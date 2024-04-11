@@ -1,14 +1,13 @@
 <style lang="scss">
   :global(*) {
     box-sizing: border-box;
-
   }
-  main {
-    width: 100vw;
+
+  :global(body) {
+    margin: 0;
+    padding: 0;
     height: 100vh;
   }
 </style>
 
-<main>
-  <slot/>
-</main>
+<slot/>

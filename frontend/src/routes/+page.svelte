@@ -1,6 +1,9 @@
 <script>
   import Calendar from "../components/calendar/Calendar.svelte";
-    import { getMonthName } from "../lib/common/humanization";
+  import IconButton from "../components/interactive/IconButton.svelte";
+  import { getMonthName } from "../lib/common/humanization";
+  import LeftIcon from "lucide-svelte/icons/chevron-left";
+  import RightIcon from "lucide-svelte/icons/chevron-right";
 
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth() 
@@ -22,18 +25,40 @@
 </script>
 
 <style lang="scss">
+  @import "../styles/dimensions.scss";
+
   div {
     display: flex;
     flex-direction: row;
     gap: 1em;
   }
+  main {
+    width: 100vw;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: $gap;
+  }
+
+  div.monthSelection {
+    display: flex;
+    flex-direction: row;
+    gap: $gapSmall;
+    align-items: center;
+  }
 </style>
 
-<div>
-  <button on:click={previousMonth}>←</button>
-  <h1>
-    {getMonthName(selectedMonth) + (currentYear === selectedYear ? "" : ` ${selectedYear}`)}
-  </h1>
-  <button on:click={nextMonth}>→</button>
-</div>
-<Calendar year={2024} month={selectedMonth}/>
+<main>
+  <div class="monthSelection">
+    <IconButton callback={previousMonth}>
+      <LeftIcon/>
+    </IconButton>
+    <IconButton callback={nextMonth}>
+      <RightIcon/>
+    </IconButton>
+    <span class="monthLabel">
+      {`${getMonthName(selectedMonth)} ${selectedYear}`}
+    </span>
+  </div>
+  <Calendar year={2024} month={selectedMonth}/>
+</main>
