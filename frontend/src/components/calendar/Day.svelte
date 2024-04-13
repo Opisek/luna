@@ -38,7 +38,7 @@
   div.events {
     display: flex;
     flex-direction: column;
-    gap: $gapSmall;
+    gap: $gapTiny;
   }
 </style>
 

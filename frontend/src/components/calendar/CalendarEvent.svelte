@@ -9,8 +9,11 @@
   const nextDate = new Date(date);
   nextDate.setDate(date.getDate() + 1);
 
-  const isFirstDisplay = isFirstDay || (event && previousDate < event.start);
-  const isLastDisplay = isLastDay || (event && nextDate >= event.end);
+  const isEventStart = event && previousDate < event.start;
+  const isEventEnd = event && nextDate >= event.end;
+
+  const isFirstDisplay = isFirstDay || isEventStart;
+  const isLastDisplay = isLastDay || isEventEnd;
 </script>
 
 <style lang="scss">
@@ -18,8 +21,9 @@
 
   div {
     background-color: #cbe6ec;
-    padding: $gapSmall;
-    margin: 0 (-$gapSmall);
+    padding: $paddingTiny;
+    font-size: $fontSizeSmall;
+    margin: 0 (-$gap);
   }
   div::after {
     content: ".";

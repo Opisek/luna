@@ -1,4 +1,5 @@
 /* Gaps */
+$gapTiny: 0.2em;
 $gapSmaller: 0.25em;
 $gapSmall: 0.5em;
 $gap: 1em;
@@ -31,21 +32,13 @@ $cardHeight: 15em;
 $cardWidth: 15em;
 
 /* Font */
-$fontSizeTitle: 4rem;
-$fontSizeTitleSmall: 3rem;
-$fontSizeTitleSmaller: 2rem;
-$fontSize: 1.3rem;
-$fontSizeMobile: 1.1rem;
-$fontSizeSmall: 1.1rem;
-$fontSizeSmallMobile: 0.9rem;
-$fontSizeCode: 1.1rem;
-$fontSizeCodeMobile: 0.9rem;
+$fontSize: 1rem;
+$fontSizeSmall: 0.8rem;
 $fontWeight: 400;
 $fontWeightSemiBold: 600;
 $fontWeightBold: 800;
 $fontWeightEmphasis: 350;
 $fontWeightTitle: 700;
-$fontSpacingEmphasis: 0.1rem;
 
 $lineHeightParagraph: $fontSize * 1.4;
 
