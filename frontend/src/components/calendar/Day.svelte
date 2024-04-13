@@ -1,12 +1,14 @@
 <script lang="ts">
   import CalendarEvent from "./CalendarEvent.svelte";
-  import { compareEventsByStartDate } from "../../lib/common/comparators";
 
-  export let day: number;
-  export let dayOfWeek: number;
+  export let date: Date;
+
   export let isCurrentMonth: boolean;
 
-  export let events: CalendarEventModel[];
+  export let isFirstDay: boolean;
+  export let isLastDay: boolean;
+
+  export let events: (CalendarEventModel | null)[];
 </script>
 
 <style lang="scss">
@@ -16,21 +18,21 @@
     display: flex;
     flex-direction: column;
     gap: $gapSmall;
-    padding: $gapSmall;
+    padding-top: $paddingSmaller;
     border-radius: $borderRadiusSmall;
     background-color: #f0f0f0;
   }
   div.otherMonth {
     opacity: .5;
   }
-  div.sunday {
-    color: red;
-  }
 
   span {
     text-align: center;
     width: 100%;
     display: block;
+  }
+  div.sunday > span {
+    color: red;
   }
 
   div.events {
@@ -40,13 +42,18 @@
   }
 </style>
 
-<div class="day" class:otherMonth={!isCurrentMonth} class:sunday={dayOfWeek === 0}>
+<div class="day" class:otherMonth={!isCurrentMonth} class:sunday={date.getDay() === 0}>
   <span>
-    {day}
+    {date.getDate()}
   </span>
   <div class="events">
-    {#each events.sort(compareEventsByStartDate) as event}
-      <CalendarEvent {event}/>
+    {#each events as event}
+      <CalendarEvent
+        event={event}
+        isFirstDay={isFirstDay}
+        isLastDay={isLastDay}
+        date={date}
+      />
     {/each}
   </div>
 </div>

@@ -66,17 +66,38 @@
     events={[
       {
         title: "Event 1",
-        start: new Date(2024, 0, 1),
-        end: new Date(2024, 0, 3),
+        start: new Date(2024, 3, 1),
+        end: new Date(2024, 3, 3),
         allDay: false,
         color: "red"
       },
       {
         title: "Event 2",
-        start: new Date(2024, 0, 2),
-        end: new Date(2024, 0, 4),
+        start: new Date(2024, 3, 2),
+        end: new Date(2024, 3, 4),
         allDay: false,
         color: "blue"
+      },
+      {
+        title: "Event 3",
+        start: new Date(2024, 3, 3),
+        end: new Date(2024, 3, 5),
+        allDay: false,
+        color: "green"
+      },
+      {
+        title: "Event 4",
+        start: new Date(2024, 3, 4),
+        end: new Date(2024, 3, 6),
+        allDay: false,
+        color: "yellow"
+      },
+      {
+        title: "Event 5",
+        start: new Date(2024, 3, 7),
+        end: new Date(2024, 3, 9),
+        allDay: false,
+        color: "yellow"
       }
     ]}
   />
