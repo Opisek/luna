@@ -1,20 +1,20 @@
 <script lang="ts">
-    import { getDayName } from "../../lib/common/humanization";
-    import Day from "./Day.svelte";
+  import Day from "./Day.svelte";
+  import { getDayName } from "../../lib/common/humanization";
 
   export let month: number;
   export let year: number;
+  export let events: CalendarEventModel[];
 
   let days: Date[] = [];
+  let amountOfRows: number = 0;
 
   $: ((month: number, year: number) => {
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
     const firstDayOfWeek = (firstDay.getDay() + 6) % 7;
 
-    console.log(firstDay, lastDay, firstDayOfWeek);
-
-    const amountOfRows = Math.ceil((lastDay.getDate() + firstDayOfWeek - 1) / 7);
+    amountOfRows = Math.ceil((lastDay.getDate() + firstDayOfWeek - 1) / 7);
 
     const iterator = new Date(firstDay);
     iterator.setDate(firstDay.getDate() - firstDayOfWeek);
@@ -25,6 +25,20 @@
       iterator.setDate(iterator.getDate() + 1);
     }
   })(month, year);
+
+  let calendarEventMap: Map<string, CalendarEventModel[]> = new Map();
+
+  $: ((events: CalendarEventModel[]) => {
+    calendarEventMap = new Map();
+    events.forEach(event => {
+      for (const iterator = new Date(event.start); iterator < event.end; iterator.setDate(iterator.getDate() + 1)) {
+        const key = iterator.toISOString().split("T")[0];
+        const arr = calendarEventMap.get(key);
+        if (arr) arr.push(event);
+        else calendarEventMap.set(key, [ event ]);
+      }
+    });
+  })(events);
 </script>
 
 <style lang="scss">
@@ -63,12 +77,13 @@
       </div>
     {/each}
   </div>
-  <div class="days">
+  <div class="days" style="grid-template-rows: repeat({amountOfRows}, 1fr)">
     {#each days as day}
       <Day
         day={day.getDate()}
         dayOfWeek={day.getDay()}
         isCurrentMonth={day.getMonth() === month} 
+        events={calendarEventMap.get(day.toISOString().split("T")[0]) || []}
       >
       </Day>
     {/each}

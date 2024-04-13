@@ -60,5 +60,24 @@
       {`${getMonthName(selectedMonth)} ${selectedYear}`}
     </span>
   </div>
-  <Calendar year={2024} month={selectedMonth}/>
+  <Calendar
+    year={2024}
+    month={selectedMonth}
+    events={[
+      {
+        title: "Event 1",
+        start: new Date(2024, 0, 1),
+        end: new Date(2024, 0, 3),
+        allDay: false,
+        color: "red"
+      },
+      {
+        title: "Event 2",
+        start: new Date(2024, 0, 2),
+        end: new Date(2024, 0, 4),
+        allDay: false,
+        color: "blue"
+      }
+    ]}
+  />
 </main>
