@@ -1,4 +1,5 @@
 <script lang="ts">
+
   export let event: CalendarEventModel | null;
   export let isFirstDay: boolean;
   export let isLastDay: boolean;
@@ -6,6 +7,7 @@
 
   export let currentlyHoveredEvent: CalendarEventModel | null;
   export let currentlyClickedEvent: CalendarEventModel | null;
+  export let clickCallback: (event: CalendarEventModel) => void;
 
   const previousDate = new Date(date);
   previousDate.setDate(date.getDate() - 1);
@@ -28,6 +30,8 @@
 
     if (currentlyHoveredEvent == event)
       currentlyHoveredEvent = null;
+    if (currentlyClickedEvent == event)
+      currentlyClickedEvent = null;
   }
   function mouseDown() {
     if (event == null) return;
@@ -37,8 +41,10 @@
   function mouseUp() {
     if (event == null) return;
 
-    if (currentlyClickedEvent == event)
+    if (currentlyClickedEvent == event) {
       currentlyClickedEvent = null;
+      clickCallback(event);
+    }
   
   }
 </script>

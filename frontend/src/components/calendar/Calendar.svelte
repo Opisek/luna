@@ -67,6 +67,10 @@
       dateIterator.setDate(dateIterator.getDate() + 1);
     }
   })(month, year, events);
+
+  function eventClick(event: CalendarEventModel) {
+    window.alert(event.title);
+  }
 </script>
 
 <style lang="scss">
@@ -115,6 +119,7 @@
         isLastDay={i == days.length - 1}
         bind:currentlyHoveredEvent={currentlyHoveredEvent}
         bind:currentlyClickedEvent={currentlyClickedEvent}
+        clickCallback={eventClick}
       >
       </Day>
     {/each}

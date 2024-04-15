@@ -12,6 +12,7 @@
   
   export let currentlyHoveredEvent: CalendarEventModel | null;
   export let currentlyClickedEvent: CalendarEventModel | null;
+  export let clickCallback: (event: CalendarEventModel) => void;
 </script>
 
 <style lang="scss">
@@ -58,6 +59,7 @@
         date={date}
         bind:currentlyHoveredEvent={currentlyHoveredEvent}
         bind:currentlyClickedEvent={currentlyClickedEvent}
+        clickCallback={clickCallback}
       />
     {/each}
   </div>
