@@ -4,6 +4,8 @@
   export let isLastDay: boolean;
   export let date: Date;
 
+  export let currentlyHoveredEvent: CalendarEventModel | null;
+
   const previousDate = new Date(date);
   previousDate.setDate(date.getDate() - 1);
   const nextDate = new Date(date);
@@ -14,6 +16,18 @@
 
   const isFirstDisplay = isFirstDay || isEventStart;
   const isLastDisplay = isLastDay || isEventEnd;
+
+  function mouseEnter() {
+    if (event == null) return;
+
+    currentlyHoveredEvent = event;
+  }
+  function mouseLeave() {
+    if (event == null) return;
+
+    if (currentlyHoveredEvent == event)
+      currentlyHoveredEvent = null;
+  }
 </script>
 
 <style lang="scss">
@@ -24,6 +38,9 @@
     padding: $paddingTiny;
     font-size: $fontSizeSmall;
     margin: 0 (-$gap);
+  }
+  div.hover {
+    background-color: #dbecf0;
   }
   div::after {
     content: ".";
@@ -44,7 +61,15 @@
   }
 </style>
 
-<div class:placeholder={!event} class:start={isFirstDisplay} class:end={isLastDisplay}>
+<div
+  class:placeholder={!event}
+  class:start={isFirstDisplay}
+  class:end={isLastDisplay}
+  class:hover={currentlyHoveredEvent == event}
+  on:mouseenter={mouseEnter}
+  on:mouseleave={mouseLeave}
+  role="listitem"
+>
   {#if event && isFirstDisplay}
     {event.title}
   {/if}

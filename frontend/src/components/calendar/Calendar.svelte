@@ -1,11 +1,14 @@
 <script lang="ts">
   import Day from "./Day.svelte";
   import { getDayName } from "../../lib/common/humanization";
-    import { compareEventsByStartDate } from "../../lib/common/comparators";
+  import { compareEventsByStartDate } from "../../lib/common/comparators";
 
   export let month: number;
   export let year: number;
   export let events: CalendarEventModel[];
+
+  let currentlyHoveredEvent: CalendarEventModel | null = null;
+  $: ((ev) => { console.log(ev); })(currentlyHoveredEvent);
 
   let days: Date[] = [];
   let amountOfRows: number = 0;
@@ -49,7 +52,6 @@
       // Fit new events in fitting slots
       let emptyIterator = 0;
       while (eventIterator < filteredEvents.length && filteredEvents[eventIterator].start <= dateIterator) {
-        console.log(filteredEvents[eventIterator])
         while (emptyIterator < dayEvents.length && dayEvents[emptyIterator] != null) emptyIterator++;
         if (emptyIterator < dayEvents.length) dayEvents[emptyIterator] = filteredEvents[eventIterator];
         else dayEvents.push(filteredEvents[eventIterator]);
@@ -111,6 +113,7 @@
         events={processedEvents[i]}
         isFirstDay={i == 0}
         isLastDay={i == days.length - 1}
+        bind:currentlyHoveredEvent={currentlyHoveredEvent}
       >
       </Day>
     {/each}

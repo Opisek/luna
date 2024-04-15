@@ -9,6 +9,8 @@
   export let isLastDay: boolean;
 
   export let events: (CalendarEventModel | null)[];
+  
+  export let currentlyHoveredEvent: CalendarEventModel | null;
 </script>
 
 <style lang="scss">
@@ -53,6 +55,7 @@
         isFirstDay={isFirstDay}
         isLastDay={isLastDay}
         date={date}
+        bind:currentlyHoveredEvent={currentlyHoveredEvent}
       />
     {/each}
   </div>
