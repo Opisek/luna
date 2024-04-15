@@ -5,6 +5,7 @@
   export let date: Date;
 
   export let currentlyHoveredEvent: CalendarEventModel | null;
+  export let currentlyClickedEvent: CalendarEventModel | null;
 
   const previousDate = new Date(date);
   previousDate.setDate(date.getDate() - 1);
@@ -28,6 +29,18 @@
     if (currentlyHoveredEvent == event)
       currentlyHoveredEvent = null;
   }
+  function mouseDown() {
+    if (event == null) return;
+
+    currentlyClickedEvent = event;
+  }
+  function mouseUp() {
+    if (event == null) return;
+
+    if (currentlyClickedEvent == event)
+      currentlyClickedEvent = null;
+  
+  }
 </script>
 
 <style lang="scss">
@@ -41,6 +54,9 @@
   }
   div.hover {
     background-color: #dbecf0;
+  }
+  div.active {
+    transform: scale(1.1);
   }
   div::after {
     content: ".";
@@ -66,9 +82,13 @@
   class:start={isFirstDisplay}
   class:end={isLastDisplay}
   class:hover={currentlyHoveredEvent == event}
+  class:active={currentlyClickedEvent == event}
   on:mouseenter={mouseEnter}
   on:mouseleave={mouseLeave}
-  role="listitem"
+  on:mousedown={mouseDown}
+  on:mouseup={mouseUp}
+  role="button"
+  tabindex="0"
 >
   {#if event && isFirstDisplay}
     {event.title}

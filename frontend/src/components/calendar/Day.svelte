@@ -11,6 +11,7 @@
   export let events: (CalendarEventModel | null)[];
   
   export let currentlyHoveredEvent: CalendarEventModel | null;
+  export let currentlyClickedEvent: CalendarEventModel | null;
 </script>
 
 <style lang="scss">
@@ -56,6 +57,7 @@
         isLastDay={isLastDay}
         date={date}
         bind:currentlyHoveredEvent={currentlyHoveredEvent}
+        bind:currentlyClickedEvent={currentlyClickedEvent}
       />
     {/each}
   </div>

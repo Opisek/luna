@@ -8,7 +8,7 @@
   export let events: CalendarEventModel[];
 
   let currentlyHoveredEvent: CalendarEventModel | null = null;
-  $: ((ev) => { console.log(ev); })(currentlyHoveredEvent);
+  let currentlyClickedEvent: CalendarEventModel | null = null;
 
   let days: Date[] = [];
   let amountOfRows: number = 0;
@@ -114,6 +114,7 @@
         isFirstDay={i == 0}
         isLastDay={i == days.length - 1}
         bind:currentlyHoveredEvent={currentlyHoveredEvent}
+        bind:currentlyClickedEvent={currentlyClickedEvent}
       >
       </Day>
     {/each}
