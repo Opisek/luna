@@ -7,6 +7,6 @@ Ultimately, Luna should become a fully offline-capable *Progressive Web Applicat
 
 This approach ensures out-of-the-box platform cross-compatibility: You will be able to use Luna inside your favourite web browser, as well as install it as a PWA.
 
-Currently this project is still very much **work-in-progress** and is nowhere near being production-ready. Nevertheless, I have high hopes for one day replacing the propriatary calendar apps I use with Luna. 
+Currently, this project is still very much **work-in-progress** and is nowhere near being production-ready. Nevertheless, I have high hopes for one day replacing the propriatary calendar apps I use with Luna. 
 
 Feel free to get in contact through GitHub discussions if you are interested in contributing.
