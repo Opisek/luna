@@ -31,7 +31,11 @@
   async function fetchCalendars(): Promise<CalendarModel[]> {
     const response = await fetch("/api/calendars");
     if (response.ok) return response.json();
-    else return [];
+    else {
+      console.log("Failed to fetch calendars");
+      console.log(response);
+      return [];
+    }
   }
 
   (async () => {
