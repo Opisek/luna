@@ -82,3 +82,16 @@ func getEvents(c *gin.Context) {
 func notImplemented(c *gin.Context) {
 	c.JSON(http.StatusNotImplemented, gin.H{"error": "not implemented"})
 }
+
+func getSources(c *gin.Context) {
+	user, _ := c.Get("user")
+	fmt.Println("sources request received by " + fmt.Sprintf("%v", user))
+
+	sources := make([]string, 0)
+
+	//for _, source := range util.Sources {
+	//	sources = append(sources, source.String())
+	//}
+
+	c.JSON(http.StatusOK, sources)
+}

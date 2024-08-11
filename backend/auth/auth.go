@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 )
 
 //
@@ -30,15 +29,32 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"user": "admin",
-	})
-
-	signedToken, err := token.SignedString([]byte{'s', 'e', 'c', 'r', 'e', 't'})
+	token, err := NewToken(credentials.Username)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not generate token"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"token": signedToken})
+	c.JSON(http.StatusOK, gin.H{"token": token})
+}
+
+func AuthMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		cookie, err := c.Cookie("token")
+
+		if err != nil || cookie == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "missing token"})
+			return
+		}
+
+		token, err := ParseToken(cookie)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
+			return
+		}
+
+		c.Set("user", token.User)
+
+		c.Next()
+	}
 }

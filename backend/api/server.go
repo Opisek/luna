@@ -13,8 +13,10 @@ func Run() {
 
 	endpoints.POST("/login", auth.Login)
 
-	sourcesEndpoints := endpoints.Group("/sources")
-	sourcesEndpoints.GET("", notImplemented)
+	authenticatedEndpoints := endpoints.Group("", auth.AuthMiddleware())
+
+	sourcesEndpoints := authenticatedEndpoints.Group("/sources")
+	sourcesEndpoints.GET("", getSources)
 	sourcesEndpoints.PUT("", notImplemented)
 	sourcesEndpoints.PATCH("/:sourceId", notImplemented)
 	sourcesEndpoints.DELETE("/:sourceId", notImplemented)
