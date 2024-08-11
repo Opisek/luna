@@ -5,8 +5,8 @@ import (
 )
 
 type Calendar struct {
-	Url   string      `json:"url"`
 	Name  string      `json:"name"`
+	Desc  string      `json:"desc"`
 	Color *color.RGBA `json:"color"`
 }
 
