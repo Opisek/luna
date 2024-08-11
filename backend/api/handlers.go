@@ -1,7 +1,7 @@
 package api
 
 import (
-	"luna-backend/caldav"
+	"luna-backend/types"
 	"luna-backend/util"
 	"net/http"
 
@@ -9,12 +9,16 @@ import (
 )
 
 func getCalendars(c *gin.Context) {
-	calendars, err := caldav.GetCalendars(util.CaldavSettingsInstance)
+	calendars := make([]*types.Calendar, 0)
 
-	if err != nil {
-		// TODO: debug levels, we don't want to expose the error message to the user
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-	} else {
-		c.JSON(http.StatusOK, calendars)
+	for _, source := range util.Sources {
+		cals, err := source.GetCalendars()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		calendars = append(calendars, cals...)
 	}
+
+	c.JSON(http.StatusOK, calendars)
 }
