@@ -4,7 +4,6 @@ import (
 	"luna-backend/api"
 	"luna-backend/sources"
 	"luna-backend/sources/caldav"
-	"luna-backend/sources/ical"
 	"luna-backend/util"
 	"net/url"
 	"os"
@@ -23,28 +22,10 @@ func main() {
 		panic(err)
 	}
 
-	//vikunjaUrl, err := url.Parse(os.Getenv("VIKUNJA_URL"))
-	//if err != nil {
-	//	panic(err)
-	//}
-
-	icalUrl, err := url.Parse(os.Getenv("ICAL_URL"))
-	if err != nil {
-		panic(err)
-	}
-
 	util.Sources = []sources.Source{
 		caldav.NewCaldavSource(
 			caldavUrl,
 			sources.BasicAuth(os.Getenv("CALDAV_USERNAME"), os.Getenv("CALDAV_PASSWORD")),
-		),
-		//caldav.NewCaldavSource(
-		//	vikunjaUrl,
-		//	sources.BearerAuth(os.Getenv("VIKUNJA_TOKEN")),
-		//),
-		ical.NewIcalSource(
-			icalUrl,
-			sources.NoAuth(),
 		),
 	}
 
