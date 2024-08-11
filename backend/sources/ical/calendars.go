@@ -21,7 +21,7 @@ func (source *IcalSource) GetCalendars() ([]*types.Calendar, error) {
 		return nil, err
 	}
 
-	parsedCal := calendarFromIcal(cal)
+	parsedCal := source.calendarFromIcal(cal)
 
 	return []*types.Calendar{parsedCal}, nil
 }

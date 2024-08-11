@@ -7,6 +7,7 @@ func Run() {
 
 	endpoints := router.Group("/api")
 	endpoints.GET("/calendars", getCalendars)
+	endpoints.GET("/events/:id", getEvents)
 
 	router.Run(":3000")
 }

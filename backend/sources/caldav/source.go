@@ -9,6 +9,7 @@ import (
 
 func NewCaldavSource(url *url.URL, auth sources.SourceAuth) *CaldavSource {
 	return &CaldavSource{
+		id: sources.NewRandomSourceId(),
 		settings: &CaldavSettings{
 			Url:  url,
 			Auth: auth,

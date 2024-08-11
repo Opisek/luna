@@ -18,7 +18,7 @@ func (source *CaldavSource) GetCalendars() ([]*types.Calendar, error) {
 
 	calendars := make([]*types.Calendar, len(rawCalendars))
 	for i, rawCalendar := range rawCalendars {
-		calendars[i], err = calendarFromCaldav(rawCalendar)
+		calendars[i], err = source.calendarFromCaldav(rawCalendar)
 		if err != nil {
 			return nil, err
 		}
