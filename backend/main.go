@@ -2,6 +2,7 @@ package main
 
 import (
 	"luna-backend/api"
+	"luna-backend/auth"
 	"luna-backend/sources"
 	"luna-backend/sources/caldav"
 	"luna-backend/util"
@@ -25,7 +26,7 @@ func main() {
 	util.Sources = []sources.Source{
 		caldav.NewCaldavSource(
 			caldavUrl,
-			sources.BasicAuth(os.Getenv("CALDAV_USERNAME"), os.Getenv("CALDAV_PASSWORD")),
+			auth.NewBasicAuth(os.Getenv("CALDAV_USERNAME"), os.Getenv("CALDAV_PASSWORD")),
 		),
 	}
 

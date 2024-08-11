@@ -1,6 +1,7 @@
 package caldav
 
 import (
+	"luna-backend/auth"
 	"luna-backend/sources"
 	"luna-backend/types"
 	"net/url"
@@ -16,7 +17,7 @@ type CaldavSource struct {
 
 type CaldavSettings struct {
 	Url  *url.URL
-	Auth sources.SourceAuth
+	Auth auth.AuthMethod
 }
 
 func (source *CaldavSource) GetId() *sources.SourceId {

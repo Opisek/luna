@@ -1,6 +1,7 @@
 package ical
 
 import (
+	"luna-backend/auth"
 	"luna-backend/sources"
 	"luna-backend/types"
 	"net/url"
@@ -15,7 +16,7 @@ type IcalSource struct {
 
 type IcalSettings struct {
 	Url  *url.URL
-	Auth sources.SourceAuth
+	Auth auth.AuthMethod
 }
 
 func (source *IcalSource) GetId() *sources.SourceId {
