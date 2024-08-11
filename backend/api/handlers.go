@@ -78,3 +78,7 @@ func getEvents(c *gin.Context) {
 
 	c.JSON(http.StatusNotImplemented, gin.H{"error": "not implemented"})
 }
+
+func notImplemented(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{"error": "not implemented"})
+}
