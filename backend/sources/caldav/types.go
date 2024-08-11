@@ -1,6 +1,7 @@
 package caldav
 
 import (
+	"luna-backend/sources"
 	"luna-backend/types"
 	"net/url"
 
@@ -13,9 +14,8 @@ type CaldavSource struct {
 }
 
 type CaldavSettings struct {
-	Url      *url.URL
-	Username string
-	Password string
+	Url  *url.URL
+	Auth sources.SourceAuth
 }
 
 func calendarFromCaldav(rawCalendar caldav.Calendar) (*types.Calendar, error) {

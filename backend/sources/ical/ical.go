@@ -1,7 +1,15 @@
 package ical
 
-func NewIcalSource(settings *IcalSettings) *IcalSource {
+import (
+	"luna-backend/sources"
+	"net/url"
+)
+
+func NewIcalSource(url *url.URL, auth sources.SourceAuth) *IcalSource {
 	return &IcalSource{
-		settings: settings,
+		settings: &IcalSettings{
+			Url:  url,
+			Auth: auth,
+		},
 	}
 }

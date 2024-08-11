@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"luna-backend/types"
 	"luna-backend/util"
 	"net/http"
@@ -14,6 +15,7 @@ func getCalendars(c *gin.Context) {
 	for _, source := range util.Sources {
 		cals, err := source.GetCalendars()
 		if err != nil {
+			fmt.Println(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}

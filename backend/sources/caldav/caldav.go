@@ -1,15 +1,18 @@
 package caldav
 
 import (
-	"net/http"
+	"luna-backend/sources"
+	"net/url"
 
-	"github.com/emersion/go-webdav"
 	"github.com/emersion/go-webdav/caldav"
 )
 
-func NewCaldavSource(settings *CaldavSettings) *CaldavSource {
+func NewCaldavSource(url *url.URL, auth sources.SourceAuth) *CaldavSource {
 	return &CaldavSource{
-		settings: settings,
+		settings: &CaldavSettings{
+			Url:  url,
+			Auth: auth,
+		},
 	}
 }
 
@@ -17,13 +20,10 @@ func (source *CaldavSource) getClient() (*caldav.Client, error) {
 	if source.client == nil {
 		var err error
 		source.client, err = caldav.NewClient(
-			webdav.HTTPClientWithBasicAuth(
-				http.DefaultClient,
-				source.settings.Username,
-				source.settings.Password,
-			),
+			source.settings.Auth,
 			source.settings.Url.String(),
 		)
+
 		if err != nil {
 			return nil, err
 		}

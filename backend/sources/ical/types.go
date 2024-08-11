@@ -1,6 +1,7 @@
 package ical
 
 import (
+	"luna-backend/sources"
 	"luna-backend/types"
 	"net/url"
 
@@ -12,7 +13,8 @@ type IcalSource struct {
 }
 
 type IcalSettings struct {
-	Url *url.URL
+	Url  *url.URL
+	Auth sources.SourceAuth
 }
 
 func calendarFromIcal(rawCalendar *ics.Calendar) *types.Calendar {
