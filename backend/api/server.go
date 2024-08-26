@@ -2,12 +2,33 @@ package api
 
 import (
 	"luna-backend/auth"
+	"luna-backend/common"
+	"luna-backend/db"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
-func Run() {
+type Api struct {
+	db           *db.Database
+	commonConfig *common.CommonConfig
+	logger       *logrus.Entry
+}
+
+func NewApi(db *db.Database, commonConfig *common.CommonConfig, logger *logrus.Entry) *Api {
+	return &Api{
+		db:           db,
+		commonConfig: commonConfig,
+		logger:       logger,
+	}
+}
+
+func (api *Api) Run() {
 	router := gin.Default()
+	router.Use(func(c *gin.Context) {
+		c.Set("apiConfig", api)
+		c.Next()
+	})
 
 	endpoints := router.Group("/api")
 

@@ -1,0 +1,15 @@
+version: "3.9"
+
+name: luna
+services:
+  luna-postgres:
+    image: postgres:13
+    container_name: luna-postgres
+    environment:
+      POSTGRES_USER: luna
+      POSTGRES_PASSWORD: luna
+      POSTGRES_DB: luna
+    ports:
+      - "5432:5432"
+    volumes:
+      - /srv/luna/postgres:/var/lib/postgresql/data
