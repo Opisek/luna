@@ -14,7 +14,9 @@ var version string
 func main() {
 	var err error
 
+	//
 	// Config
+	//
 	logger := log.NewLogger()
 	mainLogger := logger.WithField("module", "main")
 
@@ -31,23 +33,36 @@ func main() {
 		os.Exit(1)
 	}
 
+	//
 	// Database
+	//
 	dbLogger := logger.WithField("module", "database")
 	db := db.NewDatabase(env.DB_HOST, env.DB_PORT, env.DB_USERNAME, env.DB_PASSWORD, env.DB_DATABASE, commonConfig, dbLogger)
+	// Connect to the database
 	err = db.Connect()
 	if err != nil {
 		os.Exit(1)
 	}
+	// Initialize non-existent tables
 	err = db.InitializeTables()
 	if err != nil {
 		os.Exit(1)
 	}
+	// Run migrations
 	latestUsedVersion, err := db.GetLatestVersion()
 	if err != nil {
 		os.Exit(1)
 	}
 	if latestUsedVersion.IsGreaterThan(&commonConfig.Version) {
 		mainLogger.Errorf("downgrades are not supported: database version %v is greater than binary version %v", latestUsedVersion.String(), commonConfig.Version.String())
+		os.Exit(1)
+	}
+	err = db.RunMigrations(&latestUsedVersion)
+	if err != nil {
+		os.Exit(1)
+	}
+	err = db.UpdateVersion(commonConfig.Version)
+	if err != nil {
 		os.Exit(1)
 	}
 
@@ -66,8 +81,6 @@ func main() {
 	// Api Server
 	apiLogger := logger.WithField("module", "api")
 	api := api.NewApi(db, commonConfig, apiLogger)
-	go api.Run()
-
-	// Finilize
 	mainLogger.Infof("started luna-backend %s", commonConfig.Version.String())
+	api.Run()
 }

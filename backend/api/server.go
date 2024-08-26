@@ -33,6 +33,7 @@ func (api *Api) Run() {
 	endpoints := router.Group("/api")
 
 	endpoints.POST("/login", auth.Login)
+	endpoints.GET("/version", getVersion)
 
 	authenticatedEndpoints := endpoints.Group("", auth.AuthMiddleware())
 

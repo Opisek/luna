@@ -82,3 +82,13 @@ func getEvents(c *gin.Context) {
 func notImplemented(c *gin.Context) {
 	c.JSON(http.StatusNotImplemented, gin.H{"error": "not implemented"})
 }
+
+func getVersion(c *gin.Context) {
+	apiConfig, err := c.Get("apiConfig")
+	if !err {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "context error"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"version": apiConfig.(*Api).commonConfig.Version.String()})
+}

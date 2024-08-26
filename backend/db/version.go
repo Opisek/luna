@@ -34,3 +34,16 @@ func (db *Database) GetLatestVersion() (common.Version, error) {
 
 	return version, nil
 }
+
+func (db *Database) UpdateVersion(version common.Version) error {
+	_, err := db.connection.Exec(`
+		INSERT INTO version (major, minor, patch, extension, installed)
+		VALUES ($1, $2, $3, $4, NOW());
+	`, version.Major, version.Minor, version.Patch, version.Extension)
+	if err != nil {
+		db.logger.Errorf("could not update version: %v", err)
+		return err
+	}
+
+	return nil
+}
