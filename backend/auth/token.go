@@ -2,6 +2,7 @@ package auth
 
 import "github.com/golang-jwt/jwt/v5"
 
+// TODO: proper key usage and algorithms in production
 var secret = []byte{'s', 'e', 'c', 'r', 'e', 't'}
 
 type JsonWebToken struct {

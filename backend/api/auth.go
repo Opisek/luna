@@ -104,3 +104,24 @@ func register(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{})
 }
+
+func authMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		cookie, err := c.Cookie("token")
+
+		if err != nil || cookie == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "missing token"})
+			return
+		}
+
+		token, err := auth.ParseToken(cookie)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
+			return
+		}
+
+		c.Set("user", token.User)
+
+		c.Next()
+	}
+}

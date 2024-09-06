@@ -1,7 +1,6 @@
 package api
 
 import (
-	"luna-backend/auth"
 	"luna-backend/common"
 	"luna-backend/db"
 	"net/http"
@@ -38,7 +37,7 @@ func (api *Api) Run() {
 	endpoints.POST("/register", register)
 	endpoints.GET("/version", getVersion)
 
-	authenticatedEndpoints := endpoints.Group("", auth.AuthMiddleware())
+	authenticatedEndpoints := endpoints.Group("", authMiddleware())
 
 	// /api/sources/*
 	sourcesEndpoints := authenticatedEndpoints.Group("/sources")
