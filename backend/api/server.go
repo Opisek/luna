@@ -4,6 +4,7 @@ import (
 	"luna-backend/auth"
 	"luna-backend/common"
 	"luna-backend/db"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -30,25 +31,30 @@ func (api *Api) Run() {
 		c.Next()
 	})
 
+	// /api/*
 	endpoints := router.Group("/api")
 
-	endpoints.POST("/login", auth.Login)
+	endpoints.POST("/login", login)
+	endpoints.POST("/register", register)
 	endpoints.GET("/version", getVersion)
 
 	authenticatedEndpoints := endpoints.Group("", auth.AuthMiddleware())
 
+	// /api/sources/*
 	sourcesEndpoints := authenticatedEndpoints.Group("/sources")
 	sourcesEndpoints.GET("", getSources)
 	sourcesEndpoints.PUT("", notImplemented)
 	sourcesEndpoints.PATCH("/:sourceId", notImplemented)
 	sourcesEndpoints.DELETE("/:sourceId", notImplemented)
 
+	// /api/sources/.../calendars/*
 	calendarsEndpoints := sourcesEndpoints.Group("/:sourceId/calendars")
 	calendarsEndpoints.GET("", notImplemented)
 	calendarsEndpoints.PUT("", notImplemented)
 	calendarsEndpoints.PATCH("/:calendarId", notImplemented)
 	calendarsEndpoints.DELETE("/:calendarId", notImplemented)
 
+	// /api/sources/.../calendars/.../events/*
 	eventEndpoints := calendarsEndpoints.Group("/:calendarId/events")
 	eventEndpoints.GET("", notImplemented)
 	eventEndpoints.PUT("", notImplemented)
@@ -56,4 +62,14 @@ func (api *Api) Run() {
 	eventEndpoints.DELETE("/:eventId", notImplemented)
 
 	router.Run(":3000")
+}
+
+func getConfig(c *gin.Context) *Api {
+	// TODO: consider changing to "MustGet"
+	apiConfig, err := c.Get("apiConfig")
+	if !err {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "context error"})
+		return nil
+	}
+	return apiConfig.(*Api)
 }

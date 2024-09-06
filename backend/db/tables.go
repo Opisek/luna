@@ -46,9 +46,10 @@ func (db *Database) initializeUserTable() error {
 	_, err := db.connection.Exec(`
 		CREATE TABLE IF NOT EXISTS users (
 			id SERIAL PRIMARY KEY,
-			username VARCHAR(255) NOT NULL,
+			username VARCHAR(255) NOT NULL UNIQUE,
 			password VARCHAR(255) NOT NULL,
-			email VARCHAR(255) NOT NULL,
+			algorithm VARCHAR(32) NOT NULL,
+			email VARCHAR(255) NOT NULL UNIQUE,
 			admin BOOLEAN
 		);
 	`)

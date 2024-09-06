@@ -84,11 +84,10 @@ func notImplemented(c *gin.Context) {
 }
 
 func getVersion(c *gin.Context) {
-	apiConfig, err := c.Get("apiConfig")
-	if !err {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "context error"})
+	apiConfig := getConfig(c)
+	if apiConfig == nil {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"version": apiConfig.(*Api).commonConfig.Version.String()})
+	c.JSON(http.StatusOK, gin.H{"version": apiConfig.commonConfig.Version.String()})
 }

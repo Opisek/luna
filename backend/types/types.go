@@ -19,3 +19,12 @@ type Event struct {
 	End   time.Time   `json:"end"`
 	Color *color.RGBA `json:"color"`
 }
+
+type User struct {
+	Id        string `json:"id"`
+	Username  string `json:"username"`
+	Password  string `json:"-"`
+	Algorithm string `json:"-"`
+	Email     string `json:"email"`
+	Admin     bool   `json:"admin"`
+}
