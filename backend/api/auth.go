@@ -11,6 +11,7 @@ import (
 )
 
 func login(c *gin.Context) {
+	// Parsing
 	apiConfig := getConfig(c)
 	if apiConfig == nil {
 		return
@@ -25,6 +26,7 @@ func login(c *gin.Context) {
 		return
 	}
 
+	// Check if the user exists
 	userId, err := apiConfig.db.GetUserIdFromUsername(credentials.Username)
 	if err != nil {
 		apiConfig.logger.Error(errors.Join(topErr, err))
@@ -32,6 +34,7 @@ func login(c *gin.Context) {
 		return
 	}
 
+	// Get the user's password
 	savedPassword, algorithm, err := apiConfig.db.GetPassword(userId)
 	if err != nil {
 		apiConfig.logger.Error(errors.Join(topErr, err))
@@ -39,12 +42,27 @@ func login(c *gin.Context) {
 		return
 	}
 
+	// Verify the password
 	if !auth.VerifyPassword(credentials.Password, savedPassword, algorithm) {
 		apiConfig.logger.Error(errors.Join(topErr, err))
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
 		return
 	}
 
+	// Silently update the user's password to a newer algorithm if applicable
+	if algorithm != auth.DefaultAlgorithm {
+		apiConfig.logger.Infof("updating password %v for user to newer algorithm", credentials.Username)
+		hash, alg, err := auth.SecurePassword(credentials.Password)
+		if err != nil {
+			apiConfig.logger.Error(errors.Join(errors.New("could not update password"), err))
+		}
+		err = apiConfig.db.UpdatePassword(userId, hash, alg)
+		if err != nil {
+			apiConfig.logger.Error(errors.Join(errors.New("could not update password"), err))
+		}
+	}
+
+	// Generate the token
 	token, err := auth.NewToken(credentials.Username)
 	if err != nil {
 		apiConfig.logger.Error(errors.Join(topErr, err))

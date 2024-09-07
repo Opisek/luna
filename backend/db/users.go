@@ -65,6 +65,21 @@ func (db *Database) GetPassword(id int) (string, string, error) {
 	return password, algorithm, err
 }
 
+func (db *Database) UpdatePassword(id int, password string, alg string) error {
+	var err error
+
+	_, err = db.connection.Exec(`
+		UPDATE users
+		SET password = $1, algorithm = $2
+		WHERE id = $3;
+	`, password, alg, id)
+
+	if err != nil {
+		db.logger.Errorf("could not update password of user %v: %v", id, err)
+	}
+	return err
+}
+
 func (db *Database) IsAdmin(id int) (bool, error) {
 	var err error
 
