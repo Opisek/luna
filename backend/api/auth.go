@@ -87,13 +87,12 @@ func register(c *gin.Context) {
 	}
 
 	payload := registerPayload{}
-	topErr := fmt.Errorf("failed to register with payload %v", payload)
-
 	if err := c.ShouldBind(&payload); err != nil {
-		apiConfig.logger.Error(errors.Join(topErr, err))
+		apiConfig.logger.Error(err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "improper payload"})
 		return
 	}
+	topErr := fmt.Errorf("failed to register with payload %v", payload)
 
 	hash, alg, err := auth.SecurePassword(payload.Password)
 	if err != nil {
