@@ -1,6 +1,8 @@
 package db
 
-import "luna-backend/types"
+import (
+	"luna-backend/types"
+)
 
 // TODO: return the created user's ID
 func (db *Database) AddUser(user *types.User) error {
@@ -97,12 +99,21 @@ func (db *Database) IsAdmin(id int) (bool, error) {
 	return admin, err
 }
 
+// TODO: consider returning (bool, error) instead
 func (db *Database) AnyUsersExist() bool {
-	err := db.connection.QueryRow(`
+	rows, err := db.connection.Query(`
 		SELECT *
 		FROM users
 		LIMIT 1;
-	`).Scan()
+	`)
 
-	return err != nil
+	if err != nil {
+		db.logger.Errorf("could not check if any users exist: %v", err)
+		return false
+	}
+
+	exists := rows.Next()
+	rows.Close()
+
+	return exists
 }
