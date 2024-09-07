@@ -6,6 +6,7 @@ import (
 	"luna-backend/auth"
 	"luna-backend/types"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -146,22 +147,46 @@ func register(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{})
 }
 
+func getBearerToken(c *gin.Context) (string, error) {
+	header := c.Request.Header.Get("Authorization")
+	if header == "" {
+		return "", errors.New("missing bearer token")
+	}
+
+	parts := strings.Split(header, " ")
+	if len(parts) != 2 || parts[0] != "Bearer" {
+		return "", errors.New("malformed authorization header")
+	}
+
+	return parts[1], nil
+}
+
 func authMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		cookie, err := c.Cookie("token")
+		cookieToken, cookieErr := c.Cookie("token")
+		gotCookie := cookieErr == nil && cookieToken != ""
+		bearerToken, bearerErr := getBearerToken(c)
+		gotBearer := bearerErr == nil && bearerToken != ""
 
-		if err != nil || cookie == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "missing token"})
+		if !gotCookie && !gotBearer {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "missing authorization token"})
 			return
 		}
 
-		token, err := auth.ParseToken(cookie)
+		var token string
+		if gotBearer {
+			token = bearerToken
+		} else if gotCookie {
+			token = cookieToken
+		}
+
+		parsedToken, err := auth.ParseToken(token)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid authorization token"})
 			return
 		}
 
-		c.Set("user", token.User)
+		c.Set("user", parsedToken.User)
 
 		c.Next()
 	}
