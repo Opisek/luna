@@ -10,7 +10,7 @@ import (
 )
 
 type IcalSource struct {
-	id       *sources.SourceId
+	id       sources.SourceId
 	settings *IcalSettings
 }
 
@@ -19,7 +19,7 @@ type IcalSettings struct {
 	Auth auth.AuthMethod
 }
 
-func (source *IcalSource) GetId() *sources.SourceId {
+func (source *IcalSource) GetId() sources.SourceId {
 	return source.id
 }
 

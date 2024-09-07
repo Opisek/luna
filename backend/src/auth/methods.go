@@ -2,8 +2,15 @@ package auth
 
 import "net/http"
 
+const (
+	AuthNone   = "none"
+	AuthBasic  = "basic"
+	AuthBearer = "bearer"
+)
+
 type AuthMethod interface {
 	Do(req *http.Request) (*http.Response, error)
+	GetType() string
 }
 
 // No Authentication
@@ -12,6 +19,10 @@ type NoAuth struct{}
 
 func (auth NoAuth) Do(req *http.Request) (*http.Response, error) {
 	return http.DefaultClient.Do(req)
+}
+
+func (auth NoAuth) GetType() string {
+	return AuthNone
 }
 
 func NewNoAuth() AuthMethod {
@@ -30,6 +41,10 @@ func (auth BasicAuth) Do(req *http.Request) (*http.Response, error) {
 	return http.DefaultClient.Do(req)
 }
 
+func (auth BasicAuth) GetType() string {
+	return AuthBasic
+}
+
 func NewBasicAuth(username, password string) AuthMethod {
 	return BasicAuth{Username: username, Password: password}
 }
@@ -43,6 +58,10 @@ type BearerAuth struct {
 func (auth BearerAuth) Do(req *http.Request) (*http.Response, error) {
 	req.Header.Set("Authorization", "Bearer "+auth.Token)
 	return http.DefaultClient.Do(req)
+}
+
+func (auth BearerAuth) GetType() string {
+	return AuthBearer
 }
 
 func NewBearerAuth(token string) AuthMethod {

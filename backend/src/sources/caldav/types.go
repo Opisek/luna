@@ -1,6 +1,7 @@
 package caldav
 
 import (
+	"encoding/json"
 	"luna-backend/auth"
 	"luna-backend/sources"
 	"luna-backend/types"
@@ -10,18 +11,39 @@ import (
 )
 
 type CaldavSource struct {
-	id       *sources.SourceId
+	id       sources.SourceId
+	name     string
 	settings *CaldavSettings
+	auth     auth.AuthMethod
 	client   *caldav.Client
 }
 
 type CaldavSettings struct {
-	Url  *url.URL
-	Auth auth.AuthMethod
+	Url *url.URL `json:"url"`
 }
 
-func (source *CaldavSource) GetId() *sources.SourceId {
+func (source *CaldavSource) GetType() string {
+	return sources.SourceCaldav
+}
+
+func (source *CaldavSource) GetId() sources.SourceId {
 	return source.id
+}
+
+func (source *CaldavSource) GetName() string {
+	return source.name
+}
+
+func (source *CaldavSource) GetAuth() auth.AuthMethod {
+	return source.auth
+}
+
+func (source *CaldavSource) GetSettings() []byte {
+	bytes, err := json.Marshal(source.settings)
+	if err != nil {
+		panic(err)
+	}
+	return bytes
 }
 
 func (source *CaldavSource) calendarFromCaldav(rawCalendar caldav.Calendar) (*types.Calendar, error) {

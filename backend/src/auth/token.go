@@ -1,17 +1,20 @@
 package auth
 
-import "github.com/golang-jwt/jwt/v5"
+import (
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
+)
 
 // TODO: proper key usage and algorithms in production
 var secret = []byte{'s', 'e', 'c', 'r', 'e', 't'}
 
 type JsonWebToken struct {
-	User string `json:"user"`
+	UserId uuid.UUID `json:"user_id"`
 	jwt.RegisteredClaims
 }
 
-func NewToken(user string) (string, error) {
-	token := JsonWebToken{User: user}
+func NewToken(user uuid.UUID) (string, error) {
+	token := JsonWebToken{UserId: user}
 
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, token)
 

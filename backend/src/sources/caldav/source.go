@@ -8,13 +8,23 @@ import (
 	"github.com/emersion/go-webdav/caldav"
 )
 
-func NewCaldavSource(url *url.URL, auth auth.AuthMethod) *CaldavSource {
+func NewCaldavSource(name string, url *url.URL, auth auth.AuthMethod) *CaldavSource {
 	return &CaldavSource{
-		id: sources.NewRandomSourceId(),
+		id:   sources.NewRandomSourceId(),
+		name: name,
+		auth: auth,
 		settings: &CaldavSettings{
-			Url:  url,
-			Auth: auth,
+			Url: url,
 		},
+	}
+}
+
+func PackCaldavSource(id sources.SourceId, name string, settings *CaldavSettings, auth auth.AuthMethod) *CaldavSource {
+	return &CaldavSource{
+		id:       id,
+		name:     name,
+		settings: settings,
+		auth:     auth,
 	}
 }
 
@@ -22,7 +32,7 @@ func (source *CaldavSource) getClient() (*caldav.Client, error) {
 	if source.client == nil {
 		var err error
 		source.client, err = caldav.NewClient(
-			source.settings.Auth,
+			source.auth,
 			source.settings.Url.String(),
 		)
 

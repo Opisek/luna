@@ -2,7 +2,26 @@ package db
 
 import (
 	"luna-backend/types"
+
+	"github.com/google/uuid"
 )
+
+func (db *Database) initializeUserTable() error {
+	// Auth table:
+	// id username password email admin
+	_, err := db.connection.Exec(`
+		CREATE TABLE IF NOT EXISTS users (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			username VARCHAR(255) NOT NULL UNIQUE,
+			password VARCHAR(255) NOT NULL,
+			algorithm VARCHAR(32) NOT NULL,
+			email VARCHAR(255) NOT NULL UNIQUE,
+			admin BOOLEAN
+		);
+	`)
+
+	return err
+}
 
 // TODO: return the created user's ID
 func (db *Database) AddUser(user *types.User) error {
@@ -34,10 +53,10 @@ func (db *Database) GetUserIdFromEmail(email string) (int, error) {
 	return id, err
 }
 
-func (db *Database) GetUserIdFromUsername(username string) (int, error) {
+func (db *Database) GetUserIdFromUsername(username string) (uuid.UUID, error) {
 	var err error
 
-	var id int
+	var id uuid.UUID
 
 	err = db.connection.QueryRow(`
 		SELECT id
@@ -50,7 +69,7 @@ func (db *Database) GetUserIdFromUsername(username string) (int, error) {
 	return id, err
 }
 
-func (db *Database) GetPassword(id int) (string, string, error) {
+func (db *Database) GetPassword(id uuid.UUID) (string, string, error) {
 	var err error
 
 	var password, algorithm string
@@ -67,7 +86,7 @@ func (db *Database) GetPassword(id int) (string, string, error) {
 	return password, algorithm, err
 }
 
-func (db *Database) UpdatePassword(id int, password string, alg string) error {
+func (db *Database) UpdatePassword(id uuid.UUID, password string, alg string) error {
 	var err error
 
 	_, err = db.connection.Exec(`

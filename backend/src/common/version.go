@@ -62,3 +62,12 @@ func EmptyVersion() Version {
 		Extension: "",
 	}
 }
+
+func Ver(major, minor, patch int) Version {
+	return Version{
+		Major:     major,
+		Minor:     minor,
+		Patch:     patch,
+		Extension: "",
+	}
+}

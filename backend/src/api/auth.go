@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 func login(c *gin.Context) {
@@ -75,7 +76,7 @@ func login(c *gin.Context) {
 	}
 
 	// Generate the token
-	token, err := auth.NewToken(credentials.Username)
+	token, err := auth.NewToken(userId)
 	if err != nil {
 		apiConfig.logger.Error(errors.Join(
 			topErr,
@@ -131,7 +132,6 @@ func register(c *gin.Context) {
 		Email:     payload.Email,
 		Admin:     isFirstUser,
 	}
-	fmt.Println(user)
 
 	err = apiConfig.db.AddUser(user)
 	if err != nil {
@@ -186,8 +186,14 @@ func authMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		c.Set("user", parsedToken.User)
+		c.Set("user_id", parsedToken.UserId)
 
 		c.Next()
 	}
+}
+
+func getUserId(c *gin.Context) uuid.UUID {
+	// it's fine to panic here because getUserId is always called after the
+	// authMiddleware so we know the key must be set
+	return c.MustGet("user_id").(uuid.UUID)
 }

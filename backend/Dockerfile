@@ -19,5 +19,4 @@ RUN make build
 FROM alpine:latest
 WORKDIR /app
 COPY --from=build /app/src/luna-backend .
-RUN ls -la
 ENTRYPOINT [ "/app/luna-backend" ]

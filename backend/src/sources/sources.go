@@ -1,6 +1,7 @@
 package sources
 
 import (
+	"luna-backend/auth"
 	"luna-backend/types"
 	"time"
 
@@ -9,16 +10,25 @@ import (
 
 type SourceId uuid.UUID
 
+const (
+	SourceCaldav = "caldav"
+	SourceIcal   = "ical"
+)
+
 type Source interface {
-	GetId() *SourceId
+	GetType() string
+	GetId() SourceId
+	GetName() string
+	GetAuth() auth.AuthMethod
+	GetSettings() []byte
 	GetCalendars() ([]*types.Calendar, error)
 	GetEvents(calendarId string, start time.Time, end time.Time) ([]*types.Event, error)
 }
 
-func NewRandomSourceId() *SourceId {
+func NewRandomSourceId() SourceId {
 	id, _ := uuid.NewRandom()
 	sourceId := SourceId(id)
-	return &sourceId
+	return sourceId
 }
 
 func (id SourceId) String() string {
@@ -27,10 +37,10 @@ func (id SourceId) String() string {
 	return strings[0]
 }
 
-func SourceIdFromBytes(bytes []byte) (*SourceId, error) {
+func SourceIdFromBytes(bytes []byte) (SourceId, error) {
 	sourceId, err := uuid.FromBytes(bytes)
 	if err != nil {
-		return nil, err
+		return SourceId(uuid.Nil), err
 	}
-	return (*SourceId)(&sourceId), nil
+	return (SourceId)(sourceId), nil
 }

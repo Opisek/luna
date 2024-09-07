@@ -43,11 +43,6 @@ func main() {
 	if err != nil {
 		os.Exit(1)
 	}
-	// Initialize non-existent tables
-	err = db.InitializeTables()
-	if err != nil {
-		os.Exit(1)
-	}
 	// Run migrations
 	latestUsedVersion, err := db.GetLatestVersion()
 	if err != nil {

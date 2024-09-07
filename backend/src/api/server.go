@@ -42,7 +42,7 @@ func (api *Api) Run() {
 	// /api/sources/*
 	sourcesEndpoints := authenticatedEndpoints.Group("/sources")
 	sourcesEndpoints.GET("", getSources)
-	sourcesEndpoints.PUT("", notImplemented)
+	sourcesEndpoints.PUT("", putSource)
 	sourcesEndpoints.PATCH("/:sourceId", notImplemented)
 	sourcesEndpoints.DELETE("/:sourceId", notImplemented)
 
