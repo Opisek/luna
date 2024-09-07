@@ -87,8 +87,6 @@ func (db *Database) GetSources(userId uuid.UUID) ([]sources.Source, error) {
 }
 
 func (db *Database) InsertSource(userId uuid.UUID, source sources.Source) error {
-	db.logger.Warnf("inserting source %v for user %v", source.GetName(), userId)
-
 	query := `
 		INSERT INTO sources (user_id, name, type, settings)
 		VALUES ($1, $2, $3, $4);
