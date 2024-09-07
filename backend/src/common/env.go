@@ -1,13 +1,13 @@
 package common
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"reflect"
 	"strconv"
 
 	"github.com/joho/godotenv"
+	"github.com/sirupsen/logrus"
 )
 
 type Environmental struct {
@@ -18,12 +18,13 @@ type Environmental struct {
 	DB_DATABASE string
 }
 
-func ParseEnvironmental() (Environmental, error) {
+func ParseEnvironmental(logger *logrus.Entry) (Environmental, error) {
 	env := Environmental{}
 
 	err := godotenv.Load()
 	if err != nil {
-		return env, errors.Join(errors.New("could not load .env file: "), err)
+		logger.Warnf("could not load .env file: %v", err)
+		//return env, errors.Join(errors.New("could not load .env file: "), err)
 	}
 
 	reflected := reflect.Indirect(reflect.ValueOf(&env))

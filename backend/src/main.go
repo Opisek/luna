@@ -27,7 +27,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	env, err := common.ParseEnvironmental()
+	env, err := common.ParseEnvironmental(mainLogger)
 	if err != nil {
 		mainLogger.Error(errors.Join(errors.New("could not parse environmental variables: "), err))
 		os.Exit(1)

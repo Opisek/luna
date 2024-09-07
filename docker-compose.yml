@@ -2,6 +2,23 @@ version: "3.9"
 
 name: luna
 services:
+
+  luna-backend:
+    container_name: luna-backend
+    ports:
+      - "3000:3000"
+    environment:
+      DB_HOST: luna-postgres
+      DB_PORT: 5432
+      DB_USERNAME: luna
+      DB_PASSWORD: luna
+      DB_DATABASE: luna
+    depends_on:
+      - luna-postgres
+    build:
+      context: backend
+      dockerfile: Dockerfile
+
   luna-postgres:
     image: postgres:13
     container_name: luna-postgres
