@@ -28,7 +28,11 @@ func login(c *gin.Context) {
 	// Check if the user exists
 	userId, err := apiConfig.db.GetUserIdFromUsername(credentials.Username)
 	if err != nil {
-		apiConfig.logger.Error(errors.Join(topErr, err))
+		apiConfig.logger.Error(errors.Join(
+			topErr,
+			errors.New("could not get user id"),
+			err,
+		))
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
 		return
 	}
@@ -36,14 +40,22 @@ func login(c *gin.Context) {
 	// Get the user's password
 	savedPassword, algorithm, err := apiConfig.db.GetPassword(userId)
 	if err != nil {
-		apiConfig.logger.Error(errors.Join(topErr, err))
+		apiConfig.logger.Error(errors.Join(
+			topErr,
+			errors.New("could not get password"),
+			err,
+		))
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
 		return
 	}
 
 	// Verify the password
 	if !auth.VerifyPassword(credentials.Password, savedPassword, algorithm) {
-		apiConfig.logger.Error(errors.Join(topErr, err))
+		apiConfig.logger.Error(errors.Join(
+			topErr,
+			errors.New("passwords do not match"),
+			err,
+		))
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
 		return
 	}
@@ -64,7 +76,11 @@ func login(c *gin.Context) {
 	// Generate the token
 	token, err := auth.NewToken(credentials.Username)
 	if err != nil {
-		apiConfig.logger.Error(errors.Join(topErr, err))
+		apiConfig.logger.Error(errors.Join(
+			topErr,
+			errors.New("could not generate token"),
+			err,
+		))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not generate token"})
 		return
 	}
@@ -96,7 +112,11 @@ func register(c *gin.Context) {
 
 	hash, alg, err := auth.SecurePassword(payload.Password)
 	if err != nil {
-		apiConfig.logger.Error(errors.Join(topErr, err))
+		apiConfig.logger.Error(errors.Join(
+			topErr,
+			errors.New("could not hash password"),
+			err,
+		))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to register"})
 		return
 	}
@@ -113,7 +133,11 @@ func register(c *gin.Context) {
 
 	err = apiConfig.db.AddUser(user)
 	if err != nil {
-		apiConfig.logger.Error(errors.Join(topErr, err))
+		apiConfig.logger.Error(errors.Join(
+			topErr,
+			errors.New("could not add user"),
+			err,
+		))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to register"})
 		return
 	}
