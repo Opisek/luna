@@ -18,13 +18,12 @@ func login(c *gin.Context) {
 	}
 
 	credentials := auth.BasicAuth{}
-	topErr := fmt.Errorf("failed to log in with credentials %v, %v", credentials.Username, credentials.Password)
-
 	if err := c.ShouldBind(&credentials); err != nil {
-		apiConfig.logger.Error(errors.Join(topErr, err))
+		apiConfig.logger.Error(err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "improper payload"})
 		return
 	}
+	topErr := fmt.Errorf("failed to log in with credentials %v, %v", credentials.Username, credentials.Password)
 
 	// Check if the user exists
 	userId, err := apiConfig.db.GetUserIdFromUsername(credentials.Username)
