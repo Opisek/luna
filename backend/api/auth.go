@@ -89,9 +89,9 @@ func login(c *gin.Context) {
 }
 
 type registerPayload struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-	Email    string `json:"email"`
+	Username string `form:"username"`
+	Password string `form:"password"`
+	Email    string `form:"email"`
 }
 
 // TODO: check if registration is enabled on this instance otherwise we will
@@ -108,7 +108,7 @@ func register(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "improper payload"})
 		return
 	}
-	topErr := fmt.Errorf("failed to register with payload %v", payload)
+	topErr := fmt.Errorf("failed to register user %v", payload.Username)
 
 	hash, alg, err := auth.SecurePassword(payload.Password)
 	if err != nil {
@@ -130,6 +130,7 @@ func register(c *gin.Context) {
 		Email:     payload.Email,
 		Admin:     isFirstUser,
 	}
+	fmt.Println(user)
 
 	err = apiConfig.db.AddUser(user)
 	if err != nil {

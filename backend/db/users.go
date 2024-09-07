@@ -98,11 +98,11 @@ func (db *Database) IsAdmin(id int) (bool, error) {
 }
 
 func (db *Database) AnyUsersExist() bool {
-	row := db.connection.QueryRow(`
+	err := db.connection.QueryRow(`
 		SELECT *
 		FROM users
 		LIMIT 1;
-	`)
+	`).Scan()
 
-	return row != nil
+	return err != nil
 }
