@@ -10,7 +10,7 @@ import (
 )
 
 type CaldavSource struct {
-	id       sources.SourceId
+	id       types.ID
 	name     string
 	settings *CaldavSettings
 	auth     auth.AuthMethod
@@ -25,7 +25,7 @@ func (source *CaldavSource) GetType() string {
 	return sources.SourceCaldav
 }
 
-func (source *CaldavSource) GetId() sources.SourceId {
+func (source *CaldavSource) GetId() types.ID {
 	return source.id
 }
 
@@ -47,8 +47,9 @@ func (source *CaldavSource) GetSettings() []byte {
 
 func (source *CaldavSource) calendarFromCaldav(rawCalendar caldav.Calendar) (*types.Calendar, error) {
 	return &types.Calendar{
-		Source: source.GetId().String(),
-		Id:     rawCalendar.Path,
+		Source: source.GetId(),
+		Id:     types.EmptyId(), // TODO: placeholder
+		Path:   rawCalendar.Path,
 		Name:   rawCalendar.Name,
 		Desc:   rawCalendar.Description,
 		Color:  nil,

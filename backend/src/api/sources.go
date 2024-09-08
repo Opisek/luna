@@ -114,19 +114,68 @@ func putSource(c *gin.Context) {
 		return
 	}
 
-	err := apiConfig.db.InsertSource(userId, source)
+	id, err := apiConfig.db.InsertSource(userId, source)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not add source"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"id": source.GetId().String()})
+	c.JSON(http.StatusOK, gin.H{"id": id.String()})
 }
 
 func patchSource(c *gin.Context) {
-	c.JSON(http.StatusNotImplemented, gin.H{"error": "not implemented"})
+	notImplemented(c)
+
+	//apiConfig := getConfig(c)
+	//if apiConfig == nil {
+	//	return
+	//}
+
+	//userId := getUserId(c)
+	//rawSourceId := c.Param("sourceId")
+
+	//if rawSourceId == "" {
+	//	apiConfig.logger.Error("could not patch source: missing source id")
+	//	c.JSON(http.StatusBadRequest, gin.H{"error": "missing source id"})
+	//	return
+	//}
+	//sourceId, err := sources.SourceIdFromString(rawSourceId)
+	//if err != nil {
+	//	apiConfig.logger.Errorf("could not patch source: malformed source id: %v", err)
+	//	c.JSON(http.StatusBadRequest, gin.H{"error": "malformed source id"})
+	//	return
+	//}
+
+	//var source sources.Source
 }
 
 func deleteSource(c *gin.Context) {
-	c.JSON(http.StatusNotImplemented, gin.H{"error": "not implemented"})
+	apiConfig := getConfig(c)
+	if apiConfig == nil {
+		return
+	}
+
+	userId := getUserId(c)
+	rawSourceId := c.Param("sourceId")
+
+	if rawSourceId == "" {
+		apiConfig.logger.Error("could not delete source: missing source id")
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing source id"})
+		return
+	}
+	sourceId, err := types.IdFromString(rawSourceId)
+	if err != nil {
+		apiConfig.logger.Errorf("could not delete source: malformed source id: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "malformed source id"})
+		return
+	}
+
+	err = apiConfig.db.DeleteSource(userId, sourceId)
+	if err != nil {
+		apiConfig.logger.Errorf("could not delete source: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not delete source"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{})
 }

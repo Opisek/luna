@@ -3,7 +3,6 @@ package api
 import (
 	"encoding/base64"
 	"fmt"
-	"luna-backend/sources"
 	"luna-backend/types"
 	"luna-backend/util"
 	"net/http"
@@ -25,9 +24,10 @@ func getCalendars(c *gin.Context) {
 		calendars = append(calendars, cals...)
 	}
 
-	for _, calendar := range calendars {
-		calendar.Id = base64.StdEncoding.EncodeToString([]byte(calendar.Source + calendar.Id))
-	}
+	//for _, calendar := range calendars {
+	//	calendar.Id = base64.StdEncoding.EncodeToString([]byte(calendar.Source + calendar.Id))
+	//}
+	// TODO: calendar IDs
 
 	c.JSON(http.StatusOK, calendars)
 }
@@ -40,7 +40,7 @@ func getEvents(c *gin.Context) {
 		return
 	}
 
-	sourceId, err := sources.SourceIdFromBytes(combinedId[:36])
+	sourceId, err := types.IdFromBytes(combinedId[:36])
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 		return

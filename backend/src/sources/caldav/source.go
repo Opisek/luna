@@ -2,7 +2,6 @@ package caldav
 
 import (
 	"luna-backend/auth"
-	"luna-backend/sources"
 	"luna-backend/types"
 
 	"github.com/emersion/go-webdav/caldav"
@@ -10,7 +9,8 @@ import (
 
 func NewCaldavSource(name string, url *types.Url, auth auth.AuthMethod) *CaldavSource {
 	return &CaldavSource{
-		id:   sources.NewRandomSourceId(),
+		//id:   types.RandomId(),
+		id:   types.EmptyId(), // Placeholder until the database assigns an ID
 		name: name,
 		auth: auth,
 		settings: &CaldavSettings{
@@ -19,7 +19,7 @@ func NewCaldavSource(name string, url *types.Url, auth auth.AuthMethod) *CaldavS
 	}
 }
 
-func PackCaldavSource(id sources.SourceId, name string, settings *CaldavSettings, auth auth.AuthMethod) *CaldavSource {
+func PackCaldavSource(id types.ID, name string, settings *CaldavSettings, auth auth.AuthMethod) *CaldavSource {
 	return &CaldavSource{
 		id:       id,
 		name:     name,

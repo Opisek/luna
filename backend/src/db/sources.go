@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"luna-backend/sources"
 	"luna-backend/sources/caldav"
+	"luna-backend/types"
 
 	"github.com/google/uuid"
 )
 
 type sourceEntry struct {
-	Id       sources.SourceId
+	Id       types.ID
 	Name     string
 	Type     string
 	Settings string
@@ -82,17 +83,55 @@ func (db *Database) GetSources(userId uuid.UUID) ([]sources.Source, error) {
 	return sources, nil
 }
 
-func (db *Database) InsertSource(userId uuid.UUID, source sources.Source) error {
+func (db *Database) InsertSource(userId uuid.UUID, source sources.Source) (types.ID, error) {
 	query := `
 		INSERT INTO sources (user_id, name, type, settings)
-		VALUES ($1, $2, $3, $4);
+		VALUES ($1, $2, $3, $4)
+		RETURNING id;
 	`
 	args := []any{userId, source.GetName(), source.GetType(), source.GetSettings()}
+
+	var id uuid.UUID
+	err := db.connection.QueryRow(query, args...).Scan(&id)
+
+	if err != nil {
+		return types.EmptyId(), fmt.Errorf("could not insert source: %v", err)
+	}
+
+	return types.IdFromUuid(id), nil
+}
+
+func (db *Database) UpdateSource(userId uuid.UUID, source sources.Source) error {
+	query := `
+		UPDATE sources
+		SET name = $1, settings = $2
+		WHERE user_id = $3 AND id = $4;
+	`
+	args := []any{source.GetName(), source.GetSettings(), userId, source.GetId()}
 
 	_, err := db.connection.Exec(query, args...)
 
 	if err != nil {
-		return fmt.Errorf("could not insert source: %v", err)
+		return fmt.Errorf("could not update source: %v", err)
+	}
+
+	return nil
+}
+
+func (db *Database) DeleteSource(userId uuid.UUID, sourceId types.ID) error {
+	tag, err := db.connection.Exec(`
+		DELETE FROM sources
+		WHERE user_id = $1 AND id = $2;
+	`, userId, sourceId)
+	if err != nil {
+		return fmt.Errorf("could not delete source: %v", err)
+	}
+	if tag.RowsAffected() == 0 {
+		// TODO: consider not returning an error here
+		// TODO: this is of essence on lossy networks
+		// TODO: if the first delete confirmation fails and the user retries,
+		// TODO: we can simply confirm that the source no longer exists
+		return fmt.Errorf("could not delete source: source not found")
 	}
 
 	return nil

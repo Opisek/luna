@@ -1,11 +1,14 @@
 package util
 
-import "luna-backend/sources"
+import (
+	"luna-backend/sources"
+	"luna-backend/types"
+)
 
 // TODO: this will become better and will use a map once there is user logic and persistance
 var Sources []sources.Source
 
-func GetSource(id sources.SourceId) sources.Source {
+func GetSource(id types.ID) sources.Source {
 	for _, source := range Sources {
 		if source.GetId() == id {
 			return source

@@ -43,8 +43,8 @@ func (api *Api) Run() {
 	sourcesEndpoints := authenticatedEndpoints.Group("/sources")
 	sourcesEndpoints.GET("", getSources)
 	sourcesEndpoints.PUT("", putSource)
-	sourcesEndpoints.PATCH("/:sourceId", notImplemented)
-	sourcesEndpoints.DELETE("/:sourceId", notImplemented)
+	sourcesEndpoints.PATCH("/:sourceId", patchSource)
+	sourcesEndpoints.DELETE("/:sourceId", deleteSource)
 
 	// /api/sources/.../calendars/*
 	calendarsEndpoints := sourcesEndpoints.Group("/:sourceId/calendars")

@@ -2,13 +2,13 @@ package ical
 
 import (
 	"luna-backend/auth"
-	"luna-backend/sources"
 	"luna-backend/types"
 )
 
 func NewIcalSource(url *types.Url, auth auth.AuthMethod) *IcalSource {
 	return &IcalSource{
-		id: sources.NewRandomSourceId(),
+		//id: types.RandomId(),
+		id: types.EmptyId(), // Placeholder until the database assigns an ID
 		settings: &IcalSettings{
 			Url:  url,
 			Auth: auth,

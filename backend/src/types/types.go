@@ -5,11 +5,14 @@ import (
 	"image/color"
 	"net/url"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type Calendar struct {
-	Source string      `json:"-"`
-	Id     string      `json:"id"`
+	Source ID          `json:"-"`
+	Id     ID          `json:"id"`
+	Path   string      `json:"path"`
 	Name   string      `json:"name"`
 	Desc   string      `json:"desc"`
 	Color  *color.RGBA `json:"color"`
@@ -23,7 +26,7 @@ type Event struct {
 }
 
 type User struct {
-	Id        string `json:"id"`
+	Id        ID     `json:"id"`
 	Username  string `json:"username"`
 	Password  string `json:"-"`
 	Algorithm string `json:"-"`
@@ -63,4 +66,41 @@ func NewUrl(rawUrl string) (*Url, error) {
 		return nil, err
 	}
 	return (*Url)(URL), nil
+}
+
+type ID uuid.UUID
+
+func EmptyId() ID {
+	return ID(uuid.Nil)
+}
+
+func RandomId() ID {
+	id, _ := uuid.NewRandom()
+	return IdFromUuid(id)
+}
+
+func (id ID) String() string {
+	uuids := uuid.UUIDs([]uuid.UUID{uuid.UUID(id)})
+	strings := uuids.Strings()
+	return strings[0]
+}
+
+func IdFromBytes(bytes []byte) (ID, error) {
+	id, err := uuid.FromBytes(bytes)
+	if err != nil {
+		return EmptyId(), err
+	}
+	return IdFromUuid(id), nil
+}
+
+func IdFromString(str string) (ID, error) {
+	id, err := uuid.Parse(str)
+	if err != nil {
+		return EmptyId(), err
+	}
+	return IdFromUuid(id), nil
+}
+
+func IdFromUuid(uu uuid.UUID) ID {
+	return ID(uu)
 }

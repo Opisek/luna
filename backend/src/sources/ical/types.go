@@ -2,14 +2,13 @@ package ical
 
 import (
 	"luna-backend/auth"
-	"luna-backend/sources"
 	"luna-backend/types"
 
 	ics "github.com/arran4/golang-ical"
 )
 
 type IcalSource struct {
-	id       sources.SourceId
+	id       types.ID
 	settings *IcalSettings
 }
 
@@ -18,7 +17,7 @@ type IcalSettings struct {
 	Auth auth.AuthMethod
 }
 
-func (source *IcalSource) GetId() sources.SourceId {
+func (source *IcalSource) GetId() types.ID {
 	return source.id
 }
 
@@ -29,8 +28,9 @@ func (source *IcalSource) calendarFromIcal(rawCalendar *ics.Calendar) *types.Cal
 	}
 
 	return &types.Calendar{
-		Source: source.GetId().String(),
-		Id:     "", // for now we assume that one ical link corresponds to exactly one calendar
+		Source: source.GetId(),
+		Id:     types.EmptyId(), // TODO: placeholder
+		Path:   "",              // TODO: placeholder
 		Name:   properties[string(ics.PropertyXWRCalName)],
 		Desc:   properties[string(ics.PropertyXWRCalDesc)],
 		Color:  nil,
