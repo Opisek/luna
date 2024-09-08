@@ -1,7 +1,6 @@
 package db
 
 import (
-	"errors"
 	"fmt"
 	"luna-backend/common"
 )
@@ -19,9 +18,7 @@ func (db *Database) RunMigrations(lastVersion *common.Version) error {
 				err := migration(db)
 				if err != nil {
 					ver := common.Ver(major, minor, patch)
-					err := errors.Join(fmt.Errorf("error running migration for %v", ver.String()), err)
-					db.logger.Error(err)
-					return err
+					return fmt.Errorf("error running migration for %v: %v", ver.String(), err)
 				}
 			}
 		}
@@ -60,7 +57,7 @@ func init() {
 		`)
 
 		if err != nil {
-			return errors.Join(errors.New("could not create extension pgcrypto"), err)
+			return fmt.Errorf("could not create extension pgcrypto: %v", err)
 		}
 
 		// Sources enum
@@ -71,7 +68,7 @@ func init() {
 			);
 		`)
 		if err != nil {
-			return errors.Join(errors.New("could not create source_type enum"), err)
+			return fmt.Errorf("could not create source_type enum: %v", err)
 		}
 
 		// Auth enum
@@ -83,13 +80,23 @@ func init() {
 			);
 		`)
 		if err != nil {
-			return errors.Join(errors.New("could not create source_type enum"), err)
+			return fmt.Errorf("could not create auth_type enum: %v", err)
 		}
 
 		// Tables
-		err = db.InitializeTables()
+		err = db.initalizeVersionTable()
 		if err != nil {
-			return errors.Join(errors.New("could not initialize tables"), err)
+			return fmt.Errorf("could not initialize version table: %v", err)
+		}
+
+		err = db.initializeUserTable()
+		if err != nil {
+			return fmt.Errorf("could not initialize user table: %v", err)
+		}
+
+		err = db.initializeSourcesTable()
+		if err != nil {
+			return fmt.Errorf("could not initialize sources table: %v", err)
 		}
 
 		return nil

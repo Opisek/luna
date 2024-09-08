@@ -42,6 +42,10 @@ func (v1 *Version) IsGreaterThan(v2 *Version) bool {
 	return false
 }
 
+func (v1 *Version) IsEqualTo(v2 *Version) bool {
+	return v1.Major == v2.Major && v1.Minor == v2.Minor && v1.Patch == v2.Patch
+}
+
 func ParseVersion(verstr string) (Version, error) {
 	ver := Version{}
 

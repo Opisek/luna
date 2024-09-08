@@ -24,7 +24,6 @@ func ParseEnvironmental(logger *logrus.Entry) (Environmental, error) {
 	err := godotenv.Load()
 	if err != nil {
 		logger.Warnf("could not load .env file: %v", err)
-		//return env, errors.Join(errors.New("could not load .env file: "), err)
 	}
 
 	reflected := reflect.Indirect(reflect.ValueOf(&env))

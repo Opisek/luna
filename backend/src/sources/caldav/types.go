@@ -5,7 +5,6 @@ import (
 	"luna-backend/auth"
 	"luna-backend/sources"
 	"luna-backend/types"
-	"net/url"
 
 	"github.com/emersion/go-webdav/caldav"
 )
@@ -19,7 +18,7 @@ type CaldavSource struct {
 }
 
 type CaldavSettings struct {
-	Url *url.URL `json:"url"`
+	Url *types.Url `json:"url"`
 }
 
 func (source *CaldavSource) GetType() string {

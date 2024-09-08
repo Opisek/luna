@@ -1,6 +1,9 @@
 package db
 
-import "luna-backend/common"
+import (
+	"fmt"
+	"luna-backend/common"
+)
 
 func (db *Database) initalizeVersionTable() error {
 	// Keeps track of the current backend version as well as stores past
@@ -28,8 +31,7 @@ func (db *Database) GetLatestVersion() (common.Version, error) {
 
 	err = db.initalizeVersionTable()
 	if err != nil {
-		db.logger.Errorf("could not initialize version table: %v", err)
-		return common.Version{}, err
+		return common.Version{}, fmt.Errorf("could not get latest version: could not initialize version table: %v", err)
 	}
 
 	var rowCount int
@@ -38,8 +40,7 @@ func (db *Database) GetLatestVersion() (common.Version, error) {
 		FROM version;	
 	`).Scan(&rowCount)
 	if err != nil {
-		db.logger.Errorf("could not get latest version: %v", err)
-		return common.Version{}, err
+		return common.Version{}, fmt.Errorf("could not get latest version: %v", err)
 	}
 
 	if rowCount == 0 {
@@ -55,8 +56,7 @@ func (db *Database) GetLatestVersion() (common.Version, error) {
 		LIMIT 1
 	`).Scan(&version.Major, &version.Minor, &version.Patch, &version.Extension)
 	if err != nil {
-		db.logger.Errorf("could not get latest version: %v", err)
-		return common.EmptyVersion(), err
+		return common.EmptyVersion(), fmt.Errorf("could not get latest version: %v", err)
 	}
 
 	return version, nil
@@ -69,8 +69,7 @@ func (db *Database) UpdateVersion(version common.Version) error {
 		VALUES ($1, $2, $3, $4, NOW());
 	`, version.Major, version.Minor, version.Patch, version.Extension)
 	if err != nil {
-		db.logger.Errorf("could not update version: %v", err)
-		return err
+		return fmt.Errorf("could not update version: %v", err)
 	}
 
 	return nil

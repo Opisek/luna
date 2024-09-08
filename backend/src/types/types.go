@@ -1,7 +1,9 @@
 package types
 
 import (
+	"encoding/json"
 	"image/color"
+	"net/url"
 	"time"
 )
 
@@ -27,4 +29,38 @@ type User struct {
 	Algorithm string `json:"-"`
 	Email     string `json:"email"`
 	Admin     bool   `json:"admin"`
+}
+
+type Url url.URL
+
+func (u *Url) MarshalJSON() ([]byte, error) {
+	if u == nil {
+		return json.Marshal(nil)
+	}
+	return json.Marshal(u.URL().String())
+}
+
+func (u *Url) UnmarshalJSON(data []byte) error {
+	var rawUrl string
+	if err := json.Unmarshal(data, &rawUrl); err != nil {
+		return err
+	}
+	URL, err := url.Parse(rawUrl)
+	if err != nil {
+		return err
+	}
+	*u = Url(*URL)
+	return nil
+}
+
+func (u *Url) URL() *url.URL {
+	return (*url.URL)(u)
+}
+
+func NewUrl(rawUrl string) (*Url, error) {
+	URL, err := url.Parse(rawUrl)
+	if err != nil {
+		return nil, err
+	}
+	return (*Url)(URL), nil
 }

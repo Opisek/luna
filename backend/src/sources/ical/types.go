@@ -4,7 +4,6 @@ import (
 	"luna-backend/auth"
 	"luna-backend/sources"
 	"luna-backend/types"
-	"net/url"
 
 	ics "github.com/arran4/golang-ical"
 )
@@ -15,7 +14,7 @@ type IcalSource struct {
 }
 
 type IcalSettings struct {
-	Url  *url.URL
+	Url  *types.Url
 	Auth auth.AuthMethod
 }
 

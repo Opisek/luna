@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"luna-backend/api"
 	"luna-backend/common"
 	"luna-backend/db"
@@ -29,7 +28,7 @@ func main() {
 
 	env, err := common.ParseEnvironmental(mainLogger)
 	if err != nil {
-		mainLogger.Error(errors.Join(errors.New("could not parse environmental variables: "), err))
+		mainLogger.Errorf("could not parse environmental variables: %v", err)
 		os.Exit(1)
 	}
 
@@ -56,9 +55,11 @@ func main() {
 	if err != nil {
 		os.Exit(1)
 	}
-	err = db.UpdateVersion(commonConfig.Version)
-	if err != nil {
-		os.Exit(1)
+	if !latestUsedVersion.IsEqualTo(&commonConfig.Version) {
+		err = db.UpdateVersion(commonConfig.Version)
+		if err != nil {
+			os.Exit(1)
+		}
 	}
 
 	//caldavUrl, err := url.Parse(os.Getenv("CALDAV_URL"))

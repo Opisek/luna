@@ -30,11 +30,7 @@ func login(c *gin.Context) {
 	// Check if the user exists
 	userId, err := apiConfig.db.GetUserIdFromUsername(credentials.Username)
 	if err != nil {
-		apiConfig.logger.Error(errors.Join(
-			topErr,
-			errors.New("could not get user id"),
-			err,
-		))
+		apiConfig.logger.Errorf("%v: could not get user id for user %v: %v", topErr, credentials.Username, err)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
 		return
 	}
@@ -42,22 +38,14 @@ func login(c *gin.Context) {
 	// Get the user's password
 	savedPassword, algorithm, err := apiConfig.db.GetPassword(userId)
 	if err != nil {
-		apiConfig.logger.Error(errors.Join(
-			topErr,
-			errors.New("could not get password"),
-			err,
-		))
+		apiConfig.logger.Errorf("%v: could not get password for user %v: %v", topErr, credentials.Username, err)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
 		return
 	}
 
 	// Verify the password
 	if !auth.VerifyPassword(credentials.Password, savedPassword, algorithm) {
-		apiConfig.logger.Error(errors.Join(
-			topErr,
-			errors.New("passwords do not match"),
-			err,
-		))
+		apiConfig.logger.Errorf("%v: passwords do not match", topErr)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
 		return
 	}
@@ -67,22 +55,22 @@ func login(c *gin.Context) {
 		apiConfig.logger.Infof("updating password %v for user to newer algorithm", credentials.Username)
 		hash, alg, err := auth.SecurePassword(credentials.Password)
 		if err != nil {
-			apiConfig.logger.Error(errors.Join(errors.New("could not update password"), err))
+			apiConfig.logger.Errorf("%v: could not hash password: %v", topErr, err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "rehashing failed"})
+			return
 		}
 		err = apiConfig.db.UpdatePassword(userId, hash, alg)
 		if err != nil {
-			apiConfig.logger.Error(errors.Join(errors.New("could not update password"), err))
+			apiConfig.logger.Errorf("%v: could not update password: %v", topErr, err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "rehashing failed"})
+			return
 		}
 	}
 
 	// Generate the token
 	token, err := auth.NewToken(userId)
 	if err != nil {
-		apiConfig.logger.Error(errors.Join(
-			topErr,
-			errors.New("could not generate token"),
-			err,
-		))
+		apiConfig.logger.Errorf("%v: could not generate token: %v", topErr, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not generate token"})
 		return
 	}
@@ -114,32 +102,29 @@ func register(c *gin.Context) {
 
 	hash, alg, err := auth.SecurePassword(payload.Password)
 	if err != nil {
-		apiConfig.logger.Error(errors.Join(
-			topErr,
-			errors.New("could not hash password"),
-			err,
-		))
+		apiConfig.logger.Errorf("%v: could not hash password: %v", topErr, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to register"})
 		return
 	}
 
-	isFirstUser := !apiConfig.db.AnyUsersExist()
+	usersExist, err := apiConfig.db.AnyUsersExist()
+	if err != nil {
+		apiConfig.logger.Errorf("%v: could not check if users exist: %v", topErr, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to register"})
+		return
+	}
 
 	user := &types.User{
 		Username:  payload.Username,
 		Password:  hash,
 		Algorithm: alg,
 		Email:     payload.Email,
-		Admin:     isFirstUser,
+		Admin:     !usersExist,
 	}
 
 	err = apiConfig.db.AddUser(user)
 	if err != nil {
-		apiConfig.logger.Error(errors.Join(
-			topErr,
-			errors.New("could not add user"),
-			err,
-		))
+		apiConfig.logger.Errorf("%v: could not add user: %v", topErr, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to register"})
 		return
 	}

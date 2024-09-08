@@ -3,10 +3,10 @@ package ical
 import (
 	"luna-backend/auth"
 	"luna-backend/sources"
-	"net/url"
+	"luna-backend/types"
 )
 
-func NewIcalSource(url *url.URL, auth auth.AuthMethod) *IcalSource {
+func NewIcalSource(url *types.Url, auth auth.AuthMethod) *IcalSource {
 	return &IcalSource{
 		id: sources.NewRandomSourceId(),
 		settings: &IcalSettings{

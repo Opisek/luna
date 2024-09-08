@@ -2,11 +2,11 @@ package api
 
 import (
 	"net/http"
-	"net/url"
 
 	"luna-backend/auth"
 	"luna-backend/sources"
 	"luna-backend/sources/caldav"
+	"luna-backend/types"
 
 	"github.com/gin-gonic/gin"
 )
@@ -39,7 +39,7 @@ func getSources(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusOK, gin.H{"sources": sources})
+	c.JSON(http.StatusOK, exposedSources)
 }
 
 func putSource(c *gin.Context) {
@@ -97,7 +97,7 @@ func putSource(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "missing caldav url"})
 			return
 		}
-		sourceUrl, err := url.Parse(rawUrl)
+		sourceUrl, err := types.NewUrl(rawUrl)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid caldav url"})
 			return

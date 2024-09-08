@@ -10,7 +10,7 @@ import (
 func (source *IcalSource) GetCalendars() ([]*types.Calendar, error) {
 	res, err := source.settings.Auth.Do(&http.Request{
 		Method: "GET",
-		URL:    source.settings.Url,
+		URL:    source.settings.Url.URL(),
 	})
 	if err != nil {
 		return nil, err

@@ -3,12 +3,12 @@ package caldav
 import (
 	"luna-backend/auth"
 	"luna-backend/sources"
-	"net/url"
+	"luna-backend/types"
 
 	"github.com/emersion/go-webdav/caldav"
 )
 
-func NewCaldavSource(name string, url *url.URL, auth auth.AuthMethod) *CaldavSource {
+func NewCaldavSource(name string, url *types.Url, auth auth.AuthMethod) *CaldavSource {
 	return &CaldavSource{
 		id:   sources.NewRandomSourceId(),
 		name: name,
@@ -33,7 +33,7 @@ func (source *CaldavSource) getClient() (*caldav.Client, error) {
 		var err error
 		source.client, err = caldav.NewClient(
 			source.auth,
-			source.settings.Url.String(),
+			source.settings.Url.URL().String(),
 		)
 
 		if err != nil {

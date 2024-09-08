@@ -2,7 +2,7 @@ package db
 
 import (
 	"encoding/json"
-	"errors"
+	"fmt"
 	"luna-backend/sources"
 	"luna-backend/sources/caldav"
 
@@ -31,7 +31,7 @@ func (db *Database) initializeSourcesTable() error {
 		);
 	`)
 	if err != nil {
-		return errors.Join(errors.New("could not create sources table"), err)
+		return fmt.Errorf("could not create sources table: %v", err)
 	}
 
 	return nil
@@ -46,7 +46,6 @@ func (db *Database) GetSources(userId uuid.UUID) ([]sources.Source, error) {
 		WHERE user_id = $1;
 	`, userId)
 	if err != nil {
-		db.logger.Errorf("could not get sources: %v", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -56,8 +55,7 @@ func (db *Database) GetSources(userId uuid.UUID) ([]sources.Source, error) {
 		sourceEntry := sourceEntry{}
 		err = rows.Scan(&sourceEntry.Id, &sourceEntry.Name, &sourceEntry.Type, &sourceEntry.Settings)
 		if err != nil {
-			db.logger.Errorf("could not scan source row: %v", err)
-			return nil, err
+			return nil, fmt.Errorf("could not scan source row: %v", err)
 		}
 
 		switch sourceEntry.Type {
@@ -65,8 +63,7 @@ func (db *Database) GetSources(userId uuid.UUID) ([]sources.Source, error) {
 			settings := &caldav.CaldavSettings{}
 			err = json.Unmarshal([]byte(sourceEntry.Settings), settings)
 			if err != nil {
-				db.logger.Errorf("could not unmarshal caldav settings: %v", err)
-				return nil, err
+				return nil, fmt.Errorf("could not unmarshal caldav settings: %v", err)
 			}
 			caldavSource := caldav.PackCaldavSource(
 				sourceEntry.Id,
@@ -78,8 +75,7 @@ func (db *Database) GetSources(userId uuid.UUID) ([]sources.Source, error) {
 		case "ical":
 			fallthrough
 		default:
-			db.logger.Errorf("unknown source type: %v", sourceEntry.Type)
-			return nil, errors.New("unknown source type")
+			return nil, fmt.Errorf("unknown source type: %v", sourceEntry.Type)
 		}
 	}
 
@@ -96,8 +92,8 @@ func (db *Database) InsertSource(userId uuid.UUID, source sources.Source) error 
 	_, err := db.connection.Exec(query, args...)
 
 	if err != nil {
-		db.logger.Errorf("could not insert source: %v", err)
+		return fmt.Errorf("could not insert source: %v", err)
 	}
 
-	return err
+	return nil
 }
