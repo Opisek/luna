@@ -29,6 +29,8 @@ func (db *Database) initializeSourcesTable() error {
 			name VARCHAR(255) NOT NULL,
 			type source_type NOT NULL,
 			settings JSONB NOT NULL
+			auth_type auth_type NOT NULL,
+			auth JSONB NOT NULL
 		);
 	`)
 	if err != nil {
@@ -41,6 +43,7 @@ func (db *Database) initializeSourcesTable() error {
 func (db *Database) GetSources(userId types.ID) ([]sources.Source, error) {
 	var err error
 
+	// TODO: also get auth_type and auth?
 	rows, err := db.connection.Query(`
 		SELECT id, name, type, settings
 		FROM sources
@@ -85,11 +88,11 @@ func (db *Database) GetSources(userId types.ID) ([]sources.Source, error) {
 
 func (db *Database) InsertSource(userId types.ID, source sources.Source) (types.ID, error) {
 	query := `
-		INSERT INTO sources (user_id, name, type, settings)
-		VALUES ($1, $2, $3, $4)
+		INSERT INTO sources (user_id, name, type, settings, auth_type, auth)
+		VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING id;
 	`
-	args := []any{userId, source.GetName(), source.GetType(), source.GetSettings()}
+	args := []any{userId, source.GetName(), source.GetType(), source.GetSettings(), source.GetAuth().GetType(), source.GetAuth()}
 
 	var id types.ID
 	err := db.connection.QueryRow(query, args...).Scan(&id)
