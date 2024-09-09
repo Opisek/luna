@@ -108,3 +108,14 @@ func IdFromString(str string) (ID, error) {
 func IdFromUuid(uu uuid.UUID) ID {
 	return ID(uu)
 }
+
+const (
+	SourceCaldav = "caldav"
+	SourceIcal   = "ical"
+)
+
+const (
+	AuthNone   = "none"
+	AuthBasic  = "basic"
+	AuthBearer = "bearer"
+)

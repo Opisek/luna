@@ -6,11 +6,6 @@ import (
 	"time"
 )
 
-const (
-	SourceCaldav = "caldav"
-	SourceIcal   = "ical"
-)
-
 type Source interface {
 	GetType() string
 	GetId() types.ID

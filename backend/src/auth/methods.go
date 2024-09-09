@@ -1,11 +1,8 @@
 package auth
 
-import "net/http"
-
-const (
-	AuthNone   = "none"
-	AuthBasic  = "basic"
-	AuthBearer = "bearer"
+import (
+	"luna-backend/types"
+	"net/http"
 )
 
 type AuthMethod interface {
@@ -22,7 +19,7 @@ func (auth NoAuth) Do(req *http.Request) (*http.Response, error) {
 }
 
 func (auth NoAuth) GetType() string {
-	return AuthNone
+	return types.AuthNone
 }
 
 func NewNoAuth() AuthMethod {
@@ -42,7 +39,7 @@ func (auth BasicAuth) Do(req *http.Request) (*http.Response, error) {
 }
 
 func (auth BasicAuth) GetType() string {
-	return AuthBasic
+	return types.AuthBasic
 }
 
 func NewBasicAuth(username, password string) AuthMethod {
@@ -61,7 +58,7 @@ func (auth BearerAuth) Do(req *http.Request) (*http.Response, error) {
 }
 
 func (auth BearerAuth) GetType() string {
-	return AuthBearer
+	return types.AuthBearer
 }
 
 func NewBearerAuth(token string) AuthMethod {

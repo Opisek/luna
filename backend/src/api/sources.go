@@ -48,9 +48,9 @@ func parseAuthMethod(c *gin.Context) (auth.AuthMethod, error) {
 
 	authType := c.PostForm("auth_type")
 	switch authType {
-	case auth.AuthNone:
+	case types.AuthNone:
 		sourceAuth = auth.NewNoAuth()
-	case auth.AuthBasic:
+	case types.AuthBasic:
 		username := c.PostForm("auth_username")
 		password := c.PostForm("auth_password")
 		if username == "" || password == "" {
@@ -58,7 +58,7 @@ func parseAuthMethod(c *gin.Context) (auth.AuthMethod, error) {
 		}
 
 		sourceAuth = auth.NewBasicAuth(username, password)
-	case auth.AuthBearer:
+	case types.AuthBearer:
 		token := c.PostForm("auth_token")
 		if token == "" {
 			return nil, errors.New("missing token")
@@ -79,7 +79,7 @@ func parseSource(c *gin.Context, sourceName string, sourceAuth auth.AuthMethod) 
 
 	sourceType := c.PostForm("type")
 	switch sourceType {
-	case sources.SourceCaldav:
+	case types.SourceCaldav:
 		rawUrl := c.PostForm("url")
 		if rawUrl == "" {
 			return nil, errors.New("missing caldav url")
@@ -90,7 +90,7 @@ func parseSource(c *gin.Context, sourceName string, sourceAuth auth.AuthMethod) 
 		}
 
 		source = caldav.NewCaldavSource(sourceName, sourceUrl, sourceAuth)
-	case sources.SourceIcal:
+	case types.SourceIcal:
 		fallthrough
 	default:
 		return nil, errors.New("invalid source type")

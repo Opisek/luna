@@ -3,7 +3,6 @@ package caldav
 import (
 	"encoding/json"
 	"luna-backend/auth"
-	"luna-backend/sources"
 	"luna-backend/types"
 
 	"github.com/emersion/go-webdav/caldav"
@@ -22,7 +21,7 @@ type CaldavSettings struct {
 }
 
 func (source *CaldavSource) GetType() string {
-	return sources.SourceCaldav
+	return types.SourceCaldav
 }
 
 func (source *CaldavSource) GetId() types.ID {
