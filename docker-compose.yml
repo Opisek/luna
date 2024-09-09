@@ -20,7 +20,7 @@ services:
       dockerfile: Dockerfile
 
   luna-postgres:
-    image: postgres:16
+    image: postgres:16-alpine
     container_name: luna-postgres
     ports:
       - "5432:5432"
