@@ -3,7 +3,6 @@ package api
 import (
 	"luna-backend/common"
 	"luna-backend/db"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -61,14 +60,4 @@ func (api *Api) Run() {
 	eventEndpoints.DELETE("/:eventId", notImplemented)
 
 	router.Run(":3000")
-}
-
-func getConfig(c *gin.Context) *Api {
-	// TODO: consider changing to "MustGet"
-	apiConfig, err := c.Get("apiConfig")
-	if !err {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "context error"})
-		return nil
-	}
-	return apiConfig.(*Api)
 }

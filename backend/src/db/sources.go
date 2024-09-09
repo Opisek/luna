@@ -3,11 +3,11 @@ package db
 import (
 	"encoding/json"
 	"fmt"
+	"luna-backend/auth"
 	"luna-backend/sources"
 	"luna-backend/sources/caldav"
 	"luna-backend/types"
-
-	"github.com/google/uuid"
+	"strings"
 )
 
 type sourceEntry struct {
@@ -38,7 +38,7 @@ func (db *Database) initializeSourcesTable() error {
 	return nil
 }
 
-func (db *Database) GetSources(userId uuid.UUID) ([]sources.Source, error) {
+func (db *Database) GetSources(userId types.ID) ([]sources.Source, error) {
 	var err error
 
 	rows, err := db.connection.Query(`
@@ -83,7 +83,7 @@ func (db *Database) GetSources(userId uuid.UUID) ([]sources.Source, error) {
 	return sources, nil
 }
 
-func (db *Database) InsertSource(userId uuid.UUID, source sources.Source) (types.ID, error) {
+func (db *Database) InsertSource(userId types.ID, source sources.Source) (types.ID, error) {
 	query := `
 		INSERT INTO sources (user_id, name, type, settings)
 		VALUES ($1, $2, $3, $4)
@@ -91,23 +91,39 @@ func (db *Database) InsertSource(userId uuid.UUID, source sources.Source) (types
 	`
 	args := []any{userId, source.GetName(), source.GetType(), source.GetSettings()}
 
-	var id uuid.UUID
+	var id types.ID
 	err := db.connection.QueryRow(query, args...).Scan(&id)
 
 	if err != nil {
 		return types.EmptyId(), fmt.Errorf("could not insert source: %v", err)
 	}
 
-	return types.IdFromUuid(id), nil
+	return id, nil
 }
 
-func (db *Database) UpdateSource(userId uuid.UUID, source sources.Source) error {
-	query := `
+func (db *Database) UpdateSource(userId types.ID, sourceId types.ID, newName string, newAuth auth.AuthMethod, newSourceType string, newSourceSettings []byte) error {
+	changes := []string{}
+	args := []any{}
+
+	if newName != "" {
+		changes = append(changes, fmt.Sprintf("name = $%d", len(changes)+1))
+		args = append(args, newName)
+	}
+	if newAuth != nil {
+		changes = append(changes, fmt.Sprintf("auth = $%d", len(changes)+1))
+		args = append(args, newAuth)
+	}
+	if newSourceType != "" {
+		changes = append(changes, fmt.Sprintf("type = $%d", len(changes)+1), fmt.Sprintf("settings = $%d", len(changes)+2))
+		args = append(args, newSourceType, newSourceSettings)
+	}
+
+	query := fmt.Sprintf(`
 		UPDATE sources
-		SET name = $1, settings = $2
-		WHERE user_id = $3 AND id = $4;
-	`
-	args := []any{source.GetName(), source.GetSettings(), userId, source.GetId()}
+		SET %s
+		WHERE user_id = $%d AND id = $%d;
+	`, strings.Join(changes, ", "), len(changes)+1, len(changes)+2)
+	args = append(args, userId, sourceId)
 
 	_, err := db.connection.Exec(query, args...)
 
@@ -118,7 +134,7 @@ func (db *Database) UpdateSource(userId uuid.UUID, source sources.Source) error 
 	return nil
 }
 
-func (db *Database) DeleteSource(userId uuid.UUID, sourceId types.ID) error {
+func (db *Database) DeleteSource(userId types.ID, sourceId types.ID) error {
 	tag, err := db.connection.Exec(`
 		DELETE FROM sources
 		WHERE user_id = $1 AND id = $2;

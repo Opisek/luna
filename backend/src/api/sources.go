@@ -1,6 +1,7 @@
 package api
 
 import (
+	"errors"
 	"net/http"
 
 	"luna-backend/auth"
@@ -42,22 +43,7 @@ func getSources(c *gin.Context) {
 	c.JSON(http.StatusOK, exposedSources)
 }
 
-func putSource(c *gin.Context) {
-	apiConfig := getConfig(c)
-	if apiConfig == nil {
-		return
-	}
-
-	userId := getUserId(c)
-
-	var source sources.Source
-
-	sourceName := c.PostForm("name")
-	if sourceName == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "missing name"})
-		return
-	}
-
+func parseAuthMethod(c *gin.Context) (auth.AuthMethod, error) {
 	var sourceAuth auth.AuthMethod
 
 	authType := c.PostForm("auth_type")
@@ -68,55 +54,82 @@ func putSource(c *gin.Context) {
 		username := c.PostForm("auth_username")
 		password := c.PostForm("auth_password")
 		if username == "" || password == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "missing username or password"})
-			return
+			return nil, errors.New("missing username or password")
 		}
 
 		sourceAuth = auth.NewBasicAuth(username, password)
 	case auth.AuthBearer:
 		token := c.PostForm("auth_token")
 		if token == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "missing token"})
-			return
+			return nil, errors.New("missing token")
 		}
 
 		sourceAuth = auth.NewBearerAuth(token)
 	case "":
-		c.JSON(http.StatusBadRequest, gin.H{"error": "missing auth type"})
-		return
+		return nil, errors.New("missing auth type")
 	default:
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid auth type"})
-		return
+		return nil, errors.New("invalid auth type")
 	}
+
+	return sourceAuth, nil
+}
+
+func parseSource(c *gin.Context, sourceName string, sourceAuth auth.AuthMethod) (sources.Source, error) {
+	var source sources.Source
 
 	sourceType := c.PostForm("type")
 	switch sourceType {
 	case sources.SourceCaldav:
 		rawUrl := c.PostForm("url")
 		if rawUrl == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "missing caldav url"})
-			return
+			return nil, errors.New("missing caldav url")
 		}
 		sourceUrl, err := types.NewUrl(rawUrl)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid caldav url"})
-			return
+			return nil, errors.New("invalid caldav url")
 		}
 
 		source = caldav.NewCaldavSource(sourceName, sourceUrl, sourceAuth)
 	case sources.SourceIcal:
 		fallthrough
 	default:
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid source type"})
-		return
+		return nil, errors.New("invalid source type")
 	case "":
-		c.JSON(http.StatusBadRequest, gin.H{"error": "missing source type"})
+		return nil, errors.New("missing source type")
+	}
+
+	return source, nil
+}
+
+func putSource(c *gin.Context) {
+	apiConfig := getConfig(c)
+	if apiConfig == nil {
+		return
+	}
+
+	userId := getUserId(c)
+
+	sourceName := c.PostForm("name")
+	if sourceName == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing name"})
+		return
+	}
+
+	sourceAuth, err := parseAuthMethod(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	source, err := parseSource(c, sourceName, sourceAuth)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	id, err := apiConfig.db.InsertSource(userId, source)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not add source"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -124,29 +137,56 @@ func putSource(c *gin.Context) {
 }
 
 func patchSource(c *gin.Context) {
-	notImplemented(c)
+	apiConfig := getConfig(c)
+	if apiConfig == nil {
+		return
+	}
 
-	//apiConfig := getConfig(c)
-	//if apiConfig == nil {
-	//	return
-	//}
+	var err error
 
-	//userId := getUserId(c)
-	//rawSourceId := c.Param("sourceId")
+	userId := getUserId(c)
+	sourceId, err := getSourceId(c)
+	if err != nil {
+		apiConfig.logger.Errorf("could not get source id: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "malformed or missing source id"})
+		return
+	}
 
-	//if rawSourceId == "" {
-	//	apiConfig.logger.Error("could not patch source: missing source id")
-	//	c.JSON(http.StatusBadRequest, gin.H{"error": "missing source id"})
-	//	return
-	//}
-	//sourceId, err := sources.SourceIdFromString(rawSourceId)
-	//if err != nil {
-	//	apiConfig.logger.Errorf("could not patch source: malformed source id: %v", err)
-	//	c.JSON(http.StatusBadRequest, gin.H{"error": "malformed source id"})
-	//	return
-	//}
+	newName := c.PostForm("name")
+	newType := c.PostForm("type")
+	newAuthType := c.PostForm("auth_type")
 
-	//var source sources.Source
+	if newName == "" && newType == "" && newAuthType == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "no fields to update"})
+		return
+	}
+
+	var newAuth auth.AuthMethod = nil
+	if newAuthType != "" {
+		newAuth, err = parseAuthMethod(c)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "malformed auth"})
+			return
+		}
+	}
+
+	var newSource sources.Source = nil
+	if newType != "" {
+		newSource, err = parseSource(c, newName, newAuth)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+	}
+
+	err = apiConfig.db.UpdateSource(userId, sourceId, newName, newAuth, newType, newSource.GetSettings())
+	if err != nil {
+		apiConfig.logger.Errorf("could not update source: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not update source"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{})
 }
 
 func deleteSource(c *gin.Context) {
@@ -156,17 +196,10 @@ func deleteSource(c *gin.Context) {
 	}
 
 	userId := getUserId(c)
-	rawSourceId := c.Param("sourceId")
-
-	if rawSourceId == "" {
-		apiConfig.logger.Error("could not delete source: missing source id")
-		c.JSON(http.StatusBadRequest, gin.H{"error": "missing source id"})
-		return
-	}
-	sourceId, err := types.IdFromString(rawSourceId)
+	sourceId, err := getSourceId(c)
 	if err != nil {
-		apiConfig.logger.Errorf("could not delete source: malformed source id: %v", err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": "malformed source id"})
+		apiConfig.logger.Errorf("could not get source id: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "malformed or missing source id"})
 		return
 	}
 

@@ -1,15 +1,12 @@
 package api
 
 import (
-	"errors"
 	"fmt"
 	"luna-backend/auth"
 	"luna-backend/types"
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 )
 
 func login(c *gin.Context) {
@@ -132,20 +129,6 @@ func register(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{})
 }
 
-func getBearerToken(c *gin.Context) (string, error) {
-	header := c.Request.Header.Get("Authorization")
-	if header == "" {
-		return "", errors.New("missing bearer token")
-	}
-
-	parts := strings.Split(header, " ")
-	if len(parts) != 2 || parts[0] != "Bearer" {
-		return "", errors.New("malformed authorization header")
-	}
-
-	return parts[1], nil
-}
-
 func authMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		cookieToken, cookieErr := c.Cookie("token")
@@ -175,10 +158,4 @@ func authMiddleware() gin.HandlerFunc {
 
 		c.Next()
 	}
-}
-
-func getUserId(c *gin.Context) uuid.UUID {
-	// it's fine to panic here because getUserId is always called after the
-	// authMiddleware so we know the key must be set
-	return c.MustGet("user_id").(uuid.UUID)
 }
