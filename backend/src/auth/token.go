@@ -1,20 +1,21 @@
 package auth
 
 import (
+	"luna-backend/types"
+
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/uuid"
 )
 
 // TODO: proper key usage and algorithms in production
 var secret = []byte{'s', 'e', 'c', 'r', 'e', 't'}
 
 type JsonWebToken struct {
-	UserId uuid.UUID `json:"user_id"`
+	UserId types.ID `json:"user_id"`
 	jwt.RegisteredClaims
 }
 
-func NewToken(user uuid.UUID) (string, error) {
-	token := JsonWebToken{UserId: user}
+func NewToken(userId types.ID) (string, error) {
+	token := JsonWebToken{UserId: userId}
 
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, token)
 

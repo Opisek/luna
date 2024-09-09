@@ -62,25 +62,25 @@ func init() {
 
 		// Sources enum
 		_, err = db.connection.Exec(`
-			CREATE TYPE source_type AS ENUM (
+			CREATE TYPE SOURCE_TYPE_ENUM AS ENUM (
 				'caldav',
 				'ical'
 			);
 		`)
 		if err != nil {
-			return fmt.Errorf("could not create source_type enum: %v", err)
+			return fmt.Errorf("could not create SOURCE_TYPE enum: %v", err)
 		}
 
 		// Auth enum
 		_, err = db.connection.Exec(`
-			CREATE TYPE auth_type AS ENUM (
+			CREATE TYPE AUTH_TYPE_ENUM AS ENUM (
 				'none',
 				'basic',
 				'bearer'
 			);
 		`)
 		if err != nil {
-			return fmt.Errorf("could not create auth_type enum: %v", err)
+			return fmt.Errorf("could not create AUTH_TYPE enum: %v", err)
 		}
 
 		// Tables

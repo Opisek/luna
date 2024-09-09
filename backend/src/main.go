@@ -40,11 +40,13 @@ func main() {
 	// Connect to the database
 	err = db.Connect()
 	if err != nil {
+		mainLogger.Error(err)
 		os.Exit(1)
 	}
 	// Run migrations
 	latestUsedVersion, err := db.GetLatestVersion()
 	if err != nil {
+		mainLogger.Error(err)
 		os.Exit(1)
 	}
 	if latestUsedVersion.IsGreaterThan(&commonConfig.Version) {
@@ -53,11 +55,13 @@ func main() {
 	}
 	err = db.RunMigrations(&latestUsedVersion)
 	if err != nil {
+		mainLogger.Errorf("could not run migrations: %v", err)
 		os.Exit(1)
 	}
 	if !latestUsedVersion.IsEqualTo(&commonConfig.Version) {
 		err = db.UpdateVersion(commonConfig.Version)
 		if err != nil {
+			mainLogger.Error(err)
 			os.Exit(1)
 		}
 	}

@@ -85,6 +85,10 @@ func (id ID) String() string {
 	return strings[0]
 }
 
+func (id ID) UUID() uuid.UUID {
+	return uuid.UUID(id)
+}
+
 func IdFromBytes(bytes []byte) (ID, error) {
 	id, err := uuid.FromBytes(bytes)
 	if err != nil {

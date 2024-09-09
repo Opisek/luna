@@ -111,25 +111,29 @@ func putSource(c *gin.Context) {
 
 	sourceName := c.PostForm("name")
 	if sourceName == "" {
+		apiConfig.logger.Error("missing name")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "missing name"})
 		return
 	}
 
 	sourceAuth, err := parseAuthMethod(c)
 	if err != nil {
+		apiConfig.logger.Errorf("could not parse auth: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	source, err := parseSource(c, sourceName, sourceAuth)
 	if err != nil {
+		apiConfig.logger.Errorf("could not parse source: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	id, err := apiConfig.db.InsertSource(userId, source)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		apiConfig.logger.Errorf("could not insert source %v for user %v: %v", source.GetId().String(), userId.String(), err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not insert source"})
 		return
 	}
 

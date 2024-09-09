@@ -8,6 +8,8 @@ import (
 	"luna-backend/sources/caldav"
 	"luna-backend/types"
 	"strings"
+
+	"github.com/google/uuid"
 )
 
 type sourceEntry struct {
@@ -27,9 +29,9 @@ func (db *Database) initializeSourcesTable() error {
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 			user_id UUID REFERENCES users(id),
 			name VARCHAR(255) NOT NULL,
-			type source_type NOT NULL,
-			settings JSONB NOT NULL
-			auth_type auth_type NOT NULL,
+			type SOURCE_TYPE_ENUM NOT NULL,
+			settings JSONB NOT NULL,
+			auth_type AUTH_TYPE_ENUM NOT NULL,
 			auth JSONB NOT NULL
 		);
 	`)
@@ -48,7 +50,7 @@ func (db *Database) GetSources(userId types.ID) ([]sources.Source, error) {
 		SELECT id, name, type, settings
 		FROM sources
 		WHERE user_id = $1;
-	`, userId)
+	`, userId.UUID())
 	if err != nil {
 		return nil, err
 	}
@@ -92,16 +94,17 @@ func (db *Database) InsertSource(userId types.ID, source sources.Source) (types.
 		VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING id;
 	`
-	args := []any{userId, source.GetName(), source.GetType(), source.GetSettings(), source.GetAuth().GetType(), source.GetAuth()}
+	// TODO: encrypt auth before saving in the database
+	args := []any{userId.UUID(), source.GetName(), source.GetType(), source.GetSettings(), source.GetAuth().GetType(), source.GetAuth()}
 
-	var id types.ID
+	var id uuid.UUID
 	err := db.connection.QueryRow(query, args...).Scan(&id)
 
 	if err != nil {
 		return types.EmptyId(), fmt.Errorf("could not insert source: %v", err)
 	}
 
-	return id, nil
+	return types.IdFromUuid(id), nil
 }
 
 func (db *Database) UpdateSource(userId types.ID, sourceId types.ID, newName string, newAuth auth.AuthMethod, newSourceType string, newSourceSettings []byte) error {
@@ -126,7 +129,7 @@ func (db *Database) UpdateSource(userId types.ID, sourceId types.ID, newName str
 		SET %s
 		WHERE user_id = $%d AND id = $%d;
 	`, strings.Join(changes, ", "), len(changes)+1, len(changes)+2)
-	args = append(args, userId, sourceId)
+	args = append(args, userId.UUID(), sourceId.UUID())
 
 	_, err := db.connection.Exec(query, args...)
 
@@ -141,7 +144,7 @@ func (db *Database) DeleteSource(userId types.ID, sourceId types.ID) error {
 	tag, err := db.connection.Exec(`
 		DELETE FROM sources
 		WHERE user_id = $1 AND id = $2;
-	`, userId, sourceId)
+	`, userId.UUID(), sourceId)
 	if err != nil {
 		return fmt.Errorf("could not delete source: %v", err)
 	}

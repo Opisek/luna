@@ -54,7 +54,7 @@ func (db *Database) GetUserIdFromEmail(email string) (uuid.UUID, error) {
 	return id, err
 }
 
-func (db *Database) GetUserIdFromUsername(username string) (uuid.UUID, error) {
+func (db *Database) GetUserIdFromUsername(username string) (types.ID, error) {
 	var err error
 
 	var id uuid.UUID
@@ -65,12 +65,12 @@ func (db *Database) GetUserIdFromUsername(username string) (uuid.UUID, error) {
 		WHERE username = $1;
 	`, username).Scan(&id)
 	if err != nil {
-		return uuid.Nil, fmt.Errorf("could not get user id by username %v: %v", username, err)
+		return types.EmptyId(), fmt.Errorf("could not get user id by username %v: %v", username, err)
 	}
-	return id, err
+	return types.IdFromUuid(id), err
 }
 
-func (db *Database) GetPassword(id uuid.UUID) (string, string, error) {
+func (db *Database) GetPassword(id types.ID) (string, string, error) {
 	var err error
 
 	var password, algorithm string
@@ -79,7 +79,7 @@ func (db *Database) GetPassword(id uuid.UUID) (string, string, error) {
 		SELECT password, algorithm
 		FROM users
 		WHERE id = $1;
-	`, id).Scan(&password, &algorithm)
+	`, id.UUID()).Scan(&password, &algorithm)
 
 	if err != nil {
 		return "", "", fmt.Errorf("could not get password hash of user %v: %v", id, err)
@@ -87,14 +87,14 @@ func (db *Database) GetPassword(id uuid.UUID) (string, string, error) {
 	return password, algorithm, err
 }
 
-func (db *Database) UpdatePassword(id uuid.UUID, password string, alg string) error {
+func (db *Database) UpdatePassword(id types.ID, password string, alg string) error {
 	var err error
 
 	_, err = db.connection.Exec(`
 		UPDATE users
 		SET password = $1, algorithm = $2
 		WHERE id = $3;
-	`, password, alg, id)
+	`, password, alg, id.UUID())
 
 	if err != nil {
 		return fmt.Errorf("could not update password of user %v: %v", id, err)
