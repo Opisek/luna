@@ -33,7 +33,8 @@ func (db *Database) initializeSourcesTable() error {
 			type SOURCE_TYPE_ENUM NOT NULL,
 			settings JSONB NOT NULL,
 			auth_type BYTEA NOT NULL,
-			auth BYTEA NOT NULL
+			auth BYTEA NOT NULL,
+			UNIQUE (user_id, name)
 		);
 	`)
 	if err != nil {
