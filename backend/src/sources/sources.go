@@ -11,7 +11,11 @@ type Source interface {
 	GetId() types.ID
 	GetName() string
 	GetAuth() auth.AuthMethod
-	GetSettings() []byte
+	GetSettings() SourceSettings
 	GetCalendars() ([]*types.Calendar, error)
 	GetEvents(calendarId string, start time.Time, end time.Time) ([]*types.Event, error)
+}
+
+type SourceSettings interface {
+	GetBytes() []byte
 }

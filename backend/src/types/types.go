@@ -119,3 +119,7 @@ const (
 	AuthBasic  = "basic"
 	AuthBearer = "bearer"
 )
+
+type PgxScanner interface {
+	Scan(dest ...interface{}) (err error)
+}

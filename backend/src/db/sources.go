@@ -42,12 +42,85 @@ func (db *Database) initializeSourcesTable() error {
 	return nil
 }
 
+func (db *Database) parseSource(rows types.PgxScanner) (sources.Source, error) {
+	var err error
+	var authType string
+	var authBytes []byte
+	sourceEntry := sourceEntry{}
+	err = rows.Scan(&sourceEntry.Id, &sourceEntry.Name, &sourceEntry.Type, &sourceEntry.Settings, &authType, &authBytes)
+	if err != nil {
+		return nil, fmt.Errorf("could not scan source row: %v", err)
+	}
+
+	var authMethod auth.AuthMethod
+	switch authType {
+	case "none":
+		authMethod = auth.NewNoAuth()
+	case "basic":
+		basicAuth := &auth.BasicAuth{}
+		err = json.Unmarshal(authBytes, basicAuth)
+		if err != nil {
+			return nil, fmt.Errorf("could not unmarshal basic auth: %v", err)
+		}
+		authMethod = basicAuth
+	case "bearer":
+		bearerAuth := &auth.BearerAuth{}
+		err = json.Unmarshal(authBytes, bearerAuth)
+		if err != nil {
+			return nil, fmt.Errorf("could not unmarshal bearer auth: %v", err)
+		}
+		authMethod = bearerAuth
+	default:
+		return nil, fmt.Errorf("unknown auth type: %v", authType)
+	}
+
+	switch sourceEntry.Type {
+	case "caldav":
+		settings := &caldav.CaldavSettings{}
+		err = json.Unmarshal([]byte(sourceEntry.Settings), settings)
+		if err != nil {
+			return nil, fmt.Errorf("could not unmarshal caldav settings: %v", err)
+		}
+		caldavSource := caldav.PackCaldavSource(
+			sourceEntry.Id,
+			sourceEntry.Name,
+			settings,
+			authMethod,
+		)
+		return caldavSource, nil
+	case "ical":
+		fallthrough
+	default:
+		return nil, fmt.Errorf("unknown source type: %v", sourceEntry.Type)
+	}
+}
+
+func (db *Database) GetSource(userId types.ID, sourceId types.ID) (sources.Source, error) {
+	db.logger.Debugf("Getting source %v for user %v", sourceId, userId)
+
+	row := db.connection.QueryRow(`
+		SELECT id, name, type, settings, auth_type, auth
+		FROM sources
+		WHERE user_id = $1 AND id = $2;
+	`, userId.UUID(), sourceId.UUID())
+
+	db.logger.Debugf("Got source %v for user %v", sourceId, userId)
+
+	source, err := db.parseSource(row)
+	if err != nil {
+		return nil, fmt.Errorf("could not parse source: %v", err)
+	}
+
+	db.logger.Debugf("Parsed source %v for user %v", sourceId, userId)
+
+	return source, nil
+}
+
 func (db *Database) GetSources(userId types.ID) ([]sources.Source, error) {
 	var err error
 
-	// TODO: also get auth_type and auth?
 	rows, err := db.connection.Query(`
-		SELECT id, name, type, settings
+		SELECT id, name, type, settings, auth_type, auth
 		FROM sources
 		WHERE user_id = $1;
 	`, userId.UUID())
@@ -58,31 +131,11 @@ func (db *Database) GetSources(userId types.ID) ([]sources.Source, error) {
 
 	sources := []sources.Source{}
 	for rows.Next() {
-		sourceEntry := sourceEntry{}
-		err = rows.Scan(&sourceEntry.Id, &sourceEntry.Name, &sourceEntry.Type, &sourceEntry.Settings)
+		source, err := db.parseSource(rows)
 		if err != nil {
-			return nil, fmt.Errorf("could not scan source row: %v", err)
+			return nil, fmt.Errorf("could not parse source: %v", err)
 		}
-
-		switch sourceEntry.Type {
-		case "caldav":
-			settings := &caldav.CaldavSettings{}
-			err = json.Unmarshal([]byte(sourceEntry.Settings), settings)
-			if err != nil {
-				return nil, fmt.Errorf("could not unmarshal caldav settings: %v", err)
-			}
-			caldavSource := caldav.PackCaldavSource(
-				sourceEntry.Id,
-				sourceEntry.Name,
-				settings,
-				nil,
-			)
-			sources = append(sources, caldavSource)
-		case "ical":
-			fallthrough
-		default:
-			return nil, fmt.Errorf("unknown source type: %v", sourceEntry.Type)
-		}
+		sources = append(sources, source)
 	}
 
 	return sources, nil
@@ -107,7 +160,7 @@ func (db *Database) InsertSource(userId types.ID, source sources.Source) (types.
 	return types.IdFromUuid(id), nil
 }
 
-func (db *Database) UpdateSource(userId types.ID, sourceId types.ID, newName string, newAuth auth.AuthMethod, newSourceType string, newSourceSettings []byte) error {
+func (db *Database) UpdateSource(userId types.ID, sourceId types.ID, newName string, newAuth auth.AuthMethod, newSourceType string, newSourceSettings sources.SourceSettings) error {
 	changes := []string{}
 	args := []any{}
 

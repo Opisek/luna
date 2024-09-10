@@ -17,6 +17,15 @@ type exposedSource struct {
 	Name string `json:"name"`
 }
 
+type exposedDetailedSource struct {
+	Id       string      `json:"id"`
+	Name     string      `json:"name"`
+	Type     string      `json:"type"`
+	Settings interface{} `json:"settings"`
+	AuthType string      `json:"auth_type"`
+	Auth     interface{} `json:"auth"`
+}
+
 func getSources(c *gin.Context) {
 	apiConfig := getConfig(c)
 	if apiConfig == nil {
@@ -41,6 +50,39 @@ func getSources(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, exposedSources)
+}
+
+func getSource(c *gin.Context) {
+	apiConfig := getConfig(c)
+	if apiConfig == nil {
+		return
+	}
+
+	userId := getUserId(c)
+	sourceId, err := getSourceId(c)
+	if err != nil {
+		apiConfig.logger.Errorf("could not get source id: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "malformed or missing source id"})
+		return
+	}
+
+	source, err := apiConfig.db.GetSource(userId, sourceId)
+	if err != nil {
+		apiConfig.logger.Errorf("could not get source: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get source"})
+		return
+	}
+
+	exposedSource := exposedDetailedSource{
+		Id:       source.GetId().String(),
+		Name:     source.GetName(),
+		Settings: source.GetSettings(),
+		Type:     source.GetType(),
+		AuthType: source.GetAuth().GetType(),
+		Auth:     source.GetAuth(),
+	}
+
+	c.JSON(http.StatusOK, exposedSource)
 }
 
 func parseAuthMethod(c *gin.Context) (auth.AuthMethod, error) {
