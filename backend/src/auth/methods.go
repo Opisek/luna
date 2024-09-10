@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"encoding/json"
+	"fmt"
 	"luna-backend/types"
 	"net/http"
 )
@@ -8,6 +10,7 @@ import (
 type AuthMethod interface {
 	Do(req *http.Request) (*http.Response, error)
 	GetType() string
+	String() (string, error)
 }
 
 // No Authentication
@@ -20,6 +23,9 @@ func (auth NoAuth) Do(req *http.Request) (*http.Response, error) {
 
 func (auth NoAuth) GetType() string {
 	return types.AuthNone
+}
+func (auth NoAuth) String() (string, error) {
+	return "", nil
 }
 
 func NewNoAuth() AuthMethod {
@@ -41,6 +47,13 @@ func (auth BasicAuth) Do(req *http.Request) (*http.Response, error) {
 func (auth BasicAuth) GetType() string {
 	return types.AuthBasic
 }
+func (auth BasicAuth) String() (string, error) {
+	bytes, err := json.Marshal(auth)
+	if err != nil {
+		return "", fmt.Errorf("could not marshal basic auth: %v", err)
+	}
+	return string(bytes), nil
+}
 
 func NewBasicAuth(username, password string) AuthMethod {
 	return BasicAuth{Username: username, Password: password}
@@ -59,6 +72,13 @@ func (auth BearerAuth) Do(req *http.Request) (*http.Response, error) {
 
 func (auth BearerAuth) GetType() string {
 	return types.AuthBearer
+}
+func (auth BearerAuth) String() (string, error) {
+	bytes, err := json.Marshal(auth)
+	if err != nil {
+		return "", fmt.Errorf("could not marshal bearer auth: %v", err)
+	}
+	return string(bytes), nil
 }
 
 func NewBearerAuth(token string) AuthMethod {

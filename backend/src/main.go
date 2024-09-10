@@ -14,6 +14,11 @@ func main() {
 	var err error
 
 	//
+	// Directories
+	//
+	os.MkdirAll("/data/keys", 0660)
+
+	//
 	// Config
 	//
 	logger := log.NewLogger()

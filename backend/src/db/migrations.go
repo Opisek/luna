@@ -51,7 +51,7 @@ func addMigration(version common.Version, migration func(*Database) error) {
 func init() {
 	// Initialize database
 	addMigration(common.Ver(0, 0, 1), func(db *Database) error {
-		// Support for UUID
+		// Support for UUID and encryption
 		_, err := db.connection.Exec(`
 			CREATE EXTENSION IF NOT EXISTS pgcrypto;
 		`)

@@ -7,6 +7,8 @@ services:
     container_name: luna-backend
     ports:
       - "3000:3000"
+    volumes:
+      - /srv/luna/data:/data
     environment:
       DB_HOST: luna-postgres
       DB_PORT: 5432

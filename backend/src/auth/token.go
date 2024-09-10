@@ -1,13 +1,12 @@
 package auth
 
 import (
+	"fmt"
+	"luna-backend/crypto"
 	"luna-backend/types"
 
 	"github.com/golang-jwt/jwt/v5"
 )
-
-// TODO: proper key usage and algorithms in production
-var secret = []byte{'s', 'e', 'c', 'r', 'e', 't'}
 
 type JsonWebToken struct {
 	UserId types.ID `json:"user_id"`
@@ -17,17 +16,28 @@ type JsonWebToken struct {
 func NewToken(userId types.ID) (string, error) {
 	token := JsonWebToken{UserId: userId}
 
-	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, token)
+	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS512, token)
 
-	return jwtToken.SignedString(secret)
+	key, err := crypto.GetSymmetricKey("token")
+	if err != nil {
+		return "", fmt.Errorf("could not get token key: %v", err)
+	}
+	return jwtToken.SignedString(key)
 }
 
 func ParseToken(tokenString string) (*JsonWebToken, error) {
 	token := &JsonWebToken{}
 
 	_, err := jwt.ParseWithClaims(tokenString, token, func(token *jwt.Token) (interface{}, error) {
-		return secret, nil
+		key, err := crypto.GetSymmetricKey("token")
+		if err != nil {
+			return nil, fmt.Errorf("could not get token key: %v", err)
+		}
+		return key, nil
 	})
+	if err != nil {
+		return nil, fmt.Errorf("could not parse token: %v", err)
+	}
 
 	return token, err
 }
