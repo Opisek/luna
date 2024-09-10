@@ -216,16 +216,19 @@ func patchSource(c *gin.Context) {
 		}
 	}
 
-	var newSource sources.Source = nil
+	var newSourceSettings sources.SourceSettings = nil
 	if newType != "" {
-		newSource, err = parseSource(c, newName, newAuth)
+		newSource, err := parseSource(c, newName, newAuth)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
+		newSourceSettings = newSource.GetSettings()
 	}
 
-	err = apiConfig.db.UpdateSource(userId, sourceId, newName, newAuth, newType, newSource.GetSettings())
+	apiConfig.logger.Debugf("parsed params")
+
+	err = apiConfig.db.UpdateSource(userId, sourceId, newName, newAuth, newType, newSourceSettings)
 	if err != nil {
 		apiConfig.logger.Errorf("could not update source: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not update source"})

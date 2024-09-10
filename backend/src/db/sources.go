@@ -204,7 +204,7 @@ func (db *Database) UpdateSource(userId types.ID, sourceId types.ID, newName str
 		changes = append(changes, fmt.Sprintf("name = $%d", len(changes)+1))
 		args = append(args, newName)
 	}
-	if newSourceType != "" {
+	if newSourceType != "" && newSourceSettings != nil {
 		changes = append(changes, fmt.Sprintf("type = $%d", len(changes)+1), fmt.Sprintf("settings = $%d", len(changes)+2))
 		args = append(args, newSourceType, newSourceSettings)
 	}
@@ -218,7 +218,7 @@ func (db *Database) UpdateSource(userId types.ID, sourceId types.ID, newName str
 		if err != nil {
 			return fmt.Errorf("could not marshal auth: %v", err)
 		}
-		args = append(args, newAuth.GetType(), marshalledAuth)
+		args = append(args, newAuth.GetType(), marshalledAuth, encryptionKey)
 	}
 
 	if len(changes) == 0 {
@@ -229,8 +229,8 @@ func (db *Database) UpdateSource(userId types.ID, sourceId types.ID, newName str
 		UPDATE sources
 		SET %s
 		WHERE user_id = $%d AND id = $%d;
-	`, strings.Join(changes, ", "), len(changes)+2, len(changes)+3)
-	args = append(args, encryptionKey, userId.UUID(), sourceId.UUID())
+	`, strings.Join(changes, ", "), len(args)+1, len(args)+2)
+	args = append(args, userId.UUID(), sourceId.UUID())
 
 	_, err = db.connection.Exec(query, args...)
 
