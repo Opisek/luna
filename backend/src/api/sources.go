@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"luna-backend/auth"
-	"luna-backend/sources"
-	"luna-backend/sources/caldav"
+	"luna-backend/interface/primitives/sources"
+	"luna-backend/interface/protocols/caldav"
 	"luna-backend/types"
 
 	"github.com/gin-gonic/gin"

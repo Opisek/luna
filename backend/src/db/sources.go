@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"luna-backend/auth"
 	"luna-backend/crypto"
-	"luna-backend/sources"
-	"luna-backend/sources/caldav"
+	"luna-backend/interface/primitives/sources"
+	"luna-backend/interface/protocols/caldav"
 	"luna-backend/types"
 	"strings"
 

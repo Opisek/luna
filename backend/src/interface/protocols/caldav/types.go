@@ -3,7 +3,7 @@ package caldav
 import (
 	"encoding/json"
 	"luna-backend/auth"
-	"luna-backend/sources"
+	"luna-backend/interface/primitives/sources"
 	"luna-backend/types"
 
 	"github.com/emersion/go-webdav/caldav"

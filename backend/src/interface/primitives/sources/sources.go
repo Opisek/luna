@@ -3,7 +3,6 @@ package sources
 import (
 	"luna-backend/auth"
 	"luna-backend/types"
-	"time"
 )
 
 type Source interface {
@@ -13,7 +12,6 @@ type Source interface {
 	GetAuth() auth.AuthMethod
 	GetSettings() SourceSettings
 	GetCalendars() ([]*types.Calendar, error)
-	GetEvents(calendarId string, start time.Time, end time.Time) ([]*types.Event, error)
 }
 
 type SourceSettings interface {
