@@ -53,6 +53,10 @@ func (u *Url) URL() *url.URL {
 	return (*url.URL)(u)
 }
 
+func (u *Url) String() string {
+	return u.URL().String()
+}
+
 func NewUrl(rawUrl string) (*Url, error) {
 	URL, err := url.Parse(rawUrl)
 	if err != nil {
