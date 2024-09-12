@@ -21,21 +21,21 @@ func (source *IcalSource) GetId() types.ID {
 	return source.id
 }
 
-func (source *IcalSource) calendarFromIcal(rawCalendar *ics.Calendar) *types.Calendar {
-	properties := make(map[string]string)
-	for _, prop := range rawCalendar.CalendarProperties {
-		properties[prop.IANAToken] = prop.Value
-	}
-
-	return &types.Calendar{
-		Source: source.GetId(),
-		Id:     types.EmptyId(), // TODO: placeholder
-		Path:   "",              // TODO: placeholder
-		Name:   properties[string(ics.PropertyXWRCalName)],
-		Desc:   properties[string(ics.PropertyXWRCalDesc)],
-		Color:  nil,
-	}
-}
+//func (source *IcalSource) calendarFromIcal(rawCalendar *ics.Calendar) *calendars.Calendar {
+//	properties := make(map[string]string)
+//	for _, prop := range rawCalendar.CalendarProperties {
+//		properties[prop.IANAToken] = prop.Value
+//	}
+//
+//	return &types.Calendar{
+//		Source: source.GetId(),
+//		Id:     types.EmptyId(), // TODO: placeholder
+//		Path:   "",              // TODO: placeholder
+//		Name:   properties[string(ics.PropertyXWRCalName)],
+//		Desc:   properties[string(ics.PropertyXWRCalDesc)],
+//		Color:  nil,
+//	}
+//}
 
 func (source *IcalSource) eventFromIcal(rawEvent *ics.VEvent) *types.Event {
 	properties := make(map[string]string)

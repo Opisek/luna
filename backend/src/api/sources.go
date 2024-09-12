@@ -13,12 +13,12 @@ import (
 )
 
 type exposedSource struct {
-	Id   string `json:"id"`
-	Name string `json:"name"`
+	Id   types.ID `json:"id"`
+	Name string   `json:"name"`
 }
 
 type exposedDetailedSource struct {
-	Id       string      `json:"id"`
+	Id       types.ID    `json:"id"`
 	Name     string      `json:"name"`
 	Type     string      `json:"type"`
 	Settings interface{} `json:"settings"`
@@ -44,7 +44,7 @@ func getSources(c *gin.Context) {
 	exposedSources := make([]exposedSource, len(sources))
 	for i, source := range sources {
 		exposedSources[i] = exposedSource{
-			Id:   source.GetId().String(),
+			Id:   source.GetId(),
 			Name: source.GetName(),
 		}
 	}
@@ -74,7 +74,7 @@ func getSource(c *gin.Context) {
 	}
 
 	exposedSource := exposedDetailedSource{
-		Id:       source.GetId().String(),
+		Id:       source.GetId(),
 		Name:     source.GetName(),
 		Settings: source.GetSettings(),
 		Type:     source.GetType(),

@@ -78,7 +78,7 @@ func (db *Database) parseSource(rows types.PgxScanner) (sources.Source, error) {
 
 	switch sourceEntry.Type {
 	case "caldav":
-		settings := &caldav.CaldavSettings{}
+		settings := &caldav.CaldavSourceSettings{}
 		err = json.Unmarshal([]byte(sourceEntry.Settings), settings)
 		if err != nil {
 			return nil, fmt.Errorf("could not unmarshal caldav settings: %v", err)

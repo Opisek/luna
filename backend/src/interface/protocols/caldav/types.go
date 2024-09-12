@@ -1,61 +1,29 @@
 package caldav
 
 import (
-	"encoding/json"
-	"luna-backend/auth"
-	"luna-backend/interface/primitives/sources"
+	"fmt"
 	"luna-backend/types"
 
 	"github.com/emersion/go-webdav/caldav"
 )
 
-type CaldavSource struct {
-	id       types.ID
-	name     string
-	settings *CaldavSettings
-	auth     auth.AuthMethod
-	client   *caldav.Client
-}
-
-type CaldavSettings struct {
-	Url *types.Url `json:"url"`
-}
-
-func (settings *CaldavSettings) GetBytes() []byte {
-	bytes, err := json.Marshal(settings)
+func (source *CaldavSource) calendarFromCaldav(rawCalendar caldav.Calendar) (*CaldavCalendar, error) {
+	url, err := types.NewUrl(rawCalendar.Path)
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("could not parse calendar URL: %w", err)
 	}
-	return bytes
-}
 
-func (source *CaldavSource) GetType() string {
-	return types.SourceCaldav
-}
+	settings := &CaldavCalendarSettings{
+		Url: url,
+	}
 
-func (source *CaldavSource) GetId() types.ID {
-	return source.id
-}
+	calendar := &CaldavCalendar{
+		name:     rawCalendar.Name,
+		desc:     rawCalendar.Description,
+		source:   source.id,
+		settings: settings,
+		client:   source.client,
+	}
 
-func (source *CaldavSource) GetName() string {
-	return source.name
-}
-
-func (source *CaldavSource) GetAuth() auth.AuthMethod {
-	return source.auth
-}
-
-func (source *CaldavSource) GetSettings() sources.SourceSettings {
-	return source.settings
-}
-
-func (source *CaldavSource) calendarFromCaldav(rawCalendar caldav.Calendar) (*types.Calendar, error) {
-	return &types.Calendar{
-		Source: source.GetId(),
-		Id:     types.EmptyId(), // TODO: placeholder
-		Path:   rawCalendar.Path,
-		Name:   rawCalendar.Name,
-		Desc:   rawCalendar.Description,
-		Color:  nil,
-	}, nil
+	return calendar, nil
 }
