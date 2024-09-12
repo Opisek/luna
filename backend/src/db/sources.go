@@ -56,16 +56,16 @@ func (db *Database) parseSource(rows types.PgxScanner) (sources.Source, error) {
 
 	var authMethod auth.AuthMethod
 	switch authType {
-	case "none":
+	case types.AuthNone:
 		authMethod = auth.NewNoAuth()
-	case "basic":
+	case types.AuthBasic:
 		basicAuth := &auth.BasicAuth{}
 		err = json.Unmarshal([]byte(authBytes), basicAuth)
 		if err != nil {
 			return nil, fmt.Errorf("could not unmarshal basic auth: %v", err)
 		}
 		authMethod = basicAuth
-	case "bearer":
+	case types.AuthBearer:
 		bearerAuth := &auth.BearerAuth{}
 		err = json.Unmarshal([]byte(authBytes), bearerAuth)
 		if err != nil {
@@ -77,7 +77,7 @@ func (db *Database) parseSource(rows types.PgxScanner) (sources.Source, error) {
 	}
 
 	switch sourceEntry.Type {
-	case "caldav":
+	case types.SourceCaldav:
 		settings := &caldav.CaldavSourceSettings{}
 		err = json.Unmarshal([]byte(sourceEntry.Settings), settings)
 		if err != nil {
@@ -90,7 +90,7 @@ func (db *Database) parseSource(rows types.PgxScanner) (sources.Source, error) {
 			authMethod,
 		)
 		return caldavSource, nil
-	case "ical":
+	case types.SourceIcal:
 		fallthrough
 	default:
 		return nil, fmt.Errorf("unknown source type: %v", sourceEntry.Type)
