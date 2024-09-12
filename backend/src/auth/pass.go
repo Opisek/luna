@@ -1,8 +1,11 @@
 package auth
 
-import "errors"
+import (
+	"errors"
+	"luna-backend/types"
+)
 
-var DefaultAlgorithm = "plain"
+var DefaultAlgorithm = types.HashPlain
 
 func VerifyPassword(password string, hash string, algorithm string) bool {
 	hashedPassword, err := hashPassword(password, algorithm)
@@ -20,7 +23,7 @@ func SecurePassword(password string) (string, string, error) {
 
 func hashPassword(password string, algorithm string) (string, error) {
 	switch algorithm {
-	case "plain":
+	case types.HashPlain:
 		return plain(password)
 	default:
 		return "", errors.New("unknown algorithm")

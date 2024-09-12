@@ -209,6 +209,10 @@ const (
 	AuthBearer = "bearer"
 )
 
+const (
+	HashPlain = "plain"
+)
+
 type PgxScanner interface {
 	Scan(dest ...interface{}) (err error)
 }
