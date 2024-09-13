@@ -178,7 +178,7 @@ func PutSource(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"id": id.String()})
+	c.JSON(http.StatusCreated, gin.H{"id": id.String()})
 }
 
 func PatchSource(c *gin.Context) {
@@ -243,12 +243,16 @@ func DeleteSource(c *gin.Context) {
 		return
 	}
 
-	err = apiConfig.Db.DeleteSource(userId, sourceId)
+	deleted, err := apiConfig.Db.DeleteSource(userId, sourceId)
 	if err != nil {
 		apiConfig.Logger.Errorf("could not delete source: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not delete source"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{})
+	if deleted {
+		c.JSON(http.StatusOK, gin.H{})
+	} else {
+		c.JSON(http.StatusNotFound, gin.H{"error": "source not found"})
+	}
 }

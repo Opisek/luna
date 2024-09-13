@@ -241,21 +241,13 @@ func (db *Database) UpdateSource(userId types.ID, sourceId types.ID, newName str
 	return nil
 }
 
-func (db *Database) DeleteSource(userId types.ID, sourceId types.ID) error {
+func (db *Database) DeleteSource(userId types.ID, sourceId types.ID) (bool, error) {
 	tag, err := db.connection.Exec(`
 		DELETE FROM sources
 		WHERE user_id = $1 AND id = $2;
 	`, userId.UUID(), sourceId)
 	if err != nil {
-		return fmt.Errorf("could not delete source: %v", err)
+		return false, fmt.Errorf("could not delete source: %v", err)
 	}
-	if tag.RowsAffected() == 0 {
-		// TODO: consider not returning an error here
-		// TODO: this is of essence on lossy networks
-		// TODO: if the first delete confirmation fails and the user retries,
-		// TODO: we can simply confirm that the source no longer exists
-		return fmt.Errorf("could not delete source: source not found")
-	}
-
-	return nil
+	return tag.RowsAffected() != 0, nil
 }
