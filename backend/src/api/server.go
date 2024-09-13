@@ -39,7 +39,6 @@ func run(api *config.Api) {
 	sourcesEndpoints.DELETE("/:sourceId", handlers.DeleteSource)
 
 	// /api/calendars/*
-	//calendarsEndpoints := sourcesEndpoints.Group("/:sourceId/calendars") // old approach, however now we have unique IDs
 	calendarsEndpoints := authenticatedEndpoints.Group("/calendars")
 	calendarsEndpoints.GET("", handlers.GetCalendars)
 	calendarsEndpoints.GET("/:calendarId", handlers.NotImplemented)
@@ -47,9 +46,10 @@ func run(api *config.Api) {
 	calendarsEndpoints.PATCH("/:calendarId", handlers.NotImplemented)
 	calendarsEndpoints.DELETE("/:calendarId", handlers.NotImplemented)
 
-	// /api/sources/.../calendars/.../events/*
-	eventEndpoints := calendarsEndpoints.Group("/:calendarId/events")
-	eventEndpoints.GET("", handlers.NotImplemented)
+	// /api/events/*
+	eventEndpoints := authenticatedEndpoints.Group("/events")
+	eventEndpoints.GET("", handlers.GetEvents)
+	eventEndpoints.GET("/:eventId", handlers.NotImplemented)
 	eventEndpoints.PUT("", handlers.NotImplemented)
 	eventEndpoints.PATCH("/:eventId", handlers.NotImplemented)
 	eventEndpoints.DELETE("/:eventId", handlers.NotImplemented)

@@ -1,6 +1,6 @@
 package ical
 
-//func (source *IcalSource) GetCalendars() ([]*calendars.Calendar, error) {
+//func (source *IcalSource) GetCalendars() ([]*primitives.Calendar, error) {
 //	res, err := source.settings.Auth.Do(&http.Request{
 //		Method: "GET",
 //		URL:    source.settings.Url.URL(),
@@ -16,5 +16,5 @@ package ical
 //
 //	parsedCal := source.calendarFromIcal(cal)
 //
-//	return []*calendars.Calendar{parsedCal}, nil
+//	return []*primitives.Calendar{parsedCal}, nil
 //}

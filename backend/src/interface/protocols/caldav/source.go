@@ -5,8 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"luna-backend/auth"
-	"luna-backend/interface/primitives/calendars"
-	"luna-backend/interface/primitives/sources"
+	"luna-backend/interface/primitives"
 	"luna-backend/types"
 
 	"github.com/emersion/go-webdav/caldav"
@@ -48,7 +47,7 @@ func (source *CaldavSource) GetAuth() auth.AuthMethod {
 	return source.auth
 }
 
-func (source *CaldavSource) GetSettings() sources.SourceSettings {
+func (source *CaldavSource) GetSettings() primitives.SourceSettings {
 	return source.settings
 }
 
@@ -88,7 +87,7 @@ func (source *CaldavSource) getClient() (*caldav.Client, error) {
 	return source.client, nil
 }
 
-func (source *CaldavSource) GetCalendars() ([]calendars.Calendar, error) {
+func (source *CaldavSource) GetCalendars() ([]primitives.Calendar, error) {
 	client, err := source.getClient()
 	if err != nil {
 		return nil, err
@@ -99,14 +98,14 @@ func (source *CaldavSource) GetCalendars() ([]calendars.Calendar, error) {
 		return nil, err
 	}
 
-	result := make([]calendars.Calendar, len(cals))
+	result := make([]primitives.Calendar, len(cals))
 	for i, calendar := range cals {
 		converted, err := source.calendarFromCaldav(calendar)
 		if err != nil {
 			return nil, fmt.Errorf("could not parse calendar %v: %w", calendar.Name, err)
 		}
 
-		casted := (calendars.Calendar)(converted)
+		casted := (primitives.Calendar)(converted)
 
 		result[i] = casted
 	}

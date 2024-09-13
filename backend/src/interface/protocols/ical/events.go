@@ -1,11 +1,11 @@
 package ical
 
 import (
-	"luna-backend/types"
+	"luna-backend/interface/primitives"
 	"time"
 )
 
-func (source *IcalSource) GetEvents(calendarId string, start time.Time, end time.Time) ([]*types.Event, error) {
+func (source *IcalSource) GetEvents(calendarId string, start time.Time, end time.Time) ([]primitives.Event, error) {
 	//res, err := source.settings.Auth.Do(&http.Request{
 	//	Method: "GET",
 	//	URL:    source.settings.Url,

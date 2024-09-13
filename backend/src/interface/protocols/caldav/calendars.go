@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"luna-backend/auth"
 	"luna-backend/crypto"
-	"luna-backend/interface/primitives/calendars"
+	"luna-backend/interface/primitives"
 	"luna-backend/types"
 	"time"
 
@@ -75,7 +75,7 @@ func (calendar *CaldavCalendar) GetAuth() auth.AuthMethod {
 	return calendar.auth
 }
 
-func (calendar *CaldavCalendar) GetSettings() calendars.CalendarSettings {
+func (calendar *CaldavCalendar) GetSettings() primitives.CalendarSettings {
 	return calendar.settings
 }
 
@@ -83,7 +83,7 @@ func (calendar *CaldavCalendar) GetColor() *types.Color {
 	return types.ColorFromVals(50, 50, 50)
 }
 
-func (calendar *CaldavCalendar) GetEvents(start time.Time, end time.Time) ([]*types.Event, error) {
+func (calendar *CaldavCalendar) GetEvents(start time.Time, end time.Time) ([]primitives.Event, error) {
 	client, err := calendar.source.getClient()
 	if err != nil {
 		return nil, fmt.Errorf("could not get caldav client: %w", err)
@@ -91,7 +91,7 @@ func (calendar *CaldavCalendar) GetEvents(start time.Time, end time.Time) ([]*ty
 
 	query := caldav.CalendarQuery{
 		CompRequest: caldav.CalendarCompRequest{
-			Name:     "VCALENDAR",
+			Name:     "VEVENT",
 			AllProps: true,
 			AllComps: true,
 		},

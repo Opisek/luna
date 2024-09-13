@@ -2,11 +2,13 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
+	"luna-backend/api/internal/config"
 	"luna-backend/api/internal/context"
 	"luna-backend/auth"
-	"luna-backend/interface/primitives/sources"
+	"luna-backend/interface/primitives"
 	"luna-backend/interface/protocols/caldav"
 	"luna-backend/types"
 
@@ -27,11 +29,19 @@ type exposedDetailedSource struct {
 	Auth     interface{} `json:"auth"`
 }
 
+func getSources(config *config.Api, userId types.ID) ([]primitives.Source, error) {
+	srcs, err := config.Db.GetSources(userId)
+	if err != nil {
+		return nil, fmt.Errorf("could not get sources: %v", err)
+	}
+	return srcs, nil
+}
+
 func GetSources(c *gin.Context) {
 	apiConfig := context.GetConfig(c)
 	userId := context.GetUserId(c)
 
-	sources, err := apiConfig.Db.GetSources(userId)
+	sources, err := getSources(apiConfig, userId)
 	if err != nil {
 		apiConfig.Logger.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get sources"})
@@ -109,8 +119,8 @@ func parseAuthMethod(c *gin.Context) (auth.AuthMethod, error) {
 	return sourceAuth, nil
 }
 
-func parseSource(c *gin.Context, sourceName string, sourceAuth auth.AuthMethod) (sources.Source, error) {
-	var source sources.Source
+func parseSource(c *gin.Context, sourceName string, sourceAuth auth.AuthMethod) (primitives.Source, error) {
+	var source primitives.Source
 
 	sourceType := c.PostForm("type")
 	switch sourceType {
@@ -201,7 +211,7 @@ func PatchSource(c *gin.Context) {
 		}
 	}
 
-	var newSourceSettings sources.SourceSettings = nil
+	var newSourceSettings primitives.SourceSettings = nil
 	if newType != "" {
 		newSource, err := parseSource(c, newName, newAuth)
 		if err != nil {

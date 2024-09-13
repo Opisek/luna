@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"luna-backend/auth"
 	"luna-backend/crypto"
-	"luna-backend/interface/primitives/sources"
+	"luna-backend/interface/primitives"
 	"luna-backend/interface/protocols/caldav"
 	"luna-backend/types"
 	"strings"
@@ -44,7 +44,7 @@ func (db *Database) initializeSourcesTable() error {
 	return nil
 }
 
-func (db *Database) parseSource(rows types.PgxScanner) (sources.Source, error) {
+func (db *Database) parseSource(rows types.PgxScanner) (primitives.Source, error) {
 	var err error
 	var authType string
 	var authBytes string
@@ -114,7 +114,7 @@ func getUserDecryptionKey(userId types.ID) (string, error) {
 	return getUserEncryptionKey(userId)
 }
 
-func (db *Database) GetSource(userId types.ID, sourceId types.ID) (sources.Source, error) {
+func (db *Database) GetSource(userId types.ID, sourceId types.ID) (primitives.Source, error) {
 	decryptionKey, err := getUserDecryptionKey(userId)
 	if err != nil {
 		return nil, fmt.Errorf("could not get user decryption key: %v", err)
@@ -134,7 +134,7 @@ func (db *Database) GetSource(userId types.ID, sourceId types.ID) (sources.Sourc
 	return source, nil
 }
 
-func (db *Database) GetSources(userId types.ID) ([]sources.Source, error) {
+func (db *Database) GetSources(userId types.ID) ([]primitives.Source, error) {
 	var err error
 
 	decryptionKey, err := getUserDecryptionKey(userId)
@@ -152,7 +152,7 @@ func (db *Database) GetSources(userId types.ID) ([]sources.Source, error) {
 	}
 	defer rows.Close()
 
-	sources := []sources.Source{}
+	sources := []primitives.Source{}
 	for rows.Next() {
 		source, err := db.parseSource(rows)
 		if err != nil {
@@ -164,7 +164,7 @@ func (db *Database) GetSources(userId types.ID) ([]sources.Source, error) {
 	return sources, nil
 }
 
-func (db *Database) InsertSource(userId types.ID, source sources.Source) (types.ID, error) {
+func (db *Database) InsertSource(userId types.ID, source primitives.Source) (types.ID, error) {
 	encryptionKey, err := getUserEncryptionKey(userId)
 	if err != nil {
 		return types.EmptyId(), fmt.Errorf("could not get user encryption key: %v", err)
@@ -191,7 +191,7 @@ func (db *Database) InsertSource(userId types.ID, source sources.Source) (types.
 	return types.IdFromUuid(id), nil
 }
 
-func (db *Database) UpdateSource(userId types.ID, sourceId types.ID, newName string, newAuth auth.AuthMethod, newSourceType string, newSourceSettings sources.SourceSettings) error {
+func (db *Database) UpdateSource(userId types.ID, sourceId types.ID, newName string, newAuth auth.AuthMethod, newSourceType string, newSourceSettings primitives.SourceSettings) error {
 	encryptionKey, err := getUserEncryptionKey(userId)
 	if err != nil {
 		return fmt.Errorf("could not get user encryption key: %v", err)

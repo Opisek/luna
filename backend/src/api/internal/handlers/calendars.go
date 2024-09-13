@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"errors"
+	"luna-backend/api/internal/config"
 	"luna-backend/api/internal/context"
-	"luna-backend/interface/primitives/sources"
+	"luna-backend/interface/primitives"
 	"luna-backend/types"
 	"net/http"
 	"sync"
@@ -18,62 +20,74 @@ type exposedCalendar struct {
 	Color  *types.Color `json:"color"`
 }
 
-func GetCalendars(c *gin.Context) {
-	// Get config
-	config := context.GetConfig(c)
-	userId := context.GetUserId(c)
-
-	// Get all of user's sources
-	srcs, err := config.Db.GetSources(userId)
-	if err != nil {
-		config.Logger.Errorf("could not get calendars: could not get user's sources: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get user's sources"})
-		return
-	}
-
+func getCalendars(config *config.Api, srcs []primitives.Source) ([]primitives.Calendar, error) {
 	// For each source, get its calendars
-	cals := make([][]exposedCalendar, len(srcs))
+	cals := make([][]primitives.Calendar, len(srcs))
 	errored := false
 
 	waitGroup := sync.WaitGroup{}
 	for i, src := range srcs {
 		waitGroup.Add(1)
-		go func(i int, source sources.Source) {
+		go func(i int, source primitives.Source) {
 			defer waitGroup.Done()
 
 			calsFromSource, err := source.GetCalendars()
 			if err != nil {
 				errored = true
-				config.Logger.Errorf("could not get calendars: could not get calendars from source: %v", err)
+				config.Logger.Errorf("could not get calendars: could not get calendars from source %v: %v", src.GetId().String(), err)
 				return
 			}
 
-			convertedCals := make([]exposedCalendar, len(calsFromSource))
-			for j, cal := range calsFromSource {
-				convertedCals[j] = exposedCalendar{
-					Id:     cal.GetId(),
-					Source: source.GetId(),
-					Name:   cal.GetName(),
-					Desc:   cal.GetDesc(),
-					Color:  cal.GetColor(),
-				}
-			}
-
-			cals[i] = convertedCals
+			cals[i] = calsFromSource
 		}(i, src)
 	}
 
 	// Combine (flatten) all calendars
 	waitGroup.Wait()
 	if errored {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get calendars"})
-		return
+		return nil, errors.New("at least one calendar failed to load")
 	}
 
-	combinedCals := []exposedCalendar{}
+	combinedCals := []primitives.Calendar{}
 	for _, calsFromSource := range cals {
 		combinedCals = append(combinedCals, calsFromSource...)
 	}
 
-	c.JSON(http.StatusOK, combinedCals)
+	return combinedCals, nil
+}
+
+func GetCalendars(c *gin.Context) {
+	// Get config
+	config := context.GetConfig(c)
+	userId := context.GetUserId(c)
+
+	// Get all of user's sources
+	srcs, err := getSources(config, userId)
+	if err != nil {
+		config.Logger.Errorf("could not get calendars: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get sources"})
+		return
+	}
+
+	// Get their associated calendars
+	cals, err := getCalendars(config, srcs)
+	if err != nil {
+		config.Logger.Errorf("could not get calendars: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get calendars"})
+		return
+	}
+
+	// Convert to exposed format
+	convertedCals := make([]exposedCalendar, len(cals))
+	for i, cal := range cals {
+		convertedCals[i] = exposedCalendar{
+			Id:     cal.GetId(),
+			Source: cal.GetSource(),
+			Name:   cal.GetName(),
+			Desc:   cal.GetDesc(),
+			Color:  cal.GetColor(),
+		}
+	}
+
+	c.JSON(http.StatusOK, convertedCals)
 }

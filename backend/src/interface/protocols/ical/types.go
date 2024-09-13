@@ -3,8 +3,6 @@ package ical
 import (
 	"luna-backend/auth"
 	"luna-backend/types"
-
-	ics "github.com/arran4/golang-ical"
 )
 
 type IcalSource struct {
@@ -21,7 +19,7 @@ func (source *IcalSource) GetId() types.ID {
 	return source.id
 }
 
-//func (source *IcalSource) calendarFromIcal(rawCalendar *ics.Calendar) *calendars.Calendar {
+//func (source *IcalSource) calendarFromIcal(rawCalendar *ics.Calendar) *primitives.Calendar {
 //	properties := make(map[string]string)
 //	for _, prop := range rawCalendar.CalendarProperties {
 //		properties[prop.IANAToken] = prop.Value
@@ -37,26 +35,26 @@ func (source *IcalSource) GetId() types.ID {
 //	}
 //}
 
-func (source *IcalSource) eventFromIcal(rawEvent *ics.VEvent) *types.Event {
-	properties := make(map[string]string)
-	for _, prop := range rawEvent.Properties {
-		properties[prop.IANAToken] = prop.Value
-	}
-
-	//startString := properties[string(ics.ComponentPropertyDtStart)]
-	//endString := properties[string(ics.ComponentPropertyDtEnd)]
-	//durationString := properties[string(ics.PropertyDuration)]
-
-	//startTime, err := time.Parse(time.RFC3339, startString)
-	//if err != nil {
-	//	return nil
-	//}
-	//endTime, err := time.Parse(time.RFC3339, endString)
-
-	//return &types.Event{
-	//	Name: properties[string(ics.PropertySummary)],
-	//	Start:
-	//}
-
-	return nil
-}
+//func (source *IcalSource) eventFromIcal(rawEvent *ics.VEvent) *types.Event {
+//	properties := make(map[string]string)
+//	for _, prop := range rawEvent.Properties {
+//		properties[prop.IANAToken] = prop.Value
+//	}
+//
+//	//startString := properties[string(ics.ComponentPropertyDtStart)]
+//	//endString := properties[string(ics.ComponentPropertyDtEnd)]
+//	//durationString := properties[string(ics.PropertyDuration)]
+//
+//	//startTime, err := time.Parse(time.RFC3339, startString)
+//	//if err != nil {
+//	//	return nil
+//	//}
+//	//endTime, err := time.Parse(time.RFC3339, endString)
+//
+//	//return &types.Event{
+//	//	Name: properties[string(ics.PropertySummary)],
+//	//	Start:
+//	//}
+//
+//	return nil
+//}

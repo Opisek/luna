@@ -1,4 +1,4 @@
-package calendars
+package primitives
 
 import (
 	"luna-backend/types"
@@ -12,7 +12,7 @@ type Calendar interface {
 	GetDesc() string
 	GetColor() *types.Color
 	GetSettings() CalendarSettings
-	GetEvents(start time.Time, end time.Time) ([]*types.Event, error)
+	GetEvents(start time.Time, end time.Time) ([]Event, error)
 }
 
 type CalendarSettings interface {

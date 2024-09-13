@@ -1,8 +1,7 @@
-package sources
+package primitives
 
 import (
 	"luna-backend/auth"
-	"luna-backend/interface/primitives/calendars"
 	"luna-backend/types"
 )
 
@@ -12,7 +11,7 @@ type Source interface {
 	GetName() string
 	GetAuth() auth.AuthMethod
 	GetSettings() SourceSettings
-	GetCalendars() ([]calendars.Calendar, error)
+	GetCalendars() ([]Calendar, error)
 }
 
 type SourceSettings interface {
