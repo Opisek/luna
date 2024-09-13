@@ -21,7 +21,7 @@ type exposedEvent struct {
 	Color    *types.Color `json:"color"`
 }
 
-func getEvents(config *config.Api, cals []primitives.Calendar) ([]primitives.Event, error) {
+func getEvents(config *config.Api, cals []primitives.Calendar, start time.Time, end time.Time) ([]primitives.Event, error) {
 	// For each calendar, get its events
 	events := make([][]primitives.Event, len(cals))
 	errored := false
@@ -32,7 +32,7 @@ func getEvents(config *config.Api, cals []primitives.Calendar) ([]primitives.Eve
 		go func(i int, cal primitives.Calendar) {
 			defer waitGroup.Done()
 
-			eventsFromCal, err := cal.GetEvents(time.Now(), time.Now()) // TODO: proper time filtering
+			eventsFromCal, err := cal.GetEvents(start, end)
 			if err != nil {
 				errored = true
 				config.Logger.Errorf("could not get events: could not get events from calendar %v: %v", cal.GetId().String(), err)
@@ -79,7 +79,17 @@ func GetEvents(c *gin.Context) {
 	}
 
 	// Get their associated events
-	events, err := getEvents(config, cals)
+	// TODO: get time from the api request
+	startTime, err := time.Parse(time.RFC3339, "2024-01-01T00:00:00+00:00")
+	if err != nil {
+		panic(err)
+	}
+	endTime, err := time.Parse(time.RFC3339, "2025-01-01T00:00:00+00:00")
+	if err != nil {
+		panic(err)
+	}
+
+	events, err := getEvents(config, cals, startTime, endTime)
 	if err != nil {
 		config.Logger.Errorf("could not get events: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get events"})
@@ -89,6 +99,10 @@ func GetEvents(c *gin.Context) {
 	// Convert to exposed format
 	convertedEvents := make([]exposedEvent, len(events))
 	for i, event := range events {
+		if event.GetName() == "" { // TODO: error handling
+			continue
+		}
+
 		convertedEvents[i] = exposedEvent{
 			Id:       event.GetId(),
 			Calendar: event.GetCalendar(),

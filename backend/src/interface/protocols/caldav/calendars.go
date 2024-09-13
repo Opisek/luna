@@ -91,11 +91,26 @@ func (calendar *CaldavCalendar) GetEvents(start time.Time, end time.Time) ([]pri
 
 	query := caldav.CalendarQuery{
 		CompRequest: caldav.CalendarCompRequest{
-			Name:     "VEVENT",
-			AllProps: true,
-			AllComps: true,
+			Name: "VCALENDAR",
+			Comps: []caldav.CalendarCompRequest{{
+				Name: "VEVENT",
+				Props: []string{
+					"SUMMARY",
+					"UID",
+					"DTSTART",
+					"DTEND",
+					"DURATION",
+				},
+			}},
 		},
-		CompFilter: caldav.CompFilter{},
+		CompFilter: caldav.CompFilter{
+			Name: "VCALENDAR",
+			Comps: []caldav.CompFilter{{
+				Name:  "VEVENT",
+				Start: start,
+				End:   end,
+			}},
+		},
 	}
 
 	events, err := client.QueryCalendar(context.TODO(), calendar.settings.Url.String(), &query)
@@ -103,7 +118,15 @@ func (calendar *CaldavCalendar) GetEvents(start time.Time, end time.Time) ([]pri
 		return nil, fmt.Errorf("could not query calendar: %w", err)
 	}
 
-	fmt.Printf("events: %v\n", events)
+	convertedEvents := make([]*CaldavEvent, len(events))
+	for i, event := range events {
+		convertedEvents[i] = eventFromCaldav(calendar, &event)
+	}
 
-	return nil, nil
+	castedEvents := make([]primitives.Event, len(convertedEvents))
+	for i, event := range convertedEvents {
+		castedEvents[i] = (primitives.Event)(event)
+	}
+
+	return castedEvents, nil
 }

@@ -1,6 +1,9 @@
 package primitives
 
-import "luna-backend/types"
+import (
+	"luna-backend/types"
+	"time"
+)
 
 type Event interface {
 	GetId() types.ID
@@ -9,6 +12,8 @@ type Event interface {
 	GetDesc() string
 	GetColor() *types.Color
 	GetSettings() EventSettings
+	GetStart() time.Time
+	GetEnd() time.Time
 }
 
 type EventSettings interface {
