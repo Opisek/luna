@@ -1,9 +1,10 @@
-package api
+package handlers
 
 import (
 	"errors"
 	"net/http"
 
+	"luna-backend/api/internal/context"
 	"luna-backend/auth"
 	"luna-backend/interface/primitives/sources"
 	"luna-backend/interface/protocols/caldav"
@@ -26,17 +27,13 @@ type exposedDetailedSource struct {
 	Auth     interface{} `json:"auth"`
 }
 
-func getSources(c *gin.Context) {
-	apiConfig := getConfig(c)
-	if apiConfig == nil {
-		return
-	}
+func GetSources(c *gin.Context) {
+	apiConfig := context.GetConfig(c)
+	userId := context.GetUserId(c)
 
-	userId := getUserId(c)
-
-	sources, err := apiConfig.db.GetSources(userId)
+	sources, err := apiConfig.Db.GetSources(userId)
 	if err != nil {
-		apiConfig.logger.Error(err)
+		apiConfig.Logger.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get sources"})
 		return
 	}
@@ -52,23 +49,19 @@ func getSources(c *gin.Context) {
 	c.JSON(http.StatusOK, exposedSources)
 }
 
-func getSource(c *gin.Context) {
-	apiConfig := getConfig(c)
-	if apiConfig == nil {
-		return
-	}
-
-	userId := getUserId(c)
-	sourceId, err := getSourceId(c)
+func GetSource(c *gin.Context) {
+	apiConfig := context.GetConfig(c)
+	userId := context.GetUserId(c)
+	sourceId, err := context.GetSourceId(c)
 	if err != nil {
-		apiConfig.logger.Errorf("could not get source id: %v", err)
+		apiConfig.Logger.Errorf("could not get source id: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "malformed or missing source id"})
 		return
 	}
 
-	source, err := apiConfig.db.GetSource(userId, sourceId)
+	source, err := apiConfig.Db.GetSource(userId, sourceId)
 	if err != nil {
-		apiConfig.logger.Errorf("could not get source: %v", err)
+		apiConfig.Logger.Errorf("could not get source: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get source"})
 		return
 	}
@@ -143,38 +136,34 @@ func parseSource(c *gin.Context, sourceName string, sourceAuth auth.AuthMethod) 
 	return source, nil
 }
 
-func putSource(c *gin.Context) {
-	apiConfig := getConfig(c)
-	if apiConfig == nil {
-		return
-	}
-
-	userId := getUserId(c)
+func PutSource(c *gin.Context) {
+	apiConfig := context.GetConfig(c)
+	userId := context.GetUserId(c)
 
 	sourceName := c.PostForm("name")
 	if sourceName == "" {
-		apiConfig.logger.Error("missing name")
+		apiConfig.Logger.Error("missing name")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "missing name"})
 		return
 	}
 
 	sourceAuth, err := parseAuthMethod(c)
 	if err != nil {
-		apiConfig.logger.Errorf("could not parse auth: %v", err)
+		apiConfig.Logger.Errorf("could not parse auth: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	source, err := parseSource(c, sourceName, sourceAuth)
 	if err != nil {
-		apiConfig.logger.Errorf("could not parse source: %v", err)
+		apiConfig.Logger.Errorf("could not parse source: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	id, err := apiConfig.db.InsertSource(userId, source)
+	id, err := apiConfig.Db.InsertSource(userId, source)
 	if err != nil {
-		apiConfig.logger.Errorf("could not insert source %v for user %v: %v", source.GetId().String(), userId.String(), err)
+		apiConfig.Logger.Errorf("could not insert source %v for user %v: %v", source.GetId().String(), userId.String(), err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not insert source"})
 		return
 	}
@@ -182,18 +171,14 @@ func putSource(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"id": id.String()})
 }
 
-func patchSource(c *gin.Context) {
-	apiConfig := getConfig(c)
-	if apiConfig == nil {
-		return
-	}
-
+func PatchSource(c *gin.Context) {
 	var err error
 
-	userId := getUserId(c)
-	sourceId, err := getSourceId(c)
+	apiConfig := context.GetConfig(c)
+	userId := context.GetUserId(c)
+	sourceId, err := context.GetSourceId(c)
 	if err != nil {
-		apiConfig.logger.Errorf("could not get source id: %v", err)
+		apiConfig.Logger.Errorf("could not get source id: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "malformed or missing source id"})
 		return
 	}
@@ -226,11 +211,11 @@ func patchSource(c *gin.Context) {
 		newSourceSettings = newSource.GetSettings()
 	}
 
-	apiConfig.logger.Debugf("parsed params")
+	apiConfig.Logger.Debugf("parsed params")
 
-	err = apiConfig.db.UpdateSource(userId, sourceId, newName, newAuth, newType, newSourceSettings)
+	err = apiConfig.Db.UpdateSource(userId, sourceId, newName, newAuth, newType, newSourceSettings)
 	if err != nil {
-		apiConfig.logger.Errorf("could not update source: %v", err)
+		apiConfig.Logger.Errorf("could not update source: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not update source"})
 		return
 	}
@@ -238,23 +223,19 @@ func patchSource(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{})
 }
 
-func deleteSource(c *gin.Context) {
-	apiConfig := getConfig(c)
-	if apiConfig == nil {
-		return
-	}
-
-	userId := getUserId(c)
-	sourceId, err := getSourceId(c)
+func DeleteSource(c *gin.Context) {
+	apiConfig := context.GetConfig(c)
+	userId := context.GetUserId(c)
+	sourceId, err := context.GetSourceId(c)
 	if err != nil {
-		apiConfig.logger.Errorf("could not get source id: %v", err)
+		apiConfig.Logger.Errorf("could not get source id: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "malformed or missing source id"})
 		return
 	}
 
-	err = apiConfig.db.DeleteSource(userId, sourceId)
+	err = apiConfig.Db.DeleteSource(userId, sourceId)
 	if err != nil {
-		apiConfig.logger.Errorf("could not delete source: %v", err)
+		apiConfig.Logger.Errorf("could not delete source: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not delete source"})
 		return
 	}

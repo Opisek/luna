@@ -1,6 +1,7 @@
-package api
+package handlers
 
 import (
+	"luna-backend/api/internal/context"
 	"luna-backend/interface/primitives/sources"
 	"luna-backend/types"
 	"net/http"
@@ -17,19 +18,15 @@ type exposedCalendar struct {
 	Color  *types.Color `json:"color"`
 }
 
-func getCalendars(c *gin.Context) {
+func GetCalendars(c *gin.Context) {
 	// Get config
-	config := getConfig(c)
-	if config == nil {
-		return
-	}
-
-	userId := getUserId(c)
+	config := context.GetConfig(c)
+	userId := context.GetUserId(c)
 
 	// Get all of user's sources
-	srcs, err := config.db.GetSources(userId)
+	srcs, err := config.Db.GetSources(userId)
 	if err != nil {
-		config.logger.Errorf("could not get calendars: could not get user's sources: %v", err)
+		config.Logger.Errorf("could not get calendars: could not get user's sources: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get user's sources"})
 		return
 	}
@@ -47,7 +44,7 @@ func getCalendars(c *gin.Context) {
 			calsFromSource, err := source.GetCalendars()
 			if err != nil {
 				errored = true
-				config.logger.Errorf("could not get calendars: could not get calendars from source: %v", err)
+				config.Logger.Errorf("could not get calendars: could not get calendars from source: %v", err)
 				return
 			}
 
