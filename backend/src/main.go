@@ -71,19 +71,9 @@ func main() {
 		}
 	}
 
-	//caldavUrl, err := url.Parse(os.Getenv("CALDAV_URL"))
-	//if err != nil {
-	//	panic(err)
-	//}
-
-	//util.Sources = []sources.Source{
-	//	caldav.NewCaldavSource(
-	//		caldavUrl,
-	//		auth.NewBasicAuth(os.Getenv("CALDAV_USERNAME"), os.Getenv("CALDAV_PASSWORD")),
-	//	),
-	//}
-
+	//
 	// Api Server
+	//
 	apiLogger := logger.WithField("module", "api")
 	api := api.NewApi(db, commonConfig, apiLogger)
 	mainLogger.Infof("started luna-backend %s", commonConfig.Version.String())
