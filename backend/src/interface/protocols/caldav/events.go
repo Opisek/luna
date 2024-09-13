@@ -23,10 +23,6 @@ type CaldavEvent struct {
 type CaldavEventSettings struct {
 }
 
-func emptyEvent() *CaldavEvent {
-	return &CaldavEvent{}
-}
-
 // TODO: proper parsing of start, end, duration, etc.
 func eventFromCaldav(calendar *CaldavCalendar, obj *caldav.CalendarObject) (*CaldavEvent, error) {
 	eventIndex := -1
