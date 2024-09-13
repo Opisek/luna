@@ -37,7 +37,7 @@ func eventFromCaldav(calendar *CaldavCalendar, obj *caldav.CalendarObject) (*Cal
 		}
 	}
 	if eventIndex == -1 {
-		return nil, fmt.Errorf("could not find VEVENT in calendar object %v\n", obj.Path)
+		return nil, fmt.Errorf("could not find VEVENT in calendar object %v", obj.Path)
 	}
 
 	uid := obj.Data.Children[eventIndex].Props.Get("UID")
