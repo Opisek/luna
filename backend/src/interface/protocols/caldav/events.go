@@ -1,6 +1,7 @@
 package caldav
 
 import (
+	"fmt"
 	"luna-backend/crypto"
 	"luna-backend/interface/primitives"
 	"luna-backend/types"
@@ -27,15 +28,20 @@ func emptyEvent() *CaldavEvent {
 }
 
 // TODO: proper parsing of start, end, duration, etc.
-func eventFromCaldav(calendar *CaldavCalendar, obj *caldav.CalendarObject) *CaldavEvent {
-	uid := obj.Data.Children[0].Props.Get("UID")
-	if uid == nil {
-		return emptyEvent() // TODO: error handling
+func eventFromCaldav(calendar *CaldavCalendar, obj *caldav.CalendarObject) (*CaldavEvent, error) {
+	eventIndex := -1
+	for i, child := range obj.Data.Children {
+		if child.Name == "VEVENT" {
+			eventIndex = i
+			break
+		}
 	}
-	summary := obj.Data.Children[0].Props.Get("SUMMARY")
-	if summary == nil {
-		return emptyEvent() // TODO: error handling
+	if eventIndex == -1 {
+		return nil, fmt.Errorf("could not find VEVENT in calendar object %v\n", obj.Path)
 	}
+
+	uid := obj.Data.Children[eventIndex].Props.Get("UID")
+	summary := obj.Data.Children[eventIndex].Props.Get("SUMMARY")
 	//dtstart := obj.Data.Children[0].Props.Get("DTSTART") // TODO: why does this not work?
 	//tzid := dtstart.Params.Get("TZID")
 
@@ -59,7 +65,7 @@ func eventFromCaldav(calendar *CaldavCalendar, obj *caldav.CalendarObject) *Cald
 		calendar: calendar,
 		start:    time.Now(),
 		end:      time.Now().Add(time.Hour),
-	}
+	}, nil
 }
 
 func (event *CaldavEventSettings) GetBytes() []byte {

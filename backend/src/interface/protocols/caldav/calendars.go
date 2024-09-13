@@ -120,7 +120,10 @@ func (calendar *CaldavCalendar) GetEvents(start time.Time, end time.Time) ([]pri
 
 	convertedEvents := make([]*CaldavEvent, len(events))
 	for i, event := range events {
-		convertedEvents[i] = eventFromCaldav(calendar, &event)
+		convertedEvents[i], err = eventFromCaldav(calendar, &event)
+		if err != nil {
+			return nil, fmt.Errorf("could not convert event: %w", err)
+		}
 	}
 
 	castedEvents := make([]primitives.Event, len(convertedEvents))
