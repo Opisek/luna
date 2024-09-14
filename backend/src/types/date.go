@@ -70,4 +70,5 @@ func (ed *EventDate) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// TODO: validation according to RFC-5545 3.3.10, 3.8.5.3
 type EventRecurrence map[string]string
