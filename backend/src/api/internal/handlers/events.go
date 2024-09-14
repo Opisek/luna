@@ -14,11 +14,12 @@ import (
 )
 
 type exposedEvent struct {
-	Id       types.ID     `json:"id"`
-	Calendar types.ID     `json:"calendar"`
-	Name     string       `json:"name"`
-	Desc     string       `json:"desc"`
-	Color    *types.Color `json:"color"`
+	Id       types.ID         `json:"id"`
+	Calendar types.ID         `json:"calendar"`
+	Name     string           `json:"name"`
+	Desc     string           `json:"desc"`
+	Color    *types.Color     `json:"color"`
+	Date     *types.EventDate `json:"date"`
 }
 
 func getEvents(config *config.Api, cals []primitives.Calendar, start time.Time, end time.Time) ([]primitives.Event, error) {
@@ -109,6 +110,7 @@ func GetEvents(c *gin.Context) {
 			Name:     event.GetName(),
 			Desc:     event.GetDesc(),
 			Color:    event.GetColor(),
+			Date:     event.GetDate(),
 		}
 	}
 

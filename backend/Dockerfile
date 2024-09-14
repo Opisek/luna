@@ -18,5 +18,6 @@ RUN make build
 # Run the binary
 FROM alpine:latest
 WORKDIR /app
+RUN apk add tzdata
 COPY --from=build /app/src/luna-backend .
 ENTRYPOINT [ "/app/luna-backend" ]

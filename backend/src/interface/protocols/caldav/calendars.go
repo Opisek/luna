@@ -122,7 +122,7 @@ func (calendar *CaldavCalendar) GetEvents(start time.Time, end time.Time) ([]pri
 	for i, event := range events {
 		convertedEvents[i], err = eventFromCaldav(calendar, &event)
 		if err != nil {
-			return nil, fmt.Errorf("could not convert event: %w", err)
+			return nil, fmt.Errorf("could not convert event %v: %w", event.Path, err)
 		}
 	}
 
