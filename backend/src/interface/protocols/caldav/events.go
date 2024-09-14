@@ -75,6 +75,18 @@ func eventFromCaldav(calendar *CaldavCalendar, obj *caldav.CalendarObject) (*Cal
 	// Basic info
 	uid := obj.Data.Children[eventIndex].Props.Get("UID")
 	summary := obj.Data.Children[eventIndex].Props.Get("SUMMARY")
+	// TODO: proper string parsing
+	//summaryStr := strings.Join(strings.Split(summary.Value, "\\\\"), "\n")
+	summaryStr := summary.Value
+	description := obj.Data.Children[eventIndex].Props.Get("DESCRIPTION")
+	var descStr string
+	if description != nil {
+		// TODO: proper string parsing
+		//descStr = strings.Join(strings.Split(description.Value, "\\\\"), "\n")
+		descStr = description.Value
+	} else {
+		descStr = ""
+	}
 
 	// Date
 	dtstart := obj.Data.Children[eventIndex].Props.Get("DTSTART")
@@ -119,8 +131,8 @@ func eventFromCaldav(calendar *CaldavCalendar, obj *caldav.CalendarObject) (*Cal
 
 	return &CaldavEvent{
 		uid:       uid.Value,
-		name:      summary.Value,
-		desc:      summary.Value,
+		name:      summaryStr,
+		desc:      descStr,
 		settings:  &CaldavEventSettings{},
 		calendar:  calendar,
 		eventDate: eventDate,
