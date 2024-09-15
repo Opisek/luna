@@ -1,11 +1,10 @@
 import { redirect, type Actions } from "@sveltejs/kit";
 import { callApi } from "../../lib/server/api.server";
+import { getRedirectPage } from "../../lib/common/parsing";
 
 export const actions = {
   default: async ({cookies, request}) => {
-    const data = await request.formData();
-
-    const res = await callApi("login", { method: "POST", body: data });
+    const res = await callApi("login", { method: "POST", body: await request.formData() });
 
     if (res.ok) {
       const body = await res.json();
@@ -20,15 +19,7 @@ export const actions = {
         httpOnly: true
       });
 
-      const url = new URL(request.url);
-      let redirectPage = url.searchParams.get("redirect");
-      if (redirectPage == null || redirectPage == "") {
-        redirectPage = '/';
-      } else {
-        redirectPage = decodeURIComponent(redirectPage);
-      }
-
-      redirect(302, redirectPage);
+      redirect(302, getRedirectPage(new URL(request.url)));
     } else {
       return await res.json();
     }

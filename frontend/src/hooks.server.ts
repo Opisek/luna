@@ -1,4 +1,5 @@
 import type { Handle } from "@sveltejs/kit";
+import { getRedirectPage } from "./lib/common/parsing";
 
 const loginPaths = [
   "login",
@@ -22,18 +23,11 @@ export const handle: Handle = async ({ event, resolve }) => {
       }
     }
 
-    let redirect = currentUrl.searchParams.get("redirect")
-    if (redirect == null || redirect == "") {
-      redirect = "/"
-    } else {
-      redirect = decodeURIComponent(redirect)
-    }
-
     if (isLogin) {
       return new Response(null, {
         status: 302,
         headers: {
-          location: redirect,
+          location: getRedirectPage(currentUrl),
         },
       })
     }
