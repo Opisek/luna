@@ -1,9 +1,9 @@
+import { callApi } from "../../../lib/server/api.server";
 import type { RequestEvent } from "./$types";
 //import { API_URL } from "$env/static/private";
 
 const proxy = (async ({ params, request }: RequestEvent) => {
-  // @ts-ignore
-  return await fetch(`${process.env.API_URL}/api/${params.endpoint}`, request);
+  return await callApi(params.endpoint, request);
 })
 
 export const DELETE = proxy

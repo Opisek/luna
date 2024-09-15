@@ -1,0 +1,60 @@
+import type { Handle } from "@sveltejs/kit";
+
+const loginPaths = [
+  "login",
+  "register"
+]
+
+const unprivilegedPaths = loginPaths.concat([
+  "api"
+])
+
+export const handle: Handle = async ({ event, resolve }) => {
+  const tokenPresent = event.cookies.get("tokenPresent");
+  const currentUrl = new URL(event.request.url)
+
+  if (tokenPresent) {
+    let isLogin = false
+    for (const path of loginPaths) {
+      if (currentUrl.pathname.startsWith(`/${path}`)) {
+        isLogin = true
+        break
+      }
+    }
+
+    let redirect = currentUrl.searchParams.get("redirect")
+    if (redirect == null || redirect == "") {
+      redirect = "/"
+    } else {
+      redirect = decodeURIComponent(redirect)
+    }
+
+    if (isLogin) {
+      return new Response(null, {
+        status: 302,
+        headers: {
+          location: redirect,
+        },
+      })
+    }
+  } else {
+    let isUnprivileged = false
+    for (const path of unprivilegedPaths) {
+      if (currentUrl.pathname.startsWith(`/${path}`)) {
+        isUnprivileged = true
+        break
+      }
+    }
+    
+    if (!isUnprivileged) {
+      return new Response(null, {
+        status: 302,
+        headers: {
+          location: `/login?redirect=${encodeURIComponent(event.request.url)}`,
+        },
+      })
+    }
+  }
+
+  return await resolve(event)
+}
