@@ -125,8 +125,6 @@ func eventFromCaldav(calendar *CaldavCalendar, obj *caldav.CalendarObject) (*Cal
 		eventDate = types.NewEventDateFromDuration(startTime, &dur, eventRecurrence)
 	}
 
-	fmt.Println("Event: ", summaryStr, "\t Path: ", obj.Path)
-
 	return &CaldavEvent{
 		uid:       uid.Value,
 		name:      summaryStr,

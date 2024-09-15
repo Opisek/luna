@@ -53,7 +53,6 @@ func (source *CaldavSource) GetSettings() primitives.SourceSettings {
 
 func NewCaldavSource(name string, url *types.Url, auth auth.AuthMethod) *CaldavSource {
 	return &CaldavSource{
-		//id:   types.RandomId(),
 		id:   types.EmptyId(), // Placeholder until the database assigns an ID
 		name: name,
 		auth: auth,
