@@ -29,6 +29,4 @@ COPY package.json .
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY --from=build /app/build ./build
 USER node:node
-ENV NODE_ENV="production"
-ENV ORIGIN="http://localhost:3000"
 ENTRYPOINT [ "node", "build/index.js" ]
