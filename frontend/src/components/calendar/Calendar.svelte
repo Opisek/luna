@@ -20,7 +20,7 @@
     const lastMonthDay = new Date(year, month + 1, 0);
     const firstDayOfWeek = (firstMonthDay.getDay() + 6) % 7;
 
-    amountOfRows = Math.ceil((lastMonthDay.getDate() + firstDayOfWeek - 1) / 7);
+    amountOfRows = Math.ceil((lastMonthDay.getDate() + firstDayOfWeek) / 7);
 
     const firstViewDay = new Date(firstMonthDay);
     firstViewDay.setDate(firstMonthDay.getDate() - firstDayOfWeek);
