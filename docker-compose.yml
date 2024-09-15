@@ -3,10 +3,20 @@ version: "3.9"
 name: luna
 services:
 
+  luna-frontend:
+    container_name: luna-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      API_URL: http://luna-backend:3000
+    build:
+      context: frontend
+      dockerfile: Dockerfile
+
   luna-backend:
     container_name: luna-backend
     ports:
-      - "3000:3000"
+      - "3001:3000"
     volumes:
       - /srv/luna/data:/data
     environment:

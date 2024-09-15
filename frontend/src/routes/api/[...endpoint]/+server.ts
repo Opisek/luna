@@ -1,9 +1,10 @@
 import type { RequestEvent } from "./$types";
-import { API_URL } from "$env/static/private";
+//import { API_URL } from "$env/static/private";
 
 function proxy(method: string) {
   return (async ({ params }: RequestEvent) => {
-    return await fetch(`${API_URL}/api/${params.endpoint}`, { method: method });
+    // @ts-ignore
+    return await fetch(`${process.env.API_URL}/api/${params.endpoint}`, { method: method });
   })
 }
 
