@@ -1,15 +1,14 @@
 import type { RequestEvent } from "./$types";
 //import { API_URL } from "$env/static/private";
 
-function proxy(method: string) {
-  return (async ({ params }: RequestEvent) => {
-    // @ts-ignore
-    return await fetch(`${process.env.API_URL}/api/${params.endpoint}`, { method: method });
-  })
-}
+const proxy = (async ({ params, request }: RequestEvent) => {
+  console.log(request.url)
+  // @ts-ignore
+  return await fetch(`${process.env.API_URL}/api/${params.endpoint}`, request);
+})
 
-export const DELETE = proxy("DELETE");
-export const GET = proxy("GET");
-export const PATCH = proxy("PATCH");
-export const POST = proxy("POST");
-export const PUT = proxy("PUT");
+export const DELETE = proxy
+export const GET = proxy;
+export const PATCH = proxy;
+export const POST = proxy;
+export const PUT = proxy;

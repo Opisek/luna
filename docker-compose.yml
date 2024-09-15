@@ -8,6 +8,7 @@ services:
     ports:
       - "3000:3000"
     environment:
+      #ORIGIN: http://localhost:3000
       API_URL: http://luna-backend:3000
     build:
       context: frontend
@@ -15,8 +16,8 @@ services:
 
   luna-backend:
     container_name: luna-backend
-    ports:
-      - "3001:3000"
+    #ports:
+    #  - "3001:3000"
     volumes:
       - /srv/luna/data:/data
     environment:
