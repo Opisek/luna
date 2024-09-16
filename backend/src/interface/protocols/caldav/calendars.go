@@ -29,7 +29,7 @@ type CaldavCalendarSettings struct {
 func (source *CaldavSource) calendarFromCaldav(rawCalendar caldav.Calendar) (*CaldavCalendar, error) {
 	url, err := types.NewUrl(rawCalendar.Path)
 	if err != nil {
-		return nil, fmt.Errorf("could not parse calendar URL: %w", err)
+		return nil, fmt.Errorf("could not parse calendar URL %v: %w", rawCalendar.Path, err)
 	}
 
 	settings := &CaldavCalendarSettings{

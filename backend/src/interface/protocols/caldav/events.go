@@ -22,6 +22,7 @@ type CaldavEvent struct {
 }
 
 type CaldavEventSettings struct {
+	Url *types.Url `json:"url"`
 }
 
 func parseTime(icalTime *ical.Prop) (*time.Time, error) {
@@ -44,6 +45,7 @@ func parseTime(icalTime *ical.Prop) (*time.Time, error) {
 	}
 
 	location, err := time.LoadLocation(tzid)
+	fmt.Println(tzid, location)
 	if err != nil {
 		return nil, fmt.Errorf("could not parse timezone location %v: %v", tzid, err)
 	}
@@ -125,11 +127,18 @@ func eventFromCaldav(calendar *CaldavCalendar, obj *caldav.CalendarObject) (*Cal
 		eventDate = types.NewEventDateFromDuration(startTime, &dur, eventRecurrence)
 	}
 
+	url, err := types.NewUrl(obj.Path)
+	if err != nil {
+		return nil, fmt.Errorf("could not parse event URL %v: %w", obj.Path, err)
+	}
+
 	return &CaldavEvent{
-		uid:       uid.Value,
-		name:      summaryStr,
-		desc:      descStr,
-		settings:  &CaldavEventSettings{},
+		uid:  uid.Value,
+		name: summaryStr,
+		desc: descStr,
+		settings: &CaldavEventSettings{
+			Url: url,
+		},
 		calendar:  calendar,
 		eventDate: eventDate,
 	}, nil
