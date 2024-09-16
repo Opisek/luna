@@ -124,7 +124,7 @@
     </div>
 
     <Calendar
-      year={2024}
+      year={selectedYear}
       month={selectedMonth}
       events={events}
     />

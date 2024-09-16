@@ -28,7 +28,7 @@
     lastViewDay.setDate(firstMonthDay.getDate() + 7 * amountOfRows - 1);
 
     // Event pre-processing
-    const filteredEvents = events.sort(compareEventsByStartDate).filter(e => e.date.start >= firstViewDay && e.date.end < lastViewDay);
+    const filteredEvents = events.sort(compareEventsByStartDate).filter(e => e.date.start.getTime() >= firstViewDay.getTime() && e.date.end.getTime() < lastViewDay.getTime());
 
     // Fill
     days = [];
@@ -44,14 +44,14 @@
           ? []
           : processedEvents[i - 1]
             .map(
-              e => e === null || e.date.end <= dateIterator
+              e => e === null || e.date.end.getTime() <= dateIterator.getTime()
                 ? null
                 : e
             );
       
       // Fit new events in fitting slots
       let emptyIterator = 0;
-      while (eventIterator < filteredEvents.length && filteredEvents[eventIterator].date.start <= dateIterator) {
+      while (eventIterator < filteredEvents.length && filteredEvents[eventIterator].date.start.getTime() <= dateIterator.getTime()) {
         while (emptyIterator < dayEvents.length && dayEvents[emptyIterator] != null) emptyIterator++;
         if (emptyIterator < dayEvents.length) dayEvents[emptyIterator] = filteredEvents[eventIterator];
         else dayEvents.push(filteredEvents[eventIterator]);
