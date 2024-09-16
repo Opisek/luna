@@ -44,10 +44,14 @@
           ? []
           : processedEvents[i - 1]
             .map(
-              e => e === null || e.date.end.getTime() <= dateIterator.getTime()
+              e => e === null || e.date.end.getTime() < dateIterator.getTime()
                 ? null
                 : e
             );
+            
+      
+      days.push(new Date(dateIterator));
+      dateIterator.setDate(dateIterator.getDate() + 1);
       
       // Fit new events in fitting slots
       let emptyIterator = 0;
@@ -61,10 +65,7 @@
 
       // Remove unnecessary nulls
       while(dayEvents.length > 0 && dayEvents[dayEvents.length - 1] == null) dayEvents.pop();
-
       processedEvents.push(dayEvents);
-      days.push(new Date(dateIterator));
-      dateIterator.setDate(dateIterator.getDate() + 1);
     }
   })(month, year, events);
 

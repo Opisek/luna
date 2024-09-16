@@ -9,13 +9,11 @@
   export let currentlyClickedEvent: EventModel | null;
   export let clickCallback: (event: EventModel) => void;
 
-  const previousDate = new Date(date);
-  previousDate.setDate(date.getDate() - 1);
   const nextDate = new Date(date);
   nextDate.setDate(date.getDate() + 1);
 
-  const isEventStart = event && previousDate < event.date.start;
-  const isEventEnd = event && nextDate >= event.date.end;
+  const isEventStart = event && event.date.start.getTime() >= date.getTime();
+  const isEventEnd = event && nextDate.getTime() >= event.date.end.getTime();
 
   const isFirstDisplay = isFirstDay || isEventStart;
   const isLastDisplay = isLastDay || isEventEnd;
