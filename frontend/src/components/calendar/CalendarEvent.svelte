@@ -1,21 +1,21 @@
 <script lang="ts">
 
-  export let event: CalendarEventModel | null;
+  export let event: EventModel | null;
   export let isFirstDay: boolean;
   export let isLastDay: boolean;
   export let date: Date;
 
-  export let currentlyHoveredEvent: CalendarEventModel | null;
-  export let currentlyClickedEvent: CalendarEventModel | null;
-  export let clickCallback: (event: CalendarEventModel) => void;
+  export let currentlyHoveredEvent: EventModel | null;
+  export let currentlyClickedEvent: EventModel | null;
+  export let clickCallback: (event: EventModel) => void;
 
   const previousDate = new Date(date);
   previousDate.setDate(date.getDate() - 1);
   const nextDate = new Date(date);
   nextDate.setDate(date.getDate() + 1);
 
-  const isEventStart = event && previousDate < event.start;
-  const isEventEnd = event && nextDate >= event.end;
+  const isEventStart = event && previousDate < event.date.start;
+  const isEventEnd = event && nextDate >= event.date.end;
 
   const isFirstDisplay = isFirstDay || isEventStart;
   const isLastDisplay = isLastDay || isEventEnd;
@@ -97,6 +97,6 @@
   tabindex="0"
 >
   {#if event && isFirstDisplay}
-    {event.title}
+    {event.name}
   {/if}
 </div>

@@ -8,11 +8,11 @@
   export let isFirstDay: boolean;
   export let isLastDay: boolean;
 
-  export let events: (CalendarEventModel | null)[];
+  export let events: (EventModel | null)[];
   
-  export let currentlyHoveredEvent: CalendarEventModel | null;
-  export let currentlyClickedEvent: CalendarEventModel | null;
-  export let clickCallback: (event: CalendarEventModel) => void;
+  export let currentlyHoveredEvent: EventModel | null;
+  export let currentlyClickedEvent: EventModel | null;
+  export let clickCallback: (event: EventModel) => void;
 </script>
 
 <style lang="scss">

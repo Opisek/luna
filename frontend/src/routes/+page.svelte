@@ -6,9 +6,11 @@
 
   import { browser } from "$app/environment";
   import { getMonthName } from "../lib/common/humanization";
-    import CalendarEntry from "../components/interactive/CalendarEntry.svelte";
+  import CalendarEntry from "../components/interactive/CalendarEntry.svelte";
 
+  let sources: SourceModel[] = [];
   let calendars: CalendarModel[] = [];
+  let events: EventModel[] = [];
 
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth() 
@@ -28,6 +30,16 @@
     selectedMonth = (selectedMonth + 1) % 12;
   }
 
+  async function fetchSources(): Promise<SourceModel[]> {
+    const response = await fetch("/api/sources");
+    if (response.ok) return response.json();
+    else {
+      console.log("Failed to fetch sources");
+      console.log(response);
+      return [];
+    }
+  }
+
   async function fetchCalendars(): Promise<CalendarModel[]> {
     const response = await fetch("/api/calendars");
     if (response.ok) return response.json();
@@ -38,9 +50,28 @@
     }
   }
 
+  async function fetchEvents(): Promise<EventModel[]> {
+    const response = await fetch("/api/events");
+    if (response.ok) {
+      const events = await response.json();
+      for (const event of events) {
+        event.date.start = new Date(event.date.start);
+        event.date.end = new Date(event.date.end);
+      }
+      return events;
+    } else {
+      console.log("Failed to fetch events");
+      console.log(response);
+      return [];
+    }
+  }
+
   (async () => {
     if (!browser) return;
+    sources = await fetchSources();
     calendars = await fetchCalendars();
+    events = await fetchEvents();
+    console.log(JSON.stringify(events));
   })();
 </script>
 
@@ -95,43 +126,7 @@
     <Calendar
       year={2024}
       month={selectedMonth}
-      events={[
-        {
-          title: "Event 1",
-          start: new Date(2024, 3, 1),
-          end: new Date(2024, 3, 3),
-          allDay: false,
-          color: "red"
-        },
-        {
-          title: "Event 2",
-          start: new Date(2024, 3, 2),
-          end: new Date(2024, 3, 4),
-          allDay: false,
-          color: "blue"
-        },
-        {
-          title: "Event 3",
-          start: new Date(2024, 3, 3),
-          end: new Date(2024, 3, 5),
-          allDay: false,
-          color: "green"
-        },
-        {
-          title: "Event 4",
-          start: new Date(2024, 3, 4),
-          end: new Date(2024, 3, 6),
-          allDay: false,
-          color: "yellow"
-        },
-        {
-          title: "Event 5",
-          start: new Date(2024, 3, 7),
-          end: new Date(2024, 3, 9),
-          allDay: false,
-          color: "yellow"
-        }
-      ]}
+      events={events}
     />
   </main>
 </div>

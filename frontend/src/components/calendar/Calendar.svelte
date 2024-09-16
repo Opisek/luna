@@ -5,16 +5,16 @@
 
   export let month: number;
   export let year: number;
-  export let events: CalendarEventModel[];
+  export let events: EventModel[];
 
-  let currentlyHoveredEvent: CalendarEventModel | null = null;
-  let currentlyClickedEvent: CalendarEventModel | null = null;
+  let currentlyHoveredEvent: EventModel | null = null;
+  let currentlyClickedEvent: EventModel | null = null;
 
   let days: Date[] = [];
   let amountOfRows: number = 0;
-  let processedEvents: (CalendarEventModel | null)[][] = [];
+  let processedEvents: (EventModel | null)[][] = [];
 
-  $: ((month: number, year: number, events: CalendarEventModel[]) => {
+  $: ((month: number, year: number, events: EventModel[]) => {
     // Date calculation
     const firstMonthDay = new Date(year, month, 1);
     const lastMonthDay = new Date(year, month + 1, 0);
@@ -28,7 +28,7 @@
     lastViewDay.setDate(firstMonthDay.getDate() + 7 * amountOfRows - 1);
 
     // Event pre-processing
-    const filteredEvents = events.sort(compareEventsByStartDate).filter(e => e.start >= firstViewDay && e.end < lastViewDay);
+    const filteredEvents = events.sort(compareEventsByStartDate).filter(e => e.date.start >= firstViewDay && e.date.end < lastViewDay);
 
     // Fill
     days = [];
@@ -44,14 +44,14 @@
           ? []
           : processedEvents[i - 1]
             .map(
-              e => e === null || e.end <= dateIterator
+              e => e === null || e.date.end <= dateIterator
                 ? null
                 : e
             );
       
       // Fit new events in fitting slots
       let emptyIterator = 0;
-      while (eventIterator < filteredEvents.length && filteredEvents[eventIterator].start <= dateIterator) {
+      while (eventIterator < filteredEvents.length && filteredEvents[eventIterator].date.start <= dateIterator) {
         while (emptyIterator < dayEvents.length && dayEvents[emptyIterator] != null) emptyIterator++;
         if (emptyIterator < dayEvents.length) dayEvents[emptyIterator] = filteredEvents[eventIterator];
         else dayEvents.push(filteredEvents[eventIterator]);
@@ -68,8 +68,8 @@
     }
   })(month, year, events);
 
-  function eventClick(event: CalendarEventModel) {
-    window.alert(event.title);
+  function eventClick(event: EventModel) {
+    window.alert(event.name);
   }
 </script>
 

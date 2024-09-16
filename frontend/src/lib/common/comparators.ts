@@ -1,3 +1,3 @@
-export function compareEventsByStartDate(a: CalendarEventModel, b: CalendarEventModel): number {
-  return a.start.getTime() - b.start.getTime();
+export function compareEventsByStartDate(a: EventModel, b: EventModel): number {
+  return a.date.start.getTime() - b.date.start.getTime();
 }
