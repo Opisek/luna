@@ -1,5 +1,4 @@
 <script lang="ts">
-
   export let event: EventModel | null;
   export let isFirstDay: boolean;
   export let isLastDay: boolean;
@@ -20,6 +19,10 @@
 
   function mouseEnter() {
     if (event == null) return;
+
+    if (event && event.name == "Test") {
+      console.log(event.date.start, event.date.end, date);
+    }
 
     currentlyHoveredEvent = event;
   }

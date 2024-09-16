@@ -35,6 +35,8 @@
     processedEvents = [];
 
     const dateIterator = new Date(firstViewDay);
+    const offset = new Date().getTimezoneOffset();
+    console.log(offset)
     let eventIterator = 0;
 
     for (let i = 0; i < 7 * amountOfRows; i++) {
@@ -44,7 +46,7 @@
           ? []
           : processedEvents[i - 1]
             .map(
-              e => e === null || e.date.end.getTime() < dateIterator.getTime()
+              e => e === null || e.date.end.getTime() <= dateIterator.getTime()
                 ? null
                 : e
             );
@@ -55,7 +57,11 @@
       
       // Fit new events in fitting slots
       let emptyIterator = 0;
-      while (eventIterator < filteredEvents.length && filteredEvents[eventIterator].date.start.getTime() <= dateIterator.getTime()) {
+      while (
+        eventIterator < filteredEvents.length &&
+        filteredEvents[eventIterator].date.start.getTime() < dateIterator.getTime() &&
+        filteredEvents[eventIterator].date.start.getTime() >= days[days.length - 1].getTime()
+      ) {
         while (emptyIterator < dayEvents.length && dayEvents[emptyIterator] != null) emptyIterator++;
         if (emptyIterator < dayEvents.length) dayEvents[emptyIterator] = filteredEvents[eventIterator];
         else dayEvents.push(filteredEvents[eventIterator]);

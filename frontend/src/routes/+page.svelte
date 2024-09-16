@@ -71,7 +71,6 @@
     sources = await fetchSources();
     calendars = await fetchCalendars();
     events = await fetchEvents();
-    console.log(JSON.stringify(events));
   })();
 </script>
 
