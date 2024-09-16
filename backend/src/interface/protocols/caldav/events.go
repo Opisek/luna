@@ -45,7 +45,6 @@ func parseTime(icalTime *ical.Prop) (*time.Time, error) {
 	}
 
 	location, err := time.LoadLocation(tzid)
-	fmt.Println(tzid, location)
 	if err != nil {
 		return nil, fmt.Errorf("could not parse timezone location %v: %v", tzid, err)
 	}
