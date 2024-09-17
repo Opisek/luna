@@ -10,6 +10,7 @@ type Event interface {
 	GetName() string
 	GetDesc() string
 	GetColor() *types.Color
+	SetColor(color *types.Color)
 	GetSettings() EventSettings
 	GetDate() *types.EventDate
 }

@@ -65,6 +65,18 @@ func ColorFromRGBA(rgba color.RGBA) *Color {
 	return &col
 }
 
+func ColorFromBytes(bytes []byte) *Color {
+	rgba := color.RGBA{
+		R: bytes[0],
+		G: bytes[1],
+		B: bytes[2],
+		A: 255,
+	}
+
+	col := ColorFromRGBA(rgba)
+	return col
+}
+
 func (c *Color) MarshalJSON() ([]byte, error) {
 	if c == nil {
 		return json.Marshal(nil)

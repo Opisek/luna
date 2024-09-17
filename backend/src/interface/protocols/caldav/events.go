@@ -16,6 +16,7 @@ type CaldavEvent struct {
 	uid       string
 	name      string
 	desc      string
+	color     *types.Color
 	settings  *CaldavEventSettings
 	calendar  *CaldavCalendar
 	eventDate *types.EventDate
@@ -168,7 +169,15 @@ func (event *CaldavEvent) GetSettings() primitives.EventSettings {
 }
 
 func (event *CaldavEvent) GetColor() *types.Color {
-	return types.ColorFromVals(50, 50, 50)
+	if event.color == nil {
+		return event.calendar.color
+	} else {
+		return event.color
+	}
+}
+
+func (event *CaldavEvent) SetColor(color *types.Color) {
+	event.color = color
 }
 
 func (event *CaldavEvent) GetDate() *types.EventDate {

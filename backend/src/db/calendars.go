@@ -10,7 +10,7 @@ import (
 
 type calendarEntry struct {
 	Id       types.ID
-	Source   types.ID
+	Source   primitives.Source
 	Color    *types.Color
 	Settings primitives.CalendarSettings
 }
@@ -64,10 +64,79 @@ func (db *Database) insertCalendars(cals []primitives.Calendar) error {
 	return nil
 }
 
+func parseCalendarSettings(sourceType string, settings []byte) (primitives.CalendarSettings, error) {
+	switch sourceType {
+	case types.SourceCaldav:
+		return nil, nil
+	case types.SourceIcal:
+		fallthrough
+	default:
+		return nil, fmt.Errorf("unknown source type %v", sourceType)
+	}
+}
+
+func (db *Database) getCalendars(source primitives.Source) ([]*calendarEntry, error) {
+	rows, err := db.connection.Query(`
+		SELECT id, color, settings
+		FROM calendars
+		WHERE source = $1;
+	`, source.GetId())
+
+	if err != nil {
+		return nil, fmt.Errorf("could not get calendars from database: %v", err)
+	}
+
+	defer rows.Close()
+
+	cals := []*calendarEntry{}
+	for rows.Next() {
+		var id types.ID
+		var color []byte
+		var settings []byte
+
+		err := rows.Scan(&id, &color, &settings)
+		if err != nil {
+			return nil, fmt.Errorf("could not scan calendar row: %v", err)
+		}
+
+		parsedSettings, err := parseCalendarSettings(source.GetType(), settings)
+		if err != nil {
+			return nil, fmt.Errorf("could not parse calendar settings: %v", err)
+		}
+
+		cals = append(cals, &calendarEntry{
+			Id:       id,
+			Source:   source,
+			Color:    types.ColorFromBytes(color),
+			Settings: parsedSettings,
+		})
+	}
+
+	return cals, nil
+}
+
 func (db *Database) GetCalendars(source primitives.Source) ([]primitives.Calendar, error) {
 	cals, err := source.GetCalendars()
 	if err != nil {
 		return nil, fmt.Errorf("could not get calendars from source %v: %v", source.GetId().String(), err)
+	}
+
+	calMap := map[types.ID]primitives.Calendar{}
+	for _, cal := range cals {
+		calMap[cal.GetId()] = cal
+	}
+
+	dbCals, err := db.getCalendars(source)
+	if err != nil {
+		return nil, fmt.Errorf("could not get cached calendars: %v", err)
+	}
+
+	for _, dbCal := range dbCals {
+		if cal, ok := calMap[dbCal.Id]; ok {
+			if cal.GetColor() == nil {
+				cal.SetColor(dbCal.Color)
+			}
+		}
 	}
 
 	err = db.insertCalendars(cals)
@@ -76,4 +145,18 @@ func (db *Database) GetCalendars(source primitives.Source) ([]primitives.Calenda
 	}
 
 	return cals, nil
+}
+
+func (db *Database) UpdateCalendar(cal primitives.Calendar) error {
+	_, err := db.connection.Exec(`
+		UPDATE calendars
+		SET color = $1, settings = $2
+		WHERE id = $3;
+	`, cal.GetColor().Bytes(), cal.GetSettings().Bytes(), cal.GetId())
+
+	if err != nil {
+		return fmt.Errorf("could not update calendar %v: %v", cal.GetId().String(), err)
+	}
+
+	return nil
 }

@@ -17,6 +17,7 @@ type CaldavCalendar struct {
 	name     string
 	desc     string
 	source   *CaldavSource
+	color    *types.Color
 	settings *CaldavCalendarSettings
 	auth     auth.AuthMethod
 	client   *caldav.Client
@@ -40,6 +41,7 @@ func (source *CaldavSource) calendarFromCaldav(rawCalendar caldav.Calendar) (*Ca
 		name:     rawCalendar.Name,
 		desc:     rawCalendar.Description,
 		source:   source,
+		color:    nil,
 		settings: settings,
 		client:   source.client,
 	}
@@ -80,7 +82,11 @@ func (calendar *CaldavCalendar) GetSettings() primitives.CalendarSettings {
 }
 
 func (calendar *CaldavCalendar) GetColor() *types.Color {
-	return types.ColorFromVals(50, 50, 50)
+	return calendar.color
+}
+
+func (calendar *CaldavCalendar) SetColor(color *types.Color) {
+	calendar.color = color
 }
 
 func (calendar *CaldavCalendar) GetEvents(start time.Time, end time.Time) ([]primitives.Event, error) {

@@ -11,6 +11,7 @@ type Calendar interface {
 	GetName() string
 	GetDesc() string
 	GetColor() *types.Color
+	SetColor(color *types.Color)
 	GetSettings() CalendarSettings
 	GetEvents(start time.Time, end time.Time) ([]Event, error)
 }
