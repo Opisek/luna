@@ -7,7 +7,7 @@ import (
 
 type Calendar interface {
 	GetId() types.ID
-	GetSource() types.ID
+	GetSource() Source
 	GetName() string
 	GetDesc() string
 	GetColor() *types.Color
@@ -16,5 +16,5 @@ type Calendar interface {
 }
 
 type CalendarSettings interface {
-	GetBytes() []byte
+	Bytes() []byte
 }

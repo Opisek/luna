@@ -21,6 +21,12 @@ func (c *Color) String() string {
 	return col
 }
 
+func (c *Color) Bytes() []byte {
+	rgba := c.RGBA()
+
+	return []byte{rgba.R, rgba.G, rgba.B}
+}
+
 func ParseColor(rawColor string) (*Color, error) {
 	if len(rawColor) != 7 || rawColor[0] != '#' {
 		return nil, fmt.Errorf("invalid color format")

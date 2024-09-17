@@ -13,11 +13,12 @@ import (
 )
 
 type exposedCalendar struct {
-	Id     types.ID     `json:"id"`
-	Source types.ID     `json:"source"`
-	Name   string       `json:"name"`
-	Desc   string       `json:"desc"`
-	Color  *types.Color `json:"color"`
+	Id       types.ID                    `json:"id"`
+	Source   types.ID                    `json:"source"`
+	Name     string                      `json:"name"`
+	Desc     string                      `json:"desc"`
+	Color    *types.Color                `json:"color"`
+	Settings primitives.CalendarSettings `json:"settings"` // TODO: REMOVE FROM PRODUCTION, TESTING ONLY
 }
 
 func getCalendars(config *config.Api, srcs []primitives.Source) ([]primitives.Calendar, error) {
@@ -31,10 +32,10 @@ func getCalendars(config *config.Api, srcs []primitives.Source) ([]primitives.Ca
 		go func(i int, source primitives.Source) {
 			defer waitGroup.Done()
 
-			calsFromSource, err := source.GetCalendars()
+			calsFromSource, err := config.Db.GetCalendars(source)
 			if err != nil {
 				errored = true
-				config.Logger.Errorf("could not get calendars: could not get calendars from source %v: %v", src.GetId().String(), err)
+				config.Logger.Errorf("could not get calendars: %v", err)
 				return
 			}
 
@@ -81,11 +82,12 @@ func GetCalendars(c *gin.Context) {
 	convertedCals := make([]exposedCalendar, len(cals))
 	for i, cal := range cals {
 		convertedCals[i] = exposedCalendar{
-			Id:     cal.GetId(),
-			Source: cal.GetSource(),
-			Name:   cal.GetName(),
-			Desc:   cal.GetDesc(),
-			Color:  cal.GetColor(),
+			Id:       cal.GetId(),
+			Source:   cal.GetSource().GetId(),
+			Name:     cal.GetName(),
+			Desc:     cal.GetDesc(),
+			Color:    cal.GetColor(),
+			Settings: cal.GetSettings(),
 		}
 	}
 

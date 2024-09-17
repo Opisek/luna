@@ -47,7 +47,7 @@ func (source *CaldavSource) calendarFromCaldav(rawCalendar caldav.Calendar) (*Ca
 	return calendar, nil
 }
 
-func (settings *CaldavCalendarSettings) GetBytes() []byte {
+func (settings *CaldavCalendarSettings) Bytes() []byte {
 	bytes, err := json.Marshal(settings)
 	if err != nil {
 		panic(err)
@@ -67,8 +67,8 @@ func (calendar *CaldavCalendar) GetDesc() string {
 	return calendar.desc
 }
 
-func (calendar *CaldavCalendar) GetSource() types.ID {
-	return calendar.source.id
+func (calendar *CaldavCalendar) GetSource() primitives.Source {
+	return calendar.source
 }
 
 func (calendar *CaldavCalendar) GetAuth() auth.AuthMethod {

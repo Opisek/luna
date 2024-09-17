@@ -50,7 +50,7 @@ func addMigration(version common.Version, migration func(*Database) error) {
 
 func init() {
 	// Initialize database
-	addMigration(common.Ver(0, 0, 1), func(db *Database) error {
+	addMigration(common.Ver(0, 1, 0), func(db *Database) error {
 		// Support for UUID and encryption
 		_, err := db.connection.Exec(`
 			CREATE EXTENSION IF NOT EXISTS pgcrypto;
@@ -102,4 +102,12 @@ func init() {
 		return nil
 	})
 
+	addMigration(common.Ver(0, 2, 0), func(db *Database) error {
+		err := db.initializeCalendarsTable()
+		if err != nil {
+			return fmt.Errorf("could not initialize calendars table: %v", err)
+		}
+
+		return nil
+	})
 }
