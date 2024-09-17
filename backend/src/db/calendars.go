@@ -142,6 +142,7 @@ func (db *Database) GetCalendars(source primitives.Source) ([]primitives.Calenda
 		if cal, ok := calMap[dbCal.Id]; ok {
 			if cal.GetColor() == nil {
 				cal.SetColor(dbCal.Color)
+				// TODO: if dbCal.Color == nil, either return some default color, or generate a deterministic random one (e.g. calendar id hash -> hue)
 			}
 		}
 	}
