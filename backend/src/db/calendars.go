@@ -1,8 +1,10 @@
 package db
 
 import (
+	"encoding/json"
 	"fmt"
 	"luna-backend/interface/primitives"
+	"luna-backend/interface/protocols/caldav"
 	"luna-backend/types"
 
 	"github.com/jackc/pgx"
@@ -67,7 +69,12 @@ func (db *Database) insertCalendars(cals []primitives.Calendar) error {
 func parseCalendarSettings(sourceType string, settings []byte) (primitives.CalendarSettings, error) {
 	switch sourceType {
 	case types.SourceCaldav:
-		return nil, nil
+		parsedSettings := &caldav.CaldavCalendarSettings{}
+		err := json.Unmarshal(settings, parsedSettings)
+		if err != nil {
+			return nil, fmt.Errorf("could not unmarshal caldav settings: %v", err)
+		}
+		return parsedSettings, nil
 	case types.SourceIcal:
 		fallthrough
 	default:
