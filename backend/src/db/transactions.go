@@ -43,7 +43,7 @@ func (tx *Transaction) Commit(logger *logrus.Entry) error {
 func (tx *Transaction) Rollback(logger *logrus.Entry) error {
 	err := tx.conn.Rollback(context.TODO())
 
-	if err != nil {
+	if err != nil && err != pgx.ErrTxClosed {
 		err := fmt.Errorf("could not rollback transaction: %v", err)
 		logger.Error(err)
 		return err

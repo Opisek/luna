@@ -11,8 +11,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-var retries int = 5
-
 type Database struct {
 	pgxConfig *pgx.ConnConfig
 	pool      *pgxpool.Pool

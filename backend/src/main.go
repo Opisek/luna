@@ -47,10 +47,6 @@ func main() {
 	tx, err := db.BeginTransaction()
 	if err != nil {
 		mainLogger.Error(err)
-		err = tx.Rollback(mainLogger)
-		if err != nil {
-			mainLogger.Error(err)
-		}
 		os.Exit(1)
 	}
 	latestUsedVersion, err := tx.GetLatestVersion()
