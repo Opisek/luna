@@ -1,6 +1,7 @@
 package db
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -21,22 +22,25 @@ type sourceEntry struct {
 	Settings string
 }
 
-func (db *Database) initializeSourcesTable() error {
+func (tx *Transaction) initializeSourcesTable() error {
 	var err error
 	// Sources table:
 	// id user name type settings auth
-	_, err = db.connection.Exec(`
+	_, err = tx.conn.Exec(
+		context.TODO(),
+		`
 		CREATE TABLE IF NOT EXISTS sources (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 			user_id UUID REFERENCES users(id),
 			name VARCHAR(255) NOT NULL,
-			type SOURCE_TYPE_ENUM NOT NULL,
+			te SOURCE_TYPE_ENUM NOT NULL,
 			settings JSONB NOT NULL,
 			auth_type BYTEA NOT NULL,
 			auth BYTEA NOT NULL,
 			UNIQUE (user_id, name)
 		);
-	`)
+		`,
+	)
 	if err != nil {
 		return fmt.Errorf("could not create sources table: %v", err)
 	}
@@ -44,7 +48,7 @@ func (db *Database) initializeSourcesTable() error {
 	return nil
 }
 
-func (db *Database) parseSource(rows types.PgxScanner) (primitives.Source, error) {
+func parseSource(rows types.PgxScanner) (primitives.Source, error) {
 	var err error
 	var authType string
 	var authBytes string
@@ -114,19 +118,25 @@ func getUserDecryptionKey(userId types.ID) (string, error) {
 	return getUserEncryptionKey(userId)
 }
 
-func (db *Database) GetSource(userId types.ID, sourceId types.ID) (primitives.Source, error) {
+func (tx *Transaction) GetSource(userId types.ID, sourceId types.ID) (primitives.Source, error) {
 	decryptionKey, err := getUserDecryptionKey(userId)
 	if err != nil {
 		return nil, fmt.Errorf("could not get user decryption key: %v", err)
 	}
 
-	row := db.connection.QueryRow(`
+	row := tx.conn.QueryRow(
+		context.TODO(),
+		`
 		SELECT id, name, type, settings, PGP_SYM_DECRYPT(auth_type, $3), PGP_SYM_DECRYPT(auth, $3)
 		FROM sources
 		WHERE user_id = $1 AND id = $2;
-	`, userId.UUID(), sourceId.UUID(), decryptionKey)
+		`,
+		userId.UUID(),
+		sourceId.UUID(),
+		decryptionKey,
+	)
 
-	source, err := db.parseSource(row)
+	source, err := parseSource(row)
 	if err != nil {
 		return nil, fmt.Errorf("could not parse source: %v", err)
 	}
@@ -134,7 +144,7 @@ func (db *Database) GetSource(userId types.ID, sourceId types.ID) (primitives.So
 	return source, nil
 }
 
-func (db *Database) GetSources(userId types.ID) ([]primitives.Source, error) {
+func (tx *Transaction) GetSources(userId types.ID) ([]primitives.Source, error) {
 	var err error
 
 	decryptionKey, err := getUserDecryptionKey(userId)
@@ -142,11 +152,16 @@ func (db *Database) GetSources(userId types.ID) ([]primitives.Source, error) {
 		return nil, fmt.Errorf("could not get user decryption key: %v", err)
 	}
 
-	rows, err := db.connection.Query(`
+	rows, err := tx.conn.Query(
+		context.TODO(),
+		`
 		SELECT id, name, type, settings, PGP_SYM_DECRYPT(auth_type, $2), PGP_SYM_DECRYPT(auth, $2)
 		FROM sources
 		WHERE user_id = $1;
-	`, userId.UUID(), decryptionKey)
+		`,
+		userId.UUID(),
+		decryptionKey,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("could not get sources: %v", err)
 	}
@@ -154,7 +169,7 @@ func (db *Database) GetSources(userId types.ID) ([]primitives.Source, error) {
 
 	sources := []primitives.Source{}
 	for rows.Next() {
-		source, err := db.parseSource(rows)
+		source, err := parseSource(rows)
 		if err != nil {
 			return nil, fmt.Errorf("could not parse source: %v", err)
 		}
@@ -164,7 +179,7 @@ func (db *Database) GetSources(userId types.ID) ([]primitives.Source, error) {
 	return sources, nil
 }
 
-func (db *Database) InsertSource(userId types.ID, source primitives.Source) (types.ID, error) {
+func (tx *Transaction) InsertSource(userId types.ID, source primitives.Source) (types.ID, error) {
 	encryptionKey, err := getUserEncryptionKey(userId)
 	if err != nil {
 		return types.EmptyId(), fmt.Errorf("could not get user encryption key: %v", err)
@@ -182,7 +197,7 @@ func (db *Database) InsertSource(userId types.ID, source primitives.Source) (typ
 	args := []any{userId.UUID(), source.GetName(), source.GetType(), source.GetSettings(), source.GetAuth().GetType(), marshalledAuth, encryptionKey}
 
 	var id uuid.UUID
-	err = db.connection.QueryRow(query, args...).Scan(&id)
+	err = tx.conn.QueryRow(context.TODO(), query, args...).Scan(&id)
 
 	if err != nil {
 		return types.EmptyId(), fmt.Errorf("could not insert source: %v", err)
@@ -191,7 +206,7 @@ func (db *Database) InsertSource(userId types.ID, source primitives.Source) (typ
 	return types.IdFromUuid(id), nil
 }
 
-func (db *Database) UpdateSource(userId types.ID, sourceId types.ID, newName string, newAuth auth.AuthMethod, newSourceType string, newSourceSettings primitives.SourceSettings) error {
+func (tx *Transaction) UpdateSource(userId types.ID, sourceId types.ID, newName string, newAuth auth.AuthMethod, newSourceType string, newSourceSettings primitives.SourceSettings) error {
 	encryptionKey, err := getUserEncryptionKey(userId)
 	if err != nil {
 		return fmt.Errorf("could not get user encryption key: %v", err)
@@ -232,7 +247,7 @@ func (db *Database) UpdateSource(userId types.ID, sourceId types.ID, newName str
 	`, strings.Join(changes, ", "), len(args)+1, len(args)+2)
 	args = append(args, userId.UUID(), sourceId.UUID())
 
-	_, err = db.connection.Exec(query, args...)
+	_, err = tx.conn.Exec(context.TODO(), query, args...)
 
 	if err != nil {
 		return fmt.Errorf("could not update source: %v", err)
@@ -241,11 +256,16 @@ func (db *Database) UpdateSource(userId types.ID, sourceId types.ID, newName str
 	return nil
 }
 
-func (db *Database) DeleteSource(userId types.ID, sourceId types.ID) (bool, error) {
-	tag, err := db.connection.Exec(`
+func (tx *Transaction) DeleteSource(userId types.ID, sourceId types.ID) (bool, error) {
+	tag, err := tx.conn.Exec(
+		context.TODO(),
+		`
 		DELETE FROM sources
 		WHERE user_id = $1 AND id = $2;
-	`, userId.UUID(), sourceId)
+		`,
+		userId.UUID(),
+		sourceId,
+	)
 	if err != nil {
 		return false, fmt.Errorf("could not delete source: %v", err)
 	}

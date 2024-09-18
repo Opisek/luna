@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"luna-backend/api/internal/config"
+	"luna-backend/db"
 	"luna-backend/types"
 	"strings"
 
@@ -53,4 +54,8 @@ func GetBearerToken(c *gin.Context) (string, error) {
 	}
 
 	return parts[1], nil
+}
+
+func GetTransaction(c *gin.Context) *db.Transaction {
+	return c.MustGet("transaction").(*db.Transaction)
 }

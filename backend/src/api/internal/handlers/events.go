@@ -63,9 +63,11 @@ func GetEvents(c *gin.Context) {
 	// Get config
 	config := context.GetConfig(c)
 	userId := context.GetUserId(c)
+	tx := context.GetTransaction(c)
+	defer tx.Rollback(config.Logger)
 
 	// Get all of user's sources
-	srcs, err := getSources(config, userId)
+	srcs, err := getSources(config, tx, userId)
 	if err != nil {
 		config.Logger.Errorf("could not get events: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get sources"})
@@ -73,7 +75,7 @@ func GetEvents(c *gin.Context) {
 	}
 
 	// Get their associated calendars
-	cals, err := getCalendars(config, srcs)
+	cals, err := getCalendars(config, tx, srcs)
 	if err != nil {
 		config.Logger.Errorf("could not get events: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get calendars"})
@@ -114,6 +116,11 @@ func GetEvents(c *gin.Context) {
 			Date:     event.GetDate(),
 			Settings: event.GetSettings(),
 		}
+	}
+
+	if tx.Commit(config.Logger) != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		return
 	}
 
 	c.JSON(http.StatusOK, convertedEvents)

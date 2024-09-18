@@ -1,13 +1,14 @@
 package db
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"luna-backend/interface/primitives"
 	"luna-backend/interface/protocols/caldav"
 	"luna-backend/types"
 
-	"github.com/jackc/pgx"
+	"github.com/jackc/pgx/v5"
 )
 
 type calendarEntry struct {
@@ -17,11 +18,13 @@ type calendarEntry struct {
 	Settings primitives.CalendarSettings
 }
 
-func (db *Database) initializeCalendarsTable() error {
+func (tx *Transaction) initializeCalendarsTable() error {
 	var err error
 	// Calendars table:
 	// id source color settings
-	_, err = db.connection.Exec(`
+	_, err = tx.conn.Exec(
+		context.TODO(),
+		`
 		CREATE TABLE IF NOT EXISTS calendars (
 			id UUID PRIMARY KEY,
 			source UUID REFERENCES sources(id),
@@ -36,7 +39,7 @@ func (db *Database) initializeCalendarsTable() error {
 	return nil
 }
 
-func (db *Database) insertCalendars(cals []primitives.Calendar) error {
+func (tx *Transaction) insertCalendars(cals []primitives.Calendar) error {
 	rows := [][]any{}
 
 	for _, cal := range cals {
@@ -53,7 +56,8 @@ func (db *Database) insertCalendars(cals []primitives.Calendar) error {
 	// TODO: to avoid conflicts with existing keys, we want to do something similar to this:
 	// TODO: https://github.com/jackc/pgx/issues/992
 	// TODO: this might require transactions to be set up first
-	_, err := db.connection.CopyFrom(
+	_, err := tx.conn.CopyFrom(
+		context.TODO(),
 		pgx.Identifier{"calendars"},
 		[]string{"id", "source", "color", "settings"},
 		pgx.CopyFromRows(rows),
@@ -82,8 +86,10 @@ func parseCalendarSettings(sourceType string, settings []byte) (primitives.Calen
 	}
 }
 
-func (db *Database) getCalendars(source primitives.Source) ([]*calendarEntry, error) {
-	rows, err := db.connection.Query(`
+func (tx *Transaction) getCalendars(source primitives.Source) ([]*calendarEntry, error) {
+	rows, err := tx.conn.Query(
+		context.TODO(),
+		`
 		SELECT id, color, settings
 		FROM calendars
 		WHERE source = $1;
@@ -122,7 +128,7 @@ func (db *Database) getCalendars(source primitives.Source) ([]*calendarEntry, er
 	return cals, nil
 }
 
-func (db *Database) GetCalendars(source primitives.Source) ([]primitives.Calendar, error) {
+func (tx *Transaction) GetCalendars(source primitives.Source) ([]primitives.Calendar, error) {
 	cals, err := source.GetCalendars()
 	if err != nil {
 		return nil, fmt.Errorf("could not get calendars from source %v: %v", source.GetId().String(), err)
@@ -133,7 +139,7 @@ func (db *Database) GetCalendars(source primitives.Source) ([]primitives.Calenda
 		calMap[cal.GetId()] = cal
 	}
 
-	dbCals, err := db.getCalendars(source)
+	dbCals, err := tx.getCalendars(source)
 	if err != nil {
 		return nil, fmt.Errorf("could not get cached calendars: %v", err)
 	}
@@ -147,7 +153,7 @@ func (db *Database) GetCalendars(source primitives.Source) ([]primitives.Calenda
 		}
 	}
 
-	err = db.insertCalendars(cals)
+	err = tx.insertCalendars(cals)
 	if err != nil {
 		return nil, fmt.Errorf("could not cache calendars: %v", err)
 	}
@@ -155,12 +161,17 @@ func (db *Database) GetCalendars(source primitives.Source) ([]primitives.Calenda
 	return cals, nil
 }
 
-func (db *Database) UpdateCalendar(cal primitives.Calendar) error {
-	_, err := db.connection.Exec(`
+func (tx *Transaction) UpdateCalendar(cal primitives.Calendar) error {
+	_, err := tx.conn.Exec(
+		context.TODO(),
+		`
 		UPDATE calendars
 		SET color = $1, settings = $2
-		WHERE id = $3;
-	`, cal.GetColor().Bytes(), cal.GetSettings().Bytes(), cal.GetId())
+		WHERE id = $3;`,
+		cal.GetColor().Bytes(),
+		cal.GetSettings().Bytes(),
+		cal.GetId(),
+	)
 
 	if err != nil {
 		return fmt.Errorf("could not update calendar %v: %v", cal.GetId().String(), err)

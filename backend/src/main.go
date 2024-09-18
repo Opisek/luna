@@ -42,33 +42,44 @@ func main() {
 	//
 	dbLogger := logger.WithField("module", "database")
 	db := db.NewDatabase(env.DB_HOST, env.DB_PORT, env.DB_USERNAME, env.DB_PASSWORD, env.DB_DATABASE, commonConfig, dbLogger)
-	// Connect to the database
-	err = db.Connect()
+
+	// Run migrations
+	tx, err := db.BeginTransaction()
 	if err != nil {
 		mainLogger.Error(err)
+		err = tx.Rollback(mainLogger)
+		if err != nil {
+			mainLogger.Error(err)
+		}
 		os.Exit(1)
 	}
-	// Run migrations
-	latestUsedVersion, err := db.GetLatestVersion()
+	latestUsedVersion, err := tx.GetLatestVersion()
 	if err != nil {
 		mainLogger.Error(err)
+		tx.Rollback(mainLogger)
 		os.Exit(1)
 	}
 	if latestUsedVersion.IsGreaterThan(&commonConfig.Version) {
 		mainLogger.Errorf("downgrades are not supported: database version %v is greater than binary version %v", latestUsedVersion.String(), commonConfig.Version.String())
+		tx.Rollback(mainLogger)
 		os.Exit(1)
 	}
-	err = db.RunMigrations(&latestUsedVersion)
+	err = tx.RunMigrations(&latestUsedVersion)
 	if err != nil {
 		mainLogger.Errorf("could not run migrations: %v", err)
+		tx.Rollback(mainLogger)
 		os.Exit(1)
 	}
 	if !latestUsedVersion.IsEqualTo(&commonConfig.Version) {
-		err = db.UpdateVersion(commonConfig.Version)
+		err = tx.UpdateVersion(commonConfig.Version)
 		if err != nil {
 			mainLogger.Error(err)
+			tx.Rollback(mainLogger)
 			os.Exit(1)
 		}
+	}
+	if err = tx.Commit(mainLogger); err != nil {
+		os.Exit(1)
 	}
 
 	//

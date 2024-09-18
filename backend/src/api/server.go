@@ -22,7 +22,8 @@ func run(api *config.Api) {
 	})
 
 	// /api/*
-	endpoints := router.Group("/api")
+	rawEndpoints := router.Group("/api")
+	endpoints := rawEndpoints.Group("", handlers.TransactionMiddleware())
 
 	endpoints.POST("/login", handlers.Login)
 	endpoints.POST("/register", handlers.Register)

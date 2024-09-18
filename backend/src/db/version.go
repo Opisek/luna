@@ -1,18 +1,21 @@
 package db
 
 import (
+	"context"
 	"fmt"
 	"luna-backend/common"
 )
 
-func (db *Database) initalizeVersionTable() error {
+func (tx *Transaction) initalizeVersionTable() error {
 	// Keeps track of the current backend version as well as stores past
 	// versions in case some specific migration rules need to be followed
 
 	// Version table:
 	// id major minor patch extension installed
 
-	_, err := db.connection.Exec(`
+	_, err := tx.conn.Exec(
+		context.TODO(),
+		`
 		CREATE TABLE IF NOT EXISTS version (
 			id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
 			major INT NOT NULL,
@@ -21,24 +24,28 @@ func (db *Database) initalizeVersionTable() error {
 			extension VARCHAR(255),
 			installed TIMESTAMP NOT NULL
 		);
-	`)
+		`,
+	)
 
 	return err
 }
 
-func (db *Database) GetLatestVersion() (common.Version, error) {
+func (tx *Transaction) GetLatestVersion() (common.Version, error) {
 	var err error
 
-	err = db.initalizeVersionTable()
+	err = tx.initalizeVersionTable()
 	if err != nil {
 		return common.Version{}, fmt.Errorf("could not get latest version: could not initialize version table: %v", err)
 	}
 
 	var rowCount int
-	err = db.connection.QueryRow(`
+	err = tx.conn.QueryRow(
+		context.TODO(),
+		`
 		SELECT COUNT(*)
 		FROM version;	
-	`).Scan(&rowCount)
+		`,
+	).Scan(&rowCount)
 	if err != nil {
 		return common.Version{}, fmt.Errorf("could not get latest version: %v", err)
 	}
@@ -49,12 +56,15 @@ func (db *Database) GetLatestVersion() (common.Version, error) {
 
 	var version common.Version
 
-	err = db.connection.QueryRow(`
+	err = tx.conn.QueryRow(
+		context.TODO(),
+		`
 		SELECT major, minor, patch, extension
 		FROM version
 		ORDER BY major DESC, minor DESC, patch DESC
 		LIMIT 1
-	`).Scan(&version.Major, &version.Minor, &version.Patch, &version.Extension)
+		`,
+	).Scan(&version.Major, &version.Minor, &version.Patch, &version.Extension)
 	if err != nil {
 		return common.EmptyVersion(), fmt.Errorf("could not get latest version: %v", err)
 	}
@@ -62,12 +72,19 @@ func (db *Database) GetLatestVersion() (common.Version, error) {
 	return version, nil
 }
 
-func (db *Database) UpdateVersion(version common.Version) error {
-	db.logger.Warnf("updating version to %v", version.String())
-	_, err := db.connection.Exec(`
+func (tx *Transaction) UpdateVersion(version common.Version) error {
+	tx.db.logger.Warnf("updating version to %v", version.String())
+	_, err := tx.conn.Exec(
+		context.TODO(),
+		`
 		INSERT INTO version (major, minor, patch, extension, installed)
 		VALUES ($1, $2, $3, $4, NOW());
-	`, version.Major, version.Minor, version.Patch, version.Extension)
+		`,
+		version.Major,
+		version.Minor,
+		version.Patch,
+		version.Extension,
+	)
 	if err != nil {
 		return fmt.Errorf("could not update version: %v", err)
 	}

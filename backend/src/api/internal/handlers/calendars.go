@@ -4,6 +4,7 @@ import (
 	"errors"
 	"luna-backend/api/internal/config"
 	"luna-backend/api/internal/context"
+	"luna-backend/db"
 	"luna-backend/interface/primitives"
 	"luna-backend/types"
 	"net/http"
@@ -21,7 +22,7 @@ type exposedCalendar struct {
 	Settings primitives.CalendarSettings `json:"settings"` // TODO: REMOVE FROM PRODUCTION, TESTING ONLY
 }
 
-func getCalendars(config *config.Api, srcs []primitives.Source) ([]primitives.Calendar, error) {
+func getCalendars(config *config.Api, tx *db.Transaction, srcs []primitives.Source) ([]primitives.Calendar, error) {
 	// For each source, get its calendars
 	cals := make([][]primitives.Calendar, len(srcs))
 	errored := false
@@ -32,7 +33,7 @@ func getCalendars(config *config.Api, srcs []primitives.Source) ([]primitives.Ca
 		go func(i int, source primitives.Source) {
 			defer waitGroup.Done()
 
-			calsFromSource, err := config.Db.GetCalendars(source)
+			calsFromSource, err := tx.GetCalendars(source)
 			if err != nil {
 				errored = true
 				config.Logger.Errorf("could not get calendars: %v", err)
@@ -61,9 +62,11 @@ func GetCalendars(c *gin.Context) {
 	// Get config
 	config := context.GetConfig(c)
 	userId := context.GetUserId(c)
+	tx := context.GetTransaction(c)
+	defer tx.Rollback(config.Logger)
 
 	// Get all of user's sources
-	srcs, err := getSources(config, userId)
+	srcs, err := getSources(config, tx, userId)
 	if err != nil {
 		config.Logger.Errorf("could not get calendars: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get sources"})
@@ -71,7 +74,7 @@ func GetCalendars(c *gin.Context) {
 	}
 
 	// Get their associated calendars
-	cals, err := getCalendars(config, srcs)
+	cals, err := getCalendars(config, tx, srcs)
 	if err != nil {
 		config.Logger.Errorf("could not get calendars: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get calendars"})
@@ -89,6 +92,11 @@ func GetCalendars(c *gin.Context) {
 			Color:    cal.GetColor(),
 			Settings: cal.GetSettings(),
 		}
+	}
+
+	if tx.Commit(config.Logger) != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		return
 	}
 
 	c.JSON(http.StatusOK, convertedCals)

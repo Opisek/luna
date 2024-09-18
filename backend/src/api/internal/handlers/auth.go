@@ -13,6 +13,8 @@ import (
 func Login(c *gin.Context) {
 	// Parsing
 	apiConfig := context.GetConfig(c)
+	tx := context.GetTransaction(c)
+	defer tx.Rollback(apiConfig.Logger)
 
 	credentials := auth.BasicAuth{}
 	if err := c.ShouldBind(&credentials); err != nil {
@@ -23,7 +25,7 @@ func Login(c *gin.Context) {
 	topErr := fmt.Errorf("failed to log in with credentials %v, %v", credentials.Username, credentials.Password)
 
 	// Check if the user exists
-	userId, err := apiConfig.Db.GetUserIdFromUsername(credentials.Username)
+	userId, err := tx.GetUserIdFromUsername(credentials.Username)
 	if err != nil {
 		apiConfig.Logger.Errorf("%v: could not get user id for user %v: %v", topErr, credentials.Username, err)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
@@ -31,7 +33,7 @@ func Login(c *gin.Context) {
 	}
 
 	// Get the user's password
-	savedPassword, algorithm, err := apiConfig.Db.GetPassword(userId)
+	savedPassword, algorithm, err := tx.GetPassword(userId)
 	if err != nil {
 		apiConfig.Logger.Errorf("%v: could not get password for user %v: %v", topErr, credentials.Username, err)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
@@ -54,7 +56,7 @@ func Login(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "rehashing failed"})
 			return
 		}
-		err = apiConfig.Db.UpdatePassword(userId, hash, alg)
+		err = tx.UpdatePassword(userId, hash, alg)
 		if err != nil {
 			apiConfig.Logger.Errorf("%v: could not update password: %v", topErr, err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "rehashing failed"})
@@ -67,6 +69,11 @@ func Login(c *gin.Context) {
 	if err != nil {
 		apiConfig.Logger.Errorf("%v: could not generate token: %v", topErr, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not generate token"})
+		return
+	}
+
+	if tx.Commit(apiConfig.Logger) != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
 		return
 	}
 
@@ -83,6 +90,8 @@ type registerPayload struct {
 // TODO: have some kind of invite tokens that we will have to verify
 func Register(c *gin.Context) {
 	apiConfig := context.GetConfig(c)
+	tx := context.GetTransaction(c)
+	defer tx.Rollback(apiConfig.Logger)
 
 	payload := registerPayload{}
 	if err := c.ShouldBind(&payload); err != nil {
@@ -99,7 +108,7 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	usersExist, err := apiConfig.Db.AnyUsersExist()
+	usersExist, err := tx.AnyUsersExist()
 	if err != nil {
 		apiConfig.Logger.Errorf("%v: could not check if users exist: %v", topErr, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to register"})
@@ -114,43 +123,17 @@ func Register(c *gin.Context) {
 		Admin:     !usersExist,
 	}
 
-	err = apiConfig.Db.AddUser(user)
+	err = tx.AddUser(user)
 	if err != nil {
 		apiConfig.Logger.Errorf("%v: could not add user: %v", topErr, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to register"})
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{})
-}
-
-func AuthMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		cookieToken, cookieErr := c.Cookie("token")
-		gotCookie := cookieErr == nil && cookieToken != ""
-		bearerToken, bearerErr := context.GetBearerToken(c)
-		gotBearer := bearerErr == nil && bearerToken != ""
-
-		if !gotCookie && !gotBearer {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "missing authorization token"})
-			return
-		}
-
-		var token string
-		if gotBearer {
-			token = bearerToken
-		} else if gotCookie {
-			token = cookieToken
-		}
-
-		parsedToken, err := auth.ParseToken(token)
-		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid authorization token"})
-			return
-		}
-
-		c.Set("user_id", parsedToken.UserId)
-
-		c.Next()
+	if tx.Commit(apiConfig.Logger) != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		return
 	}
+
+	c.JSON(http.StatusCreated, gin.H{})
 }

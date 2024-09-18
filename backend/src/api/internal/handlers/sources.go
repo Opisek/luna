@@ -8,6 +8,7 @@ import (
 	"luna-backend/api/internal/config"
 	"luna-backend/api/internal/context"
 	"luna-backend/auth"
+	"luna-backend/db"
 	"luna-backend/interface/primitives"
 	"luna-backend/interface/protocols/caldav"
 	"luna-backend/types"
@@ -29,8 +30,8 @@ type exposedDetailedSource struct {
 	Auth     interface{} `json:"auth"`
 }
 
-func getSources(config *config.Api, userId types.ID) ([]primitives.Source, error) {
-	srcs, err := config.Db.GetSources(userId)
+func getSources(_ *config.Api, tx *db.Transaction, userId types.ID) ([]primitives.Source, error) {
+	srcs, err := tx.GetSources(userId)
 	if err != nil {
 		return nil, fmt.Errorf("could not get sources: %v", err)
 	}
@@ -40,8 +41,10 @@ func getSources(config *config.Api, userId types.ID) ([]primitives.Source, error
 func GetSources(c *gin.Context) {
 	apiConfig := context.GetConfig(c)
 	userId := context.GetUserId(c)
+	tx := context.GetTransaction(c)
+	defer tx.Rollback(apiConfig.Logger)
 
-	sources, err := getSources(apiConfig, userId)
+	sources, err := getSources(apiConfig, tx, userId)
 	if err != nil {
 		apiConfig.Logger.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get sources"})
@@ -56,12 +59,16 @@ func GetSources(c *gin.Context) {
 		}
 	}
 
+	if tx.Commit(apiConfig.Logger) != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		return
+	}
+
 	c.JSON(http.StatusOK, exposedSources)
 }
 
 func GetSource(c *gin.Context) {
 	apiConfig := context.GetConfig(c)
-	userId := context.GetUserId(c)
 	sourceId, err := context.GetSourceId(c)
 	if err != nil {
 		apiConfig.Logger.Errorf("could not get source id: %v", err)
@@ -69,7 +76,11 @@ func GetSource(c *gin.Context) {
 		return
 	}
 
-	source, err := apiConfig.Db.GetSource(userId, sourceId)
+	userId := context.GetUserId(c)
+	tx := context.GetTransaction(c)
+	defer tx.Rollback(apiConfig.Logger)
+
+	source, err := tx.GetSource(userId, sourceId)
 	if err != nil {
 		apiConfig.Logger.Errorf("could not get source: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get source"})
@@ -83,6 +94,11 @@ func GetSource(c *gin.Context) {
 		Type:     source.GetType(),
 		AuthType: source.GetAuth().GetType(),
 		Auth:     source.GetAuth(),
+	}
+
+	if tx.Commit(apiConfig.Logger) != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		return
 	}
 
 	c.JSON(http.StatusOK, exposedSource)
@@ -149,6 +165,8 @@ func parseSource(c *gin.Context, sourceName string, sourceAuth auth.AuthMethod) 
 func PutSource(c *gin.Context) {
 	apiConfig := context.GetConfig(c)
 	userId := context.GetUserId(c)
+	tx := context.GetTransaction(c)
+	defer tx.Rollback(apiConfig.Logger)
 
 	sourceName := c.PostForm("name")
 	if sourceName == "" {
@@ -171,10 +189,15 @@ func PutSource(c *gin.Context) {
 		return
 	}
 
-	id, err := apiConfig.Db.InsertSource(userId, source)
+	id, err := tx.InsertSource(userId, source)
 	if err != nil {
 		apiConfig.Logger.Errorf("could not insert source %v for user %v: %v", source.GetId().String(), userId.String(), err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not insert source"})
+		return
+	}
+
+	if tx.Commit(apiConfig.Logger) != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
 		return
 	}
 
@@ -185,13 +208,16 @@ func PatchSource(c *gin.Context) {
 	var err error
 
 	apiConfig := context.GetConfig(c)
-	userId := context.GetUserId(c)
 	sourceId, err := context.GetSourceId(c)
 	if err != nil {
 		apiConfig.Logger.Errorf("could not get source id: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "malformed or missing source id"})
 		return
 	}
+
+	userId := context.GetUserId(c)
+	tx := context.GetTransaction(c)
+	defer tx.Rollback(apiConfig.Logger)
 
 	newName := c.PostForm("name")
 	newType := c.PostForm("type")
@@ -223,10 +249,15 @@ func PatchSource(c *gin.Context) {
 
 	apiConfig.Logger.Debugf("parsed params")
 
-	err = apiConfig.Db.UpdateSource(userId, sourceId, newName, newAuth, newType, newSourceSettings)
+	err = tx.UpdateSource(userId, sourceId, newName, newAuth, newType, newSourceSettings)
 	if err != nil {
 		apiConfig.Logger.Errorf("could not update source: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not update source"})
+		return
+	}
+
+	if tx.Commit(apiConfig.Logger) != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
 		return
 	}
 
@@ -235,7 +266,6 @@ func PatchSource(c *gin.Context) {
 
 func DeleteSource(c *gin.Context) {
 	apiConfig := context.GetConfig(c)
-	userId := context.GetUserId(c)
 	sourceId, err := context.GetSourceId(c)
 	if err != nil {
 		apiConfig.Logger.Errorf("could not get source id: %v", err)
@@ -243,10 +273,19 @@ func DeleteSource(c *gin.Context) {
 		return
 	}
 
-	deleted, err := apiConfig.Db.DeleteSource(userId, sourceId)
+	userId := context.GetUserId(c)
+	tx := context.GetTransaction(c)
+	defer tx.Rollback(apiConfig.Logger)
+
+	deleted, err := tx.DeleteSource(userId, sourceId)
 	if err != nil {
 		apiConfig.Logger.Errorf("could not delete source: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not delete source"})
+		return
+	}
+
+	if tx.Commit(apiConfig.Logger) != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
 		return
 	}
 
