@@ -5,16 +5,13 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"luna-backend/common"
 	"os"
 
 	"golang.org/x/crypto/hkdf"
 )
 
-func getKeysPath() string {
-	return "/data/keys"
-}
-
-func GenerateSymmetricKey(name string) ([]byte, error) {
+func GenerateSymmetricKey(commonConfig *common.CommonConfig, name string) ([]byte, error) {
 	secret, err := GenerateRandomBytes(64)
 	if err != nil {
 		return nil, fmt.Errorf("could not generate random bytes: %v", err)
@@ -22,7 +19,7 @@ func GenerateSymmetricKey(name string) ([]byte, error) {
 
 	encodedSecret := base64.StdEncoding.EncodeToString(secret)
 
-	path := fmt.Sprintf("%s/%s.key", getKeysPath(), name)
+	path := fmt.Sprintf("%s/%s.key", commonConfig.Env.GetKeysPath(), name)
 	err = os.WriteFile(path, []byte(encodedSecret), 0660)
 	if err != nil {
 		return nil, fmt.Errorf("could not write key file: %v", err)
@@ -31,8 +28,8 @@ func GenerateSymmetricKey(name string) ([]byte, error) {
 	return secret, nil
 }
 
-func GetSymmetricKey(name string) ([]byte, error) {
-	path := fmt.Sprintf("%s/%s.key", getKeysPath(), name)
+func GetSymmetricKey(commonConfig *common.CommonConfig, name string) ([]byte, error) {
+	path := fmt.Sprintf("%s/%s.key", commonConfig.Env.GetKeysPath(), name)
 
 	_, err := os.Stat(path)
 	if err == nil {
@@ -48,7 +45,7 @@ func GetSymmetricKey(name string) ([]byte, error) {
 
 		return secret, nil
 	} else if errors.Is(err, os.ErrNotExist) {
-		return GenerateSymmetricKey(name)
+		return GenerateSymmetricKey(commonConfig, name)
 	} else {
 		return nil, fmt.Errorf("could not check key file: %v", err)
 	}

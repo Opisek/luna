@@ -2,6 +2,7 @@ package auth
 
 import (
 	"fmt"
+	"luna-backend/common"
 	"luna-backend/crypto"
 	"luna-backend/types"
 
@@ -13,23 +14,23 @@ type JsonWebToken struct {
 	jwt.RegisteredClaims
 }
 
-func NewToken(userId types.ID) (string, error) {
+func NewToken(commonConfig *common.CommonConfig, userId types.ID) (string, error) {
 	token := JsonWebToken{UserId: userId}
 
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS512, token)
 
-	key, err := crypto.GetSymmetricKey("token")
+	key, err := crypto.GetSymmetricKey(commonConfig, "token")
 	if err != nil {
 		return "", fmt.Errorf("could not get token key: %v", err)
 	}
 	return jwtToken.SignedString(key)
 }
 
-func ParseToken(tokenString string) (*JsonWebToken, error) {
+func ParseToken(commonConfig *common.CommonConfig, tokenString string) (*JsonWebToken, error) {
 	token := &JsonWebToken{}
 
 	_, err := jwt.ParseWithClaims(tokenString, token, func(token *jwt.Token) (interface{}, error) {
-		key, err := crypto.GetSymmetricKey("token")
+		key, err := crypto.GetSymmetricKey(commonConfig, "token")
 		if err != nil {
 			return nil, fmt.Errorf("could not get token key: %v", err)
 		}

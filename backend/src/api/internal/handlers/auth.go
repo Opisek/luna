@@ -65,7 +65,7 @@ func Login(c *gin.Context) {
 	}
 
 	// Generate the token
-	token, err := auth.NewToken(userId)
+	token, err := auth.NewToken(apiConfig.CommonConfig, userId)
 	if err != nil {
 		apiConfig.Logger.Errorf("%v: could not generate token: %v", topErr, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not generate token"})

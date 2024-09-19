@@ -16,10 +16,15 @@ type Environmental struct {
 	DB_USERNAME string
 	DB_PASSWORD string
 	DB_DATABASE string
+	DATA_PATH   string
+}
+
+var defaultEnv = Environmental{
+	DATA_PATH: "/data",
 }
 
 func ParseEnvironmental(logger *logrus.Entry) (Environmental, error) {
-	env := Environmental{}
+	env := defaultEnv
 
 	err := godotenv.Load()
 	if err != nil {
@@ -35,8 +40,13 @@ func ParseEnvironmental(logger *logrus.Entry) (Environmental, error) {
 		fieldValueRaw := os.Getenv(fieldName)
 
 		if fieldValueRaw == "" {
-			err := fmt.Errorf("environmental variable %v is missing", fieldName)
-			return env, err
+			if reflected.Field(i).IsZero() {
+				err := fmt.Errorf("environmental variable %v is missing", fieldName)
+				return env, err
+			} else {
+				logger.Warnf("environmental variable %v is missing, using default value %v", fieldName, reflected.Field(i).Interface())
+				continue
+			}
 		}
 
 		switch fieldType {

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"luna-backend/auth"
+	"luna-backend/common"
 	"luna-backend/crypto"
 	"luna-backend/interface/primitives"
 	"luna-backend/interface/protocols/caldav"
@@ -33,7 +34,7 @@ func (tx *Transaction) initializeSourcesTable() error {
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 			user_id UUID REFERENCES users(id),
 			name VARCHAR(255) NOT NULL,
-			te SOURCE_TYPE_ENUM NOT NULL,
+			type SOURCE_TYPE_ENUM NOT NULL,
 			settings JSONB NOT NULL,
 			auth_type BYTEA NOT NULL,
 			auth BYTEA NOT NULL,
@@ -101,8 +102,8 @@ func parseSource(rows types.PgxScanner) (primitives.Source, error) {
 	}
 }
 
-func getUserEncryptionKey(userId types.ID) (string, error) {
-	masterKey, err := crypto.GetSymmetricKey("database")
+func getUserEncryptionKey(commonConfig *common.CommonConfig, userId types.ID) (string, error) {
+	masterKey, err := crypto.GetSymmetricKey(commonConfig, "database")
 	if err != nil {
 		return "", fmt.Errorf("could not get master key: %v", err)
 	}
@@ -114,12 +115,12 @@ func getUserEncryptionKey(userId types.ID) (string, error) {
 	return encodedKey, nil
 }
 
-func getUserDecryptionKey(userId types.ID) (string, error) {
-	return getUserEncryptionKey(userId)
+func getUserDecryptionKey(commonConfig *common.CommonConfig, userId types.ID) (string, error) {
+	return getUserEncryptionKey(commonConfig, userId)
 }
 
 func (tx *Transaction) GetSource(userId types.ID, sourceId types.ID) (primitives.Source, error) {
-	decryptionKey, err := getUserDecryptionKey(userId)
+	decryptionKey, err := getUserDecryptionKey(tx.db.commonConfig, userId)
 	if err != nil {
 		return nil, fmt.Errorf("could not get user decryption key: %v", err)
 	}
@@ -147,7 +148,7 @@ func (tx *Transaction) GetSource(userId types.ID, sourceId types.ID) (primitives
 func (tx *Transaction) GetSources(userId types.ID) ([]primitives.Source, error) {
 	var err error
 
-	decryptionKey, err := getUserDecryptionKey(userId)
+	decryptionKey, err := getUserDecryptionKey(tx.db.commonConfig, userId)
 	if err != nil {
 		return nil, fmt.Errorf("could not get user decryption key: %v", err)
 	}
@@ -180,7 +181,7 @@ func (tx *Transaction) GetSources(userId types.ID) ([]primitives.Source, error) 
 }
 
 func (tx *Transaction) InsertSource(userId types.ID, source primitives.Source) (types.ID, error) {
-	encryptionKey, err := getUserEncryptionKey(userId)
+	encryptionKey, err := getUserEncryptionKey(tx.db.commonConfig, userId)
 	if err != nil {
 		return types.EmptyId(), fmt.Errorf("could not get user encryption key: %v", err)
 	}
@@ -207,7 +208,7 @@ func (tx *Transaction) InsertSource(userId types.ID, source primitives.Source) (
 }
 
 func (tx *Transaction) UpdateSource(userId types.ID, sourceId types.ID, newName string, newAuth auth.AuthMethod, newSourceType string, newSourceSettings primitives.SourceSettings) error {
-	encryptionKey, err := getUserEncryptionKey(userId)
+	encryptionKey, err := getUserEncryptionKey(tx.db.commonConfig, userId)
 	if err != nil {
 		return fmt.Errorf("could not get user encryption key: %v", err)
 	}

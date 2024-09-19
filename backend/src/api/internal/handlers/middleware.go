@@ -10,6 +10,8 @@ import (
 
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		config := context.GetConfig(c)
+
 		cookieToken, cookieErr := c.Cookie("token")
 		gotCookie := cookieErr == nil && cookieToken != ""
 		bearerToken, bearerErr := context.GetBearerToken(c)
@@ -27,7 +29,7 @@ func AuthMiddleware() gin.HandlerFunc {
 			token = cookieToken
 		}
 
-		parsedToken, err := auth.ParseToken(token)
+		parsedToken, err := auth.ParseToken(config.CommonConfig, token)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid authorization token"})
 			return

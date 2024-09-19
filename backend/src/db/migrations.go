@@ -57,7 +57,7 @@ func init() {
 			context.TODO(),
 			`
 			CREATE EXTENSION IF NOT EXISTS pgcrypto;
-			Database`,
+			`,
 		)
 
 		if err != nil {
@@ -86,9 +86,9 @@ func init() {
 				'none',
 				'basic',
 				'bearer'
-				),
-		;
-		`)
+			);
+			`,
+		)
 		if err != nil {
 			return fmt.Errorf("could not create AUTH_TYPE enum: %v", err)
 		}

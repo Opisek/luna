@@ -14,31 +14,34 @@ import (
 
 var version string
 
-func setupDirs() error {
-	os.MkdirAll("/data/keys", 0660)
-	return nil
+func setupDirs(env *common.Environmental) error {
+	err := os.MkdirAll(env.GetKeysPath(), 0660)
+	return fmt.Errorf("could not create %v directory: %v", env.GetKeysPath(), err)
 }
 
-func setupConfig() (*logrus.Logger, *logrus.Entry, *common.CommonConfig, *common.Environmental, error) {
+func setupConfig() (*logrus.Logger, *logrus.Entry, *common.CommonConfig, error) {
 	var err error
 	logger := log.NewLogger()
 	mainLogger := logger.WithField("module", "main")
 
-	commonConfig := &common.CommonConfig{}
-	commonConfig.Version, err = common.ParseVersion(version)
-	if err != nil {
-		return nil, nil, nil, nil, fmt.Errorf("malformed binary version \"%v\": %v", version, err)
-	}
-
 	env, err := common.ParseEnvironmental(mainLogger)
 	if err != nil {
-		return nil, nil, nil, nil, fmt.Errorf("could not parse environmental variables: %v", err)
+		return nil, nil, nil, fmt.Errorf("could not parse environmental variables: %v", err)
 	}
 
-	return logger, mainLogger, commonConfig, &env, nil
+	commonConfig := &common.CommonConfig{
+		Env: &env,
+	}
+	commonConfig.Version, err = common.ParseVersion(version)
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("malformed binary version \"%v\": %v", version, err)
+	}
+
+	return logger, mainLogger, commonConfig, nil
 }
 
-func setupDb(env *common.Environmental, commonConfig *common.CommonConfig, mainLogger *logrus.Entry, dbLogger *logrus.Entry) (*db.Database, error) {
+func setupDb(commonConfig *common.CommonConfig, mainLogger *logrus.Entry, dbLogger *logrus.Entry) (*db.Database, error) {
+	env := commonConfig.Env
 	db := db.NewDatabase(env.DB_HOST, env.DB_PORT, env.DB_USERNAME, env.DB_PASSWORD, env.DB_DATABASE, commonConfig, dbLogger)
 
 	tx, err := db.BeginTransaction()
@@ -74,22 +77,22 @@ func setupDb(env *common.Environmental, commonConfig *common.CommonConfig, mainL
 func main() {
 	var err error
 
-	// Directories
-	setupDirs()
-
 	// Config
-	logger, mainLogger, commonConfig, env, err := setupConfig()
+	logger, mainLogger, commonConfig, err := setupConfig()
 	if err != nil {
 		mainLogger.Errorf("could not set up config: %v", err)
 		os.Exit(1)
 	}
+
+	// Directories
+	setupDirs(commonConfig.Env)
 
 	// Database
 	dbLogger := logger.WithField("module", "database")
 	dbReady := false
 	var db *db.Database
 	for i := 0; i < 5; i++ {
-		db, err = setupDb(env, commonConfig, mainLogger, dbLogger)
+		db, err = setupDb(commonConfig, mainLogger, dbLogger)
 		if err == nil {
 			dbReady = true
 			break
