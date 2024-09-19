@@ -69,7 +69,7 @@ func GetSources(c *gin.Context) {
 
 func GetSource(c *gin.Context) {
 	apiConfig := context.GetConfig(c)
-	sourceId, err := context.GetSourceId(c)
+	sourceId, err := context.GetId(c, "source")
 	if err != nil {
 		apiConfig.Logger.Errorf("could not get source id: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "malformed or missing source id"})
@@ -208,7 +208,7 @@ func PatchSource(c *gin.Context) {
 	var err error
 
 	apiConfig := context.GetConfig(c)
-	sourceId, err := context.GetSourceId(c)
+	sourceId, err := context.GetId(c, "source")
 	if err != nil {
 		apiConfig.Logger.Errorf("could not get source id: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "malformed or missing source id"})
@@ -266,7 +266,7 @@ func PatchSource(c *gin.Context) {
 
 func DeleteSource(c *gin.Context) {
 	apiConfig := context.GetConfig(c)
-	sourceId, err := context.GetSourceId(c)
+	sourceId, err := context.GetId(c, "source")
 	if err != nil {
 		apiConfig.Logger.Errorf("could not get source id: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "malformed or missing source id"})

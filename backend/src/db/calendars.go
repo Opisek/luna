@@ -167,6 +167,12 @@ func (tx *Transaction) GetCalendars(source primitives.Source) ([]primitives.Cale
 	return cals, nil
 }
 
+func (tx *Transaction) GetCalendar(userId types.ID, calendarId types.ID) (primitives.Calendar, error) {
+	// TODO: join query of calendar and source,
+	// TODO: then get source and execute .GetCalendar on it
+	return nil, nil
+}
+
 func (tx *Transaction) UpdateCalendar(cal primitives.Calendar) error {
 	_, err := tx.conn.Exec(
 		context.TODO(),

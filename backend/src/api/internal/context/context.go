@@ -27,19 +27,19 @@ func GetUserId(c *gin.Context) types.ID {
 	return c.MustGet("user_id").(types.ID)
 }
 
-func GetSourceId(c *gin.Context) (types.ID, error) {
-	rawSourceId := c.Param("sourceId")
+func GetId(c *gin.Context, primitive string) (types.ID, error) {
+	rawId := c.Param(fmt.Sprintf("%sId", primitive))
 
-	if rawSourceId == "" {
-		return types.EmptyId(), errors.New("missing source id")
+	if rawId == "" {
+		return types.EmptyId(), fmt.Errorf("missing %v id", primitive)
 	}
 
-	sourceId, err := types.IdFromString(rawSourceId)
+	id, err := types.IdFromString(rawId)
 	if err != nil {
-		return types.EmptyId(), fmt.Errorf("malformed source id: %v", err)
+		return types.EmptyId(), fmt.Errorf("malformed %v id: %v", primitive, err)
 	}
 
-	return sourceId, nil
+	return id, nil
 }
 
 func GetBearerToken(c *gin.Context) (string, error) {

@@ -101,3 +101,42 @@ func GetCalendars(c *gin.Context) {
 
 	c.JSON(http.StatusOK, convertedCals)
 }
+
+func GetCalendar(c *gin.Context) {
+	apiConfig := context.GetConfig(c)
+	calendarId, err := context.GetId(c, "calendar")
+	if err != nil {
+		apiConfig.Logger.Errorf("could not get calendar id: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "malformed or missing calendar id"})
+		return
+	}
+
+	userId := context.GetUserId(c)
+	tx := context.GetTransaction(c)
+	defer tx.Rollback(apiConfig.Logger)
+
+	// Get calendar
+	cal, err := tx.GetCalendar(userId, calendarId)
+	if err != nil {
+		apiConfig.Logger.Errorf("could not get calendar: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get calendar"})
+		return
+	}
+
+	// Convert to exposed format
+	convertedCal := exposedCalendar{
+		Id:       cal.GetId(),
+		Source:   cal.GetSource().GetId(),
+		Name:     cal.GetName(),
+		Desc:     cal.GetDesc(),
+		Color:    cal.GetColor(),
+		Settings: cal.GetSettings(),
+	}
+
+	if tx.Commit(apiConfig.Logger) != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		return
+	}
+
+	c.JSON(http.StatusOK, convertedCal)
+}
