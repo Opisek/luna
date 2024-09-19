@@ -55,6 +55,7 @@ func (tx *Transaction) insertCalendars(cals []primitives.Calendar) error {
 		context.TODO(),
 		"calendars",
 		[]string{"id", "source", "color", "settings"},
+		[]string{"color", "settings"},
 		rows,
 	)
 

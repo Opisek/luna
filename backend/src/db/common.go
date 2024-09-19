@@ -2,30 +2,42 @@ package db
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"luna-backend/crypto"
+	"strings"
 
 	"github.com/jackc/pgx/v5"
 )
 
-func (tx *Transaction) CopyAndUpdate(context context.Context, tableName string, columnNames []string, rows [][]any) error {
+func (tx *Transaction) CopyAndUpdate(context context.Context, tableName string, columnNames []string, updateColumns []string, rows [][]any) error {
 	randomNumber, err := crypto.GenerateRandomNumber()
 	if err != nil {
 		return fmt.Errorf("could not copy into table %v: %v", tableName, err)
 	}
 
+	if !isSafe(tableName) {
+		return errors.New("could not copy into table: table name contains illegal substrings")
+	}
 	tpmTableName := fmt.Sprintf("temp_%v_%v", tableName, randomNumber)
 
-	tx.conn.Exec(
-		context,
+	query := fmt.Sprintf(
 		`
-		CREATE TEMPORARY TABLE $1 (
-			LIKE $2 INCLUDING ALL	
-		)	ON COMMIT DELET ROWS;
+		CREATE TEMP TABLE %s (
+			LIKE %s INCLUDING ALL	
+		)	ON COMMIT DELETE ROWS;
 		`,
 		tpmTableName,
 		tableName,
 	)
+
+	_, err = tx.conn.Exec(
+		context,
+		query,
+	)
+	if err != nil {
+		return fmt.Errorf("could not copy into table %v: could not create temporary table %v: %v", tableName, tpmTableName, err)
+	}
 
 	_, err = tx.conn.CopyFrom(
 		context,
@@ -34,22 +46,34 @@ func (tx *Transaction) CopyAndUpdate(context context.Context, tableName string, 
 		pgx.CopyFromRows(rows),
 	)
 	if err != nil {
-		return fmt.Errorf("could not copy into table %v: %v", tableName, err)
+		return fmt.Errorf("could not copy into table %v: could not copy into temporary table %v: %v", tableName, tpmTableName, err)
 	}
 
-	_, err = tx.conn.Exec(
-		context,
+	for i, column := range updateColumns {
+		updateColumns[i] = fmt.Sprintf("%v = EXCLUDED.%v", column, column)
+	}
+	updateString := strings.Join(updateColumns, ", ")
+
+	query = fmt.Sprintf(
 		`
-		INSERT INTO $1
-		SELECT *
-		FROM $2
-		WITH ON CONFLICT DO UPDATE;
+		INSERT INTO %s
+			SELECT *
+			FROM %s
+		ON CONFLICT (id)
+		DO UPDATE
+			SET %s;
 		`,
 		tableName,
 		tpmTableName,
+		updateString,
+	)
+
+	_, err = tx.conn.Exec(
+		context,
+		query,
 	)
 	if err != nil {
-		return fmt.Errorf("could not copy into table %v: %v", tableName, err)
+		return fmt.Errorf("could not copy into table %v: could not update with values from temporary table %v: %v", tableName, tpmTableName, err)
 	}
 
 	return nil
