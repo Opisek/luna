@@ -120,4 +120,13 @@ func init() {
 
 		return nil
 	})
+
+	addMigration(common.Ver(0, 3, 0), func(tx *Transaction) error {
+		err := tx.initializeEventsTable()
+		if err != nil {
+			return fmt.Errorf("could not initialize events table: %v", err)
+		}
+
+		return nil
+	})
 }

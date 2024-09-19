@@ -6,7 +6,7 @@ import (
 
 type Event interface {
 	GetId() types.ID
-	GetCalendar() types.ID
+	GetCalendar() Calendar
 	GetName() string
 	GetDesc() string
 	GetColor() *types.Color
@@ -16,5 +16,5 @@ type Event interface {
 }
 
 type EventSettings interface {
-	GetBytes() []byte
+	Bytes() []byte
 }

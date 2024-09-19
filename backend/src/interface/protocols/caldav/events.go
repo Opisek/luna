@@ -1,6 +1,7 @@
 package caldav
 
 import (
+	"encoding/json"
 	"fmt"
 	"luna-backend/crypto"
 	"luna-backend/interface/primitives"
@@ -144,8 +145,12 @@ func eventFromCaldav(calendar *CaldavCalendar, obj *caldav.CalendarObject) (*Cal
 	}, nil
 }
 
-func (event *CaldavEventSettings) GetBytes() []byte {
-	return []byte{}
+func (settings *CaldavEventSettings) Bytes() []byte {
+	bytes, err := json.Marshal(settings)
+	if err != nil {
+		panic(err)
+	}
+	return bytes
 }
 
 func (event *CaldavEvent) GetId() types.ID {
@@ -160,8 +165,8 @@ func (event *CaldavEvent) GetDesc() string {
 	return event.desc
 }
 
-func (event *CaldavEvent) GetCalendar() types.ID {
-	return event.calendar.GetId()
+func (event *CaldavEvent) GetCalendar() primitives.Calendar {
+	return event.calendar
 }
 
 func (event *CaldavEvent) GetSettings() primitives.EventSettings {

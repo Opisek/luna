@@ -97,7 +97,9 @@ func (tx *Transaction) getCalendars(source primitives.Source) ([]*calendarEntry,
 		SELECT id, color, settings
 		FROM calendars
 		WHERE source = $1;
-	`, source.GetId())
+		`,
+		source.GetId(),
+	)
 
 	if err != nil {
 		return nil, fmt.Errorf("could not get calendars from database: %v", err)

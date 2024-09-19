@@ -4,6 +4,7 @@ import (
 	"errors"
 	"luna-backend/api/internal/config"
 	"luna-backend/api/internal/context"
+	"luna-backend/db"
 	"luna-backend/interface/primitives"
 	"luna-backend/types"
 	"net/http"
@@ -23,7 +24,7 @@ type exposedEvent struct {
 	Settings primitives.EventSettings `json:"settings"` // TODO: REMOVE FROM PRODUCTION, TESTING ONLY
 }
 
-func getEvents(config *config.Api, cals []primitives.Calendar, start time.Time, end time.Time) ([]primitives.Event, error) {
+func getEvents(config *config.Api, tx *db.Transaction, cals []primitives.Calendar, start time.Time, end time.Time) ([]primitives.Event, error) {
 	// For each calendar, get its events
 	events := make([][]primitives.Event, len(cals))
 	errored := false
@@ -34,7 +35,7 @@ func getEvents(config *config.Api, cals []primitives.Calendar, start time.Time, 
 		go func(i int, cal primitives.Calendar) {
 			defer waitGroup.Done()
 
-			eventsFromCal, err := cal.GetEvents(start, end)
+			eventsFromCal, err := tx.GetEvents(cal, start, end)
 			if err != nil {
 				errored = true
 				config.Logger.Errorf("could not get events: could not get events from calendar %v: %v", cal.GetId().String(), err)
@@ -93,7 +94,7 @@ func GetEvents(c *gin.Context) {
 		panic(err)
 	}
 
-	events, err := getEvents(config, cals, startTime, endTime)
+	events, err := getEvents(config, tx, cals, startTime, endTime)
 	if err != nil {
 		config.Logger.Errorf("could not get events: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get events"})
@@ -109,7 +110,7 @@ func GetEvents(c *gin.Context) {
 
 		convertedEvents[i] = exposedEvent{
 			Id:       event.GetId(),
-			Calendar: event.GetCalendar(),
+			Calendar: event.GetCalendar().GetId(),
 			Name:     event.GetName(),
 			Desc:     event.GetDesc(),
 			Color:    event.GetColor(),
