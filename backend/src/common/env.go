@@ -16,11 +16,14 @@ type Environmental struct {
 	DB_USERNAME string
 	DB_PASSWORD string
 	DB_DATABASE string
-	DATA_PATH   string
+
+	DATA_PATH string
+	API_PORT  uint16
 }
 
 var defaultEnv = Environmental{
 	DATA_PATH: "/data",
+	API_PORT:  3000,
 }
 
 func ParseEnvironmental(logger *logrus.Entry) (Environmental, error) {
