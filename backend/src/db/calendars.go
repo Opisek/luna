@@ -41,10 +41,18 @@ func (tx *Transaction) insertCalendars(cals []primitives.Calendar) error {
 	rows := [][]any{}
 
 	for _, cal := range cals {
+		color := cal.GetColor()
+		var colBytes []byte
+		if color.IsEmpty() {
+			colBytes = nil
+		} else {
+			colBytes = color.Bytes()
+		}
+
 		row := []any{
 			cal.GetId(),
 			cal.GetSource().GetId(),
-			cal.GetColor().Bytes(),
+			colBytes,
 			cal.GetSettings().Bytes(),
 		}
 

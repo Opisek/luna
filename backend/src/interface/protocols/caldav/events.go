@@ -170,7 +170,7 @@ func (event *CaldavEvent) GetSettings() primitives.EventSettings {
 
 func (event *CaldavEvent) GetColor() *types.Color {
 	if event.color == nil {
-		return event.calendar.color
+		return event.calendar.GetColor()
 	} else {
 		return event.color
 	}

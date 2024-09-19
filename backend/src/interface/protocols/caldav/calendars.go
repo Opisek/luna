@@ -82,7 +82,11 @@ func (calendar *CaldavCalendar) GetSettings() primitives.CalendarSettings {
 }
 
 func (calendar *CaldavCalendar) GetColor() *types.Color {
-	return calendar.color
+	if calendar.color == nil {
+		return types.ColorEmpty
+	} else {
+		return calendar.color
+	}
 }
 
 func (calendar *CaldavCalendar) SetColor(color *types.Color) {

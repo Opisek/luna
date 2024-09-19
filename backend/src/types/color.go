@@ -7,13 +7,23 @@ import (
 	"strconv"
 )
 
-type Color color.RGBA
+var ColorDefault = ColorFromVals(25, 25, 50)
+var ColorEmpty = &Color{empty: true}
+
+type Color struct {
+	empty bool
+	col   color.RGBA
+}
 
 func (c *Color) RGBA() color.RGBA {
-	return color.RGBA(*c)
+	return color.RGBA(c.col)
 }
 
 func (c *Color) String() string {
+	if c == nil {
+		return ColorDefault.String()
+	}
+
 	rgba := c.RGBA()
 
 	col := fmt.Sprintf("#%02x%02x%02x", rgba.R, rgba.G, rgba.B)
@@ -22,6 +32,10 @@ func (c *Color) String() string {
 }
 
 func (c *Color) Bytes() []byte {
+	if c == nil {
+		return ColorDefault.Bytes()
+	}
+
 	rgba := c.RGBA()
 
 	return []byte{rgba.R, rgba.G, rgba.B}
@@ -61,11 +75,18 @@ func ColorFromVals(r, g, b uint8) *Color {
 }
 
 func ColorFromRGBA(rgba color.RGBA) *Color {
-	col := Color(rgba)
-	return &col
+	col := &Color{
+		empty: false,
+		col:   rgba,
+	}
+	return col
 }
 
 func ColorFromBytes(bytes []byte) *Color {
+	if bytes == nil || len(bytes) != 3 {
+		return nil
+	}
+
 	rgba := color.RGBA{
 		R: bytes[0],
 		G: bytes[1],
@@ -78,13 +99,20 @@ func ColorFromBytes(bytes []byte) *Color {
 }
 
 func (c *Color) MarshalJSON() ([]byte, error) {
-	if c == nil {
-		return json.Marshal(nil)
+	if c.empty {
+		//return json.Marshal(nil)
+		return json.Marshal(ColorDefault)
 	}
+
 	return json.Marshal(c.String())
 }
 
 func (c *Color) UnmarshalJSON(data []byte) error {
+	if data == nil || string(data) == "null" {
+		*c = *ColorEmpty
+		return nil
+	}
+
 	var rawColor string
 	if err := json.Unmarshal(data, &rawColor); err != nil {
 		return err
@@ -95,4 +123,8 @@ func (c *Color) UnmarshalJSON(data []byte) error {
 	}
 	*c = Color(*color)
 	return nil
+}
+
+func (c *Color) IsEmpty() bool {
+	return c == nil || c.empty
 }
