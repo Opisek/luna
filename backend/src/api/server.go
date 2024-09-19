@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"luna-backend/api/internal/config"
 	"luna-backend/api/internal/handlers"
 	"luna-backend/common"
@@ -55,5 +56,5 @@ func run(api *config.Api) {
 	eventEndpoints.PATCH("/:eventId", handlers.NotImplemented)
 	eventEndpoints.DELETE("/:eventId", handlers.NotImplemented)
 
-	router.Run(":3000")
+	router.Run(fmt.Sprintf(":%d", api.CommonConfig.Env.API_PORT))
 }
