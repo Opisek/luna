@@ -7,8 +7,6 @@ import (
 	"luna-backend/interface/primitives"
 	"luna-backend/interface/protocols/caldav"
 	"luna-backend/types"
-
-	"github.com/jackc/pgx/v5"
 )
 
 type calendarEntry struct {
@@ -53,14 +51,11 @@ func (tx *Transaction) insertCalendars(cals []primitives.Calendar) error {
 		rows = append(rows, row)
 	}
 
-	// TODO: to avoid conflicts with existing keys, we want to do something similar to this:
-	// TODO: https://github.com/jackc/pgx/issues/992
-	// TODO: this might require transactions to be set up first
-	_, err := tx.conn.CopyFrom(
+	err := tx.CopyAndUpdate(
 		context.TODO(),
-		pgx.Identifier{"calendars"},
+		"calendars",
 		[]string{"id", "source", "color", "settings"},
-		pgx.CopyFromRows(rows),
+		rows,
 	)
 
 	if err != nil {
