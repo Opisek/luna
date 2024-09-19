@@ -27,7 +27,7 @@ func Login(c *gin.Context) {
 	// Check if the user exists
 	userId, err := tx.GetUserIdFromUsername(credentials.Username)
 	if err != nil {
-		apiConfig.Logger.Errorf("%v: could not get user id for user %v: %v", topErr, credentials.Username, err)
+		apiConfig.Logger.Warnf("%v: could not get user id for user %v: %v", topErr, credentials.Username, err)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
 		return
 	}
@@ -42,7 +42,7 @@ func Login(c *gin.Context) {
 
 	// Verify the password
 	if !auth.VerifyPassword(credentials.Password, savedPassword, algorithm) {
-		apiConfig.Logger.Errorf("%v: passwords do not match", topErr)
+		apiConfig.Logger.Warnf("%v: passwords do not match", topErr)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
 		return
 	}
