@@ -3,6 +3,7 @@ package handlers
 import (
 	"fmt"
 	"luna-backend/api/internal/context"
+	"luna-backend/api/internal/util"
 	"luna-backend/auth"
 	"luna-backend/types"
 	"net/http"
@@ -19,7 +20,7 @@ func Login(c *gin.Context) {
 	credentials := auth.BasicAuth{}
 	if err := c.ShouldBind(&credentials); err != nil {
 		apiConfig.Logger.Error(err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": "improper payload"})
+		util.Error(c, util.ErrorPayload)
 		return
 	}
 	topErr := fmt.Errorf("failed to log in with credentials %v, %v", credentials.Username, credentials.Password)
@@ -28,7 +29,7 @@ func Login(c *gin.Context) {
 	userId, err := tx.Queries().GetUserIdFromUsername(credentials.Username)
 	if err != nil {
 		apiConfig.Logger.Warnf("%v: could not get user id for user %v: %v", topErr, credentials.Username, err)
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
+		util.Error(c, util.ErrorInvalidCredentials)
 		return
 	}
 
@@ -36,14 +37,14 @@ func Login(c *gin.Context) {
 	savedPassword, algorithm, err := tx.Queries().GetPassword(userId)
 	if err != nil {
 		apiConfig.Logger.Errorf("%v: could not get password for user %v: %v", topErr, credentials.Username, err)
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
+		util.Error(c, util.ErrorInvalidCredentials)
 		return
 	}
 
 	// Verify the password
 	if !auth.VerifyPassword(credentials.Password, savedPassword, algorithm) {
 		apiConfig.Logger.Warnf("%v: passwords do not match", topErr)
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
+		util.Error(c, util.ErrorInvalidCredentials)
 		return
 	}
 
@@ -53,13 +54,13 @@ func Login(c *gin.Context) {
 		hash, alg, err := auth.SecurePassword(credentials.Password)
 		if err != nil {
 			apiConfig.Logger.Errorf("%v: could not hash password: %v", topErr, err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "rehashing failed"})
+			util.Error(c, util.ErrorInternal)
 			return
 		}
 		err = tx.Queries().UpdatePassword(userId, hash, alg)
 		if err != nil {
 			apiConfig.Logger.Errorf("%v: could not update password: %v", topErr, err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "rehashing failed"})
+			util.Error(c, util.ErrorDatabase)
 			return
 		}
 	}
@@ -68,12 +69,12 @@ func Login(c *gin.Context) {
 	token, err := auth.NewToken(apiConfig.CommonConfig, userId)
 	if err != nil {
 		apiConfig.Logger.Errorf("%v: could not generate token: %v", topErr, err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not generate token"})
+		util.Error(c, util.ErrorInternal)
 		return
 	}
 
 	if tx.Commit(apiConfig.Logger) != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		util.Error(c, util.ErrorDatabase)
 		return
 	}
 
@@ -96,7 +97,7 @@ func Register(c *gin.Context) {
 	payload := registerPayload{}
 	if err := c.ShouldBind(&payload); err != nil {
 		apiConfig.Logger.Error(err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": "improper payload"})
+		util.Error(c, util.ErrorPayload)
 		return
 	}
 	topErr := fmt.Errorf("failed to register user %v", payload.Username)
@@ -104,14 +105,14 @@ func Register(c *gin.Context) {
 	hash, alg, err := auth.SecurePassword(payload.Password)
 	if err != nil {
 		apiConfig.Logger.Errorf("%v: could not hash password: %v", topErr, err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to register"})
+		util.Error(c, util.ErrorInternal)
 		return
 	}
 
 	usersExist, err := tx.Queries().AnyUsersExist()
 	if err != nil {
 		apiConfig.Logger.Errorf("%v: could not check if users exist: %v", topErr, err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to register"})
+		util.Error(c, util.ErrorDatabase)
 		return
 	}
 
@@ -126,14 +127,14 @@ func Register(c *gin.Context) {
 	err = tx.Queries().AddUser(user)
 	if err != nil {
 		apiConfig.Logger.Errorf("%v: could not add user: %v", topErr, err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to register"})
+		util.Error(c, util.ErrorDatabase)
 		return
 	}
 
 	if tx.Commit(apiConfig.Logger) != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		util.Error(c, util.ErrorDatabase)
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{})
+	util.Success(c)
 }

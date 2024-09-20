@@ -13,17 +13,9 @@ import (
 
 func GetConfig(c *gin.Context) *config.Api {
 	return c.MustGet("apiConfig").(*config.Api)
-	//apiConfig, err := c.Get("apiConfig")
-	//if !err {
-	//	c.JSON(http.StatusInternalServerError, gin.H{"error": "context error"})
-	//	return nil
-	//}
-	//return apiConfig.(*config.Api)
 }
 
 func GetUserId(c *gin.Context) types.ID {
-	// it's fine to panic here because getUserId is always called after the
-	// authMiddleware so we know the key must be set
 	return c.MustGet("user_id").(types.ID)
 }
 

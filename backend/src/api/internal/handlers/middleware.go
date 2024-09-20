@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"luna-backend/api/internal/context"
+	"luna-backend/api/internal/util"
 	"luna-backend/auth"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -18,7 +18,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		gotBearer := bearerErr == nil && bearerToken != ""
 
 		if !gotCookie && !gotBearer {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "missing authorization token"})
+			util.Abort(c, util.ErrorTokenMissing)
 			return
 		}
 
@@ -31,7 +31,7 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		parsedToken, err := auth.ParseToken(config.CommonConfig, token)
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid authorization token"})
+			util.Abort(c, util.ErrorTokenInvalid)
 			return
 		}
 
@@ -47,7 +47,7 @@ func TransactionMiddleware() gin.HandlerFunc {
 		tx, err := config.Db.BeginTransaction()
 
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+			util.Abort(c, util.ErrorDatabase)
 		}
 
 		c.Set("transaction", tx)

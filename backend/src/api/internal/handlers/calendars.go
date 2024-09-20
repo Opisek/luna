@@ -4,6 +4,7 @@ import (
 	"errors"
 	"luna-backend/api/internal/config"
 	"luna-backend/api/internal/context"
+	"luna-backend/api/internal/util"
 	"luna-backend/db"
 	"luna-backend/interface/primitives"
 	"luna-backend/types"
@@ -69,7 +70,7 @@ func GetCalendars(c *gin.Context) {
 	srcs, err := getSources(config, tx, userId)
 	if err != nil {
 		config.Logger.Errorf("could not get calendars: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get sources"})
+		util.Error(c, util.ErrorUnknown)
 		return
 	}
 
@@ -77,7 +78,7 @@ func GetCalendars(c *gin.Context) {
 	cals, err := getCalendars(config, tx, srcs)
 	if err != nil {
 		config.Logger.Errorf("could not get calendars: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get calendars"})
+		util.Error(c, util.ErrorUnknown)
 		return
 	}
 
@@ -85,7 +86,7 @@ func GetCalendars(c *gin.Context) {
 	cals, err = tx.Queries().ReconcileCalendars(srcs, cals)
 	if err != nil {
 		config.Logger.Errorf("could not reconcile calendars: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not reconcile calendars"})
+		util.Error(c, util.ErrorUnknown)
 		return
 	}
 
@@ -103,7 +104,7 @@ func GetCalendars(c *gin.Context) {
 	}
 
 	if tx.Commit(config.Logger) != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		util.Error(c, util.ErrorDatabase)
 		return
 	}
 
@@ -115,7 +116,7 @@ func GetCalendar(c *gin.Context) {
 	calendarId, err := context.GetId(c, "calendar")
 	if err != nil {
 		apiConfig.Logger.Errorf("could not get calendar id: %v", err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": "malformed or missing calendar id"})
+		util.Error(c, util.ErrorMalformedID)
 		return
 	}
 
@@ -127,7 +128,7 @@ func GetCalendar(c *gin.Context) {
 	cal, err := tx.Queries().GetCalendar(userId, calendarId)
 	if err != nil {
 		apiConfig.Logger.Errorf("could not get calendar: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get calendar"})
+		util.Error(c, util.ErrorDatabase)
 		return
 	}
 
@@ -142,7 +143,7 @@ func GetCalendar(c *gin.Context) {
 	}
 
 	if tx.Commit(apiConfig.Logger) != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		util.Error(c, util.ErrorDatabase)
 		return
 	}
 

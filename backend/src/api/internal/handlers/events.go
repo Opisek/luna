@@ -4,6 +4,7 @@ import (
 	"errors"
 	"luna-backend/api/internal/config"
 	"luna-backend/api/internal/context"
+	"luna-backend/api/internal/util"
 	"luna-backend/db"
 	"luna-backend/interface/primitives"
 	"luna-backend/types"
@@ -71,7 +72,7 @@ func GetEvents(c *gin.Context) {
 	srcs, err := getSources(config, tx, userId)
 	if err != nil {
 		config.Logger.Errorf("could not get events: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get sources"})
+		util.Error(c, util.ErrorUnknown)
 		return
 	}
 
@@ -79,7 +80,7 @@ func GetEvents(c *gin.Context) {
 	cals, err := getCalendars(config, tx, srcs)
 	if err != nil {
 		config.Logger.Errorf("could not get events: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get calendars"})
+		util.Error(c, util.ErrorUnknown)
 		return
 	}
 
@@ -97,7 +98,7 @@ func GetEvents(c *gin.Context) {
 	events, err := getEvents(config, tx, cals, startTime, endTime)
 	if err != nil {
 		config.Logger.Errorf("could not get events: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get events"})
+		util.Error(c, util.ErrorUnknown)
 		return
 	}
 
@@ -105,7 +106,7 @@ func GetEvents(c *gin.Context) {
 	events, err = tx.Queries().ReconcileEvents(cals, events)
 	if err != nil {
 		config.Logger.Errorf("could not reconcile events: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not reconcile events"})
+		util.Error(c, util.ErrorUnknown)
 		return
 	}
 
@@ -128,7 +129,7 @@ func GetEvents(c *gin.Context) {
 	}
 
 	if tx.Commit(config.Logger) != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		util.Error(c, util.ErrorDatabase)
 		return
 	}
 
@@ -140,7 +141,7 @@ func GetEvent(c *gin.Context) {
 	eventId, err := context.GetId(c, "event")
 	if err != nil {
 		apiConfig.Logger.Errorf("could not get event id: %v", err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": "malformed or missing event id"})
+		util.Error(c, util.ErrorMalformedID)
 		return
 	}
 
@@ -152,7 +153,7 @@ func GetEvent(c *gin.Context) {
 	event, err := tx.Queries().GetEvent(userId, eventId)
 	if err != nil {
 		apiConfig.Logger.Errorf("could not get event: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get event"})
+		util.Error(c, util.ErrorDatabase)
 		return
 	}
 
@@ -168,7 +169,7 @@ func GetEvent(c *gin.Context) {
 	}
 
 	if tx.Commit(apiConfig.Logger) != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		util.Error(c, util.ErrorDatabase)
 		return
 	}
 

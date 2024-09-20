@@ -2,13 +2,14 @@ package handlers
 
 import (
 	"luna-backend/api/internal/context"
+	"luna-backend/api/internal/util"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
 func NotImplemented(c *gin.Context) {
-	c.JSON(http.StatusNotImplemented, gin.H{"error": "not implemented"})
+	util.Error(c, util.ErrorNotImplemented)
 }
 
 func GetVersion(c *gin.Context) {
