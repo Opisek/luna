@@ -48,22 +48,22 @@ func (q *Queries) insertCalendars(cals []primitives.Calendar) error {
 	return nil
 }
 
-func (q *Queries) getCalendarEntries(sources []primitives.Source) ([]*tables.CalendarEntry, error) {
+func (q *Queries) getCalendarEntries(sources []primitives.Source, cals []primitives.Calendar) ([]*tables.CalendarEntry, error) {
 	query := fmt.Sprintf(
 		`
 		SELECT id, source, color, settings
 		FROM calendars
-		WHERE source IN (
+		WHERE id IN (
 			%s
 		);
 		`,
-		util.GenerateArgList(1, len(sources)),
+		util.GenerateArgList(1, len(cals)),
 	)
 
 	rows, err := q.Tx.Query(
 		context.TODO(),
 		query,
-		util.JoinIds(sources, func(s primitives.Source) types.ID { return s.GetId() })...,
+		util.JoinIds(cals, func(c primitives.Calendar) types.ID { return c.GetId() })...,
 	)
 
 	if err != nil {
@@ -77,7 +77,7 @@ func (q *Queries) getCalendarEntries(sources []primitives.Source) ([]*tables.Cal
 		sourceMap[source.GetId()] = source
 	}
 
-	cals := []*tables.CalendarEntry{}
+	calEntries := []*tables.CalendarEntry{}
 	for rows.Next() {
 		var id types.ID
 		var source types.ID
@@ -94,10 +94,10 @@ func (q *Queries) getCalendarEntries(sources []primitives.Source) ([]*tables.Cal
 			return nil, fmt.Errorf("could not parse calendar: %v", err)
 		}
 
-		cals = append(cals, calEntry)
+		calEntries = append(calEntries, calEntry)
 	}
 
-	return cals, nil
+	return calEntries, nil
 }
 
 func (q *Queries) ReconcileCalendars(sources []primitives.Source, cals []primitives.Calendar) ([]primitives.Calendar, error) {
@@ -106,7 +106,7 @@ func (q *Queries) ReconcileCalendars(sources []primitives.Source, cals []primiti
 		calMap[cal.GetId()] = cal
 	}
 
-	dbCals, err := q.getCalendarEntries(sources)
+	dbCals, err := q.getCalendarEntries(sources, cals)
 	if err != nil {
 		return nil, fmt.Errorf("could not get cached calendars: %v", err)
 	}
@@ -142,12 +142,13 @@ func (q *Queries) GetCalendar(userId types.ID, calendarId types.ID) (primitives.
 	var sourceSettings []byte
 	var authType string
 	var authBytes []byte
+	var calendarColor []byte
 	var calendarSettings []byte
 
 	err = q.Tx.QueryRow(
 		context.TODO(),
 		`
-		SELECT sources.id, sources.name, sources.type, sources.settings, PGP_SYM_DECRYPT(sources.auth_type, $3), PGP_SYM_DECRYPT(sources.auth, $3), calendars.settings
+		SELECT sources.id, sources.name, sources.type, sources.settings, PGP_SYM_DECRYPT(sources.auth_type, $3), PGP_SYM_DECRYPT(sources.auth, $3), calendars.color, calendars.settings
 		FROM calendars
 		JOIN sources ON calendars.source = sources.id
 		WHERE calendars.id = $1
@@ -156,7 +157,7 @@ func (q *Queries) GetCalendar(userId types.ID, calendarId types.ID) (primitives.
 		calendarId.UUID(),
 		userId.UUID(),
 		decryptionKey,
-	).Scan(&sourceId, &sourceName, &sourceType, &sourceSettings, &authType, &authBytes, &calendarSettings)
+	).Scan(&sourceId, &sourceName, &sourceType, &sourceSettings, &authType, &authBytes, &calendarColor, &calendarSettings)
 	if err != nil {
 		return nil, fmt.Errorf("could not get calendar: %v", err)
 	}
@@ -166,12 +167,20 @@ func (q *Queries) GetCalendar(userId types.ID, calendarId types.ID) (primitives.
 		return nil, fmt.Errorf("could not parse source: %v", err)
 	}
 
-	parsedCalendarSettings, err := parsing.ParseCalendarSettings(source.GetType(), calendarSettings)
+	calendarEntry, err := parsing.ParseCalendarEntry(source, calendarId, calendarColor, calendarSettings)
 	if err != nil {
-		return nil, fmt.Errorf("could not parse calendar settings: %v", err)
+		return nil, fmt.Errorf("could not parse calendar entry: %v", err)
 	}
 
-	return source.GetCalendar(parsedCalendarSettings)
+	calendar, err := source.GetCalendar(calendarEntry.Settings)
+	if err != nil {
+		return nil, fmt.Errorf("could not get calendar: %v", err)
+	}
+	if calendar.GetColor() == nil {
+		calendar.SetColor(calendarEntry.Color)
+	}
+
+	return calendar, nil
 }
 
 func (q *Queries) UpdateCalendar(cal primitives.Calendar) error {

@@ -48,22 +48,22 @@ func (q *Queries) insertEvents(cals []primitives.Event) error {
 	return nil
 }
 
-func (q *Queries) getEventEntries(calendars []primitives.Calendar) ([]*tables.EventEntry, error) {
+func (q *Queries) getEventEntries(calendars []primitives.Calendar, events []primitives.Event) ([]*tables.EventEntry, error) {
 	query := fmt.Sprintf(
 		`
 		SELECT id, calendar, color, settings
 		FROM events
-		WHERE calendar IN (
+		WHERE id IN (
 			%s
 		);
 		`,
-		util.GenerateArgList(1, len(calendars)),
+		util.GenerateArgList(1, len(events)),
 	)
 
 	rows, err := q.Tx.Query(
 		context.TODO(),
 		query,
-		util.JoinIds(calendars, func(s primitives.Calendar) types.ID { return s.GetId() })...,
+		util.JoinIds(events, func(e primitives.Event) types.ID { return e.GetId() })...,
 	)
 
 	if err != nil {
@@ -77,7 +77,7 @@ func (q *Queries) getEventEntries(calendars []primitives.Calendar) ([]*tables.Ev
 		calMap[cal.GetId()] = cal
 	}
 
-	events := []*tables.EventEntry{}
+	eventEntries := []*tables.EventEntry{}
 	for rows.Next() {
 		var id types.ID
 		var source types.ID
@@ -94,10 +94,10 @@ func (q *Queries) getEventEntries(calendars []primitives.Calendar) ([]*tables.Ev
 			return nil, fmt.Errorf("could not parse calendar: %v", err)
 		}
 
-		events = append(events, eventEntry)
+		eventEntries = append(eventEntries, eventEntry)
 	}
 
-	return events, nil
+	return eventEntries, nil
 }
 
 func (q *Queries) ReconcileEvents(cals []primitives.Calendar, events []primitives.Event) ([]primitives.Event, error) {
@@ -106,7 +106,7 @@ func (q *Queries) ReconcileEvents(cals []primitives.Calendar, events []primitive
 		eventMap[event.GetId()] = event
 	}
 
-	dbEvents, err := q.getEventEntries(cals)
+	dbEvents, err := q.getEventEntries(cals, events)
 	if err != nil {
 		return nil, fmt.Errorf("could not get cached events: %v", err)
 	}
@@ -142,13 +142,16 @@ func (q *Queries) GetEvent(userId types.ID, eventId types.ID) (primitives.Event,
 	var sourceSettings []byte
 	var authType string
 	var authBytes []byte
+	var calendarId types.ID
+	var calendarColor []byte
 	var calendarSettings []byte
+	var eventColor []byte
 	var eventSettings []byte
 
 	err = q.Tx.QueryRow(
 		context.TODO(),
 		`
-		SELECT sources.id, sources.name, sources.type, sources.settings, PGP_SYM_DECRYPT(sources.auth_type, $3), PGP_SYM_DECRYPT(sources.auth, $3), calendars.settings, events.settings
+		SELECT sources.id, sources.name, sources.type, sources.settings, PGP_SYM_DECRYPT(sources.auth_type, $3), PGP_SYM_DECRYPT(sources.auth, $3), calendars.id, calendars.color, calendars.settings, events.color, events.settings
 		FROM events
 		JOIN calendars ON events.calendar = calendars.id
 		JOIN sources ON calendars.source = sources.id
@@ -158,7 +161,7 @@ func (q *Queries) GetEvent(userId types.ID, eventId types.ID) (primitives.Event,
 		eventId.UUID(),
 		userId.UUID(),
 		decryptionKey,
-	).Scan(&sourceId, &sourceName, &sourceType, &sourceSettings, &authType, &authBytes, &calendarSettings, &eventSettings)
+	).Scan(&sourceId, &sourceName, &sourceType, &sourceSettings, &authType, &authBytes, &calendarId, &calendarColor, &calendarSettings, &eventColor, &eventSettings)
 	if err != nil {
 		return nil, fmt.Errorf("could not get event: %v", err)
 	}
@@ -168,20 +171,31 @@ func (q *Queries) GetEvent(userId types.ID, eventId types.ID) (primitives.Event,
 		return nil, fmt.Errorf("could not parse source: %v", err)
 	}
 
-	parsedCalendarSettings, err := parsing.ParseCalendarSettings(source.GetType(), calendarSettings)
+	calendarEntry, err := parsing.ParseCalendarEntry(source, calendarId, calendarColor, calendarSettings)
 	if err != nil {
-		return nil, fmt.Errorf("could not parse calendar settings: %v", err)
+		return nil, fmt.Errorf("could not parse calendar entry: %v", err)
 	}
 
-	calendar, err := source.GetCalendar(parsedCalendarSettings)
+	calendar, err := source.GetCalendar(calendarEntry.Settings)
 	if err != nil {
 		return nil, fmt.Errorf("could not get calendar: %v", err)
 	}
-
-	parsedEventSettings, err := parsing.ParseEventSettings(source.GetType(), eventSettings)
-	if err != nil {
-		return nil, fmt.Errorf("could not parse event settings: %v", err)
+	if calendar.GetColor() == nil {
+		calendar.SetColor(calendarEntry.Color)
 	}
 
-	return calendar.GetEvent(parsedEventSettings)
+	eventEntry, err := parsing.ParseEventEntry(calendar, eventId, eventColor, eventSettings)
+	if err != nil {
+		return nil, fmt.Errorf("could not parse event entry: %v", err)
+	}
+
+	event, err := calendar.GetEvent(eventEntry.Settings)
+	if err != nil {
+		return nil, fmt.Errorf("could not get event: %v", err)
+	}
+	if event.GetColor() == nil {
+		event.SetColor(eventEntry.Color)
+	}
+
+	return event, nil
 }
