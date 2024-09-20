@@ -101,6 +101,10 @@ func (q *Queries) getEventEntries(calendars []primitives.Calendar, events []prim
 }
 
 func (q *Queries) ReconcileEvents(cals []primitives.Calendar, events []primitives.Event) ([]primitives.Event, error) {
+	if len(events) == 0 {
+		return events, nil
+	}
+
 	eventMap := map[types.ID]primitives.Event{}
 	for _, event := range events {
 		eventMap[event.GetId()] = event
