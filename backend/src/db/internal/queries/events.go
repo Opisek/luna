@@ -1,9 +1,10 @@
-package db
+package queries
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"luna-backend/db/internal/util"
 	"luna-backend/interface/primitives"
 	"luna-backend/interface/protocols/caldav"
 	"luna-backend/types"
@@ -17,28 +18,7 @@ type eventEntry struct {
 	Settings primitives.EventSettings
 }
 
-func (tx *Transaction) initializeEventsTable() error {
-	var err error
-	// Events table:
-	// id calendar color settings
-	_, err = tx.conn.Exec(
-		context.TODO(),
-		`
-		CREATE TABLE IF NOT EXISTS events (
-			id UUID PRIMARY KEY,
-			calendar UUID REFERENCES calendars(id),
-			color BYTEA,
-			settings JSONB NOT NULL
-		);
-	`)
-	if err != nil {
-		return fmt.Errorf("could not create events table: %v", err)
-	}
-
-	return nil
-}
-
-func (tx *Transaction) insertEvents(cals []primitives.Event) error {
+func (q *Queries) insertEvents(cals []primitives.Event) error {
 	rows := [][]any{}
 
 	for _, cal := range cals {
@@ -60,7 +40,8 @@ func (tx *Transaction) insertEvents(cals []primitives.Event) error {
 		rows = append(rows, row)
 	}
 
-	err := tx.CopyAndUpdate(
+	err := util.CopyAndUpdate(
+		q.Tx,
 		context.TODO(),
 		"events",
 		[]string{"id", "calendar", "color", "settings"},
@@ -91,8 +72,8 @@ func parseEventSettings(sourceType string, settings []byte) (primitives.Calendar
 	}
 }
 
-func (tx *Transaction) getEvents(calendar primitives.Calendar) ([]*eventEntry, error) {
-	rows, err := tx.conn.Query(
+func (q *Queries) getEvents(calendar primitives.Calendar) ([]*eventEntry, error) {
+	rows, err := q.Tx.Query(
 		context.TODO(),
 		`
 		SELECT id, color, settings
@@ -135,7 +116,7 @@ func (tx *Transaction) getEvents(calendar primitives.Calendar) ([]*eventEntry, e
 	return cals, nil
 }
 
-func (tx *Transaction) GetEvents(calendar primitives.Calendar, start time.Time, end time.Time) ([]primitives.Event, error) {
+func (q *Queries) GetEvents(calendar primitives.Calendar, start time.Time, end time.Time) ([]primitives.Event, error) {
 	events, err := calendar.GetEvents(start, end)
 	if err != nil {
 		return nil, fmt.Errorf("could not get events from calendar %v: %v", calendar.GetId().String(), err)
@@ -146,7 +127,7 @@ func (tx *Transaction) GetEvents(calendar primitives.Calendar, start time.Time, 
 		eventMap[event.GetId()] = event
 	}
 
-	dbEvents, err := tx.getEvents(calendar)
+	dbEvents, err := q.getEvents(calendar)
 	if err != nil {
 		return nil, fmt.Errorf("could not get cached events: %v", err)
 	}
@@ -159,7 +140,7 @@ func (tx *Transaction) GetEvents(calendar primitives.Calendar, start time.Time, 
 		}
 	}
 
-	err = tx.insertEvents(events)
+	err = q.insertEvents(events)
 	if err != nil {
 		return nil, fmt.Errorf("could not cache events: %v", err)
 	}

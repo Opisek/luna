@@ -31,7 +31,7 @@ type exposedDetailedSource struct {
 }
 
 func getSources(_ *config.Api, tx *db.Transaction, userId types.ID) ([]primitives.Source, error) {
-	srcs, err := tx.GetSources(userId)
+	srcs, err := tx.Queries().GetSources(userId)
 	if err != nil {
 		return nil, fmt.Errorf("could not get sources: %v", err)
 	}
@@ -80,7 +80,7 @@ func GetSource(c *gin.Context) {
 	tx := context.GetTransaction(c)
 	defer tx.Rollback(apiConfig.Logger)
 
-	source, err := tx.GetSource(userId, sourceId)
+	source, err := tx.Queries().GetSource(userId, sourceId)
 	if err != nil {
 		apiConfig.Logger.Errorf("could not get source: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get source"})
@@ -189,7 +189,7 @@ func PutSource(c *gin.Context) {
 		return
 	}
 
-	id, err := tx.InsertSource(userId, source)
+	id, err := tx.Queries().InsertSource(userId, source)
 	if err != nil {
 		apiConfig.Logger.Errorf("could not insert source %v for user %v: %v", source.GetId().String(), userId.String(), err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not insert source"})
@@ -249,7 +249,7 @@ func PatchSource(c *gin.Context) {
 
 	apiConfig.Logger.Debugf("parsed params")
 
-	err = tx.UpdateSource(userId, sourceId, newName, newAuth, newType, newSourceSettings)
+	err = tx.Queries().UpdateSource(userId, sourceId, newName, newAuth, newType, newSourceSettings)
 	if err != nil {
 		apiConfig.Logger.Errorf("could not update source: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not update source"})
@@ -277,7 +277,7 @@ func DeleteSource(c *gin.Context) {
 	tx := context.GetTransaction(c)
 	defer tx.Rollback(apiConfig.Logger)
 
-	deleted, err := tx.DeleteSource(userId, sourceId)
+	deleted, err := tx.Queries().DeleteSource(userId, sourceId)
 	if err != nil {
 		apiConfig.Logger.Errorf("could not delete source: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not delete source"})

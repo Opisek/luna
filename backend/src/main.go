@@ -48,7 +48,11 @@ func setupDb(commonConfig *common.CommonConfig, mainLogger *logrus.Entry, dbLogg
 	if err != nil {
 		return nil, err
 	}
-	latestUsedVersion, err := tx.GetLatestVersion()
+	err = tx.Tables().InitalizeVersionTable()
+	if err != nil {
+		return nil, fmt.Errorf("could not initialize version table: %v", err)
+	}
+	latestUsedVersion, err := tx.Queries().GetLatestVersion()
 	if err != nil {
 		tx.Rollback(mainLogger)
 		return nil, err
@@ -58,14 +62,14 @@ func setupDb(commonConfig *common.CommonConfig, mainLogger *logrus.Entry, dbLogg
 		tx.Rollback(mainLogger)
 		return nil, err
 	}
-	err = tx.RunMigrations(&latestUsedVersion)
+	err = tx.Migrations().RunMigrations(&latestUsedVersion)
 	if err != nil {
 		err = fmt.Errorf("could not run migrations: %v", err)
 		tx.Rollback(mainLogger)
 		return nil, err
 	}
 	if !latestUsedVersion.IsEqualTo(&commonConfig.Version) {
-		err = tx.UpdateVersion(commonConfig.Version)
+		err = tx.Queries().UpdateVersion(commonConfig.Version)
 		if err != nil {
 			tx.Rollback(mainLogger)
 			return nil, err

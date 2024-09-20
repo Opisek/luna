@@ -3,14 +3,22 @@ package db
 import (
 	"context"
 	"fmt"
+	"luna-backend/db/internal/migrations"
+	"luna-backend/db/internal/migrations/types"
+	"luna-backend/db/internal/queries"
+	"luna-backend/db/internal/tables"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/sirupsen/logrus"
 )
 
 type Transaction struct {
-	db   *Database
-	conn pgx.Tx
+	db *Database
+	tx pgx.Tx
+
+	queries    *queries.Queries
+	tables     *tables.Tables
+	migrations *types.MigrationQueries
 }
 
 func (db *Database) BeginTransaction() (*Transaction, error) {
@@ -21,15 +29,15 @@ func (db *Database) BeginTransaction() (*Transaction, error) {
 	}
 
 	transaction := &Transaction{
-		db:   db,
-		conn: tx,
+		db: db,
+		tx: tx,
 	}
 
 	return transaction, nil
 }
 
 func (tx *Transaction) Commit(logger *logrus.Entry) error {
-	err := tx.conn.Commit(context.TODO())
+	err := tx.tx.Commit(context.TODO())
 
 	if err != nil {
 		err := fmt.Errorf("could not commit transaction: %v", err)
@@ -41,7 +49,7 @@ func (tx *Transaction) Commit(logger *logrus.Entry) error {
 }
 
 func (tx *Transaction) Rollback(logger *logrus.Entry) error {
-	err := tx.conn.Rollback(context.TODO())
+	err := tx.tx.Rollback(context.TODO())
 
 	if err != nil && err != pgx.ErrTxClosed {
 		err := fmt.Errorf("could not rollback transaction: %v", err)
@@ -50,4 +58,31 @@ func (tx *Transaction) Rollback(logger *logrus.Entry) error {
 	}
 
 	return nil
+}
+
+func (tx *Transaction) Queries() *queries.Queries {
+	if tx.queries == nil {
+		tx.queries = &queries.Queries{
+			Tx:           tx.tx,
+			Logger:       tx.db.logger,
+			CommonConfig: tx.db.commonConfig,
+		}
+	}
+	return tx.queries
+}
+
+func (tx *Transaction) Tables() *tables.Tables {
+	if tx.tables == nil {
+		tx.tables = &tables.Tables{
+			Tx: tx.tx,
+		}
+	}
+	return tx.tables
+}
+
+func (tx *Transaction) Migrations() *types.MigrationQueries {
+	if tx.migrations == nil {
+		tx.migrations = migrations.NewMigrationQueries(tx.tx, tx.db.logger, tx.db.commonConfig, tx.Tables())
+	}
+	return tx.migrations
 }

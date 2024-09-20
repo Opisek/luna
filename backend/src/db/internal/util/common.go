@@ -1,4 +1,4 @@
-package db
+package util
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func (tx *Transaction) CopyAndUpdate(context context.Context, tableName string, columnNames []string, updateColumns []string, rows [][]any) error {
+func CopyAndUpdate(tx pgx.Tx, context context.Context, tableName string, columnNames []string, updateColumns []string, rows [][]any) error {
 	randomNumber, err := crypto.GenerateRandomNumber()
 	if err != nil {
 		return fmt.Errorf("could not copy into table %v: %v", tableName, err)
@@ -31,7 +31,7 @@ func (tx *Transaction) CopyAndUpdate(context context.Context, tableName string, 
 		tableName,
 	)
 
-	_, err = tx.conn.Exec(
+	_, err = tx.Exec(
 		context,
 		query,
 	)
@@ -39,7 +39,7 @@ func (tx *Transaction) CopyAndUpdate(context context.Context, tableName string, 
 		return fmt.Errorf("could not copy into table %v: could not create temporary table %v: %v", tableName, tpmTableName, err)
 	}
 
-	_, err = tx.conn.CopyFrom(
+	_, err = tx.CopyFrom(
 		context,
 		pgx.Identifier{tpmTableName},
 		columnNames,
@@ -68,7 +68,7 @@ func (tx *Transaction) CopyAndUpdate(context context.Context, tableName string, 
 		updateString,
 	)
 
-	_, err = tx.conn.Exec(
+	_, err = tx.Exec(
 		context,
 		query,
 	)

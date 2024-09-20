@@ -25,7 +25,7 @@ func Login(c *gin.Context) {
 	topErr := fmt.Errorf("failed to log in with credentials %v, %v", credentials.Username, credentials.Password)
 
 	// Check if the user exists
-	userId, err := tx.GetUserIdFromUsername(credentials.Username)
+	userId, err := tx.Queries().GetUserIdFromUsername(credentials.Username)
 	if err != nil {
 		apiConfig.Logger.Warnf("%v: could not get user id for user %v: %v", topErr, credentials.Username, err)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
@@ -33,7 +33,7 @@ func Login(c *gin.Context) {
 	}
 
 	// Get the user's password
-	savedPassword, algorithm, err := tx.GetPassword(userId)
+	savedPassword, algorithm, err := tx.Queries().GetPassword(userId)
 	if err != nil {
 		apiConfig.Logger.Errorf("%v: could not get password for user %v: %v", topErr, credentials.Username, err)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
@@ -56,7 +56,7 @@ func Login(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "rehashing failed"})
 			return
 		}
-		err = tx.UpdatePassword(userId, hash, alg)
+		err = tx.Queries().UpdatePassword(userId, hash, alg)
 		if err != nil {
 			apiConfig.Logger.Errorf("%v: could not update password: %v", topErr, err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "rehashing failed"})
@@ -108,7 +108,7 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	usersExist, err := tx.AnyUsersExist()
+	usersExist, err := tx.Queries().AnyUsersExist()
 	if err != nil {
 		apiConfig.Logger.Errorf("%v: could not check if users exist: %v", topErr, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to register"})
@@ -123,7 +123,7 @@ func Register(c *gin.Context) {
 		Admin:     !usersExist,
 	}
 
-	err = tx.AddUser(user)
+	err = tx.Queries().AddUser(user)
 	if err != nil {
 		apiConfig.Logger.Errorf("%v: could not add user: %v", topErr, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to register"})

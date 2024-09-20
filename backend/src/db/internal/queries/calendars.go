@@ -1,9 +1,10 @@
-package db
+package queries
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"luna-backend/db/internal/util"
 	"luna-backend/interface/primitives"
 	"luna-backend/interface/protocols/caldav"
 	"luna-backend/types"
@@ -16,28 +17,7 @@ type calendarEntry struct {
 	Settings primitives.CalendarSettings
 }
 
-func (tx *Transaction) initializeCalendarsTable() error {
-	var err error
-	// Calendars table:
-	// id source color settings
-	_, err = tx.conn.Exec(
-		context.TODO(),
-		`
-		CREATE TABLE IF NOT EXISTS calendars (
-			id UUID PRIMARY KEY,
-			source UUID REFERENCES sources(id),
-			color BYTEA,
-			settings JSONB NOT NULL
-		);
-	`)
-	if err != nil {
-		return fmt.Errorf("could not create calendars table: %v", err)
-	}
-
-	return nil
-}
-
-func (tx *Transaction) insertCalendars(cals []primitives.Calendar) error {
+func (q *Queries) insertCalendars(cals []primitives.Calendar) error {
 	rows := [][]any{}
 
 	for _, cal := range cals {
@@ -59,7 +39,8 @@ func (tx *Transaction) insertCalendars(cals []primitives.Calendar) error {
 		rows = append(rows, row)
 	}
 
-	err := tx.CopyAndUpdate(
+	err := util.CopyAndUpdate(
+		q.Tx,
 		context.TODO(),
 		"calendars",
 		[]string{"id", "source", "color", "settings"},
@@ -90,8 +71,8 @@ func parseCalendarSettings(sourceType string, settings []byte) (primitives.Calen
 	}
 }
 
-func (tx *Transaction) getCalendars(source primitives.Source) ([]*calendarEntry, error) {
-	rows, err := tx.conn.Query(
+func (q *Queries) getCalendars(source primitives.Source) ([]*calendarEntry, error) {
+	rows, err := q.Tx.Query(
 		context.TODO(),
 		`
 		SELECT id, color, settings
@@ -134,7 +115,7 @@ func (tx *Transaction) getCalendars(source primitives.Source) ([]*calendarEntry,
 	return cals, nil
 }
 
-func (tx *Transaction) GetCalendars(source primitives.Source) ([]primitives.Calendar, error) {
+func (q *Queries) GetCalendars(source primitives.Source) ([]primitives.Calendar, error) {
 	cals, err := source.GetCalendars()
 	if err != nil {
 		return nil, fmt.Errorf("could not get calendars from source %v: %v", source.GetId().String(), err)
@@ -145,7 +126,7 @@ func (tx *Transaction) GetCalendars(source primitives.Source) ([]primitives.Cale
 		calMap[cal.GetId()] = cal
 	}
 
-	dbCals, err := tx.getCalendars(source)
+	dbCals, err := q.getCalendars(source)
 	if err != nil {
 		return nil, fmt.Errorf("could not get cached calendars: %v", err)
 	}
@@ -159,7 +140,7 @@ func (tx *Transaction) GetCalendars(source primitives.Source) ([]primitives.Cale
 		}
 	}
 
-	err = tx.insertCalendars(cals)
+	err = q.insertCalendars(cals)
 	if err != nil {
 		return nil, fmt.Errorf("could not cache calendars: %v", err)
 	}
@@ -167,14 +148,14 @@ func (tx *Transaction) GetCalendars(source primitives.Source) ([]primitives.Cale
 	return cals, nil
 }
 
-func (tx *Transaction) GetCalendar(userId types.ID, calendarId types.ID) (primitives.Calendar, error) {
+func (q *Queries) GetCalendar(userId types.ID, calendarId types.ID) (primitives.Calendar, error) {
 	// TODO: join query of calendar and source,
 	// TODO: then get source and execute .GetCalendar on it
 	return nil, nil
 }
 
-func (tx *Transaction) UpdateCalendar(cal primitives.Calendar) error {
-	_, err := tx.conn.Exec(
+func (q *Queries) UpdateCalendar(cal primitives.Calendar) error {
+	_, err := q.Tx.Exec(
 		context.TODO(),
 		`
 		UPDATE calendars

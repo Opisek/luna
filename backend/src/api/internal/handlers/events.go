@@ -35,7 +35,7 @@ func getEvents(config *config.Api, tx *db.Transaction, cals []primitives.Calenda
 		go func(i int, cal primitives.Calendar) {
 			defer waitGroup.Done()
 
-			eventsFromCal, err := tx.GetEvents(cal, start, end)
+			eventsFromCal, err := tx.Queries().GetEvents(cal, start, end)
 			if err != nil {
 				errored = true
 				config.Logger.Errorf("could not get events: could not get events from calendar %v: %v", cal.GetId().String(), err)

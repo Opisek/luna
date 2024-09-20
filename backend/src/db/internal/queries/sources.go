@@ -1,4 +1,4 @@
-package db
+package queries
 
 import (
 	"context"
@@ -21,32 +21,6 @@ type sourceEntry struct {
 	Name     string
 	Type     string
 	Settings string
-}
-
-func (tx *Transaction) initializeSourcesTable() error {
-	var err error
-	// Sources table:
-	// id user name type settings auth
-	_, err = tx.conn.Exec(
-		context.TODO(),
-		`
-		CREATE TABLE IF NOT EXISTS sources (
-			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-			user_id UUID REFERENCES users(id),
-			name VARCHAR(255) NOT NULL,
-			type SOURCE_TYPE_ENUM NOT NULL,
-			settings JSONB NOT NULL,
-			auth_type BYTEA NOT NULL,
-			auth BYTEA NOT NULL,
-			UNIQUE (user_id, name)
-		);
-		`,
-	)
-	if err != nil {
-		return fmt.Errorf("could not create sources table: %v", err)
-	}
-
-	return nil
 }
 
 func parseSource(rows types.PgxScanner) (primitives.Source, error) {
@@ -119,13 +93,13 @@ func getUserDecryptionKey(commonConfig *common.CommonConfig, userId types.ID) (s
 	return getUserEncryptionKey(commonConfig, userId)
 }
 
-func (tx *Transaction) GetSource(userId types.ID, sourceId types.ID) (primitives.Source, error) {
-	decryptionKey, err := getUserDecryptionKey(tx.db.commonConfig, userId)
+func (q *Queries) GetSource(userId types.ID, sourceId types.ID) (primitives.Source, error) {
+	decryptionKey, err := getUserDecryptionKey(q.CommonConfig, userId)
 	if err != nil {
 		return nil, fmt.Errorf("could not get user decryption key: %v", err)
 	}
 
-	row := tx.conn.QueryRow(
+	row := q.Tx.QueryRow(
 		context.TODO(),
 		`
 		SELECT id, name, type, settings, PGP_SYM_DECRYPT(auth_type, $3), PGP_SYM_DECRYPT(auth, $3)
@@ -145,15 +119,15 @@ func (tx *Transaction) GetSource(userId types.ID, sourceId types.ID) (primitives
 	return source, nil
 }
 
-func (tx *Transaction) GetSources(userId types.ID) ([]primitives.Source, error) {
+func (q *Queries) GetSources(userId types.ID) ([]primitives.Source, error) {
 	var err error
 
-	decryptionKey, err := getUserDecryptionKey(tx.db.commonConfig, userId)
+	decryptionKey, err := getUserDecryptionKey(q.CommonConfig, userId)
 	if err != nil {
 		return nil, fmt.Errorf("could not get user decryption key: %v", err)
 	}
 
-	rows, err := tx.conn.Query(
+	rows, err := q.Tx.Query(
 		context.TODO(),
 		`
 		SELECT id, name, type, settings, PGP_SYM_DECRYPT(auth_type, $2), PGP_SYM_DECRYPT(auth, $2)
@@ -180,8 +154,8 @@ func (tx *Transaction) GetSources(userId types.ID) ([]primitives.Source, error) 
 	return sources, nil
 }
 
-func (tx *Transaction) InsertSource(userId types.ID, source primitives.Source) (types.ID, error) {
-	encryptionKey, err := getUserEncryptionKey(tx.db.commonConfig, userId)
+func (q *Queries) InsertSource(userId types.ID, source primitives.Source) (types.ID, error) {
+	encryptionKey, err := getUserEncryptionKey(q.CommonConfig, userId)
 	if err != nil {
 		return types.EmptyId(), fmt.Errorf("could not get user encryption key: %v", err)
 	}
@@ -198,7 +172,7 @@ func (tx *Transaction) InsertSource(userId types.ID, source primitives.Source) (
 	args := []any{userId.UUID(), source.GetName(), source.GetType(), source.GetSettings(), source.GetAuth().GetType(), marshalledAuth, encryptionKey}
 
 	var id uuid.UUID
-	err = tx.conn.QueryRow(context.TODO(), query, args...).Scan(&id)
+	err = q.Tx.QueryRow(context.TODO(), query, args...).Scan(&id)
 
 	if err != nil {
 		return types.EmptyId(), fmt.Errorf("could not insert source: %v", err)
@@ -207,8 +181,8 @@ func (tx *Transaction) InsertSource(userId types.ID, source primitives.Source) (
 	return types.IdFromUuid(id), nil
 }
 
-func (tx *Transaction) UpdateSource(userId types.ID, sourceId types.ID, newName string, newAuth auth.AuthMethod, newSourceType string, newSourceSettings primitives.SourceSettings) error {
-	encryptionKey, err := getUserEncryptionKey(tx.db.commonConfig, userId)
+func (q *Queries) UpdateSource(userId types.ID, sourceId types.ID, newName string, newAuth auth.AuthMethod, newSourceType string, newSourceSettings primitives.SourceSettings) error {
+	encryptionKey, err := getUserEncryptionKey(q.CommonConfig, userId)
 	if err != nil {
 		return fmt.Errorf("could not get user encryption key: %v", err)
 	}
@@ -248,7 +222,7 @@ func (tx *Transaction) UpdateSource(userId types.ID, sourceId types.ID, newName 
 	`, strings.Join(changes, ", "), len(args)+1, len(args)+2)
 	args = append(args, userId.UUID(), sourceId.UUID())
 
-	_, err = tx.conn.Exec(context.TODO(), query, args...)
+	_, err = q.Tx.Exec(context.TODO(), query, args...)
 
 	if err != nil {
 		return fmt.Errorf("could not update source: %v", err)
@@ -257,8 +231,8 @@ func (tx *Transaction) UpdateSource(userId types.ID, sourceId types.ID, newName 
 	return nil
 }
 
-func (tx *Transaction) DeleteSource(userId types.ID, sourceId types.ID) (bool, error) {
-	tag, err := tx.conn.Exec(
+func (q *Queries) DeleteSource(userId types.ID, sourceId types.ID) (bool, error) {
+	tag, err := q.Tx.Exec(
 		context.TODO(),
 		`
 		DELETE FROM sources

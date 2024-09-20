@@ -1,4 +1,4 @@
-package db
+package queries
 
 import (
 	"context"
@@ -8,31 +8,11 @@ import (
 	"github.com/google/uuid"
 )
 
-func (tx *Transaction) initializeUserTable() error {
-	// Auth table:
-	// id username password email admin
-	_, err := tx.conn.Exec(
-		context.TODO(),
-		`
-		CREATE TABLE IF NOT EXISTS users (
-			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-			username VARCHAR(255) NOT NULL UNIQUE,
-			password VARCHAR(255) NOT NULL,
-			algorithm VARCHAR(32) NOT NULL,
-			email VARCHAR(255) NOT NULL UNIQUE,
-			admin BOOLEAN
-		);
-		`,
-	)
-
-	return err
-}
-
 // TODO: return the created user's ID
-func (tx *Transaction) AddUser(user *types.User) error {
+func (q *Queries) AddUser(user *types.User) error {
 	var err error
 
-	_, err = tx.conn.Exec(
+	_, err = q.Tx.Exec(
 		context.TODO(),
 		`
 		INSERT INTO users (username, password, algorithm, email, admin)
@@ -50,12 +30,12 @@ func (tx *Transaction) AddUser(user *types.User) error {
 	return nil
 }
 
-func (tx *Transaction) GetUserIdFromEmail(email string) (uuid.UUID, error) {
+func (q *Queries) GetUserIdFromEmail(email string) (uuid.UUID, error) {
 	var err error
 
 	var id uuid.UUID
 
-	err = tx.conn.QueryRow(
+	err = q.Tx.QueryRow(
 		context.TODO(),
 		`
 		SELECT id
@@ -70,12 +50,12 @@ func (tx *Transaction) GetUserIdFromEmail(email string) (uuid.UUID, error) {
 	return id, err
 }
 
-func (tx *Transaction) GetUserIdFromUsername(username string) (types.ID, error) {
+func (q *Queries) GetUserIdFromUsername(username string) (types.ID, error) {
 	var err error
 
 	var id uuid.UUID
 
-	err = tx.conn.QueryRow(
+	err = q.Tx.QueryRow(
 		context.TODO(),
 		`
 		SELECT id
@@ -90,12 +70,12 @@ func (tx *Transaction) GetUserIdFromUsername(username string) (types.ID, error) 
 	return types.IdFromUuid(id), err
 }
 
-func (tx *Transaction) GetPassword(id types.ID) (string, string, error) {
+func (q *Queries) GetPassword(id types.ID) (string, string, error) {
 	var err error
 
 	var password, algorithm string
 
-	err = tx.conn.QueryRow(
+	err = q.Tx.QueryRow(
 		context.TODO(),
 		`
 		SELECT password, algorithm
@@ -110,10 +90,10 @@ func (tx *Transaction) GetPassword(id types.ID) (string, string, error) {
 	return password, algorithm, err
 }
 
-func (tx *Transaction) UpdatePassword(id types.ID, password string, alg string) error {
+func (q *Queries) UpdatePassword(id types.ID, password string, alg string) error {
 	var err error
 
-	_, err = tx.conn.Exec(
+	_, err = q.Tx.Exec(
 		context.TODO(),
 		`
 		UPDATE users
@@ -131,12 +111,12 @@ func (tx *Transaction) UpdatePassword(id types.ID, password string, alg string) 
 	return err
 }
 
-func (tx *Transaction) IsAdmin(id int) (bool, error) {
+func (q *Queries) IsAdmin(id int) (bool, error) {
 	var err error
 
 	var admin bool
 
-	err = tx.conn.QueryRow(
+	err = q.Tx.QueryRow(
 		context.TODO(),
 		`
 		SELECT admin
@@ -152,8 +132,8 @@ func (tx *Transaction) IsAdmin(id int) (bool, error) {
 	return admin, err
 }
 
-func (tx *Transaction) AnyUsersExist() (bool, error) {
-	rows, err := tx.conn.Query(
+func (q *Queries) AnyUsersExist() (bool, error) {
+	rows, err := q.Tx.Query(
 		context.TODO(),
 		`
 		SELECT *

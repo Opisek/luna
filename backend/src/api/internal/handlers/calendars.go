@@ -33,7 +33,7 @@ func getCalendars(config *config.Api, tx *db.Transaction, srcs []primitives.Sour
 		go func(i int, source primitives.Source) {
 			defer waitGroup.Done()
 
-			calsFromSource, err := tx.GetCalendars(source)
+			calsFromSource, err := tx.Queries().GetCalendars(source)
 			if err != nil {
 				errored = true
 				config.Logger.Errorf("could not get calendars: %v", err)
@@ -116,7 +116,7 @@ func GetCalendar(c *gin.Context) {
 	defer tx.Rollback(apiConfig.Logger)
 
 	// Get calendar
-	cal, err := tx.GetCalendar(userId, calendarId)
+	cal, err := tx.Queries().GetCalendar(userId, calendarId)
 	if err != nil {
 		apiConfig.Logger.Errorf("could not get calendar: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get calendar"})
