@@ -12,6 +12,7 @@ type Source interface {
 	GetAuth() auth.AuthMethod
 	GetSettings() SourceSettings
 	GetCalendars() ([]Calendar, error)
+	GetCalendar(settings CalendarSettings) (Calendar, error)
 }
 
 type SourceSettings interface {

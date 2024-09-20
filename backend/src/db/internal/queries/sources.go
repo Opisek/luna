@@ -15,6 +15,7 @@ import (
 
 func scanSource(rows types.PgxScanner) (primitives.Source, error) {
 	var err error
+
 	var id types.ID
 	var name string
 	var sourceType string

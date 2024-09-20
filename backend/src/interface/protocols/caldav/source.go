@@ -111,3 +111,30 @@ func (source *CaldavSource) GetCalendars() ([]primitives.Calendar, error) {
 
 	return result, nil
 }
+
+func (source *CaldavSource) GetCalendar(settings primitives.CalendarSettings) (primitives.Calendar, error) {
+	caldavSettings := settings.(*CaldavCalendarSettings)
+
+	client, err := source.getClient()
+	if err != nil {
+		return nil, err
+	}
+
+	cals, err := client.FindCalendars(context.TODO(), caldavSettings.Url.Path)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(cals) != 1 {
+		return nil, fmt.Errorf("expected exactly one calendar, got %v", len(cals))
+	}
+
+	convertedCal, err := source.calendarFromCaldav(cals[0])
+	if err != nil {
+		return nil, fmt.Errorf("could not convert event %v: %w", cals[0].Name, err)
+	}
+
+	castedCal := (primitives.Calendar)(convertedCal)
+
+	return castedCal, nil
+}

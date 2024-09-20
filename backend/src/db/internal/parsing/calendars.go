@@ -9,7 +9,7 @@ import (
 	"luna-backend/types"
 )
 
-func parseCalendarSettings(sourceType string, settings []byte) (primitives.CalendarSettings, error) {
+func ParseCalendarSettings(sourceType string, settings []byte) (primitives.CalendarSettings, error) {
 	switch sourceType {
 	case types.SourceCaldav:
 		parsedSettings := &caldav.CaldavCalendarSettings{}
@@ -26,7 +26,7 @@ func parseCalendarSettings(sourceType string, settings []byte) (primitives.Calen
 }
 
 func ParseCalendarEntry(source primitives.Source, id types.ID, color []byte, settings []byte) (*tables.CalendarEntry, error) {
-	parsedSettings, err := parseCalendarSettings(source.GetType(), settings)
+	parsedSettings, err := ParseCalendarSettings(source.GetType(), settings)
 	if err != nil {
 		return nil, fmt.Errorf("could not parse calendar settings: %v", err)
 	}

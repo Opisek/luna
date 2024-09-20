@@ -43,7 +43,7 @@ func run(api *config.Api) {
 	// /api/calendars/*
 	calendarsEndpoints := authenticatedEndpoints.Group("/calendars")
 	calendarsEndpoints.GET("", handlers.GetCalendars)
-	calendarsEndpoints.GET("/:calendarId", handlers.NotImplemented)
+	calendarsEndpoints.GET("/:calendarId", handlers.GetCalendar)
 	calendarsEndpoints.PUT("", handlers.NotImplemented)
 	calendarsEndpoints.PATCH("/:calendarId", handlers.NotImplemented)
 	calendarsEndpoints.DELETE("/:calendarId", handlers.NotImplemented)

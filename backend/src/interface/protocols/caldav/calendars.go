@@ -143,3 +143,7 @@ func (calendar *CaldavCalendar) GetEvents(start time.Time, end time.Time) ([]pri
 
 	return castedEvents, nil
 }
+
+func (calendar *CaldavCalendar) GetEvent(settings primitives.EventSettings) (primitives.Event, error) {
+	return nil, nil
+}
