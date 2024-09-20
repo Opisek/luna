@@ -134,3 +134,43 @@ func GetEvents(c *gin.Context) {
 
 	c.JSON(http.StatusOK, convertedEvents)
 }
+
+func GetEvent(c *gin.Context) {
+	apiConfig := context.GetConfig(c)
+	eventId, err := context.GetId(c, "event")
+	if err != nil {
+		apiConfig.Logger.Errorf("could not get event id: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "malformed or missing event id"})
+		return
+	}
+
+	userId := context.GetUserId(c)
+	tx := context.GetTransaction(c)
+	defer tx.Rollback(apiConfig.Logger)
+
+	// Get event
+	event, err := tx.Queries().GetEvent(userId, eventId)
+	if err != nil {
+		apiConfig.Logger.Errorf("could not get event: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get event"})
+		return
+	}
+
+	// Convert to exposed format
+	convertedCal := exposedEvent{
+		Id:       event.GetId(),
+		Calendar: event.GetCalendar().GetId(),
+		Name:     event.GetName(),
+		Desc:     event.GetDesc(),
+		Color:    event.GetColor(),
+		Date:     event.GetDate(),
+		Settings: event.GetSettings(),
+	}
+
+	if tx.Commit(apiConfig.Logger) != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		return
+	}
+
+	c.JSON(http.StatusOK, convertedCal)
+}

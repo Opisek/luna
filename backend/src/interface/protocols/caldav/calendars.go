@@ -93,13 +93,41 @@ func (calendar *CaldavCalendar) SetColor(color *types.Color) {
 	calendar.color = color
 }
 
-func (calendar *CaldavCalendar) GetEvents(start time.Time, end time.Time) ([]primitives.Event, error) {
+func (calendar *CaldavCalendar) convertEvent(event *caldav.CalendarObject) (primitives.Event, error) {
+	convertedEvent, err := eventFromCaldav(calendar, event)
+	if err != nil {
+		return nil, fmt.Errorf("could not convert event %v: %w", event.Path, err)
+	}
+
+	castedEvent := (primitives.Event)(convertedEvent)
+
+	return castedEvent, nil
+}
+
+func (calendar *CaldavCalendar) getEvents(query *caldav.CalendarQuery) ([]primitives.Event, error) {
 	client, err := calendar.source.getClient()
 	if err != nil {
 		return nil, fmt.Errorf("could not get caldav client: %w", err)
 	}
 
-	query := caldav.CalendarQuery{
+	events, err := client.QueryCalendar(context.TODO(), calendar.settings.Url.String(), query)
+	if err != nil {
+		return nil, fmt.Errorf("could not query calendar: %w", err)
+	}
+
+	convertedEvents := make([]primitives.Event, len(events))
+	for i, event := range events {
+		convertedEvents[i], err = calendar.convertEvent(&event)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return convertedEvents, nil
+}
+
+func (calendar *CaldavCalendar) GetEvents(start time.Time, end time.Time) ([]primitives.Event, error) {
+	return calendar.getEvents(&caldav.CalendarQuery{
 		CompRequest: caldav.CalendarCompRequest{
 			Name: "VCALENDAR",
 			Comps: []caldav.CalendarCompRequest{{
@@ -121,29 +149,21 @@ func (calendar *CaldavCalendar) GetEvents(start time.Time, end time.Time) ([]pri
 				End:   end,
 			}},
 		},
-	}
-
-	events, err := client.QueryCalendar(context.TODO(), calendar.settings.Url.String(), &query)
-	if err != nil {
-		return nil, fmt.Errorf("could not query calendar: %w", err)
-	}
-
-	convertedEvents := make([]*CaldavEvent, len(events))
-	for i, event := range events {
-		convertedEvents[i], err = eventFromCaldav(calendar, &event)
-		if err != nil {
-			return nil, fmt.Errorf("could not convert event %v: %w", event.Path, err)
-		}
-	}
-
-	castedEvents := make([]primitives.Event, len(convertedEvents))
-	for i, event := range convertedEvents {
-		castedEvents[i] = (primitives.Event)(event)
-	}
-
-	return castedEvents, nil
+	})
 }
 
 func (calendar *CaldavCalendar) GetEvent(settings primitives.EventSettings) (primitives.Event, error) {
-	return nil, nil
+	caldavSettings := settings.(*CaldavEventSettings)
+
+	obj, err := calendar.client.GetCalendarObject(context.TODO(), caldavSettings.Url.Path)
+	if err != nil {
+		return nil, fmt.Errorf("could not get event: %w", err)
+	}
+
+	cal, err := calendar.convertEvent(obj)
+	if err != nil {
+		return nil, fmt.Errorf("could not get event: %w", err)
+	}
+
+	return cal, nil
 }

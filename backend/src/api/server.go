@@ -51,7 +51,7 @@ func run(api *config.Api) {
 	// /api/events/*
 	eventEndpoints := authenticatedEndpoints.Group("/events")
 	eventEndpoints.GET("", handlers.GetEvents)
-	eventEndpoints.GET("/:eventId", handlers.NotImplemented)
+	eventEndpoints.GET("/:eventId", handlers.GetEvent)
 	eventEndpoints.PUT("", handlers.NotImplemented)
 	eventEndpoints.PATCH("/:eventId", handlers.NotImplemented)
 	eventEndpoints.DELETE("/:eventId", handlers.NotImplemented)
