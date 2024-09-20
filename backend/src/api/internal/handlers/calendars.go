@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
 	"luna-backend/api/internal/config"
 	"luna-backend/api/internal/context"
 	"luna-backend/api/internal/util"
@@ -23,7 +24,7 @@ type exposedCalendar struct {
 	Settings primitives.CalendarSettings `json:"settings"` // TODO: REMOVE FROM PRODUCTION, TESTING ONLY
 }
 
-func getCalendars(config *config.Api, _ *db.Transaction, srcs []primitives.Source) ([]primitives.Calendar, error) {
+func getCalendars(config *config.Api, tx *db.Transaction, srcs []primitives.Source) ([]primitives.Calendar, error) {
 	// For each source, get its calendars
 	cals := make([][]primitives.Calendar, len(srcs))
 	errored := false
@@ -37,7 +38,7 @@ func getCalendars(config *config.Api, _ *db.Transaction, srcs []primitives.Sourc
 			calsFromSource, err := source.GetCalendars()
 			if err != nil {
 				errored = true
-				config.Logger.Errorf("could not get calendars: %v", err)
+				config.Logger.Errorf("could not fetch calendars from source %v: %v", source.GetName(), err)
 				return
 			}
 
@@ -48,12 +49,18 @@ func getCalendars(config *config.Api, _ *db.Transaction, srcs []primitives.Sourc
 	// Combine (flatten) all calendars
 	waitGroup.Wait()
 	if errored {
-		return nil, errors.New("at least one calendar failed to load")
+		return nil, errors.New("at least one source failed to provide calendars")
 	}
 
 	combinedCals := []primitives.Calendar{}
 	for _, calsFromSource := range cals {
 		combinedCals = append(combinedCals, calsFromSource...)
+	}
+
+	// Reconcile with database
+	combinedCals, err := tx.Queries().ReconcileCalendars(srcs, combinedCals)
+	if err != nil {
+		return nil, fmt.Errorf("could not reconcile calendars: %v", err)
 	}
 
 	return combinedCals, nil
@@ -78,14 +85,6 @@ func GetCalendars(c *gin.Context) {
 	cals, err := getCalendars(config, tx, srcs)
 	if err != nil {
 		config.Logger.Errorf("could not get calendars: %v", err)
-		util.Error(c, util.ErrorUnknown)
-		return
-	}
-
-	// Reconcile with database
-	cals, err = tx.Queries().ReconcileCalendars(srcs, cals)
-	if err != nil {
-		config.Logger.Errorf("could not reconcile calendars: %v", err)
 		util.Error(c, util.ErrorUnknown)
 		return
 	}

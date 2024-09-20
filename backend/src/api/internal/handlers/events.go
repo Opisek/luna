@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
 	"luna-backend/api/internal/config"
 	"luna-backend/api/internal/context"
 	"luna-backend/api/internal/util"
@@ -25,7 +26,7 @@ type exposedEvent struct {
 	Settings primitives.EventSettings `json:"settings"` // TODO: REMOVE FROM PRODUCTION, TESTING ONLY
 }
 
-func getEvents(config *config.Api, _ *db.Transaction, cals []primitives.Calendar, start time.Time, end time.Time) ([]primitives.Event, error) {
+func getEvents(config *config.Api, tx *db.Transaction, cals []primitives.Calendar, start time.Time, end time.Time) ([]primitives.Event, error) {
 	// For each calendar, get its events
 	events := make([][]primitives.Event, len(cals))
 	errored := false
@@ -39,7 +40,7 @@ func getEvents(config *config.Api, _ *db.Transaction, cals []primitives.Calendar
 			eventsFromCal, err := cal.GetEvents(start, end)
 			if err != nil {
 				errored = true
-				config.Logger.Errorf("could not get events: could not get events from calendar %v: %v", cal.GetId().String(), err)
+				config.Logger.Errorf("could not get events: could not get events from calendar %v: %v", cal.GetName(), err)
 				return
 			}
 
@@ -50,12 +51,18 @@ func getEvents(config *config.Api, _ *db.Transaction, cals []primitives.Calendar
 	// Combine (flatten) all calendars
 	waitGroup.Wait()
 	if errored {
-		return nil, errors.New("at least one calendar failed to load")
+		return nil, errors.New("at least one calendar failed to provide events")
 	}
 
 	combinedEvents := []primitives.Event{}
 	for _, eventsFromCal := range events {
 		combinedEvents = append(combinedEvents, eventsFromCal...)
+	}
+
+	// Reconcile with database
+	combinedEvents, err := tx.Queries().ReconcileEvents(cals, combinedEvents)
+	if err != nil {
+		return nil, fmt.Errorf("could not reconcile events: %v", err)
 	}
 
 	return combinedEvents, nil
@@ -98,14 +105,6 @@ func GetEvents(c *gin.Context) {
 	events, err := getEvents(config, tx, cals, startTime, endTime)
 	if err != nil {
 		config.Logger.Errorf("could not get events: %v", err)
-		util.Error(c, util.ErrorUnknown)
-		return
-	}
-
-	// Reconcile with database
-	events, err = tx.Queries().ReconcileEvents(cals, events)
-	if err != nil {
-		config.Logger.Errorf("could not reconcile events: %v", err)
 		util.Error(c, util.ErrorUnknown)
 		return
 	}
