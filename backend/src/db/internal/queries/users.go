@@ -12,21 +12,20 @@ import (
 func (q *Queries) AddUser(user *types.User) error {
 	var err error
 
-	_, err = q.Tx.Exec(
-		context.TODO(),
-		`
-		INSERT INTO users (username, password, algorithm, email, admin)
-		VALUES ($1, $2, $3, $4, $5);
-		`,
-		user.Username,
-		user.Password,
-		user.Algorithm,
-		user.Email,
-		user.Admin,
-	)
+	query := `
+		INSERT INTO users (username, email, admin)
+		VALUES ($1, $2, $3)
+		RETURNING id;
+	`
+
+	var id types.ID
+	err = q.Tx.QueryRow(context.TODO(), query, user.Username, user.Email, user.Admin).Scan(&id)
 	if err != nil {
 		return fmt.Errorf("could not add user: %v", err)
 	}
+
+	user.Id = id
+
 	return nil
 }
 
@@ -68,47 +67,6 @@ func (q *Queries) GetUserIdFromUsername(username string) (types.ID, error) {
 		return types.EmptyId(), fmt.Errorf("could not get user id by username %v: %v", username, err)
 	}
 	return types.IdFromUuid(id), err
-}
-
-func (q *Queries) GetPassword(id types.ID) (string, string, error) {
-	var err error
-
-	var password, algorithm string
-
-	err = q.Tx.QueryRow(
-		context.TODO(),
-		`
-		SELECT password, algorithm
-		FROM users
-		WHERE id = $1;
-		`, id.UUID(),
-	).Scan(&password, &algorithm)
-
-	if err != nil {
-		return "", "", fmt.Errorf("could not get password hash of user %v: %v", id, err)
-	}
-	return password, algorithm, err
-}
-
-func (q *Queries) UpdatePassword(id types.ID, password string, alg string) error {
-	var err error
-
-	_, err = q.Tx.Exec(
-		context.TODO(),
-		`
-		UPDATE users
-		SET password = $1, algorithm = $2
-		WHERE id = $3;
-		`,
-		password,
-		alg,
-		id.UUID(),
-	)
-
-	if err != nil {
-		return fmt.Errorf("could not update password of user %v: %v", id, err)
-	}
-	return err
 }
 
 func (q *Queries) IsAdmin(id int) (bool, error) {

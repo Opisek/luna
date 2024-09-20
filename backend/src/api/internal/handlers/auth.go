@@ -34,7 +34,7 @@ func Login(c *gin.Context) {
 	}
 
 	// Get the user's password
-	savedPassword, algorithm, err := tx.Queries().GetPassword(userId)
+	savedPassword, err := tx.Queries().GetPassword(userId)
 	if err != nil {
 		apiConfig.Logger.Errorf("%v: could not get password for user %v: %v", topErr, credentials.Username, err)
 		util.Error(c, util.ErrorInvalidCredentials)
@@ -42,22 +42,22 @@ func Login(c *gin.Context) {
 	}
 
 	// Verify the password
-	if !auth.VerifyPassword(credentials.Password, savedPassword, algorithm) {
+	if !auth.VerifyPassword(credentials.Password, savedPassword) {
 		apiConfig.Logger.Warnf("%v: passwords do not match", topErr)
 		util.Error(c, util.ErrorInvalidCredentials)
 		return
 	}
 
 	// Silently update the user's password to a newer algorithm if applicable
-	if algorithm != auth.DefaultAlgorithm {
+	if !auth.PasswordStillSecure(savedPassword) {
 		apiConfig.Logger.Infof("updating password %v for user to newer algorithm", credentials.Username)
-		hash, alg, err := auth.SecurePassword(credentials.Password)
+		newPassword, err := auth.SecurePassword(credentials.Password)
 		if err != nil {
 			apiConfig.Logger.Errorf("%v: could not hash password: %v", topErr, err)
 			util.Error(c, util.ErrorInternal)
 			return
 		}
-		err = tx.Queries().UpdatePassword(userId, hash, alg)
+		err = tx.Queries().UpdatePassword(userId, newPassword)
 		if err != nil {
 			apiConfig.Logger.Errorf("%v: could not update password: %v", topErr, err)
 			util.Error(c, util.ErrorDatabase)
@@ -102,13 +102,6 @@ func Register(c *gin.Context) {
 	}
 	topErr := fmt.Errorf("failed to register user %v", payload.Username)
 
-	hash, alg, err := auth.SecurePassword(payload.Password)
-	if err != nil {
-		apiConfig.Logger.Errorf("%v: could not hash password: %v", topErr, err)
-		util.Error(c, util.ErrorInternal)
-		return
-	}
-
 	usersExist, err := tx.Queries().AnyUsersExist()
 	if err != nil {
 		apiConfig.Logger.Errorf("%v: could not check if users exist: %v", topErr, err)
@@ -117,16 +110,28 @@ func Register(c *gin.Context) {
 	}
 
 	user := &types.User{
-		Username:  payload.Username,
-		Password:  hash,
-		Algorithm: alg,
-		Email:     payload.Email,
-		Admin:     !usersExist,
+		Username: payload.Username,
+		Email:    payload.Email,
+		Admin:    !usersExist,
 	}
 
 	err = tx.Queries().AddUser(user)
 	if err != nil {
 		apiConfig.Logger.Errorf("%v: could not add user: %v", topErr, err)
+		util.Error(c, util.ErrorDatabase)
+		return
+	}
+
+	securedPassword, err := auth.SecurePassword(payload.Password)
+	if err != nil {
+		apiConfig.Logger.Errorf("%v: could not hash password: %v", topErr, err)
+		util.Error(c, util.ErrorInternal)
+		return
+	}
+
+	err = tx.Queries().InsertPassword(user.Id, securedPassword)
+	if err != nil {
+		apiConfig.Logger.Errorf("%v: could not insert password: %v", topErr, err)
 		util.Error(c, util.ErrorDatabase)
 		return
 	}

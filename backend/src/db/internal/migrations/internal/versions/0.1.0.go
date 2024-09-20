@@ -57,14 +57,29 @@ func init() {
 			return fmt.Errorf("could not initialize version table: %v", err)
 		}
 
-		err = q.Tables.InitializeUserTable()
+		err = q.Tables.InitializeUsersTable()
 		if err != nil {
-			return fmt.Errorf("could not initialize user table: %v", err)
+			return fmt.Errorf("could not initialize users table: %v", err)
+		}
+
+		err = q.Tables.InitializePasswordsTable()
+		if err != nil {
+			return fmt.Errorf("could not initialize passwords table: %v", err)
 		}
 
 		err = q.Tables.InitializeSourcesTable()
 		if err != nil {
 			return fmt.Errorf("could not initialize sources table: %v", err)
+		}
+
+		err = q.Tables.InitializeCalendarsTable()
+		if err != nil {
+			return fmt.Errorf("could not initialize calendars table: %v", err)
+		}
+
+		err = q.Tables.InitializeEventsTable()
+		if err != nil {
+			return fmt.Errorf("could not initialize events table: %v", err)
 		}
 
 		return nil

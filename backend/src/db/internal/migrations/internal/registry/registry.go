@@ -45,6 +45,8 @@ func RegisterMigration(version common.Version, fun MigrationFunc) {
 	}
 	migrations[version.Major][version.Minor] = minorMigrations
 	migrations[version.Major][version.Minor][version.Patch] = &Migration{Ver: version, Fun: fun}
+
+	reg.migrations = migrations
 }
 
 func GetMigrations(lastVersion common.Version) []*Migration {

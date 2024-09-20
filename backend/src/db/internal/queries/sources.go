@@ -41,7 +41,7 @@ func (q *Queries) GetSource(userId types.ID, sourceId types.ID) (primitives.Sour
 		`
 		SELECT id, name, type, settings, PGP_SYM_DECRYPT(auth_type, $3), PGP_SYM_DECRYPT(auth, $3)
 		FROM sources
-		WHERE user_id = $1 AND id = $2;
+		WHERE userid = $1 AND id = $2;
 		`,
 		userId.UUID(),
 		sourceId.UUID(),
@@ -69,7 +69,7 @@ func (q *Queries) GetSources(userId types.ID) ([]primitives.Source, error) {
 		`
 		SELECT id, name, type, settings, PGP_SYM_DECRYPT(auth_type, $2), PGP_SYM_DECRYPT(auth, $2)
 		FROM sources
-		WHERE user_id = $1;
+		WHERE userid = $1;
 		`,
 		userId.UUID(),
 		decryptionKey,
@@ -98,7 +98,7 @@ func (q *Queries) InsertSource(userId types.ID, source primitives.Source) (types
 	}
 
 	query := `
-		INSERT INTO sources (user_id, name, type, settings, auth_type, auth)
+		INSERT INTO sources (userid, name, type, settings, auth_type, auth)
 		VALUES ($1, $2, $3, $4, PGP_SYM_ENCRYPT($5, $7), PGP_SYM_ENCRYPT($6, $7))
 		RETURNING id;
 	`
@@ -155,7 +155,7 @@ func (q *Queries) UpdateSource(userId types.ID, sourceId types.ID, newName strin
 	query := fmt.Sprintf(`
 		UPDATE sources
 		SET %s
-		WHERE user_id = $%d AND id = $%d;
+		WHERE userid = $%d AND id = $%d;
 	`, strings.Join(changes, ", "), len(args)+1, len(args)+2)
 	args = append(args, userId.UUID(), sourceId.UUID())
 
@@ -173,7 +173,7 @@ func (q *Queries) DeleteSource(userId types.ID, sourceId types.ID) (bool, error)
 		context.TODO(),
 		`
 		DELETE FROM sources
-		WHERE user_id = $1 AND id = $2;
+		WHERE userid = $1 AND id = $2;
 		`,
 		userId.UUID(),
 		sourceId,

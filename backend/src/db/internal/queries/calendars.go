@@ -152,7 +152,7 @@ func (q *Queries) GetCalendar(userId types.ID, calendarId types.ID) (primitives.
 		FROM calendars
 		JOIN sources ON calendars.source = sources.id
 		WHERE calendars.id = $1
-		AND sources.user_id = $2;
+		AND sources.userid = $2;
 		`,
 		calendarId.UUID(),
 		userId.UUID(),

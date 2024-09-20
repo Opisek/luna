@@ -156,7 +156,7 @@ func (q *Queries) GetEvent(userId types.ID, eventId types.ID) (primitives.Event,
 		JOIN calendars ON events.calendar = calendars.id
 		JOIN sources ON calendars.source = sources.id
 		WHERE events.id = $1
-		AND sources.user_id = $2;
+		AND sources.userid = $2;
 		`,
 		eventId.UUID(),
 		userId.UUID(),

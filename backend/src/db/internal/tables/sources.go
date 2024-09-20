@@ -14,13 +14,13 @@ func (q *Tables) InitializeSourcesTable() error {
 		`
 		CREATE TABLE IF NOT EXISTS sources (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-			user_id UUID REFERENCES users(id),
+			userid UUID REFERENCES users(id),
 			name VARCHAR(255) NOT NULL,
 			type SOURCE_TYPE_ENUM NOT NULL,
 			settings JSONB NOT NULL,
 			auth_type BYTEA NOT NULL,
 			auth BYTEA NOT NULL,
-			UNIQUE (user_id, name)
+			UNIQUE (userid, name)
 		);
 		`,
 	)

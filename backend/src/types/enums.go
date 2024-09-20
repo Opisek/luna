@@ -12,5 +12,6 @@ const (
 )
 
 const (
-	HashPlain = "plain"
+	HashPlain  = "plain"
+	HashArgon2 = "argon2"
 )
