@@ -24,7 +24,7 @@ type exposedEvent struct {
 	Settings primitives.EventSettings `json:"settings"` // TODO: REMOVE FROM PRODUCTION, TESTING ONLY
 }
 
-func getEvents(config *config.Api, tx *db.Transaction, cals []primitives.Calendar, start time.Time, end time.Time) ([]primitives.Event, error) {
+func getEvents(config *config.Api, _ *db.Transaction, cals []primitives.Calendar, start time.Time, end time.Time) ([]primitives.Event, error) {
 	// For each calendar, get its events
 	events := make([][]primitives.Event, len(cals))
 	errored := false
@@ -35,7 +35,7 @@ func getEvents(config *config.Api, tx *db.Transaction, cals []primitives.Calenda
 		go func(i int, cal primitives.Calendar) {
 			defer waitGroup.Done()
 
-			eventsFromCal, err := tx.Queries().GetEvents(cal, start, end)
+			eventsFromCal, err := cal.GetEvents(start, end)
 			if err != nil {
 				errored = true
 				config.Logger.Errorf("could not get events: could not get events from calendar %v: %v", cal.GetId().String(), err)
@@ -98,6 +98,14 @@ func GetEvents(c *gin.Context) {
 	if err != nil {
 		config.Logger.Errorf("could not get events: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get events"})
+		return
+	}
+
+	// Reconcile with database
+	events, err = tx.Queries().ReconcileEvents(cals, events)
+	if err != nil {
+		config.Logger.Errorf("could not reconcile events: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not reconcile events"})
 		return
 	}
 

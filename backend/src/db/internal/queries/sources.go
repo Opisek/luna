@@ -2,99 +2,35 @@ package queries
 
 import (
 	"context"
-	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"luna-backend/auth"
-	"luna-backend/common"
-	"luna-backend/crypto"
+	"luna-backend/db/internal/parsing"
+	"luna-backend/db/internal/util"
 	"luna-backend/interface/primitives"
-	"luna-backend/interface/protocols/caldav"
 	"luna-backend/types"
 	"strings"
 
 	"github.com/google/uuid"
 )
 
-type sourceEntry struct {
-	Id       types.ID
-	Name     string
-	Type     string
-	Settings string
-}
-
-func parseSource(rows types.PgxScanner) (primitives.Source, error) {
+func scanSource(rows types.PgxScanner) (primitives.Source, error) {
 	var err error
+	var id types.ID
+	var name string
+	var sourceType string
+	var settings []byte
 	var authType string
-	var authBytes string
-	sourceEntry := sourceEntry{}
-	err = rows.Scan(&sourceEntry.Id, &sourceEntry.Name, &sourceEntry.Type, &sourceEntry.Settings, &authType, &authBytes)
+	var authBytes []byte
+	err = rows.Scan(&id, &name, &sourceType, &settings, &authType, &authBytes)
 	if err != nil {
 		return nil, fmt.Errorf("could not scan source row: %v", err)
 	}
 
-	var authMethod auth.AuthMethod
-	switch authType {
-	case types.AuthNone:
-		authMethod = auth.NewNoAuth()
-	case types.AuthBasic:
-		basicAuth := &auth.BasicAuth{}
-		err = json.Unmarshal([]byte(authBytes), basicAuth)
-		if err != nil {
-			return nil, fmt.Errorf("could not unmarshal basic auth: %v", err)
-		}
-		authMethod = basicAuth
-	case types.AuthBearer:
-		bearerAuth := &auth.BearerAuth{}
-		err = json.Unmarshal([]byte(authBytes), bearerAuth)
-		if err != nil {
-			return nil, fmt.Errorf("could not unmarshal bearer auth: %v", err)
-		}
-		authMethod = bearerAuth
-	default:
-		return nil, fmt.Errorf("unknown auth type: %v", authType)
-	}
-
-	switch sourceEntry.Type {
-	case types.SourceCaldav:
-		settings := &caldav.CaldavSourceSettings{}
-		err = json.Unmarshal([]byte(sourceEntry.Settings), settings)
-		if err != nil {
-			return nil, fmt.Errorf("could not unmarshal caldav settings: %v", err)
-		}
-		caldavSource := caldav.PackCaldavSource(
-			sourceEntry.Id,
-			sourceEntry.Name,
-			settings,
-			authMethod,
-		)
-		return caldavSource, nil
-	case types.SourceIcal:
-		fallthrough
-	default:
-		return nil, fmt.Errorf("unknown source type: %v", sourceEntry.Type)
-	}
-}
-
-func getUserEncryptionKey(commonConfig *common.CommonConfig, userId types.ID) (string, error) {
-	masterKey, err := crypto.GetSymmetricKey(commonConfig, "database")
-	if err != nil {
-		return "", fmt.Errorf("could not get master key: %v", err)
-	}
-	userKey, err := crypto.DeriveKey(masterKey, userId.Bytes())
-	if err != nil {
-		return "", fmt.Errorf("could not derive user key: %v", err)
-	}
-	encodedKey := base64.StdEncoding.EncodeToString(userKey)
-	return encodedKey, nil
-}
-
-func getUserDecryptionKey(commonConfig *common.CommonConfig, userId types.ID) (string, error) {
-	return getUserEncryptionKey(commonConfig, userId)
+	return parsing.ParseSource(id, name, sourceType, settings, authType, authBytes)
 }
 
 func (q *Queries) GetSource(userId types.ID, sourceId types.ID) (primitives.Source, error) {
-	decryptionKey, err := getUserDecryptionKey(q.CommonConfig, userId)
+	decryptionKey, err := util.GetUserDecryptionKey(q.CommonConfig, userId)
 	if err != nil {
 		return nil, fmt.Errorf("could not get user decryption key: %v", err)
 	}
@@ -111,7 +47,7 @@ func (q *Queries) GetSource(userId types.ID, sourceId types.ID) (primitives.Sour
 		decryptionKey,
 	)
 
-	source, err := parseSource(row)
+	source, err := scanSource(row)
 	if err != nil {
 		return nil, fmt.Errorf("could not parse source: %v", err)
 	}
@@ -122,7 +58,7 @@ func (q *Queries) GetSource(userId types.ID, sourceId types.ID) (primitives.Sour
 func (q *Queries) GetSources(userId types.ID) ([]primitives.Source, error) {
 	var err error
 
-	decryptionKey, err := getUserDecryptionKey(q.CommonConfig, userId)
+	decryptionKey, err := util.GetUserDecryptionKey(q.CommonConfig, userId)
 	if err != nil {
 		return nil, fmt.Errorf("could not get user decryption key: %v", err)
 	}
@@ -144,7 +80,7 @@ func (q *Queries) GetSources(userId types.ID) ([]primitives.Source, error) {
 
 	sources := []primitives.Source{}
 	for rows.Next() {
-		source, err := parseSource(rows)
+		source, err := scanSource(rows)
 		if err != nil {
 			return nil, fmt.Errorf("could not parse source: %v", err)
 		}
@@ -155,7 +91,7 @@ func (q *Queries) GetSources(userId types.ID) ([]primitives.Source, error) {
 }
 
 func (q *Queries) InsertSource(userId types.ID, source primitives.Source) (types.ID, error) {
-	encryptionKey, err := getUserEncryptionKey(q.CommonConfig, userId)
+	encryptionKey, err := util.GetUserEncryptionKey(q.CommonConfig, userId)
 	if err != nil {
 		return types.EmptyId(), fmt.Errorf("could not get user encryption key: %v", err)
 	}
@@ -182,7 +118,7 @@ func (q *Queries) InsertSource(userId types.ID, source primitives.Source) (types
 }
 
 func (q *Queries) UpdateSource(userId types.ID, sourceId types.ID, newName string, newAuth auth.AuthMethod, newSourceType string, newSourceSettings primitives.SourceSettings) error {
-	encryptionKey, err := getUserEncryptionKey(q.CommonConfig, userId)
+	encryptionKey, err := util.GetUserEncryptionKey(q.CommonConfig, userId)
 	if err != nil {
 		return fmt.Errorf("could not get user encryption key: %v", err)
 	}

@@ -2,21 +2,13 @@ package queries
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
+	"luna-backend/db/internal/parsing"
+	"luna-backend/db/internal/tables"
 	"luna-backend/db/internal/util"
 	"luna-backend/interface/primitives"
-	"luna-backend/interface/protocols/caldav"
 	"luna-backend/types"
-	"time"
 )
-
-type eventEntry struct {
-	Id       types.ID
-	Calendar primitives.Calendar
-	Color    *types.Color
-	Settings primitives.EventSettings
-}
 
 func (q *Queries) insertEvents(cals []primitives.Event) error {
 	rows := [][]any{}
@@ -56,78 +48,65 @@ func (q *Queries) insertEvents(cals []primitives.Event) error {
 	return nil
 }
 
-func parseEventSettings(sourceType string, settings []byte) (primitives.CalendarSettings, error) {
-	switch sourceType {
-	case types.SourceCaldav:
-		parsedSettings := &caldav.CaldavEventSettings{}
-		err := json.Unmarshal(settings, parsedSettings)
-		if err != nil {
-			return nil, fmt.Errorf("could not unmarshal caldav settings: %v", err)
-		}
-		return parsedSettings, nil
-	case types.SourceIcal:
-		fallthrough
-	default:
-		return nil, fmt.Errorf("unknown source type %v", sourceType)
-	}
-}
+func (q *Queries) getEventEntries(calendars []primitives.Calendar) ([]*tables.EventEntry, error) {
+	query := fmt.Sprintf(
+		`
+		SELECT id, calendar, color, settings
+		FROM events
+		WHERE calendar IN (
+			%s
+		);
+		`,
+		util.GenerateArgList(1, len(calendars)),
+	)
 
-func (q *Queries) getEvents(calendar primitives.Calendar) ([]*eventEntry, error) {
 	rows, err := q.Tx.Query(
 		context.TODO(),
-		`
-		SELECT id, color, settings
-		FROM events
-		WHERE calendar = $1;
-		`,
-		calendar.GetId(),
+		query,
+		util.JoinIds(calendars, func(s primitives.Calendar) types.ID { return s.GetId() })...,
 	)
 
 	if err != nil {
-		return nil, fmt.Errorf("could not get events from database: %v", err)
+		return nil, fmt.Errorf("could not get calendars from database: %v", err)
 	}
 
 	defer rows.Close()
 
-	cals := []*eventEntry{}
+	calMap := map[types.ID]primitives.Calendar{}
+	for _, cal := range calendars {
+		calMap[cal.GetId()] = cal
+	}
+
+	events := []*tables.EventEntry{}
 	for rows.Next() {
 		var id types.ID
+		var source types.ID
 		var color []byte
 		var settings []byte
 
-		err := rows.Scan(&id, &color, &settings)
+		err := rows.Scan(&id, &source, &color, &settings)
 		if err != nil {
-			return nil, fmt.Errorf("could not scan event row: %v", err)
+			return nil, fmt.Errorf("could not scan calendar row: %v", err)
 		}
 
-		parsedSettings, err := parseEventSettings(calendar.GetSource().GetType(), settings)
+		eventEntry, err := parsing.ParseEventEntry(calMap[source], id, color, settings)
 		if err != nil {
-			return nil, fmt.Errorf("could not parse event settings: %v", err)
+			return nil, fmt.Errorf("could not parse calendar: %v", err)
 		}
 
-		cals = append(cals, &eventEntry{
-			Id:       id,
-			Calendar: calendar,
-			Color:    types.ColorFromBytes(color),
-			Settings: parsedSettings,
-		})
+		events = append(events, eventEntry)
 	}
 
-	return cals, nil
+	return events, nil
 }
 
-func (q *Queries) GetEvents(calendar primitives.Calendar, start time.Time, end time.Time) ([]primitives.Event, error) {
-	events, err := calendar.GetEvents(start, end)
-	if err != nil {
-		return nil, fmt.Errorf("could not get events from calendar %v: %v", calendar.GetId().String(), err)
-	}
-
+func (q *Queries) ReconcileEvents(cals []primitives.Calendar, events []primitives.Event) ([]primitives.Event, error) {
 	eventMap := map[types.ID]primitives.Event{}
 	for _, event := range events {
 		eventMap[event.GetId()] = event
 	}
 
-	dbEvents, err := q.getEvents(calendar)
+	dbEvents, err := q.getEventEntries(cals)
 	if err != nil {
 		return nil, fmt.Errorf("could not get cached events: %v", err)
 	}
@@ -136,6 +115,7 @@ func (q *Queries) GetEvents(calendar primitives.Calendar, start time.Time, end t
 		if event, ok := eventMap[dbEvent.Id]; ok {
 			if event.GetColor() == nil {
 				event.SetColor(dbEvent.Color)
+				// TODO: if dbCal.Color == nil, either return some default color, or generate a deterministic random one (e.g. calendar id hash -> hue)
 			}
 		}
 	}
