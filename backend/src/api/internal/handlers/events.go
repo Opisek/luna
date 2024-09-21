@@ -17,13 +17,13 @@ import (
 )
 
 type exposedEvent struct {
-	Id       types.ID                 `json:"id"`
-	Calendar types.ID                 `json:"calendar"`
-	Name     string                   `json:"name"`
-	Desc     string                   `json:"desc"`
-	Color    *types.Color             `json:"color"`
-	Date     *types.EventDate         `json:"date"`
-	Settings primitives.EventSettings `json:"settings"` // TODO: REMOVE FROM PRODUCTION, TESTING ONLY
+	Id       types.ID         `json:"id"`
+	Calendar types.ID         `json:"calendar"`
+	Name     string           `json:"name"`
+	Desc     string           `json:"desc"`
+	Color    *types.Color     `json:"color"`
+	Date     *types.EventDate `json:"date"`
+	//Settings primitives.EventSettings `json:"settings"` // TODO: REMOVE FROM PRODUCTION, TESTING ONLY
 }
 
 func getEvents(config *config.Api, tx *db.Transaction, cals []primitives.Calendar, start time.Time, end time.Time) ([]primitives.Event, error) {
@@ -123,7 +123,7 @@ func GetEvents(c *gin.Context) {
 			Desc:     event.GetDesc(),
 			Color:    event.GetColor(),
 			Date:     event.GetDate(),
-			Settings: event.GetSettings(),
+			//Settings: event.GetSettings(),
 		}
 	}
 
@@ -164,7 +164,7 @@ func GetEvent(c *gin.Context) {
 		Desc:     event.GetDesc(),
 		Color:    event.GetColor(),
 		Date:     event.GetDate(),
-		Settings: event.GetSettings(),
+		//Settings: event.GetSettings(),
 	}
 
 	if tx.Commit(apiConfig.Logger) != nil {

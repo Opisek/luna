@@ -16,12 +16,12 @@ import (
 )
 
 type exposedCalendar struct {
-	Id       types.ID                    `json:"id"`
-	Source   types.ID                    `json:"source"`
-	Name     string                      `json:"name"`
-	Desc     string                      `json:"desc"`
-	Color    *types.Color                `json:"color"`
-	Settings primitives.CalendarSettings `json:"settings"` // TODO: REMOVE FROM PRODUCTION, TESTING ONLY
+	Id     types.ID     `json:"id"`
+	Source types.ID     `json:"source"`
+	Name   string       `json:"name"`
+	Desc   string       `json:"desc"`
+	Color  *types.Color `json:"color"`
+	//Settings primitives.CalendarSettings `json:"settings"` // TODO: REMOVE FROM PRODUCTION, TESTING ONLY
 }
 
 func getCalendars(config *config.Api, tx *db.Transaction, srcs []primitives.Source) ([]primitives.Calendar, error) {
@@ -93,12 +93,12 @@ func GetCalendars(c *gin.Context) {
 	convertedCals := make([]exposedCalendar, len(cals))
 	for i, cal := range cals {
 		convertedCals[i] = exposedCalendar{
-			Id:       cal.GetId(),
-			Source:   cal.GetSource().GetId(),
-			Name:     cal.GetName(),
-			Desc:     cal.GetDesc(),
-			Color:    cal.GetColor(),
-			Settings: cal.GetSettings(),
+			Id:     cal.GetId(),
+			Source: cal.GetSource().GetId(),
+			Name:   cal.GetName(),
+			Desc:   cal.GetDesc(),
+			Color:  cal.GetColor(),
+			//Settings: cal.GetSettings(),
 		}
 	}
 
@@ -133,12 +133,12 @@ func GetCalendar(c *gin.Context) {
 
 	// Convert to exposed format
 	convertedCal := exposedCalendar{
-		Id:       cal.GetId(),
-		Source:   cal.GetSource().GetId(),
-		Name:     cal.GetName(),
-		Desc:     cal.GetDesc(),
-		Color:    cal.GetColor(),
-		Settings: cal.GetSettings(),
+		Id:     cal.GetId(),
+		Source: cal.GetSource().GetId(),
+		Name:   cal.GetName(),
+		Desc:   cal.GetDesc(),
+		Color:  cal.GetColor(),
+		//Settings: cal.GetSettings(),
 	}
 
 	if tx.Commit(apiConfig.Logger) != nil {

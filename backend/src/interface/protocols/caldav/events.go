@@ -24,7 +24,8 @@ type CaldavEvent struct {
 }
 
 type CaldavEventSettings struct {
-	Url *types.Url `json:"url"`
+	Url      *types.Url             `json:"url"`
+	rawEvent *caldav.CalendarObject `json:"-"`
 }
 
 func parseTime(icalTime *ical.Prop) (*time.Time, error) {
@@ -138,7 +139,8 @@ func eventFromCaldav(calendar *CaldavCalendar, obj *caldav.CalendarObject) (*Cal
 		name: summaryStr,
 		desc: descStr,
 		settings: &CaldavEventSettings{
-			Url: url,
+			Url:      url,
+			rawEvent: obj,
 		},
 		calendar:  calendar,
 		eventDate: eventDate,

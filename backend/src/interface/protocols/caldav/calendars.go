@@ -24,7 +24,8 @@ type CaldavCalendar struct {
 }
 
 type CaldavCalendarSettings struct {
-	Url *types.Url `json:"url"`
+	Url         *types.Url      `json:"url"`
+	rawCalendar caldav.Calendar `json:"-"`
 }
 
 func (source *CaldavSource) calendarFromCaldav(rawCalendar caldav.Calendar) (*CaldavCalendar, error) {
@@ -34,7 +35,8 @@ func (source *CaldavSource) calendarFromCaldav(rawCalendar caldav.Calendar) (*Ca
 	}
 
 	settings := &CaldavCalendarSettings{
-		Url: url,
+		Url:         url,
+		rawCalendar: rawCalendar,
 	}
 
 	calendar := &CaldavCalendar{
