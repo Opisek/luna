@@ -188,7 +188,23 @@ func DeleteEvent(c *gin.Context) {
 	tx := context.GetTransaction(c)
 	defer tx.Rollback(apiConfig.Logger)
 
-	// Delete event
+	// Get event first
+	event, err := tx.Queries().GetEvent(userId, eventId)
+	if err != nil {
+		apiConfig.Logger.Errorf("could not get event: %v", err)
+		util.Error(c, util.ErrorDatabase)
+		return
+	}
+
+	// Remove the calendar from the upstream source
+	err = event.GetCalendar().DeleteEvent(event.GetSettings())
+	if err != nil {
+		apiConfig.Logger.Errorf("could not delete event from remote source: %v", err)
+		util.Error(c, util.ErrorInternal)
+		return
+	}
+
+	// Delete event entry from the database
 	err = tx.Queries().DeleteEvent(userId, eventId)
 	if err != nil {
 		apiConfig.Logger.Errorf("could not delete event: %v", err)

@@ -163,18 +163,7 @@ func (q *Queries) GetEvent(userId types.ID, eventId types.ID) (primitives.Event,
 }
 
 func (q *Queries) DeleteEvent(userId types.ID, eventId types.ID) error {
-	// TODO: consider not doing the get and remote delete here, but rather directly in the api handler
-	event, err := q.GetEvent(userId, eventId)
-	if err != nil {
-		return fmt.Errorf("could not get event: %v", err)
-	}
-
-	err = event.GetCalendar().DeleteEvent(event.GetSettings())
-	if err != nil {
-		return fmt.Errorf("could not delete event from remote source: %v", err)
-	}
-
-	_, err = q.Tx.Exec(
+	_, err := q.Tx.Exec(
 		context.TODO(),
 		`
 		DELETE FROM events
