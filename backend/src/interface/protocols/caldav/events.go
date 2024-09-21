@@ -65,6 +65,7 @@ func parseTime(icalTime *ical.Prop) (*time.Time, error) {
 }
 
 func eventFromCaldav(calendar *CaldavCalendar, obj *caldav.CalendarObject) (*CaldavEvent, error) {
+
 	eventIndex := -1
 	for i, child := range obj.Data.Children {
 		if child.Name == "VEVENT" {
@@ -155,8 +156,12 @@ func (settings *CaldavEventSettings) Bytes() []byte {
 	return bytes
 }
 
+func genEventId(calendarId types.ID, uid string) types.ID {
+	return crypto.DeriveID(calendarId, uid)
+}
+
 func (event *CaldavEvent) GetId() types.ID {
-	return crypto.DeriveID(event.calendar.GetId(), event.uid)
+	return genEventId(event.calendar.GetId(), event.uid)
 }
 
 func (event *CaldavEvent) GetName() string {

@@ -110,7 +110,7 @@ func (q *Queries) ReconcileEvents(cals []primitives.Calendar, events []primitive
 	for _, dbEvent := range dbEvents {
 		if event, ok := eventMap[dbEvent.Id]; ok {
 			if event.GetColor() == nil {
-				event.SetColor(dbEvent.Color)
+				event.SetColor(types.ColorFromBytes(dbEvent.Color))
 				// TODO: if dbCal.Color == nil, either return some default color, or generate a deterministic random one (e.g. calendar id hash -> hue)
 			}
 		}
@@ -160,6 +160,25 @@ func (q *Queries) GetEvent(userId types.ID, eventId types.ID) (primitives.Event,
 	}
 
 	return scanner.GetEvent()
+}
+
+func (q *Queries) InsertEvent(calendarId types.ID, event primitives.Event, color *types.Color) error {
+	_, err := q.Tx.Exec(
+		context.TODO(),
+		`
+		INSERT INTO events (id, calendar, color, settings)
+		VALUES ($1, $2, $3, $4);
+		`,
+		event.GetId().UUID(),
+		calendarId.UUID(),
+		color.Bytes(),
+		event.GetSettings().Bytes(),
+	)
+	if err != nil {
+		return fmt.Errorf("could not insert event into database: %v", err)
+	}
+
+	return nil
 }
 
 func (q *Queries) DeleteEvent(userId types.ID, eventId types.ID) error {

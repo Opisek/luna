@@ -15,6 +15,7 @@ type Calendar interface {
 	GetSettings() CalendarSettings
 	GetEvents(start time.Time, end time.Time) ([]Event, error)
 	GetEvent(settings EventSettings) (Event, error)
+	AddEvent(name string, desc string, color *types.Color, date *types.EventDate) (Event, error)
 	DeleteEvent(settings EventSettings) error
 }
 

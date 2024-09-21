@@ -175,6 +175,87 @@ func GetEvent(c *gin.Context) {
 	c.JSON(http.StatusOK, convertedCal)
 }
 
+func PutEvent(c *gin.Context) {
+	apiConfig := context.GetConfig(c)
+	userId := context.GetUserId(c)
+	tx := context.GetTransaction(c)
+	defer tx.Rollback(apiConfig.Logger)
+
+	calendarIdStr := c.PostForm("calendar")
+	calendarId, err := types.IdFromString(calendarIdStr)
+	if err != nil {
+		apiConfig.Logger.Error("missing or malformed calendar id")
+		util.ErrorDetailed(c, util.ErrorPayload, util.DetailId)
+		return
+	}
+
+	calendar, err := tx.Queries().GetCalendar(userId, calendarId)
+	if err != nil {
+		apiConfig.Logger.Errorf("could not get calendar: %v", err)
+		util.Error(c, util.ErrorDatabase)
+		return
+	}
+
+	eventName := c.PostForm("name")
+	if eventName == "" {
+		apiConfig.Logger.Error("missing name")
+		util.ErrorDetailed(c, util.ErrorPayload, util.DetailName)
+		return
+	}
+
+	eventDesc := c.PostForm("desc")
+
+	eventColor, err := types.ParseColor(c.PostForm("color"))
+	if err != nil {
+		apiConfig.Logger.Errorf("missing or malformed color: %v", err)
+		util.ErrorDetailed(c, util.ErrorPayload, util.DetailColor)
+		return
+	}
+
+	eventDateStartStr := c.PostForm("date_start")
+	eventDateStart, err := time.Parse(time.RFC3339, eventDateStartStr)
+	if err != nil {
+		apiConfig.Logger.Errorf("missing or malformed date start: %v", err)
+		util.ErrorDetailed(c, util.ErrorPayload, util.DetailDate)
+		return
+	}
+
+	eventDateEndStr := c.PostForm("date_end")
+	eventDateDurationStr := c.PostForm("date_duration")
+
+	eventDateEnd, endErr := time.Parse(time.RFC3339, eventDateEndStr)
+	eventDateDuration, durationErr := time.ParseDuration(eventDateDurationStr)
+
+	if (endErr != nil && durationErr != nil) || (endErr == nil && durationErr == nil) {
+		apiConfig.Logger.Error("missing or malformed date start")
+		util.ErrorDetailed(c, util.ErrorPayload, util.DetailDate)
+		return
+	}
+
+	var date *types.EventDate
+	if endErr == nil {
+		date = types.NewEventDateFromEndTime(&eventDateStart, &eventDateEnd, nil)
+	} else {
+		date = types.NewEventDateFromDuration(&eventDateStart, &eventDateDuration, nil)
+	}
+
+	event, err := calendar.AddEvent(eventName, eventDesc, eventColor, date)
+	if err != nil {
+		apiConfig.Logger.Errorf("could not add event: %v", err)
+		util.Error(c, util.ErrorInternal)
+		return
+	}
+
+	tx.Queries().InsertEvent(calendar.GetId(), event, eventColor)
+
+	if tx.Commit(apiConfig.Logger) != nil {
+		util.Error(c, util.ErrorDatabase)
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"id": event.GetId().String()})
+}
+
 func DeleteEvent(c *gin.Context) {
 	apiConfig := context.GetConfig(c)
 	eventId, err := context.GetId(c, "event")

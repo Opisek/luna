@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"luna-backend/db/internal/tables"
 	"luna-backend/interface/primitives"
+	"luna-backend/types"
 	"reflect"
 	"strings"
 )
@@ -129,7 +130,7 @@ func (s *PgxScanner) GetCalendar() (primitives.Calendar, error) {
 	}
 
 	if calendar.GetColor() == nil {
-		calendar.SetColor(s.calendar.Color)
+		calendar.SetColor(types.ColorFromBytes(s.calendar.Color))
 	}
 
 	return calendar, nil
@@ -152,7 +153,7 @@ func (s *PgxScanner) GetEvent() (primitives.Event, error) {
 	}
 
 	if event.GetColor() == nil {
-		event.SetColor(s.event.Color)
+		event.SetColor(types.ColorFromBytes(s.event.Color))
 	}
 
 	return event, nil

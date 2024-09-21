@@ -7,10 +7,10 @@ import (
 )
 
 type CalendarEntry struct {
-	Id       types.ID     `db:"id" encrypted:"false"`
-	Source   types.ID     `db:"source" encrypted:"false"`
-	Color    *types.Color `db:"color" encrypted:"false"`
-	Settings []byte       `db:"settings" encrypted:"false"`
+	Id       types.ID `db:"id" encrypted:"false"`
+	Source   types.ID `db:"source" encrypted:"false"`
+	Color    []byte   `db:"color" encrypted:"false"`
+	Settings []byte   `db:"settings" encrypted:"false"`
 }
 
 func (q *Tables) InitializeCalendarsTable() error {

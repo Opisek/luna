@@ -46,15 +46,15 @@ func ParseColor(rawColor string) (*Color, error) {
 		return nil, fmt.Errorf("invalid color format")
 	}
 
-	r, err := strconv.ParseInt(rawColor[1:3], 16, 8)
+	r, err := strconv.ParseUint(rawColor[1:3], 16, 8)
 	if err != nil {
 		return nil, fmt.Errorf("invalid color format: could not parse red value: %v", err)
 	}
-	b, err := strconv.ParseInt(rawColor[3:5], 16, 8)
+	b, err := strconv.ParseUint(rawColor[3:5], 16, 8)
 	if err != nil {
 		return nil, fmt.Errorf("invalid color format: could not parse blue value: %v", err)
 	}
-	g, err := strconv.ParseInt(rawColor[5:7], 16, 8)
+	g, err := strconv.ParseUint(rawColor[5:7], 16, 8)
 	if err != nil {
 		return nil, fmt.Errorf("invalid color format: could not parse green value: %v", err)
 	}

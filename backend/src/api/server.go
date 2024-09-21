@@ -52,7 +52,7 @@ func run(api *config.Api) {
 	eventEndpoints := authenticatedEndpoints.Group("/events")
 	eventEndpoints.GET("", handlers.GetEvents)
 	eventEndpoints.GET("/:eventId", handlers.GetEvent)
-	eventEndpoints.PUT("", handlers.NotImplemented)
+	eventEndpoints.PUT("", handlers.PutEvent)
 	eventEndpoints.PATCH("/:eventId", handlers.NotImplemented)
 	eventEndpoints.DELETE("/:eventId", handlers.DeleteEvent)
 

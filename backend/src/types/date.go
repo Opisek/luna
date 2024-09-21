@@ -33,6 +33,36 @@ func NewEventDateFromDuration(start *time.Time, duration *time.Duration, recurre
 	}
 }
 
+func (ed *EventDate) Start() *time.Time {
+	return ed.start
+}
+
+func (ed *EventDate) End() *time.Time {
+	if ed.specifyDuration {
+		endTime := ed.start.Add(*ed.duration)
+		return &endTime
+	} else {
+		return ed.end
+	}
+}
+
+func (ed *EventDate) Duration() *time.Duration {
+	if ed.specifyDuration {
+		return ed.duration
+	} else {
+		duration := ed.end.Sub(*ed.start)
+		return &duration
+	}
+}
+
+func (ed *EventDate) SpecifyDuration() bool {
+	return ed.specifyDuration
+}
+
+//func (ed *EventDate) Recurrence() *EventRecurrence {
+//	return ed.recurrence
+//}
+
 type eventDateMarshalEnd struct {
 	Start      *time.Time       `json:"start"`
 	End        *time.Time       `json:"end"`

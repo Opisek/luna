@@ -110,7 +110,7 @@ func (q *Queries) ReconcileCalendars(sources []primitives.Source, cals []primiti
 	for _, dbCal := range dbCals {
 		if cal, ok := calMap[dbCal.Id]; ok {
 			if cal.GetColor() == nil {
-				cal.SetColor(dbCal.Color)
+				cal.SetColor(types.ColorFromBytes(dbCal.Color))
 				// TODO: if dbCal.Color == nil, either return some default color, or generate a deterministic random one (e.g. calendar id hash -> hue)
 			}
 		}

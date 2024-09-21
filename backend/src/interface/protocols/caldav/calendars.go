@@ -10,6 +10,7 @@ import (
 	"luna-backend/types"
 	"time"
 
+	"github.com/emersion/go-ical"
 	"github.com/emersion/go-webdav/caldav"
 )
 
@@ -59,8 +60,12 @@ func (settings *CaldavCalendarSettings) Bytes() []byte {
 	return bytes
 }
 
+func genCalId(sourceId types.ID, path string) types.ID {
+	return crypto.DeriveID(sourceId, path)
+}
+
 func (calendar *CaldavCalendar) GetId() types.ID {
-	return crypto.DeriveID(calendar.source.id, calendar.settings.Url.Path)
+	return genCalId(calendar.source.id, calendar.settings.Url.Path)
 }
 
 func (calendar *CaldavCalendar) GetName() string {
@@ -168,6 +173,57 @@ func (calendar *CaldavCalendar) GetEvent(settings primitives.EventSettings) (pri
 	}
 
 	return cal, nil
+}
+
+func (calendar *CaldavCalendar) AddEvent(name string, desc string, color *types.Color, date *types.EventDate) (primitives.Event, error) {
+	id := types.RandomId()
+
+	event := ical.NewEvent()
+
+	event.Props.SetText(ical.PropUID, id.String())
+
+	event.Props.SetText(ical.PropSummary, name)
+
+	if desc != "" {
+		event.Props.SetText(ical.PropDescription, desc)
+	} else {
+		event.Props.Del(ical.PropDescription)
+	}
+
+	event.Props.SetDateTime(ical.PropDateTimeStart, *date.Start())
+	if date.SpecifyDuration() {
+		// TODO: figure this out
+		return nil, fmt.Errorf("not implemented")
+		//event.Props.SetText(ical.PropDuration, *date.Duration())
+	} else {
+		event.Props.SetDateTime(ical.PropDateTimeEnd, *date.End())
+		event.Props.Del(ical.PropDuration)
+	}
+	event.Props.SetDateTime(ical.PropDateTimeStamp, time.Now())
+
+	cal := ical.NewCalendar()
+	cal.Props.SetText(ical.PropProductID, "Luna")
+	cal.Props.SetText(ical.PropVersion, "0.1.0") // TODO: access version from CommonConfig
+	cal.Children = append(cal.Children, event.Component)
+
+	path := fmt.Sprintf("%v%v.ics", calendar.settings.Url.Path, id.String())
+
+	_, err := calendar.client.PutCalendarObject(context.TODO(), path, cal)
+	if err != nil {
+		return nil, fmt.Errorf("could not add event: %w", err)
+	}
+
+	obj, err := calendar.client.GetCalendarObject(context.TODO(), path)
+	if err != nil {
+		return nil, fmt.Errorf("could not get finished event: %w", err)
+	}
+
+	finishedEvent, err := eventFromCaldav(calendar, obj)
+	if err != nil {
+		return nil, fmt.Errorf("could not parse finished event: %w", err)
+	}
+
+	return finishedEvent, nil
 }
 
 func (calendar *CaldavCalendar) DeleteEvent(settings primitives.EventSettings) error {

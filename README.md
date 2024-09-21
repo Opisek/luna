@@ -141,8 +141,13 @@ Not yet implemented
 - **Purpose**: Fetches a specific event from its appropriate calendar. This is only possible after [Get Events](#get-events) has been called before, otherwise no mapping exists between the events's ID and its calendar.
 
 #### Put Event
+- **Path**: ``/api/events``
+- **Method**: ``PUT``
+- **Body**: `name`, `desc`, `color`, `date_start`, `date_end`, `date_duration`
+- **Purpose**: Add a new event to a specified calendar in the upstream, as well as the local database.
+- **Note**: This might migrate back to ``/api/calendars/<CalendarID>/events``
 
-Not yet implemented
+The description field is optional. Either the end date or the event duration is to be specified, not both and not neither.
 
 #### Patch Event
 

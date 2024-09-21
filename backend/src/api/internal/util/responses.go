@@ -9,7 +9,7 @@ import (
 
 const (
 	ErrorInvalidCredentials = iota
-	ErrorDatabase
+	ErrorDatabase           // TODO: a lot of these should be NotFound instead, but same problem as with ErrorUnknown
 	ErrorInternal
 	ErrorSourceNotFound
 	ErrorCalendarNotFound
@@ -42,6 +42,9 @@ const (
 	DetailAuth     = "Malformed or missing authentication"
 	DetailPassword = "Malformed or missing password"
 	DetailSource   = "Malformed or missing source parameters"
+	DetailColor    = "Malformed or missing color"
+	DetailId       = "Malformed or missing ID"
+	DetailDate     = "Malformed or missing date"
 	DetailFields   = "Nothing to update"
 )
 
