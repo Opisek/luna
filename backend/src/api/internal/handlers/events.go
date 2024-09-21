@@ -174,3 +174,32 @@ func GetEvent(c *gin.Context) {
 
 	c.JSON(http.StatusOK, convertedCal)
 }
+
+func DeleteEvent(c *gin.Context) {
+	apiConfig := context.GetConfig(c)
+	eventId, err := context.GetId(c, "event")
+	if err != nil {
+		apiConfig.Logger.Errorf("could not get event id: %v", err)
+		util.Error(c, util.ErrorMalformedID)
+		return
+	}
+
+	userId := context.GetUserId(c)
+	tx := context.GetTransaction(c)
+	defer tx.Rollback(apiConfig.Logger)
+
+	// Delete event
+	err = tx.Queries().DeleteEvent(userId, eventId)
+	if err != nil {
+		apiConfig.Logger.Errorf("could not delete event: %v", err)
+		util.Error(c, util.ErrorDatabase)
+		return
+	}
+
+	if tx.Commit(apiConfig.Logger) != nil {
+		util.Error(c, util.ErrorDatabase)
+		return
+	}
+
+	util.Success(c)
+}

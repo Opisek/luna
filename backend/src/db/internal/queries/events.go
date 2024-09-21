@@ -161,3 +161,29 @@ func (q *Queries) GetEvent(userId types.ID, eventId types.ID) (primitives.Event,
 
 	return scanner.GetEvent()
 }
+
+func (q *Queries) DeleteEvent(userId types.ID, eventId types.ID) error {
+	event, err := q.GetEvent(userId, eventId)
+	if err != nil {
+		return fmt.Errorf("could not get event: %v", err)
+	}
+
+	err = event.GetCalendar().DeleteEvent(event.GetSettings())
+	if err != nil {
+		return fmt.Errorf("could not delete event from remote source: %v", err)
+	}
+
+	_, err = q.Tx.Exec(
+		context.TODO(),
+		`
+		DELETE FROM events
+		WHERE id = $1;
+		`,
+		eventId.UUID(),
+	)
+	if err != nil {
+		return fmt.Errorf("could not delete event from database: %v", err)
+	}
+
+	return nil
+}
