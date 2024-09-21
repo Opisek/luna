@@ -3,7 +3,6 @@ package caldav
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"luna-backend/auth"
 	"luna-backend/crypto"
@@ -172,10 +171,7 @@ func (calendar *CaldavCalendar) GetEvent(settings primitives.EventSettings) (pri
 func (calendar *CaldavCalendar) DeleteEvent(settings primitives.EventSettings) error {
 	caldavSettings := settings.(*CaldavEventSettings)
 
-	return errors.New("unsupported")
-
-	// TODO: figure out how to delete events with this library
-	_, err := calendar.client.PutCalendarObject(context.TODO(), caldavSettings.Url.Path, nil)
+	err := calendar.client.RemoveAll(context.TODO(), caldavSettings.Url.Path)
 	if err != nil {
 		return fmt.Errorf("could not delete event: %w", err)
 	}
