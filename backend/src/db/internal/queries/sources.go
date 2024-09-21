@@ -13,47 +13,37 @@ import (
 	"github.com/google/uuid"
 )
 
-func scanSource(rows types.PgxScanner) (primitives.Source, error) {
-	var err error
-
-	var id types.ID
-	var name string
-	var sourceType string
-	var settings []byte
-	var authType string
-	var authBytes []byte
-	err = rows.Scan(&id, &name, &sourceType, &settings, &authType, &authBytes)
-	if err != nil {
-		return nil, fmt.Errorf("could not scan source row: %v", err)
-	}
-
-	return parsing.ParseSource(id, name, sourceType, settings, authType, authBytes)
-}
-
 func (q *Queries) GetSource(userId types.ID, sourceId types.ID) (primitives.Source, error) {
 	decryptionKey, err := util.GetUserDecryptionKey(q.CommonConfig, userId)
 	if err != nil {
 		return nil, fmt.Errorf("could not get user decryption key: %v", err)
 	}
 
-	row := q.Tx.QueryRow(
-		context.TODO(),
+	scanner := parsing.NewPgxScanner()
+	scanner.ScheduleSource()
+	cols, params := scanner.Variables(3)
+
+	query := fmt.Sprintf(
 		`
-		SELECT id, name, type, settings, PGP_SYM_DECRYPT(auth_type, $3), PGP_SYM_DECRYPT(auth, $3)
+		SELECT %s
 		FROM sources
-		WHERE userid = $1 AND id = $2;
+		WHERE id = $1 AND userid = $2;
 		`,
+		cols,
+	)
+
+	err = q.Tx.QueryRow(
+		context.TODO(),
+		query,
 		userId.UUID(),
 		sourceId.UUID(),
 		decryptionKey,
-	)
-
-	source, err := scanSource(row)
+	).Scan(params...)
 	if err != nil {
-		return nil, fmt.Errorf("could not parse source: %v", err)
+		return nil, fmt.Errorf("could not get source: %v", err)
 	}
 
-	return source, nil
+	return scanner.GetSource()
 }
 
 func (q *Queries) GetSources(userId types.ID) ([]primitives.Source, error) {
@@ -64,13 +54,22 @@ func (q *Queries) GetSources(userId types.ID) ([]primitives.Source, error) {
 		return nil, fmt.Errorf("could not get user decryption key: %v", err)
 	}
 
-	rows, err := q.Tx.Query(
-		context.TODO(),
+	scanner := parsing.NewPgxScanner()
+	scanner.ScheduleSource()
+	cols, params := scanner.Variables(2)
+
+	query := fmt.Sprintf(
 		`
-		SELECT id, name, type, settings, PGP_SYM_DECRYPT(auth_type, $2), PGP_SYM_DECRYPT(auth, $2)
+		SELECT %s
 		FROM sources
 		WHERE userid = $1;
 		`,
+		cols,
+	)
+
+	rows, err := q.Tx.Query(
+		context.TODO(),
+		query,
 		userId.UUID(),
 		decryptionKey,
 	)
@@ -81,7 +80,8 @@ func (q *Queries) GetSources(userId types.ID) ([]primitives.Source, error) {
 
 	sources := []primitives.Source{}
 	for rows.Next() {
-		source, err := scanSource(rows)
+		rows.Scan(params...) // TODO: we might have to "reset" the scanner each time due to pass by reference
+		source, err := scanner.GetSource()
 		if err != nil {
 			return nil, fmt.Errorf("could not parse source: %v", err)
 		}

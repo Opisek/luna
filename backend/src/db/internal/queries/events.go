@@ -77,27 +77,19 @@ func (q *Queries) getEventEntries(calendars []primitives.Calendar, events []prim
 		calMap[cal.GetId()] = cal
 	}
 
-	eventEntries := []*tables.EventEntry{}
+	entries := []*tables.EventEntry{}
 	for rows.Next() {
-		var id types.ID
-		var source types.ID
-		var color []byte
-		var settings []byte
+		entry := &tables.EventEntry{}
 
-		err := rows.Scan(&id, &source, &color, &settings)
+		err := rows.Scan(&entry.Id, &entry.Calendar, &entry.Color, &entry.Settings)
 		if err != nil {
 			return nil, fmt.Errorf("could not scan calendar row: %v", err)
 		}
 
-		eventEntry, err := parsing.ParseEventEntry(calMap[source], id, color, settings)
-		if err != nil {
-			return nil, fmt.Errorf("could not parse calendar: %v", err)
-		}
-
-		eventEntries = append(eventEntries, eventEntry)
+		entries = append(entries, entry)
 	}
 
-	return eventEntries, nil
+	return entries, nil
 }
 
 func (q *Queries) ReconcileEvents(cals []primitives.Calendar, events []primitives.Event) ([]primitives.Event, error) {
@@ -140,66 +132,32 @@ func (q *Queries) GetEvent(userId types.ID, eventId types.ID) (primitives.Event,
 		return nil, fmt.Errorf("could not get user decryption key: %v", err)
 	}
 
-	var sourceId types.ID
-	var sourceName string
-	var sourceType string
-	var sourceSettings []byte
-	var authType string
-	var authBytes []byte
-	var calendarId types.ID
-	var calendarColor []byte
-	var calendarSettings []byte
-	var eventColor []byte
-	var eventSettings []byte
+	scanner := parsing.NewPgxScanner()
+	scanner.ScheduleEvent()
+	cols, params := scanner.Variables(3)
 
-	err = q.Tx.QueryRow(
-		context.TODO(),
+	query := fmt.Sprintf(
 		`
-		SELECT sources.id, sources.name, sources.type, sources.settings, PGP_SYM_DECRYPT(sources.auth_type, $3), PGP_SYM_DECRYPT(sources.auth, $3), calendars.id, calendars.color, calendars.settings, events.color, events.settings
+		SELECT %s 
 		FROM events
 		JOIN calendars ON events.calendar = calendars.id
 		JOIN sources ON calendars.source = sources.id
 		WHERE events.id = $1
 		AND sources.userid = $2;
 		`,
+		cols,
+	)
+
+	err = q.Tx.QueryRow(
+		context.TODO(),
+		query,
 		eventId.UUID(),
 		userId.UUID(),
 		decryptionKey,
-	).Scan(&sourceId, &sourceName, &sourceType, &sourceSettings, &authType, &authBytes, &calendarId, &calendarColor, &calendarSettings, &eventColor, &eventSettings)
+	).Scan(params...)
 	if err != nil {
 		return nil, fmt.Errorf("could not get event: %v", err)
 	}
 
-	source, err := parsing.ParseSource(sourceId, sourceName, sourceType, sourceSettings, authType, authBytes)
-	if err != nil {
-		return nil, fmt.Errorf("could not parse source: %v", err)
-	}
-
-	calendarEntry, err := parsing.ParseCalendarEntry(source, calendarId, calendarColor, calendarSettings)
-	if err != nil {
-		return nil, fmt.Errorf("could not parse calendar entry: %v", err)
-	}
-
-	calendar, err := source.GetCalendar(calendarEntry.Settings)
-	if err != nil {
-		return nil, fmt.Errorf("could not get calendar: %v", err)
-	}
-	if calendar.GetColor() == nil {
-		calendar.SetColor(calendarEntry.Color)
-	}
-
-	eventEntry, err := parsing.ParseEventEntry(calendar, eventId, eventColor, eventSettings)
-	if err != nil {
-		return nil, fmt.Errorf("could not parse event entry: %v", err)
-	}
-
-	event, err := calendar.GetEvent(eventEntry.Settings)
-	if err != nil {
-		return nil, fmt.Errorf("could not get event: %v", err)
-	}
-	if event.GetColor() == nil {
-		event.SetColor(eventEntry.Color)
-	}
-
-	return event, nil
+	return scanner.GetEvent()
 }

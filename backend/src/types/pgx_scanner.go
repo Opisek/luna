@@ -1,5 +1,5 @@
 package types
 
-type PgxScanner interface {
+type PgxScannable interface {
 	Scan(dest ...interface{}) (err error)
 }
