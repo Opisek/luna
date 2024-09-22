@@ -175,10 +175,19 @@ func (calendar *CaldavCalendar) GetEvent(settings primitives.EventSettings) (pri
 	return cal, nil
 }
 
-func (calendar *CaldavCalendar) AddEvent(name string, desc string, color *types.Color, date *types.EventDate) (primitives.Event, error) {
-	id := types.RandomId()
-
-	event := ical.NewEvent()
+func setEventProps(cal *ical.Calendar, id types.ID, name string, desc string, date *types.EventDate) error {
+	var event *ical.Event = nil
+	for _, child := range cal.Children {
+		if child.Name == "VEVENT" {
+			event = ical.NewEvent()
+			event.Component = child
+			break
+		}
+	}
+	if event == nil {
+		event = ical.NewEvent()
+		cal.Children = append(cal.Children, event.Component)
+	}
 
 	event.Props.SetText(ical.PropUID, id.String())
 
@@ -193,7 +202,7 @@ func (calendar *CaldavCalendar) AddEvent(name string, desc string, color *types.
 	event.Props.SetDateTime(ical.PropDateTimeStart, *date.Start())
 	if date.SpecifyDuration() {
 		// TODO: figure this out
-		return nil, fmt.Errorf("not implemented")
+		return fmt.Errorf("not implemented")
 		//event.Props.SetText(ical.PropDuration, *date.Duration())
 	} else {
 		event.Props.SetDateTime(ical.PropDateTimeEnd, *date.End())
@@ -201,14 +210,26 @@ func (calendar *CaldavCalendar) AddEvent(name string, desc string, color *types.
 	}
 	event.Props.SetDateTime(ical.PropDateTimeStamp, time.Now())
 
-	cal := ical.NewCalendar()
 	cal.Props.SetText(ical.PropProductID, "Luna")
 	cal.Props.SetText(ical.PropVersion, "0.1.0") // TODO: access version from CommonConfig
-	cal.Children = append(cal.Children, event.Component)
+
+	fmt.Println(cal.Children[0].Props.Get(ical.PropSummary).Value)
+
+	return nil
+}
+
+func (calendar *CaldavCalendar) AddEvent(name string, desc string, color *types.Color, date *types.EventDate) (primitives.Event, error) {
+	id := types.RandomId()
+	cal := ical.NewCalendar()
+
+	err := setEventProps(cal, id, name, desc, date)
+	if err != nil {
+		return nil, fmt.Errorf("could not set ical properties: %w", err)
+	}
 
 	path := fmt.Sprintf("%v%v.ics", calendar.settings.Url.Path, id.String())
 
-	_, err := calendar.client.PutCalendarObject(context.TODO(), path, cal)
+	_, err = calendar.client.PutCalendarObject(context.TODO(), path, cal)
 	if err != nil {
 		return nil, fmt.Errorf("could not add event: %w", err)
 	}
@@ -224,6 +245,36 @@ func (calendar *CaldavCalendar) AddEvent(name string, desc string, color *types.
 	}
 
 	return finishedEvent, nil
+}
+
+func (calendar *CaldavCalendar) UpdateEvent(originalEvent primitives.Event, name string, desc string, color *types.Color, date *types.EventDate) (primitives.Event, error) {
+	id := originalEvent.GetId()
+	originalCaldavEvent := originalEvent.(*CaldavEvent)
+	originalRawEvent := originalCaldavEvent.settings.rawEvent
+	cal := originalRawEvent.Data
+
+	err := setEventProps(cal, id, name, desc, date)
+	if err != nil {
+		return nil, fmt.Errorf("could not set ical properties: %w", err)
+	}
+
+	_, err = calendar.client.PutCalendarObject(context.TODO(), originalRawEvent.Path, cal)
+	if err != nil {
+		return nil, fmt.Errorf("could not update event: %w", err)
+	}
+
+	obj, err := calendar.client.GetCalendarObject(context.TODO(), originalRawEvent.Path)
+	if err != nil {
+		return nil, fmt.Errorf("could not get finished event: %w", err)
+	}
+
+	finishedEvent, err := eventFromCaldav(calendar, obj)
+	if err != nil {
+		return nil, fmt.Errorf("could not parse finished event: %w", err)
+	}
+
+	return finishedEvent, nil
+
 }
 
 func (calendar *CaldavCalendar) DeleteEvent(settings primitives.EventSettings) error {

@@ -162,7 +162,7 @@ func (q *Queries) GetEvent(userId types.ID, eventId types.ID) (primitives.Event,
 	return scanner.GetEvent()
 }
 
-func (q *Queries) InsertEvent(calendarId types.ID, event primitives.Event, color *types.Color) error {
+func (q *Queries) InsertEvent(event primitives.Event) error {
 	_, err := q.Tx.Exec(
 		context.TODO(),
 		`
@@ -170,12 +170,31 @@ func (q *Queries) InsertEvent(calendarId types.ID, event primitives.Event, color
 		VALUES ($1, $2, $3, $4);
 		`,
 		event.GetId().UUID(),
-		calendarId.UUID(),
-		color.Bytes(),
+		event.GetCalendar().GetId().UUID(),
+		event.GetColor().Bytes(),
 		event.GetSettings().Bytes(),
 	)
 	if err != nil {
 		return fmt.Errorf("could not insert event into database: %v", err)
+	}
+
+	return nil
+}
+
+func (q *Queries) UpdateEvent(event primitives.Event) error {
+	_, err := q.Tx.Exec(
+		context.TODO(),
+		`
+		UPDATE events
+		SET color = $2, settings = $3
+		WHERE id = $1;
+		`,
+		event.GetId().UUID(),
+		event.GetColor().Bytes(),
+		event.GetSettings().Bytes(),
+	)
+	if err != nil {
+		return fmt.Errorf("could not update event in database: %v", err)
 	}
 
 	return nil

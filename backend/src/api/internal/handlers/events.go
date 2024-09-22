@@ -246,7 +246,7 @@ func PutEvent(c *gin.Context) {
 		return
 	}
 
-	tx.Queries().InsertEvent(calendar.GetId(), event, eventColor)
+	tx.Queries().InsertEvent(event)
 
 	if tx.Commit(apiConfig.Logger) != nil {
 		util.Error(c, util.ErrorDatabase)
@@ -254,6 +254,99 @@ func PutEvent(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, gin.H{"id": event.GetId().String()})
+}
+
+func PatchEvent(c *gin.Context) {
+	apiConfig := context.GetConfig(c)
+	userId := context.GetUserId(c)
+	tx := context.GetTransaction(c)
+	defer tx.Rollback(apiConfig.Logger)
+
+	eventIdStr := c.Param("eventId")
+	eventId, err := types.IdFromString(eventIdStr)
+	if err != nil {
+		apiConfig.Logger.Error("missing or malformed event id")
+		util.ErrorDetailed(c, util.ErrorPayload, util.DetailId)
+		return
+	}
+
+	event, err := tx.Queries().GetEvent(userId, eventId)
+	if err != nil {
+		apiConfig.Logger.Errorf("could not get event: %v", err)
+		util.Error(c, util.ErrorDatabase)
+		return
+	}
+
+	newEventName := c.PostForm("name")
+
+	newEventDesc := c.PostForm("desc")
+
+	newEventColor, colErr := types.ParseColor(c.PostForm("color"))
+
+	eventDateStartStr := c.PostForm("date_start")
+	eventDateStart, startErr := time.Parse(time.RFC3339, eventDateStartStr)
+
+	eventDateEndStr := c.PostForm("date_end")
+	eventDateDurationStr := c.PostForm("date_duration")
+
+	eventDateEnd, endErr := time.Parse(time.RFC3339, eventDateEndStr)
+	eventDateDuration, durationErr := time.ParseDuration(eventDateDurationStr)
+
+	if newEventName == "" && newEventDesc == event.GetDesc() && colErr != nil && startErr != nil && endErr != nil && durationErr != nil {
+		apiConfig.Logger.Error("no values to change")
+		util.ErrorDetailed(c, util.ErrorPayload, util.DetailFields)
+		return
+	}
+
+	if newEventName == "" {
+		newEventName = event.GetName()
+	}
+
+	if colErr != nil {
+		newEventColor = event.GetColor()
+	}
+
+	var newEventDate *types.EventDate
+	if startErr != nil && endErr != nil && durationErr != nil {
+		newEventDate = event.GetDate()
+	} else {
+		if startErr == nil {
+			eventDateStart = *event.GetDate().Start()
+		}
+		if endErr != nil && durationErr == nil {
+			if event.GetDate().SpecifyDuration() {
+				eventDateDuration = *event.GetDate().Duration()
+				newEventDate = types.NewEventDateFromDuration(&eventDateStart, &eventDateDuration, nil)
+			} else {
+				eventDateEnd = *event.GetDate().End()
+				newEventDate = types.NewEventDateFromEndTime(&eventDateStart, &eventDateEnd, nil)
+			}
+		} else if endErr == nil && durationErr == nil {
+			apiConfig.Logger.Error("cannot specify both end and duration")
+			util.ErrorDetailed(c, util.ErrorPayload, util.DetailDate)
+			return
+		} else if endErr == nil {
+			newEventDate = types.NewEventDateFromEndTime(&eventDateStart, &eventDateEnd, nil)
+		} else {
+			newEventDate = types.NewEventDateFromDuration(&eventDateStart, &eventDateDuration, nil)
+		}
+	}
+
+	newEvent, err := event.GetCalendar().UpdateEvent(event, newEventName, newEventDesc, newEventColor, newEventDate)
+	if err != nil {
+		apiConfig.Logger.Errorf("could not add event: %v", err)
+		util.Error(c, util.ErrorInternal)
+		return
+	}
+
+	tx.Queries().UpdateEvent(newEvent)
+
+	if tx.Commit(apiConfig.Logger) != nil {
+		util.Error(c, util.ErrorDatabase)
+		return
+	}
+
+	util.Success(c)
 }
 
 func DeleteEvent(c *gin.Context) {

@@ -53,7 +53,7 @@ func run(api *config.Api) {
 	eventEndpoints.GET("", handlers.GetEvents)
 	eventEndpoints.GET("/:eventId", handlers.GetEvent)
 	eventEndpoints.PUT("", handlers.PutEvent)
-	eventEndpoints.PATCH("/:eventId", handlers.NotImplemented)
+	eventEndpoints.PATCH("/:eventId", handlers.PatchEvent)
 	eventEndpoints.DELETE("/:eventId", handlers.DeleteEvent)
 
 	router.Run(fmt.Sprintf(":%d", api.CommonConfig.Env.API_PORT))

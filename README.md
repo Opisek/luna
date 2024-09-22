@@ -143,15 +143,20 @@ Not yet implemented
 #### Put Event
 - **Path**: ``/api/events``
 - **Method**: ``PUT``
-- **Body**: `name`, `desc`, `color`, `date_start`, `date_end`, `date_duration`
+- **Body**: `name`, `desc`, `color`, `date_start`, `date_end`, `date_duration`, `calendar`
 - **Purpose**: Add a new event to a specified calendar in the upstream, as well as the local database.
 - **Note**: This might migrate back to ``/api/calendars/<CalendarID>/events``
 
 The description field is optional. Either the end date or the event duration is to be specified, not both and not neither.
 
 #### Patch Event
+- **Path**: ``/api/events``
+- **Method**: ``PUT``
+- **Body**: `name`, `desc`, `color`, `date_start`, `date_end`, `date_duration`, depending on which values should be updated.
+- **Purpose**: Updates specific fields of an event in the local database and the upstream source.
+- **Note**: If `desc` should not change, it must be set to its previous values, since leaving it empty implies deleting the description. This endpoint strives to not erase any values set by other applications that are not supported by Luna.
 
-Not yet implemented
+The description field is optional. Either the end date or the event duration is to be specified, not both and not neither.
 
 #### Delete Event
 - **Path**: ``/api/events/<ID>``
