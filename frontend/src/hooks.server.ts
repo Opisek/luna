@@ -1,6 +1,8 @@
 import type { Handle } from "@sveltejs/kit";
 import { getRedirectPage } from "./lib/common/parsing";
 
+import "dotenv/config"
+
 const loginPaths = [
   "login",
   "register"
