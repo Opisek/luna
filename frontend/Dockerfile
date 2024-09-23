@@ -15,7 +15,7 @@ RUN npm install
 FROM base as build
 WORKDIR /app
 RUN apk add make
-COPY Makefile .env .npmrc svelte.config.js tsconfig.json VERSION vite.config.ts package.json .
+COPY Makefile .env .npmrc svelte.config.js tsconfig.json VERSION vite.config.ts package.json ./
 COPY script script
 COPY static static
 COPY src src
