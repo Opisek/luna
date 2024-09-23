@@ -1,5 +1,9 @@
 <script lang="ts">
+  import VisibilityToggle from "./VisibilityToggle.svelte";
+
   export let calendar: CalendarModel;
+
+  let visibleTest = true;
 </script>
 
 <style lang="scss">
@@ -15,13 +19,16 @@
   }
 
   div.color {
-    width: 1em;
-    height: 1em;
+    width: 0.75em;
+    height: 0.75em;
     border-radius: 50%;
   }
 
   span {
     flex-grow: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 </style>
 
@@ -30,5 +37,5 @@
   <span>
     {calendar.name}
   </span>
-  <input type="checkbox">
+  <VisibilityToggle visible={visibleTest}/>
 </div>

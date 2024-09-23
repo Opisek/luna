@@ -7,7 +7,7 @@ import (
 	"strconv"
 )
 
-var ColorDefault = ColorFromVals(25, 25, 50)
+var ColorDefault = ColorFromVals(90, 150, 225)
 var ColorEmpty = &Color{empty: true}
 
 type Color struct {
