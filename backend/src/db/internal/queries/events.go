@@ -205,7 +205,13 @@ func (q *Queries) DeleteEvent(userId types.ID, eventId types.ID) error {
 		context.TODO(),
 		`
 		DELETE FROM events
-		WHERE id = $1;
+		WHERE id = $1
+		AND calendar IN (
+			SELECT id
+			FROM calendars
+			JOIN sources ON calendars.source = sources.id
+			WHERE sources.userid = $2
+		);
 		`,
 		eventId.UUID(),
 	)

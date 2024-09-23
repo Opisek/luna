@@ -115,16 +115,24 @@ Depending on the `auth_type` field, additional information may need to be passed
 - **Purpose**: Fetches a specific calendar from its appropriate source. This is only possible after [Get Calendars](#get-calendars) has been called before, otherwise no mapping exists between the calendar's ID and its source.
 
 #### Put Calendar
-
-Not yet implemented
+- **Path**: ``/api/calendars``
+- **Method**: ``PUT``
+- **Body**: `name`, `color`, `source`
+- **Purpose**: Add a new calendar to a specified source in the upstream, as well as the local database.
+- **Note**: This might migrate back to ``/api/sources/<SourceID>/calendars``
 
 #### Patch Calendar
-
-Not yet implemented
+- **Path**: ``/api/calendars/<ID>``
+- **Method**: ``PACH``
+- **Body**: `name`, `color`, depending on which values should be updated.
+- **Purpose**: Updates specific fields of a calendar in the local database and the upstream source.
+- **Note**: This endpoint strives to not erase any values set by other applications that are not supported by Luna.
 
 #### Delete Calendar
-
-Not yet implemented
+- **Path**: ``/api/calendars/<ID>``
+- **Method**: ``DELETE``
+- **Body**: Empty
+- **Purpose**: Deletes the source from the local database and the upstream source.
 
 ### Events
 #### Get Events
@@ -150,7 +158,7 @@ Not yet implemented
 The description field is optional. Either the end date or the event duration is to be specified, not both and not neither.
 
 #### Patch Event
-- **Path**: ``/api/events``
+- **Path**: ``/api/events/<ID>``
 - **Method**: ``PUT``
 - **Body**: `name`, `desc`, `color`, `date_start`, `date_end`, `date_duration`, depending on which values should be updated.
 - **Purpose**: Updates specific fields of an event in the local database and the upstream source.

@@ -247,7 +247,7 @@ func (calendar *CaldavCalendar) AddEvent(name string, desc string, color *types.
 	return finishedEvent, nil
 }
 
-func (calendar *CaldavCalendar) UpdateEvent(originalEvent primitives.Event, name string, desc string, color *types.Color, date *types.EventDate) (primitives.Event, error) {
+func (calendar *CaldavCalendar) EditEvent(originalEvent primitives.Event, name string, desc string, color *types.Color, date *types.EventDate) (primitives.Event, error) {
 	originalCaldavEvent := originalEvent.(*CaldavEvent)
 	uid := originalCaldavEvent.GetSettings().(*CaldavEventSettings).Uid
 	originalRawEvent := originalCaldavEvent.settings.rawEvent
@@ -277,10 +277,10 @@ func (calendar *CaldavCalendar) UpdateEvent(originalEvent primitives.Event, name
 
 }
 
-func (calendar *CaldavCalendar) DeleteEvent(settings primitives.EventSettings) error {
-	caldavSettings := settings.(*CaldavEventSettings)
+func (calendar *CaldavCalendar) DeleteEvent(event primitives.Event) error {
+	settings := event.GetSettings().(*CaldavEventSettings)
 
-	err := calendar.client.RemoveAll(context.TODO(), caldavSettings.Url.Path)
+	err := calendar.client.RemoveAll(context.TODO(), settings.Url.Path)
 	if err != nil {
 		return fmt.Errorf("could not delete event: %w", err)
 	}

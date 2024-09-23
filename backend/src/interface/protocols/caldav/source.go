@@ -138,3 +138,38 @@ func (source *CaldavSource) GetCalendar(settings primitives.CalendarSettings) (p
 
 	return castedCal, nil
 }
+
+// TODO: Add, Edit, and Delete are not supported by upstream yet
+
+func (source *CaldavSource) AddCalendar(name string, color *types.Color) (primitives.Calendar, error) {
+	//caldavCal := calendar.(*CaldavCalendar)
+
+	//client, err := source.getClient()
+	//if err != nil {
+	//	return err
+	//}
+
+	return nil, fmt.Errorf("not implemented")
+}
+
+func (source *CaldavSource) EditCalendar(calendar primitives.Calendar, name string, color *types.Color) (primitives.Calendar, error) {
+	//caldavCal := calendar.(*CaldavCalendar)
+
+	//client, err := source.getClient()
+	//if err != nil {
+	//	return err
+	//}
+
+	return nil, fmt.Errorf("not implemented")
+}
+
+func (source *CaldavSource) DeleteCalendar(calendar primitives.Calendar) error {
+	//caldavCal := calendar.(*CaldavCalendar)
+
+	//client, err := source.getClient()
+	//if err != nil {
+	//	return err
+	//}
+
+	return fmt.Errorf("not implemented")
+}

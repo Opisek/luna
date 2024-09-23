@@ -161,6 +161,26 @@ func (q *Queries) GetCalendar(userId types.ID, calendarId types.ID) (primitives.
 	return scanner.GetCalendar()
 }
 
+func (q *Queries) InsertCalendar(calendar primitives.Calendar) error {
+	_, err := q.Tx.Exec(
+		context.TODO(),
+		`
+		INSERT INTO calendars (id, source, color, settings)
+		VALUES ($1, $2, $3, $4);
+		`,
+		calendar.GetId().UUID(),
+		calendar.GetSource().GetId().UUID(),
+		calendar.GetColor().Bytes(),
+		calendar.GetSettings().Bytes(),
+	)
+
+	if err != nil {
+		return fmt.Errorf("could not insert calendar %v: %v", calendar.GetId().String(), err)
+	}
+
+	return nil
+}
+
 func (q *Queries) UpdateCalendar(cal primitives.Calendar) error {
 	_, err := q.Tx.Exec(
 		context.TODO(),
@@ -175,6 +195,29 @@ func (q *Queries) UpdateCalendar(cal primitives.Calendar) error {
 
 	if err != nil {
 		return fmt.Errorf("could not update calendar %v: %v", cal.GetId().String(), err)
+	}
+
+	return nil
+}
+
+func (q *Queries) DeleteCalendar(userId types.ID, calendarId types.ID) error {
+	_, err := q.Tx.Exec(
+		context.TODO(),
+		`
+		DELETE FROM calendars
+		WHERE id = $1
+		AND source IN (
+			SELECT id
+			FROM sources
+			WHERE userid = $2
+		);
+		`,
+		calendarId.UUID(),
+		userId.UUID(),
+	)
+
+	if err != nil {
+		return fmt.Errorf("could not delete calendar %v: %v", calendarId.String(), err)
 	}
 
 	return nil

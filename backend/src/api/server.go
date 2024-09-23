@@ -44,9 +44,9 @@ func run(api *config.Api) {
 	calendarsEndpoints := authenticatedEndpoints.Group("/calendars")
 	calendarsEndpoints.GET("", handlers.GetCalendars)
 	calendarsEndpoints.GET("/:calendarId", handlers.GetCalendar)
-	calendarsEndpoints.PUT("", handlers.NotImplemented)
-	calendarsEndpoints.PATCH("/:calendarId", handlers.NotImplemented)
-	calendarsEndpoints.DELETE("/:calendarId", handlers.NotImplemented)
+	calendarsEndpoints.PUT("", handlers.PutCalendar)
+	calendarsEndpoints.PATCH("/:calendarId", handlers.PatchCalendar)
+	calendarsEndpoints.DELETE("/:calendarId", handlers.DeleteCalendar)
 
 	// /api/events/*
 	eventEndpoints := authenticatedEndpoints.Group("/events")

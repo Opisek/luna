@@ -246,7 +246,12 @@ func PutEvent(c *gin.Context) {
 		return
 	}
 
-	tx.Queries().InsertEvent(event)
+	err = tx.Queries().InsertEvent(event)
+	if err != nil {
+		apiConfig.Logger.Errorf("could not insert event: %v", err)
+		util.Error(c, util.ErrorDatabase)
+		return
+	}
 
 	if tx.Commit(apiConfig.Logger) != nil {
 		util.Error(c, util.ErrorDatabase)
@@ -262,8 +267,7 @@ func PatchEvent(c *gin.Context) {
 	tx := context.GetTransaction(c)
 	defer tx.Rollback(apiConfig.Logger)
 
-	eventIdStr := c.Param("eventId")
-	eventId, err := types.IdFromString(eventIdStr)
+	eventId, err := context.GetId(c, "event")
 	if err != nil {
 		apiConfig.Logger.Error("missing or malformed event id")
 		util.ErrorDetailed(c, util.ErrorPayload, util.DetailId)
@@ -332,14 +336,19 @@ func PatchEvent(c *gin.Context) {
 		}
 	}
 
-	newEvent, err := event.GetCalendar().UpdateEvent(event, newEventName, newEventDesc, newEventColor, newEventDate)
+	newEvent, err := event.GetCalendar().EditEvent(event, newEventName, newEventDesc, newEventColor, newEventDate)
 	if err != nil {
-		apiConfig.Logger.Errorf("could not add event: %v", err)
+		apiConfig.Logger.Errorf("could not edit event: %v", err)
 		util.Error(c, util.ErrorInternal)
 		return
 	}
 
-	tx.Queries().UpdateEvent(newEvent)
+	err = tx.Queries().UpdateEvent(newEvent)
+	if err != nil {
+		apiConfig.Logger.Errorf("could not update event: %v", err)
+		util.Error(c, util.ErrorDatabase)
+		return
+	}
 
 	if tx.Commit(apiConfig.Logger) != nil {
 		util.Error(c, util.ErrorDatabase)
@@ -371,7 +380,7 @@ func DeleteEvent(c *gin.Context) {
 	}
 
 	// Remove the calendar from the upstream source
-	err = event.GetCalendar().DeleteEvent(event.GetSettings())
+	err = event.GetCalendar().DeleteEvent(event)
 	if err != nil {
 		apiConfig.Logger.Errorf("could not delete event from remote source: %v", err)
 		util.Error(c, util.ErrorInternal)
