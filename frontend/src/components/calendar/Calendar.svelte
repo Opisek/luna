@@ -75,7 +75,7 @@
   })(month, year, events);
 
   function eventClick(event: EventModel) {
-    window.alert(event.name);
+    window.alert(`${event.name}\nStart: ${event.date.start.toLocaleString()}\nEnd: ${event.date.end.toLocaleString()}`);
   }
 </script>
 
