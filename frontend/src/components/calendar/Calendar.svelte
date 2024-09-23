@@ -36,7 +36,6 @@
 
     const dateIterator = new Date(firstViewDay);
     const offset = new Date().getTimezoneOffset();
-    console.log(offset)
     let eventIterator = 0;
 
     for (let i = 0; i < 7 * amountOfRows; i++) {

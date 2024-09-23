@@ -20,10 +20,6 @@
   function mouseEnter() {
     if (event == null) return;
 
-    if (event && event.name == "Test") {
-      console.log(event.date.start, event.date.end, date);
-    }
-
     currentlyHoveredEvent = event;
   }
   function mouseLeave() {
