@@ -14,7 +14,6 @@ import (
 )
 
 type CaldavEvent struct {
-	uid       string
 	name      string
 	desc      string
 	color     *types.Color
@@ -25,6 +24,7 @@ type CaldavEvent struct {
 
 type CaldavEventSettings struct {
 	Url      *types.Url             `json:"url"`
+	Uid      string                 `json:"uid"`
 	rawEvent *caldav.CalendarObject `json:"-"`
 }
 
@@ -65,7 +65,6 @@ func parseTime(icalTime *ical.Prop) (*time.Time, error) {
 }
 
 func eventFromCaldav(calendar *CaldavCalendar, obj *caldav.CalendarObject) (*CaldavEvent, error) {
-
 	eventIndex := -1
 	for i, child := range obj.Data.Children {
 		if child.Name == "VEVENT" {
@@ -136,11 +135,11 @@ func eventFromCaldav(calendar *CaldavCalendar, obj *caldav.CalendarObject) (*Cal
 	}
 
 	return &CaldavEvent{
-		uid:  uid.Value,
 		name: summaryStr,
 		desc: descStr,
 		settings: &CaldavEventSettings{
 			Url:      url,
+			Uid:      uid.Value,
 			rawEvent: obj,
 		},
 		calendar:  calendar,
@@ -161,7 +160,7 @@ func genEventId(calendarId types.ID, uid string) types.ID {
 }
 
 func (event *CaldavEvent) GetId() types.ID {
-	return genEventId(event.calendar.GetId(), event.uid)
+	return genEventId(event.calendar.GetId(), event.settings.Uid)
 }
 
 func (event *CaldavEvent) GetName() string {

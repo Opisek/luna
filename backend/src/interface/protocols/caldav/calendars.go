@@ -175,7 +175,7 @@ func (calendar *CaldavCalendar) GetEvent(settings primitives.EventSettings) (pri
 	return cal, nil
 }
 
-func setEventProps(cal *ical.Calendar, id types.ID, name string, desc string, date *types.EventDate) error {
+func setEventProps(cal *ical.Calendar, id string, name string, desc string, date *types.EventDate) error {
 	var event *ical.Event = nil
 	for _, child := range cal.Children {
 		if child.Name == "VEVENT" {
@@ -189,7 +189,7 @@ func setEventProps(cal *ical.Calendar, id types.ID, name string, desc string, da
 		cal.Children = append(cal.Children, event.Component)
 	}
 
-	event.Props.SetText(ical.PropUID, id.String())
+	event.Props.SetText(ical.PropUID, id)
 
 	event.Props.SetText(ical.PropSummary, name)
 
@@ -222,7 +222,7 @@ func (calendar *CaldavCalendar) AddEvent(name string, desc string, color *types.
 	id := types.RandomId()
 	cal := ical.NewCalendar()
 
-	err := setEventProps(cal, id, name, desc, date)
+	err := setEventProps(cal, id.String(), name, desc, date)
 	if err != nil {
 		return nil, fmt.Errorf("could not set ical properties: %w", err)
 	}
@@ -248,12 +248,12 @@ func (calendar *CaldavCalendar) AddEvent(name string, desc string, color *types.
 }
 
 func (calendar *CaldavCalendar) UpdateEvent(originalEvent primitives.Event, name string, desc string, color *types.Color, date *types.EventDate) (primitives.Event, error) {
-	id := originalEvent.GetId()
 	originalCaldavEvent := originalEvent.(*CaldavEvent)
+	uid := originalCaldavEvent.GetSettings().(*CaldavEventSettings).Uid
 	originalRawEvent := originalCaldavEvent.settings.rawEvent
 	cal := originalRawEvent.Data
 
-	err := setEventProps(cal, id, name, desc, date)
+	err := setEventProps(cal, uid, name, desc, date)
 	if err != nil {
 		return nil, fmt.Errorf("could not set ical properties: %w", err)
 	}
