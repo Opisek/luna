@@ -24,4 +24,4 @@
     <!-- TODO: add close button and title -->
 		<slot />
 	</div>
-</dialog>;
+</dialog>
