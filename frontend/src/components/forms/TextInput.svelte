@@ -1,9 +1,11 @@
 <script lang="ts">
-    import Label from "./Label.svelte";
+  import Label from "./Label.svelte";
 
   export let value: string;
   export let placeholder: string;
   export let name: string;
+
+  export let editable: boolean = true;
 
   export let multiline: boolean = false;
 </script>
@@ -16,19 +18,41 @@
     all: unset;
     padding: $gapSmall;
     border-radius: $borderRadius;
+    // normal cursor
+    cursor: revert;
+  }
+
+  input.editable, textarea.editable {
     background: $backgroundSecondary;
+    cursor: text;
   }
 
   textarea {
-    height: 5em; // TODO: automatic resizing
+    height: auto;
     white-space: pre-wrap;
     word-wrap: break-word;
+  }
+
+  textarea.editable {
+    height: 5em; // TODO: automatic resizing
   }
 </style>
 
 <Label name={name}>{placeholder}</Label>
 {#if multiline}
-  <textarea bind:value={value} placeholder={placeholder} />
+  <textarea
+    bind:value={value}
+    name={name}
+    placeholder={placeholder}
+    disabled={!editable}
+    class:editable={editable}
+  />
 {:else}
-  <input name={name} type="text" bind:value={value} placeholder={placeholder} class="input" />
+  <input
+    bind:value={value}
+    name={name}
+    placeholder={placeholder}
+    disabled={!editable}
+    class:editable={editable}
+  />
 {/if}
