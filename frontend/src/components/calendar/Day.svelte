@@ -53,6 +53,7 @@
     background-color: $backgroundSecondary;
     height: calc(100% - $gapSmall);
   }
+
   div.otherMonth {
     opacity: .5;
   }
@@ -77,7 +78,9 @@
     flex-direction: column;
     gap: $gapTiny;
     height: 100%;
-    overflow: hidden;
+
+    // TODO: figure out how to circumvent the css restriction of overflow-y: hidden and overflow-x: visible not being combinable
+    //overflow: hidden;
   }
 </style>
 
