@@ -69,6 +69,6 @@
 {#if event}
   Do you really want to delete event "{event.name}"?
   <br>
-  This action is irrevensible.
+  This action is irreversible.
 {/if}
 </ConfirmationModal>
