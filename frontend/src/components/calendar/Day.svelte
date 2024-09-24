@@ -13,6 +13,24 @@
   export let currentlyHoveredEvent: EventModel | null;
   export let currentlyClickedEvent: EventModel | null;
   export let clickCallback: (event: EventModel) => void;
+
+  let containerHeight: number;
+  let maxEvents: number = 10;
+
+  // TODO: figure out why sometimes 
+  $: ((height: number) => {
+    if (height == 0) {
+      maxEvents = 0;
+      return;
+    }
+    // TODO: figure out how to extract the proper height (instead of hard-coded 20)
+    const slots = Math.floor(height / 22)
+    if (events.length > slots) {
+      maxEvents = slots - 1;
+    } else {
+      maxEvents = events.length;
+    }
+  })(containerHeight);
 </script>
 
 <style lang="scss">
@@ -22,6 +40,7 @@
   div.day {
     min-width: 0;
     overflow: hidden;
+    height: 100%;
   }
 
   div.background {
@@ -57,6 +76,8 @@
     display: flex;
     flex-direction: column;
     gap: $gapTiny;
+    height: 100%;
+    overflow: hidden;
   }
 </style>
 
@@ -65,8 +86,8 @@
     <span class="date">
       {date.getDate()}
     </span>
-    <div class="events">
-      {#each events.slice(0,2) as event}
+    <div class="events" bind:offsetHeight={containerHeight}>
+      {#each events.slice(0,maxEvents) as event}
         <CalendarEvent
           event={event}
           isFirstDay={isFirstDay}
@@ -77,9 +98,9 @@
           clickCallback={clickCallback}
         />
       {/each}
-      {#if events.length > 2}
+      {#if events.length > maxEvents}
         <span class="more">
-          and {events.length - 2} more
+          and {events.length - maxEvents} more
         </span>
       {/if}
     </div>

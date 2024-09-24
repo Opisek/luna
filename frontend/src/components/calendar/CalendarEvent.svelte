@@ -55,15 +55,17 @@
     font-size: $fontSizeSmall;
     margin: 0 (-$gap);
 
+    user-select: none;
+    cursor: pointer;
+
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
+
+    flex-shrink: 0;
   }
   div.hover {
     background-color: #dbecf0;
-  }
-  div.active {
-    transform: scale(1.1);
   }
   div::after {
     content: ".";
