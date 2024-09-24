@@ -54,6 +54,10 @@
     padding: $paddingTiny;
     font-size: $fontSizeSmall;
     margin: 0 (-$gap);
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
   }
   div.hover {
     background-color: #dbecf0;

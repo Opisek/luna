@@ -2,8 +2,7 @@
   import Day from "./Day.svelte";
   import { getDayName } from "../../lib/common/humanization";
   import { compareEventsByStartDate } from "../../lib/common/comparators";
-    import Modal from "../modals/Modal.svelte";
-    import EventModal from "../modals/EventModal.svelte";
+  import EventModal from "../modals/EventModal.svelte";
 
   export let month: number;
   export let year: number;
@@ -91,7 +90,7 @@
   div.calendar {
     display: flex;
     flex-direction: column;
-    gap: $gap;
+    gap: $gapSmall;
     width: 100%;
     height: 100%;
   }
@@ -99,7 +98,7 @@
   div.weekdays {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: $gap;
+    gap: $gapSmall;
   }
   div.weekday {
     text-align: center;
@@ -108,7 +107,7 @@
   div.days {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: $gap;
+    gap: 0;
     flex-grow: 1;
   }
 </style>
