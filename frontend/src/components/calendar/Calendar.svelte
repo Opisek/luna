@@ -2,7 +2,8 @@
   import Day from "./Day.svelte";
   import { getDayName } from "../../lib/common/humanization";
   import { compareEventsByStartDate } from "../../lib/common/comparators";
-    import Modal from "../layout/Modal.svelte";
+    import Modal from "../modals/Modal.svelte";
+    import EventModal from "../modals/EventModal.svelte";
 
   export let month: number;
   export let year: number;
@@ -137,10 +138,5 @@
   </div>
 </div>
 
-<Modal bind:showModal={showModal}>
-  {#if clickedEvent}
-    {clickedEvent.name}
-    {clickedEvent.date.start.toLocaleString()}
-    {clickedEvent.date.end.toLocaleString()}
-  {/if}
-</Modal>
+<EventModal bind:showModal={showModal} event={clickedEvent}>
+</EventModal>
