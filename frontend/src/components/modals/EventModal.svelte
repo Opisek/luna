@@ -66,7 +66,9 @@
   bind:showModal={showDeleteModal}
   confirmCallback={deleteEvent}
 >
-Do you really want to delete event "{event.name}"?
-<br>
-This action is irrevensible.
+{#if event}
+  Do you really want to delete event "{event.name}"?
+  <br>
+  This action is irrevensible.
+{/if}
 </ConfirmationModal>

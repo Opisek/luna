@@ -8,7 +8,7 @@
 
   label {
     margin-bottom: -2 * $gapSmall;
-    margin-left: $gapSmall * ($fontSize / $fontSizeSmall);
+    margin-left: calc($gapSmall * ($fontSize / $fontSizeSmall));
     color: $foregroundFaded;
     font-size: $fontSizeSmall;
   }
