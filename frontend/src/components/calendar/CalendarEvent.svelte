@@ -65,7 +65,7 @@
     flex-shrink: 0;
   }
   div.hover {
-    background-color: #dbecf0;
+    opacity: 0.7;
   }
   div::after {
     content: ".";
@@ -84,6 +84,8 @@
     border-bottom-right-radius: $borderRadius;
     margin-right: 0;
   }
+
+  // TODO: set text color to black or white depending on the HSV value of the background color
 </style>
 
 <div
@@ -98,6 +100,7 @@
   on:mouseup={mouseUp}
   role="button"
   tabindex="0"
+  style="background-color:{event ? event.color : "transparent"}"
 >
   {#if event && isFirstDisplay}
     {event.name}
