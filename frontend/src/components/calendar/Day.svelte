@@ -81,23 +81,69 @@
       {date.getDate()}
     </span>
   </div>
-  <div class="events" bind:offsetHeight={containerHeight}>
-    {#each events as event, i}
-      <CalendarEvent
-        event={event}
-        isFirstDay={isFirstDay}
-        isLastDay={isLastDay}
-        date={date}
-        visible={i < actualMaxEvents}
-        bind:currentlyHoveredEvent={currentlyHoveredEvent}
-        bind:currentlyClickedEvent={currentlyClickedEvent}
-        clickCallback={clickCallback}
-      />
-    {/each}
-    {#if events.length > maxEvents}
-      <span class="more">
-        and {events.length - actualMaxEvents} more
-      </span>
-    {/if}
-  </div>
+  {#if isFirstDay}
+    <div class="events" bind:offsetHeight={containerHeight}>
+      {#each events as event, i}
+        <CalendarEvent
+          event={event}
+          isFirstDay={isFirstDay}
+          isLastDay={isLastDay}
+          date={date}
+          visible={i < actualMaxEvents}
+          bind:currentlyHoveredEvent={currentlyHoveredEvent}
+          bind:currentlyClickedEvent={currentlyClickedEvent}
+          clickCallback={clickCallback}
+        />
+      {/each}
+      {#if events.length > maxEvents}
+        <span class="more">
+          and {events.length - actualMaxEvents} more
+        </span>
+      {/if}
+    </div>
+  {:else}
+    <div class="events">
+      {#each events as event, i}
+        <CalendarEvent
+          event={event}
+          isFirstDay={isFirstDay}
+          isLastDay={isLastDay}
+          date={date}
+          visible={i < actualMaxEvents}
+          bind:currentlyHoveredEvent={currentlyHoveredEvent}
+          bind:currentlyClickedEvent={currentlyClickedEvent}
+          clickCallback={clickCallback}
+        />
+      {/each}
+      {#if events.length > maxEvents}
+        <span class="more">
+          and {events.length - actualMaxEvents} more
+        </span>
+      {/if}
+    </div>
+  {/if}
 </div>
+
+
+<!--
+TODO: use snippets when svelte 5 is out
+{#snippet eventRows}
+  {#each events as event, i}
+    <CalendarEvent
+      event={event}
+      isFirstDay={isFirstDay}
+      isLastDay={isLastDay}
+      date={date}
+      visible={i < actualMaxEvents}
+      bind:currentlyHoveredEvent={currentlyHoveredEvent}
+      bind:currentlyClickedEvent={currentlyClickedEvent}
+      clickCallback={clickCallback}
+    />
+  {/each}
+  {#if events.length > maxEvents}
+    <span class="more">
+      and {events.length - actualMaxEvents} more
+    </span>
+  {/if}
+{/snippet}
+-->

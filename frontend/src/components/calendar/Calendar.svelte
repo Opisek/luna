@@ -36,7 +36,6 @@
     processedEvents = [];
 
     const dateIterator = new Date(firstViewDay);
-    const offset = new Date().getTimezoneOffset();
     let eventIterator = 0;
 
     for (let i = 0; i < 7 * amountOfRows; i++) {
@@ -83,7 +82,7 @@
     showModal();
   }
 
-  let containerHeights: number[] = [0, 0];
+  let containerHeight: number = 0;
   let maxEvents: number;
   $: ((height: number) => {
     if (height == 0) {
@@ -92,7 +91,7 @@
     }
     // TODO: figure out how to extract the proper height (instead of hard-coded values)
     maxEvents = Math.max(Math.floor((height - 35) / 27), 0)
-  })(containerHeights[0]);
+  })(containerHeight);
 </script>
 
 <style lang="scss">
@@ -145,7 +144,7 @@
         bind:currentlyClickedEvent={currentlyClickedEvent}
         clickCallback={eventClick}
         maxEvents={maxEvents}
-        bind:containerHeight={containerHeights[i == 0 ? 0 : 1]}
+        bind:containerHeight={containerHeight}
       >
       </Day>
     {/each}
