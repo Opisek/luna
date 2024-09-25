@@ -116,7 +116,7 @@
           clickCallback={clickCallback}
         />
       {/each}
-      {#if events.length > maxEvents}
+      {#if events.length > maxEvents && actualMaxEvents >= 0}
         <span class="more">
           and {events.length - actualMaxEvents} more
         </span>
