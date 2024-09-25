@@ -1,14 +1,17 @@
+$foregroundDark: #000000;
+$foregroundBright: #ffffff;
+
 $foregroundFaded: #6b6b6b;
 
 $backgroundPrimary: #ffffff;
-$foregroundPrimary: #000000;
+$foregroundPrimary: $foregroundDark;
 $backgroundSecondary: #f5f5f5;
 
 $backgroundSuccess: hsl(107, 61%, 70%);
-$foregroundSuccess: #000000;
+$foregroundSuccess: $foregroundDark;
 
 $backgroundFailure: hsl(0, 61%, 70%);
-$foregroundFailure: #000000;
+$foregroundFailure: $foregroundDark;
 
 $backgroundAccent: hsl(189, 61%, 70%);
-$foregroundAccent: #000000;
+$foregroundAccent: $foregroundDark;
