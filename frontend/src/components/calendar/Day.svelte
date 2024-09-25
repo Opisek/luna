@@ -68,7 +68,7 @@
     flex-direction: column;
     gap: $gapTiny;
     height: 100%;
-    width: 100%;
+    width: calc(100% + 1em); // +1em needed for long events, otherwise the boundary is visible
 
     // TODO: figure out how to circumvent the css restriction of overflow-y: hidden and overflow-x: visible not being combinable
     overflow: hidden;

@@ -58,7 +58,7 @@
   div {
     padding: $paddingTiny;
     font-size: $fontSizeSmall;
-    margin: 0 (-$gap);
+    margin: 0;
 
     user-select: none;
     cursor: pointer;
@@ -82,12 +82,12 @@
   div.start {
     border-top-left-radius: $borderRadius;
     border-bottom-left-radius: $borderRadius;
-    margin-left: 0;
+    margin-left: calc($gapSmall / 2);
   }
   div.end {
     border-top-right-radius: $borderRadius;
     border-bottom-right-radius: $borderRadius;
-    margin-right: 0;
+    margin-right: calc($gapSmall / 2 + (1em * $fontSize / $fontSizeSmall));
   }
 
   div.hidden {
