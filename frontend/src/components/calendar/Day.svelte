@@ -69,9 +69,8 @@
     flex-direction: column;
     gap: $gapTiny;
     height: 100%;
+    // TODO: z-index so long event names are not truncated
     width: calc(100% + 1em); // +1em needed for long events, otherwise the boundary is visible
-
-    // TODO: figure out how to circumvent the css restriction of overflow-y: hidden and overflow-x: visible not being combinable
     overflow: hidden;
   }
 </style>

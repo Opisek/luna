@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Loader from "../decoration/Loader.svelte";
   import Button from "../interactive/Button.svelte";
   import ConfirmationModal from "./ConfirmationModal.svelte";
   import Modal from "./Modal.svelte";
@@ -24,26 +25,38 @@
     editMode = false;
   }
 
-  function saveEdit() {
+  let awaitingEdit = false;
+  async function saveEdit() {
+    // TOOD: error message if returned value is not empty string
+    awaitingEdit = true;
+    await onEdit();
+    awaitingEdit = false;
+
     editMode = false;
-    onEdit();
   }
 
   let showDeleteModal: () => boolean;
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
+    const returnValue = await onDelete();
     hideModal();
-    onDelete();
+    return returnValue;
   }
 
-  export let onEdit: () => void;
-  export let onDelete: () => void;
+  export let onEdit: () => Promise<string>;
+  export let onDelete: () => Promise<string>;
 </script>
 
 <Modal title={title} bind:showModal={showModalInternal} bind:hideModal={hideModal} onModalHide={cancelEdit}>
   <slot/>
   <svelte:fragment slot="buttons">
     {#if editMode}
-      <Button onClick={saveEdit} color="success">Save</Button>
+      <Button onClick={saveEdit} color="success">
+        {#if awaitingEdit}
+          <Loader/>
+        {:else}
+          Save
+        {/if}
+      </Button>
       <Button onClick={cancelEdit} color="failure">Cancel</Button>
     {:else}
       <Button onClick={startEditMode} color="accent">Edit</Button>

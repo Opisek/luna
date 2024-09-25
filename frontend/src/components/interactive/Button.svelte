@@ -18,6 +18,8 @@
     cursor: pointer;
     padding: $gapSmall;
     border-radius: $borderRadius;
+
+    min-width: 5em;
   }
 
 

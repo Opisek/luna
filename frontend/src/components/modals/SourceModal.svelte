@@ -13,8 +13,12 @@
 
   let editMode: boolean;
 
-  const onDelete = () => {};
-  const onEdit = () => {};
+  const onDelete = async () => {
+    return Promise.resolve("");
+  };
+  const onEdit = () => {
+    return Promise.resolve("");
+  };
 </script>
 
 <EditableModal

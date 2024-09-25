@@ -79,7 +79,7 @@
   function eventClick(event: EventModel) {
     if (!event) return
     clickedEvent = event;
-    showModal();
+    setTimeout(() => showModal(), 0);
   }
 
   let containerHeight: number = 0;

@@ -12,8 +12,14 @@
 
   let editMode: boolean;
 
-  const onDelete = () => {};
-  const onEdit = () => {};
+  const onDelete = async () => {
+    const res = await fetch(`/api/events/${event.id}`, { method: "DELETE" });
+    if (res.ok) return "";
+    else return `Could not delete event: ${(await res.json()).error}`
+  };
+  const onEdit = () => {
+    return Promise.resolve("");
+  };
 </script>
 
 <EditableModal

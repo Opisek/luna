@@ -7,8 +7,7 @@
   import { browser } from "$app/environment";
   import { getMonthName } from "../lib/common/humanization";
   import CalendarEntry from "../components/interactive/CalendarEntry.svelte";
-  import SectionTitle from "../components/layout/SectionTitle.svelte";
-    import SourceRow from "../components/calendar/SourceRow.svelte";
+  import SourceRow from "../components/calendar/SourceRow.svelte";
 
   let sources: SourceModel[] = [];
   let calendars: CalendarModel[] = [];
