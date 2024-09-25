@@ -59,6 +59,7 @@
     text-align: center;
     color: $foregroundFaded;
     font-size: $fontSizeSmall;
+    margin-right: 1em;
   }
 
   div.events {
