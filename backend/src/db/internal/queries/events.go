@@ -207,7 +207,7 @@ func (q *Queries) DeleteEvent(userId types.ID, eventId types.ID) error {
 		DELETE FROM events
 		WHERE id = $1
 		AND calendar IN (
-			SELECT id
+			SELECT calendars.id
 			FROM calendars
 			JOIN sources ON calendars.source = sources.id
 			WHERE sources.userid = $2
