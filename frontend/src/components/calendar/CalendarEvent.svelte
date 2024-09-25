@@ -1,4 +1,8 @@
 <script lang="ts">
+  import { parseRGB, RGBtoHSV } from "$lib/common/parsing";
+
+  export let visible: boolean = true;
+
   export let event: EventModel | null;
   export let isFirstDay: boolean;
   export let isLastDay: boolean;
@@ -16,6 +20,8 @@
 
   const isFirstDisplay = isFirstDay || isEventStart;
   const isLastDisplay = isLastDay || isEventEnd;
+
+  let eventColorHSV = event ? RGBtoHSV(parseRGB(event.color)) : [0, 0, 0];
 
   function mouseEnter() {
     if (event == null) return;
@@ -50,7 +56,6 @@
   @import "../../styles/dimensions.scss";
 
   div {
-    background-color: #cbe6ec;
     padding: $paddingTiny;
     font-size: $fontSizeSmall;
     margin: 0 (-$gap);
@@ -85,6 +90,10 @@
     margin-right: 0;
   }
 
+  div.hidden {
+    display: none;
+  }
+
   // TODO: set text color to black or white depending on the HSV value of the background color
 </style>
 
@@ -94,6 +103,7 @@
   class:end={isLastDisplay}
   class:hover={currentlyHoveredEvent == event}
   class:active={currentlyClickedEvent == event}
+  class:hidden={!visible}
   on:mouseenter={mouseEnter}
   on:mouseleave={mouseLeave}
   on:mousedown={mouseDown}

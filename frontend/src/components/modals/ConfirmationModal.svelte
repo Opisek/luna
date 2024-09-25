@@ -1,7 +1,5 @@
 <script lang="ts">
   import Button from "../interactive/Button.svelte";
-  import Horizontal from "../layout/Horizontal.svelte";
-  import Vertical from "../layout/Vertical.svelte";
   import Modal from "./Modal.svelte";
 
   export let showModal: () => boolean;
@@ -22,13 +20,9 @@
 </script>
 
 <Modal title="Confirmation" bind:showModal={showModal} bind:hideModal={hideModal}>
-  <Vertical>
-    <span>
-      <slot/>
-    </span>
-    <Horizontal position="right">
-      <Button onClick={confirm} color="success">Confirm</Button>
-      <Button onClick={cancel} color="failure">Cancel</Button>
-    </Horizontal>
-  </Vertical>
+  <slot/>
+  <svelte:fragment slot="buttons">
+    <Button onClick={confirm} color="success">Confirm</Button>
+    <Button onClick={cancel} color="failure">Cancel</Button>
+  </svelte:fragment>
 </Modal>

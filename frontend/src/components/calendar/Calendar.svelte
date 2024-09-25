@@ -82,6 +82,17 @@
     clickedEvent = event;
     showModal();
   }
+
+  let containerHeights: number[] = [0, 0];
+  let maxEvents: number;
+  $: ((height: number) => {
+    if (height == 0) {
+      maxEvents = 0;
+      return;
+    }
+    // TODO: figure out how to extract the proper height (instead of hard-coded values)
+    maxEvents = Math.max(Math.floor((height - 35) / 27), 0)
+  })(containerHeights[0]);
 </script>
 
 <style lang="scss">
@@ -133,6 +144,8 @@
         bind:currentlyHoveredEvent={currentlyHoveredEvent}
         bind:currentlyClickedEvent={currentlyClickedEvent}
         clickCallback={eventClick}
+        maxEvents={maxEvents}
+        bind:containerHeight={containerHeights[i == 0 ? 0 : 1]}
       >
       </Day>
     {/each}

@@ -16,4 +16,9 @@
   }
 }
 
-$cubic: cubic-bezier(0.34, 1.56, 0.64, 1)
+$cubic: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+/* Timing */
+$animationSpeed: .25s;
+$animationSpeedSlow: .5s;
+$animationSpeedFast: .1s;

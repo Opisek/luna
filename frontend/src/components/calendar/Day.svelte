@@ -14,23 +14,10 @@
   export let currentlyClickedEvent: EventModel | null;
   export let clickCallback: (event: EventModel) => void;
 
-  let containerHeight: number;
-  let maxEvents: number = 10;
-
-  // TODO: figure out why sometimes 
-  $: ((height: number) => {
-    if (height == 0) {
-      maxEvents = 0;
-      return;
-    }
-    // TODO: figure out how to extract the proper height (instead of hard-coded 20)
-    const slots = Math.floor(height / 22)
-    if (events.length > slots) {
-      maxEvents = slots - 1;
-    } else {
-      maxEvents = events.length;
-    }
-  })(containerHeight);
+  export let containerHeight: number;
+  export let maxEvents: number = 1;
+  let actualMaxEvents: number = 1;
+  $: actualMaxEvents = maxEvents <= events.length - 1 ? maxEvents - 1 : maxEvents;
 </script>
 
 <style lang="scss">
@@ -41,6 +28,7 @@
     min-width: 0;
     overflow: hidden;
     height: 100%;
+    position: relative;
   }
 
   div.background {
@@ -74,13 +62,16 @@
   }
 
   div.events {
+    position: absolute;
+    top: calc($gapSmall / 2 + $fontSize + $paddingSmaller + $gapSmall);
     display: flex;
     flex-direction: column;
     gap: $gapTiny;
     height: 100%;
+    width: 100%;
 
     // TODO: figure out how to circumvent the css restriction of overflow-y: hidden and overflow-x: visible not being combinable
-    //overflow: hidden;
+    overflow: hidden;
   }
 </style>
 
@@ -89,23 +80,24 @@
     <span class="date">
       {date.getDate()}
     </span>
-    <div class="events" bind:offsetHeight={containerHeight}>
-      {#each events.slice(0,maxEvents) as event}
-        <CalendarEvent
-          event={event}
-          isFirstDay={isFirstDay}
-          isLastDay={isLastDay}
-          date={date}
-          bind:currentlyHoveredEvent={currentlyHoveredEvent}
-          bind:currentlyClickedEvent={currentlyClickedEvent}
-          clickCallback={clickCallback}
-        />
-      {/each}
-      {#if events.length > maxEvents}
-        <span class="more">
-          and {events.length - maxEvents} more
-        </span>
-      {/if}
-    </div>
+  </div>
+  <div class="events" bind:offsetHeight={containerHeight}>
+    {#each events as event, i}
+      <CalendarEvent
+        event={event}
+        isFirstDay={isFirstDay}
+        isLastDay={isLastDay}
+        date={date}
+        visible={i < actualMaxEvents}
+        bind:currentlyHoveredEvent={currentlyHoveredEvent}
+        bind:currentlyClickedEvent={currentlyClickedEvent}
+        clickCallback={clickCallback}
+      />
+    {/each}
+    {#if events.length > maxEvents}
+      <span class="more">
+        and {events.length - actualMaxEvents} more
+      </span>
+    {/if}
   </div>
 </div>

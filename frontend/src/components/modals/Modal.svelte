@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { X } from "lucide-svelte";
-  import Title from "../layout/Title.svelte";
-  import Horizontal from "../layout/Horizontal.svelte";
+  import Button from "../interactive/Button.svelte";
   import CloseButton from "../interactive/CloseButton.svelte";
+  import Horizontal from "../layout/Horizontal.svelte";
+  import Title from "../layout/Title.svelte";
 
   export let title: string;
 
@@ -32,10 +32,15 @@
   }
 
   dialog[open] {
-		animation: zoom 0.3s $cubic forwards;
+		animation: zoom $animationSpeed $cubic forwards;
 	}
-  dialog[open]::backdrop {
-    animation: fade 10s $cubic forwards;
+  
+  div {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    gap: $gap;
   }
 </style>
 
@@ -55,5 +60,10 @@
       <CloseButton onClick={hideModal} />
     </Horizontal>
 		<slot />
+    <Horizontal position="right">
+      <slot name="buttons">
+        <Button onClick={hideModal} color="accent">Close</Button>
+      </slot>
+    </Horizontal>
 	</div>
 </dialog>

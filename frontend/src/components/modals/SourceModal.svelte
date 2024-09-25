@@ -1,31 +1,28 @@
 <script lang="ts">
   import Button from "../interactive/Button.svelte";
   import ConfirmationModal from "./ConfirmationModal.svelte";
-  import DateTimeInput from "../forms/DateTimeInput.svelte";
   import Modal from "./Modal.svelte";
   import TextInput from "../forms/TextInput.svelte";
 
-  export let event: EventModel;
+  export let source: SourceModel;
   export let showModal: () => boolean;
   let hideModal: () => boolean;
 
   let title: string;
-  $: title = (event && event.id) ? (editMode ? "Edit event" : "Event") : "Create event";
+  $: title = (source && source.id) ? (editMode ? "Edit source" : "Source") : "Create source";
 
   let editMode: boolean;
-  $: editMode = !(event && event.id);
+  $: editMode = !(source && source.id);
 
-  let eventCopy: EventModel;
+  let sourceCopy: SourceModel;
   function startEditMode() {
     editMode = true;
-    eventCopy = JSON.parse(JSON.stringify(event));
+    sourceCopy = JSON.parse(JSON.stringify(event));
   }
 
   function cancelEdit() {
     editMode = false;
-    event = eventCopy;
-    event.date.start = new Date(event.date.start);
-    event.date.end = new Date(event.date.start);
+    source = sourceCopy;
   }
 
   function saveEdit() {
@@ -42,10 +39,7 @@
 
 <Modal title={title} bind:showModal={showModal} bind:hideModal={hideModal}>
   {#if event}
-    <TextInput bind:value={event.name} name="name" placeholder="Name" editable={editMode} />
-    <TextInput bind:value={event.desc} name="desc" placeholder="Description" multiline={true} editable={editMode} />
-    <DateTimeInput bind:value={event.date.start} name="date_start" placeholder="Start" />
-    <DateTimeInput bind:value={event.date.end} name="date_end" placeholder="End" />
+    <TextInput bind:value={source.name} name="name" placeholder="Name" editable={editMode} />
   {/if}
   <svelte:fragment slot="buttons">
     {#if editMode}
@@ -62,9 +56,9 @@
   bind:showModal={showDeleteModal}
   confirmCallback={deleteEvent}
 >
-  {#if event}
-    Do you really want to delete event "{event.name}"?
-    <br>
-    This action is irreversible.
-  {/if}
+{#if source}
+  Do you really want to delete source "{source.name}"?
+  <br>
+  This action is irreversible.
+{/if}
 </ConfirmationModal>
