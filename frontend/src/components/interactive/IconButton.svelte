@@ -1,5 +1,6 @@
 <script lang="ts">
   export let callback: () => void;
+  export let visible: boolean = true;
 </script>
 
 <style lang="scss">
@@ -11,9 +12,14 @@
     display: flex;
     align-items: center;
     padding: $paddingTiny;
+    cursor: pointer;
+  }
+
+  button.hidden {
+    visibility: hidden;
   }
 </style>
 
-<button on:click={callback}>
+<button on:click={callback} class:hidden={!visible}>
   <slot/>
 </button>

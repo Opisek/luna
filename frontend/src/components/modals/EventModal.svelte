@@ -1,70 +1,34 @@
 <script lang="ts">
-  import Button from "../interactive/Button.svelte";
-  import ConfirmationModal from "./ConfirmationModal.svelte";
   import DateTimeInput from "../forms/DateTimeInput.svelte";
-  import Modal from "./Modal.svelte";
   import TextInput from "../forms/TextInput.svelte";
+  import EditableModal from "./EditableModal.svelte";
 
   export let event: EventModel;
+
   export let showModal: () => boolean;
-  let hideModal: () => boolean;
 
   let title: string;
   $: title = (event && event.id) ? (editMode ? "Edit event" : "Event") : "Create event";
 
   let editMode: boolean;
-  $: editMode = !(event && event.id);
 
-  let eventCopy: EventModel;
-  function startEditMode() {
-    editMode = true;
-    eventCopy = JSON.parse(JSON.stringify(event));
-  }
-
-  function cancelEdit() {
-    editMode = false;
-    event = eventCopy;
-    event.date.start = new Date(event.date.start);
-    event.date.end = new Date(event.date.start);
-  }
-
-  function saveEdit() {
-    editMode = false;
-    console.log("Save");
-  }
-
-  let showDeleteModal: () => boolean;
-  const deleteEvent = () => {
-    hideModal();
-    console.log("Delete");
-  }
+  const onDelete = () => {};
+  const onEdit = () => {};
 </script>
 
-<Modal title={title} bind:showModal={showModal} bind:hideModal={hideModal}>
+<EditableModal
+  title={title}
+  deleteConfirmation={`Are you sure you want to delete event "${event ? event.name : ""}"?`}
+  isNew={!(event && event.id)}
+  bind:editMode={editMode}
+  bind:showModal={showModal}
+  onDelete={onDelete}
+  onEdit={onEdit}
+>
   {#if event}
     <TextInput bind:value={event.name} name="name" placeholder="Name" editable={editMode} />
     <TextInput bind:value={event.desc} name="desc" placeholder="Description" multiline={true} editable={editMode} />
     <DateTimeInput bind:value={event.date.start} name="date_start" placeholder="Start" />
     <DateTimeInput bind:value={event.date.end} name="date_end" placeholder="End" />
   {/if}
-  <svelte:fragment slot="buttons">
-    {#if editMode}
-      <Button onClick={saveEdit} color="success">Save</Button>
-      <Button onClick={cancelEdit} color="failure">Cancel</Button>
-    {:else}
-      <Button onClick={startEditMode} color="accent">Edit</Button>
-      <Button onClick={showDeleteModal} color="failure">Delete</Button>
-    {/if}
-  </svelte:fragment>
-</Modal>
-
-<ConfirmationModal
-  bind:showModal={showDeleteModal}
-  confirmCallback={deleteEvent}
->
-  {#if event}
-    Do you really want to delete event "{event.name}"?
-    <br>
-    This action is irreversible.
-  {/if}
-</ConfirmationModal>
+</EditableModal>

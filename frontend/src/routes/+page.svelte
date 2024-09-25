@@ -7,7 +7,8 @@
   import { browser } from "$app/environment";
   import { getMonthName } from "../lib/common/humanization";
   import CalendarEntry from "../components/interactive/CalendarEntry.svelte";
-    import SectionTitle from "../components/layout/SectionTitle.svelte";
+  import SectionTitle from "../components/layout/SectionTitle.svelte";
+    import SourceRow from "../components/calendar/SourceRow.svelte";
 
   let sources: SourceModel[] = [];
   let calendars: CalendarModel[] = [];
@@ -120,7 +121,8 @@
   <aside>
     <h1>Calendars</h1>
     {#each sources as source}
-      <SectionTitle title={source.name} />
+      <SourceRow source={source}/>
+      <!--<SectionTitle title={source.name} />-->
       {#each sourceCalendars.get(source.id) || [] as calendar}
         <CalendarEntry calendar={calendar}/>
       {/each}

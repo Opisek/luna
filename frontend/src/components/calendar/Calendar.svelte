@@ -151,5 +151,4 @@
   </div>
 </div>
 
-<EventModal bind:showModal={showModal} event={clickedEvent}>
-</EventModal>
+<EventModal bind:showModal={showModal} event={clickedEvent}/>

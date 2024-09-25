@@ -18,7 +18,6 @@
     all: unset;
     padding: $gapSmall;
     border-radius: $borderRadius;
-    // normal cursor
     cursor: revert;
   }
 

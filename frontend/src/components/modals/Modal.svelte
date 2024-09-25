@@ -12,7 +12,11 @@
   $: if (dialog && visible) dialog.showModal();
 
   export const showModal = () => (visible = true);
-  export const hideModal = () => dialog.close();
+  export const hideModal = () => {
+    dialog.close();
+    onModalHide();
+  }
+  export let onModalHide = () => {};
 </script>
 
 <style lang="scss">
