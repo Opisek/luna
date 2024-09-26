@@ -213,8 +213,6 @@ func setEventProps(cal *ical.Calendar, id string, name string, desc string, date
 	cal.Props.SetText(ical.PropProductID, "Luna")
 	cal.Props.SetText(ical.PropVersion, "0.1.0") // TODO: access version from CommonConfig
 
-	fmt.Println(cal.Children[0].Props.Get(ical.PropSummary).Value)
-
 	return nil
 }
 

@@ -33,6 +33,7 @@
     awaitingEdit = false;
 
     editMode = false;
+    hideModal();
   }
 
   let showDeleteModal: () => boolean;

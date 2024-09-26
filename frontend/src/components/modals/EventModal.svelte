@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { deleteEvent } from "$lib/client/repository";
+  import { deleteEvent, editEvent } from "$lib/client/repository";
   import DateTimeInput from "../forms/DateTimeInput.svelte";
   import TextInput from "../forms/TextInput.svelte";
   import EditableModal from "./EditableModal.svelte";
@@ -18,8 +18,10 @@
     if (res === "") return "";
     else return `Could not delete event: ${res}`;
   };
-  const onEdit = () => {
-    return Promise.resolve("");
+  const onEdit = async () => {
+    const res = await editEvent(event);
+    if (res === "") return "";
+    else return `Could not edit event: ${res}`;
   };
 </script>
 
