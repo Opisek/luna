@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { deleteEvent } from "$lib/client/repository";
   import DateTimeInput from "../forms/DateTimeInput.svelte";
   import TextInput from "../forms/TextInput.svelte";
   import EditableModal from "./EditableModal.svelte";
@@ -13,9 +14,9 @@
   let editMode: boolean;
 
   const onDelete = async () => {
-    const res = await fetch(`/api/events/${event.id}`, { method: "DELETE" });
-    if (res.ok) return "";
-    else return `Could not delete event: ${(await res.json()).error}`
+    const res = await deleteEvent(event.id);
+    if (res === "") return "";
+    else return `Could not delete event: ${res}`;
   };
   const onEdit = () => {
     return Promise.resolve("");

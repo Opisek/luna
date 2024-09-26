@@ -8,11 +8,12 @@
   import { getMonthName } from "../lib/common/humanization";
   import CalendarEntry from "../components/interactive/CalendarEntry.svelte";
   import SourceRow from "../components/calendar/SourceRow.svelte";
+  import { calendars, events, fetchCalendars, fetchEvents, fetchSources, sources } from "$lib/client/repository";
 
-  let sources: SourceModel[] = [];
-  let calendars: CalendarModel[] = [];
+  let localSources: SourceModel[] = [];
+  let localCalendars: CalendarModel[] = [];
   let sourceCalendars: Map<string, CalendarModel[]> = new Map();
-  let events: EventModel[] = [];
+  let localEvents: EventModel[] = [];
   let calendarEvents: Map<string, EventModel[]> = new Map();
 
   const currentYear = new Date().getFullYear();
@@ -33,58 +34,44 @@
     selectedMonth = (selectedMonth + 1) % 12;
   }
 
-  async function fetchSources(): Promise<SourceModel[]> {
-    const response = await fetch("/api/sources");
-    if (response.ok) return response.json();
-    else {
-      console.log("Failed to fetch sources");
-      console.log(response);
-      return [];
-    }
-  }
-
-  async function fetchCalendars(): Promise<CalendarModel[]> {
-    const response = await fetch("/api/calendars");
-    if (response.ok) return response.json();
-    else {
-      console.log("Failed to fetch calendars");
-      console.log(response);
-      return [];
-    }
-  }
-
-  async function fetchEvents(): Promise<EventModel[]> {
-    const response = await fetch("/api/events");
-    if (response.ok) {
-      const events = await response.json();
-      for (const event of events) {
-        event.date.start = new Date(event.date.start);
-        event.date.end = new Date(event.date.end);
-      }
-      return events;
-    } else {
-      console.log("Failed to fetch events");
-      console.log(response);
-      return [];
-    }
-  }
-
   (async () => {
     if (!browser) return;
-    sources = await fetchSources();
 
-    calendars = await fetchCalendars();
-    sourceCalendars = new Map();
-    calendars.forEach((calendar) => {
-      if (sourceCalendars.has(calendar.source)) {
-        // @ts-ignore typescript says that this might be undefined despite the check above
-        sourceCalendars.get(calendar.source).push(calendar);
-      } else {
-        sourceCalendars.set(calendar.source, [ calendar ]);
-      }
+    fetchSources();
+    fetchCalendars();
+    fetchEvents();
+
+    events.subscribe((newEvents) => {
+      localEvents = newEvents;
+
+      calendarEvents = new Map();
+      localEvents.forEach((event) => {
+        if (calendarEvents.has(event.calendar)) {
+          // @ts-ignore typescript says that this might be undefined despite the check above
+          calendarEvents.get(event.calendar).push(event);
+        } else {
+          calendarEvents.set(event.calendar, [ event ]);
+        }
+      });
     });
 
-    events = await fetchEvents();
+    calendars.subscribe((newCalendars) => {
+      localCalendars = newCalendars;
+
+      sourceCalendars = new Map();
+      localCalendars.forEach((calendar) => {
+        if (sourceCalendars.has(calendar.source)) {
+          // @ts-ignore typescript says that this might be undefined despite the check above
+          sourceCalendars.get(calendar.source).push(calendar);
+        } else {
+          sourceCalendars.set(calendar.source, [ calendar ]);
+        }
+      });
+    });
+
+    sources.subscribe((newSources) => {
+      localSources = newSources;
+    });
   })();
 </script>
 
@@ -119,7 +106,7 @@
 <div class="wrapper">
   <aside>
     <h1>Calendars</h1>
-    {#each sources as source}
+    {#each localSources as source}
       <SourceRow source={source}/>
       <!--<SectionTitle title={source.name} />-->
       {#each sourceCalendars.get(source.id) || [] as calendar}
@@ -143,7 +130,7 @@
     <Calendar
       year={selectedYear}
       month={selectedMonth}
-      events={events}
+      events={localEvents}
     />
   </main>
 </div>

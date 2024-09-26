@@ -214,6 +214,7 @@ func (q *Queries) DeleteEvent(userId types.ID, eventId types.ID) error {
 		);
 		`,
 		eventId.UUID(),
+		userId.UUID(),
 	)
 	if err != nil {
 		return fmt.Errorf("could not delete event from database: %v", err)
