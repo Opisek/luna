@@ -84,3 +84,15 @@ func (auth BearerAuth) String() (string, error) {
 func NewBearerAuth(token string) AuthMethod {
 	return BearerAuth{Token: token}
 }
+
+// OAuth2
+
+type OAuth2Auth struct {
+	ClientID     string `json:"client_id" form:"client_id"`
+	ClientSecret string `json:"client_secret" form:"client_secret"`
+	AuthURL      string `json:"auth_url" form:"auth_url"`
+	TokenURL     string `json:"token_url" form:"token_url"`
+	AccessToken  string `json:"access_token" form:"access_token"`
+	RefreshToken string `json:"refresh_token" form:"refresh_token"`
+	Expired      bool   `json:"bool" form:"bool"`
+}
