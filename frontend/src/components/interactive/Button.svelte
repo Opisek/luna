@@ -48,7 +48,7 @@
 </style>
 
 <button
-  on:click={(e) => {onClick(); addRipple(e)}}
+  on:click={onClick}
   on:mousedown={addRipple}
   bind:this={button}
   class:success={color == "success"}

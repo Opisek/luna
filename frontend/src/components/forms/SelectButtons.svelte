@@ -68,7 +68,7 @@
         class:selected={option.value === value}
         class:first={i === 0}
         class:last={i === options.length - 1}
-        on:click={(e) => {value = option.value; addRipple(e)}}
+        on:click={() => {value = option.value;}}
         on:mousedown={addRipple}
       >
         {option.name}
