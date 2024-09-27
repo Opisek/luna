@@ -81,7 +81,7 @@
     type="text"
   />
 {/if}
-{#if password}
+{#if password && editable}
 <div class="visibility">
   <VisibilityToggle bind:visible={passwordVisible} momentary={true} />
 </div>

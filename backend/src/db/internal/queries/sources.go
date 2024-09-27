@@ -35,8 +35,8 @@ func (q *Queries) GetSource(userId types.ID, sourceId types.ID) (primitives.Sour
 	err = q.Tx.QueryRow(
 		context.TODO(),
 		query,
-		userId.UUID(),
 		sourceId.UUID(),
+		userId.UUID(),
 		decryptionKey,
 	).Scan(params...)
 	if err != nil {

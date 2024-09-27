@@ -5,7 +5,7 @@
 
   export let source: SourceModel;
 
-  let showModal: () => boolean;
+  let showModal: () => any;
 </script>
 
 <style lang="scss">

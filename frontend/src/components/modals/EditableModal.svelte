@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { queueNotification } from "$lib/client/notifications";
   import Loader from "../decoration/Loader.svelte";
   import Button from "../interactive/Button.svelte";
   import ConfirmationModal from "./ConfirmationModal.svelte";
@@ -29,11 +30,15 @@
   async function saveEdit() {
     // TOOD: error message if returned value is not empty string
     awaitingEdit = true;
-    await onEdit();
+    const res = await onEdit();
     awaitingEdit = false;
 
-    editMode = false;
-    hideModal();
+    if (res === "") {
+      editMode = false;
+      hideModal();
+    } else {
+      queueNotification("failure", res)
+    }
   }
 
   let showDeleteModal: () => boolean;

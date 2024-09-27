@@ -1,47 +1,54 @@
 <script lang="ts">
   import EditableModal from "./EditableModal.svelte";
   import TextInput from "../forms/TextInput.svelte";
-  import SelectInput from "../forms/SelectInput.svelte";
   import SelectButtons from "../forms/SelectButtons.svelte";
+  import { queueNotification } from "$lib/client/notifications";
+  import { deleteSource, editSource } from "$lib/client/repository";
 
   export let source: SourceModel;
+  let sourceDetailed: SourceModel;
 
-  let sourceType: string = "caldav";
+  export const showModal = async () => {
+    const res = await fetch(`/api/sources/${source.id}`);
+    if (res.ok) {
+      sourceDetailed = await res.json();
+    } else {
+      queueNotification("failure", `Failed to fetch source details: ${res.statusText}`);
+      return
+    }
 
-  let caldavUrl: string;
-  let icalUrl: string;
-
-  let authType: string = "none";
-  let authUsername: string;
-  let authPassword: string;
-  let authToken: string;
-
-  export let showModal: () => boolean;
+    showModalInternal();
+  };
+  let showModalInternal: () => boolean;
 
   let title: string;
-  $: title = (source && source.id) ? (editMode ? "Edit source" : "Source") : "Create source";
+  $: title = (sourceDetailed && sourceDetailed.id) ? (editMode ? "Edit source" : "Source") : "Create source";
 
   let editMode: boolean;
 
   const onDelete = async () => {
-    return Promise.resolve("");
+    const res = await deleteSource(sourceDetailed.id);
+    if (res === "") return "";
+    else return `Could not delete source: ${res}`;
   };
-  const onEdit = () => {
-    return Promise.resolve("");
+  const onEdit = async () => {
+    const res = await editSource(sourceDetailed);
+    if (res === "") return "";
+    else return `Could not edit source: ${res}`;
   };
 </script>
 
 <EditableModal
   title={title}
-  deleteConfirmation={`Are you sure you want to delete source "${source ? source.name : ""}"?`}
-  isNew={!(source && source.id)}
+  deleteConfirmation={`Are you sure you want to delete source "${sourceDetailed ? sourceDetailed.name : ""}"?`}
+  isNew={!(sourceDetailed && sourceDetailed.id)}
   bind:editMode={editMode}
-  bind:showModal={showModal}
+  bind:showModal={showModalInternal}
   onDelete={onDelete}
   onEdit={onEdit}
 >
-  {#if source}
-    <TextInput bind:value={source.name} name="name" placeholder="Name" editable={editMode} />
+  {#if sourceDetailed}
+    <TextInput bind:value={sourceDetailed.name} name="name" placeholder="Name" editable={editMode} />
     <!--
     <SelectInput bind:value={sourceType} name="type" placeholder={"Type"} editable={editMode} options={[
       {
@@ -54,7 +61,7 @@
       }
     ]}></SelectInput>
     -->
-    <SelectButtons bind:value={sourceType} name="type" placeholder={"Type"} editable={editMode} options={[
+    <SelectButtons bind:value={sourceDetailed.type} name="type" placeholder={"Type"} editable={editMode} options={[
       {
         value: "caldav",
         name: "CalDav"
@@ -64,14 +71,14 @@
         name: "iCal"
       }
     ]}/>
-    {#if sourceType === "caldav"}
-      <TextInput bind:value={caldavUrl} name="caldav_url" placeholder="CalDav URL" editable={editMode} />
+    {#if sourceDetailed.type === "caldav"}
+      <TextInput bind:value={sourceDetailed.settings.url} name="caldav_url" placeholder="CalDav URL" editable={editMode} />
     {/if}
-    {#if sourceType === "ical"}
-      <TextInput bind:value={icalUrl} name="ical_url" placeholder="iCal URL" editable={editMode} />
+    {#if sourceDetailed.type === "ical"}
+      <TextInput bind:value={sourceDetailed.settings.url} name="ical_url" placeholder="iCal URL" editable={editMode} />
     {/if}
     
-    <SelectButtons bind:value={authType} name="auth_type" placeholder={"Authentication Type"} editable={editMode} options={[
+    <SelectButtons bind:value={sourceDetailed.auth_type} name="auth_type" placeholder={"Authentication Type"} editable={editMode} options={[
       {
         value: "none",
         name: "None",
@@ -85,12 +92,12 @@
         name: "Token",
       },
     ]}/>
-    {#if authType === "basic"}
-      <TextInput bind:value={authUsername} name="auth_username" placeholder="Username" editable={editMode} />
-      <TextInput bind:value={authPassword} name="auth_password" placeholder="Password" editable={editMode} password={true} />
+    {#if sourceDetailed.auth_type === "basic"}
+      <TextInput bind:value={sourceDetailed.auth.username} name="auth_username" placeholder="Username" editable={editMode} />
+      <TextInput bind:value={sourceDetailed.auth.password} name="auth_password" placeholder="Password" editable={editMode} password={true} />
     {/if}
-    {#if authType === "bearer"}
-      <TextInput bind:value={authToken} name="auth_token" placeholder="Token" editable={editMode} password={true} />
+    {#if sourceDetailed.auth_type === "bearer"}
+      <TextInput bind:value={sourceDetailed.auth.token} name="auth_token" placeholder="Token" editable={editMode} password={true} />
     {/if}
   {/if}
 </EditableModal>

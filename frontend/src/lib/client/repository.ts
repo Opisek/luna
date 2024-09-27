@@ -20,6 +20,61 @@ export const fetchSources = async (): Promise<string> => {
   }
 };
 
+export const editSource = async (modifiedSource: SourceModel): Promise<string> => {
+  try {
+    const formData = new FormData();
+    formData.set("name", modifiedSource.name);
+    formData.set("type", modifiedSource.type);
+    switch (modifiedSource.type) {
+      case "caldav":
+        formData.set("url", modifiedSource.settings.url);
+        break;
+      default:
+        return "Unsupported source type";
+    }
+    formData.set("auth_type", modifiedSource.auth_type);
+    switch (modifiedSource.auth_type) {
+      case "none":
+        break;
+      case "basic":
+        formData.set("auth_username", modifiedSource.auth.username);
+        formData.set("auth_password", modifiedSource.auth.password);
+        break;
+      case "bearer":
+        formData.set("auth_token", modifiedSource.auth.token);
+        break;
+      default:
+        return "Unsupported auth type";
+    }
+
+    const response = await fetch(`/api/sources/${modifiedSource.id}`, { method: "PATCH", body: formData });
+    if (response.ok) {
+      sources.update((sources) => sources.map((source => source.id === modifiedSource.id ? modifiedSource : source)))
+      return "";
+    } else {
+      const json = await response.json();
+      return (json ? json.error : "Could not contact the server");
+    }
+  } catch (e) {
+    return "Unexpected error occured"
+  }
+}
+
+export const deleteSource = async (id: string): Promise<string> => {
+  try {
+    const response = await fetch(`/api/sources/${id}`, { method: "DELETE" });
+    if (response.ok) {
+      sources.update((sources) => sources.filter((source) => source.id !== id));
+      return "";
+    } else {
+      const json = await response.json();
+      return (json ? json.error : "Could not contact the server");
+    }
+  } catch (e) {
+    return "Unexpected error occured"
+  }
+}
+
 export const fetchCalendars = async (): Promise<string> => {
   try {
     const response = await fetch("/api/calendars");

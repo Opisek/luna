@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { queueNotification } from "$lib/client/notifications";
   import Loader from "../decoration/Loader.svelte";
   import Button from "../interactive/Button.svelte";
   import Modal from "./Modal.svelte";
@@ -13,9 +14,13 @@
   async function confirm() {
     // TOOD: error message if returned value is not empty string
     awaitingConfirm = true;
-    await confirmCallback()
+    const res = await confirmCallback()
     awaitingConfirm = false;
     hideModal()
+
+    if (res !== "") {
+      queueNotification("failure", res)
+    }
   }
 
   function cancel() {
