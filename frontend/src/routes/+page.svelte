@@ -9,6 +9,7 @@
   import CalendarEntry from "../components/interactive/CalendarEntry.svelte";
   import SourceRow from "../components/calendar/SourceRow.svelte";
   import { calendars, events, fetchCalendars, fetchEvents, fetchSources, sources } from "$lib/client/repository";
+  import { queueNotification } from "$lib/client/notifications";
 
   let localSources: SourceModel[] = [];
   let localCalendars: CalendarModel[] = [];
@@ -37,9 +38,30 @@
   (async () => {
     if (!browser) return;
 
-    fetchSources();
-    fetchCalendars();
-    fetchEvents();
+    fetchSources().then(err => {
+      if (err != "") {
+        queueNotification(
+          "failure",
+          `Failed to fetch sources: ${err}`
+        );
+      }
+    });
+    fetchCalendars().then(err => {
+      if (err != "") {
+        queueNotification(
+          "failure",
+          `Failed to fetch calendars: ${err}`
+        );
+      }
+    });
+    fetchEvents().then(err => {
+      if (err != "") {
+        queueNotification(
+          "failure",
+          `Failed to fetch events: ${err}`
+        );
+      }
+    });
 
     events.subscribe((newEvents) => {
       localEvents = newEvents;
