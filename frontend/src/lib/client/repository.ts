@@ -5,6 +5,9 @@ export const sources = writable([] as SourceModel[]);
 export const calendars = writable([] as CalendarModel[]);
 export const events = writable([] as EventModel[]);
 
+export const faultySources = writable(new Set<string>());
+export const faultyCalendars = writable(new Set<string>());
+
 export const fetchSources = async (): Promise<string> => {
   try {
     const response = await fetch("/api/sources");
@@ -79,7 +82,9 @@ export const fetchCalendars = async (): Promise<string> => {
   try {
     const response = await fetch("/api/calendars");
     if (response.ok) {
-      calendars.set(await response.json());
+      const json = await response.json() as {calendars: CalendarModel[], errored: string[]};
+      calendars.set(json.calendars);
+      faultySources.set(new Set<string>(json.errored));
       return ""
     } else {
       const json = await response.json();
@@ -94,12 +99,13 @@ export const fetchEvents = async (): Promise<string> => {
   try {
     const response = await fetch("/api/events");
     if (response.ok) {
-      const fetched = await response.json()
-      for (const event of fetched) {
+      const json = await response.json() as {events: EventModel[], errored: string[]};
+      for (const event of json.events) {
         event.date.start = new Date(event.date.start);
         event.date.end = new Date(event.date.end);
       }
-      events.set(fetched);
+      events.set(json.events);
+      faultyCalendars.set(new Set<string>(json.errored));
       return ""
     } else {
       const json = await response.json();

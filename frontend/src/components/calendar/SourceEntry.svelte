@@ -1,9 +1,14 @@
 <script lang="ts">
-  import { BoltIcon, CogIcon, PencilIcon } from "lucide-svelte";
-  import IconButton from "../interactive/IconButton.svelte";
+  import { faultySources } from "$lib/client/repository";
+  import Tooltip from "../interactive/Tooltip.svelte";
   import SourceModal from "../modals/SourceModal.svelte";
 
   export let source: SourceModel;
+
+  let hasErrored = false;
+  faultySources.subscribe((faulty) => {
+    hasErrored = faulty.has(source.id);
+  });
 
   let showModal: () => any;
 </script>
@@ -37,6 +42,9 @@
 
 <span on:click={showModal}>
   {source.name}
+  {#if hasErrored}
+    <Tooltip msg="An error occurred trying to retrieve calendars from this source." error={true}/>
+  {/if}
   <!--
   <IconButton callback={showModal}>
     <PencilIcon size={16}/>

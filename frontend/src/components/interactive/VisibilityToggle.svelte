@@ -37,17 +37,17 @@
     on:mouseleave={hide} 
   >
     {#if visible}
-      <Eye/>
+      <Eye size={16}/>
     {:else}
-      <EyeOff/>
+      <EyeOff size={16}/>
     {/if}
   </span>
 {:else}
   <span on:click={toggleVisibility}>
     {#if visible}
-      <Eye/>
+      <Eye size={16}/>
     {:else}
-      <EyeOff/>
+      <EyeOff size={16}/>
     {/if}
   </span>
 {/if}

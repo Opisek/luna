@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"errors"
 	"fmt"
 	"luna-backend/api/internal/config"
 	"luna-backend/api/internal/context"
@@ -24,10 +23,10 @@ type exposedCalendar struct {
 	//Settings primitives.CalendarSettings `json:"settings"` // TODO: REMOVE FROM PRODUCTION, TESTING ONLY
 }
 
-func getCalendars(config *config.Api, tx *db.Transaction, srcs []primitives.Source) ([]primitives.Calendar, error) {
+func getCalendars(config *config.Api, tx *db.Transaction, srcs []primitives.Source) ([]primitives.Calendar, []bool, error) {
 	// For each source, get its calendars
 	cals := make([][]primitives.Calendar, len(srcs))
-	errored := false
+	success := make([]bool, len(srcs))
 
 	waitGroup := sync.WaitGroup{}
 	for i, src := range srcs {
@@ -36,8 +35,10 @@ func getCalendars(config *config.Api, tx *db.Transaction, srcs []primitives.Sour
 			defer waitGroup.Done()
 
 			calsFromSource, err := source.GetCalendars()
+			success[i] = err == nil
+
 			if err != nil {
-				errored = true
+				cals[i] = []primitives.Calendar{}
 				config.Logger.Errorf("could not fetch calendars from source %v: %v", source.GetName(), err)
 				return
 			}
@@ -48,9 +49,6 @@ func getCalendars(config *config.Api, tx *db.Transaction, srcs []primitives.Sour
 
 	// Combine (flatten) all calendars
 	waitGroup.Wait()
-	if errored {
-		return nil, errors.New("at least one source failed to provide calendars")
-	}
 
 	combinedCals := []primitives.Calendar{}
 	for _, calsFromSource := range cals {
@@ -60,10 +58,10 @@ func getCalendars(config *config.Api, tx *db.Transaction, srcs []primitives.Sour
 	// Reconcile with database
 	combinedCals, err := tx.Queries().ReconcileCalendars(srcs, combinedCals)
 	if err != nil {
-		return nil, fmt.Errorf("could not reconcile calendars: %v", err)
+		return nil, nil, fmt.Errorf("could not reconcile calendars: %v", err)
 	}
 
-	return combinedCals, nil
+	return combinedCals, success, nil
 }
 
 func GetCalendars(c *gin.Context) {
@@ -82,7 +80,7 @@ func GetCalendars(c *gin.Context) {
 	}
 
 	// Get their associated calendars
-	cals, err := getCalendars(config, tx, srcs)
+	cals, succeeded, err := getCalendars(config, tx, srcs)
 	if err != nil {
 		config.Logger.Errorf("could not get calendars: %v", err)
 		util.Error(c, util.ErrorUnknown)
@@ -107,7 +105,22 @@ func GetCalendars(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, convertedCals)
+	errCnt := 0
+	for _, success := range succeeded {
+		if !success {
+			errCnt++
+		}
+	}
+	errIDs := make([]types.ID, errCnt)
+	j := 0
+	for i, success := range succeeded {
+		if !success {
+			errIDs[j] = srcs[i].GetId()
+			j += 1
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"calendars": convertedCals, "errored": errIDs})
 }
 
 func GetCalendar(c *gin.Context) {

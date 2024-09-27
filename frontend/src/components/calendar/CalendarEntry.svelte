@@ -1,7 +1,14 @@
 <script lang="ts">
-  import VisibilityToggle from "./VisibilityToggle.svelte";
+  import { faultyCalendars } from "$lib/client/repository";
+  import Tooltip from "../interactive/Tooltip.svelte";
+  import VisibilityToggle from "../interactive/VisibilityToggle.svelte";
 
   export let calendar: CalendarModel;
+
+  let hasErrored = false;
+  faultyCalendars.subscribe((faulty) => {
+    hasErrored = faulty.has(calendar.id);
+  });
 
   let visibleTest = true;
 </script>
@@ -13,7 +20,6 @@
     display: flex;
     flex-direction: row;
     gap: $gapSmall;
-    padding: $gapSmall;
     width: 100%;
     align-items: center;
   }
@@ -38,4 +44,7 @@
     {calendar.name}
   </span>
   <VisibilityToggle visible={visibleTest}/>
+  {#if hasErrored}
+    <Tooltip msg="An error occurred trying to retrieve events from this calendar." error={true}/>
+  {/if}
 </div>

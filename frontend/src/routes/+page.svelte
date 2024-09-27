@@ -6,10 +6,10 @@
 
   import { browser } from "$app/environment";
   import { getMonthName } from "../lib/common/humanization";
-  import CalendarEntry from "../components/interactive/CalendarEntry.svelte";
-  import SourceRow from "../components/calendar/SourceRow.svelte";
+  import SourceEntry from "../components/calendar/SourceEntry.svelte";
   import { calendars, events, fetchCalendars, fetchEvents, fetchSources, sources } from "$lib/client/repository";
   import { queueNotification } from "$lib/client/notifications";
+  import CalendarEntry from "../components/calendar/CalendarEntry.svelte";
 
   let localSources: SourceModel[] = [];
   let localCalendars: CalendarModel[] = [];
@@ -123,14 +123,19 @@
     height: 100%;
     width: 100%;
   }
+  
+  aside {
+    display: flex;
+    flex-direction: column;
+    gap: $gap;
+  }
 </style>
 
 <div class="wrapper">
   <aside>
     <h1>Calendars</h1>
     {#each localSources as source}
-      <SourceRow source={source}/>
-      <!--<SectionTitle title={source.name} />-->
+      <SourceEntry source={source}/>
       {#each sourceCalendars.get(source.id) || [] as calendar}
         <CalendarEntry calendar={calendar}/>
       {/each}

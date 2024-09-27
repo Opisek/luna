@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"errors"
 	"fmt"
 	"luna-backend/api/internal/config"
 	"luna-backend/api/internal/context"
@@ -26,10 +25,10 @@ type exposedEvent struct {
 	//Settings primitives.EventSettings `json:"settings"` // TODO: REMOVE FROM PRODUCTION, TESTING ONLY
 }
 
-func getEvents(config *config.Api, tx *db.Transaction, cals []primitives.Calendar, start time.Time, end time.Time) ([]primitives.Event, error) {
+func getEvents(config *config.Api, tx *db.Transaction, cals []primitives.Calendar, start time.Time, end time.Time) ([]primitives.Event, []bool, error) {
 	// For each calendar, get its events
 	events := make([][]primitives.Event, len(cals))
-	errored := false
+	success := make([]bool, len(cals))
 
 	waitGroup := sync.WaitGroup{}
 	for i, cal := range cals {
@@ -38,8 +37,10 @@ func getEvents(config *config.Api, tx *db.Transaction, cals []primitives.Calenda
 			defer waitGroup.Done()
 
 			eventsFromCal, err := cal.GetEvents(start, end)
+			success[i] = err == nil
+
 			if err != nil {
-				errored = true
+				events[i] = []primitives.Event{}
 				config.Logger.Errorf("could not get events: could not get events from calendar %v: %v", cal.GetName(), err)
 				return
 			}
@@ -50,9 +51,6 @@ func getEvents(config *config.Api, tx *db.Transaction, cals []primitives.Calenda
 
 	// Combine (flatten) all calendars
 	waitGroup.Wait()
-	if errored {
-		return nil, errors.New("at least one calendar failed to provide events")
-	}
 
 	combinedEvents := []primitives.Event{}
 	for _, eventsFromCal := range events {
@@ -62,10 +60,10 @@ func getEvents(config *config.Api, tx *db.Transaction, cals []primitives.Calenda
 	// Reconcile with database
 	combinedEvents, err := tx.Queries().ReconcileEvents(cals, combinedEvents)
 	if err != nil {
-		return nil, fmt.Errorf("could not reconcile events: %v", err)
+		return nil, nil, fmt.Errorf("could not reconcile events: %v", err)
 	}
 
-	return combinedEvents, nil
+	return combinedEvents, success, nil
 }
 
 func GetEvents(c *gin.Context) {
@@ -84,7 +82,7 @@ func GetEvents(c *gin.Context) {
 	}
 
 	// Get their associated calendars
-	cals, err := getCalendars(config, tx, srcs)
+	cals, _, err := getCalendars(config, tx, srcs)
 	if err != nil {
 		config.Logger.Errorf("could not get events: %v", err)
 		util.Error(c, util.ErrorUnknown)
@@ -102,7 +100,7 @@ func GetEvents(c *gin.Context) {
 		panic(err)
 	}
 
-	events, err := getEvents(config, tx, cals, startTime, endTime)
+	events, succeeded, err := getEvents(config, tx, cals, startTime, endTime)
 	if err != nil {
 		config.Logger.Errorf("could not get events: %v", err)
 		util.Error(c, util.ErrorUnknown)
@@ -132,7 +130,22 @@ func GetEvents(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, convertedEvents)
+	errCnt := 0
+	for _, success := range succeeded {
+		if !success {
+			errCnt++
+		}
+	}
+	errIDs := make([]types.ID, errCnt)
+	j := 0
+	for i, success := range succeeded {
+		if !success {
+			errIDs[j] = cals[i].GetId()
+			j += 1
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"events": convertedEvents, "errored": errIDs})
 }
 
 func GetEvent(c *gin.Context) {
