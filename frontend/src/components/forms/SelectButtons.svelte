@@ -10,7 +10,8 @@
 
   export let options: Option[];
   // TODO: redo this
-  let selected: Option = options.filter(option => option.value === value)[0];
+  let selected: Option = options[0];
+  $: selected = options.filter(option => option.value === value)[0];
 </script>
 
 <style lang="scss">

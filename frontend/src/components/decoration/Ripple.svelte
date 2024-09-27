@@ -15,7 +15,7 @@
     circle.style.left = `${event.clientX - rect.left -diameter/2}px`;
     circle.style.top = `${event.clientY - rect.top -diameter/2}px`;
 
-    setTimeout(() => circle.remove(), 500);
+    setTimeout(() => circle.remove(), 1500);
   })(circle);
 
 </script>
@@ -30,6 +30,7 @@
     position: absolute;
     transform: scale(0);
     animation: ripple $animationSpeedVerySlow $cubic;
+    pointer-events: none;
   }
 </style>
 
