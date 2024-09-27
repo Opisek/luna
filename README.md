@@ -11,6 +11,8 @@ Currently, this project is still very much **work-in-progress** and is nowhere n
 
 Feel free to get in contact through GitHub discussions if you are interested in contributing.
 
+You may also follow the progress in the [development roadmap](https://todo.opisek.net/share/dvEazOyRLEYThqxohVosnqKskYLyoZ4nS8rQ63G1/auth?view=280).
+
 # API
 ## Current State
 The current frontend does not implement all functionality provided by the backend yet. For testing and development purposes, tools like Postman can be used to interact with the API directly. Note that everything is still very much under development and is subject to change.
