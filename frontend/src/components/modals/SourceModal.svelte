@@ -2,9 +2,11 @@
   import EditableModal from "./EditableModal.svelte";
   import TextInput from "../forms/TextInput.svelte";
   import SelectInput from "../forms/SelectInput.svelte";
+  import SelectButtons from "../forms/SelectButtons.svelte";
 
   export let source: SourceModel;
   let sourceType: string;
+  let authType: string = "none";
 
   export let showModal: () => boolean;
 
@@ -42,5 +44,19 @@
         name: "iCal"
       }
     ]}></SelectInput>
+    <SelectButtons bind:value={authType} name="auth_type" placeholder={"Authentication Type"} editable={editMode} options={[
+      {
+        value: "none",
+        name: "None",
+      },
+      {
+        value: "basic",
+        name: "Password",
+      },
+      {
+        value: "bearer",
+        name: "Token",
+      },
+    ]}/>
   {/if}
 </EditableModal>

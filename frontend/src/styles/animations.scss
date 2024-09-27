@@ -16,9 +16,17 @@
   }
 }
 
+@keyframes ripple {
+  to {
+      transform: scale(2.5);
+      opacity: 0;
+  }
+}
+
 $cubic: cubic-bezier(0.34, 1.56, 0.64, 1);
 
 /* Timing */
+$animationSpeedFast: .1s;
 $animationSpeed: .25s;
 $animationSpeedSlow: .5s;
-$animationSpeedFast: .1s;
+$animationSpeedVerySlow: 1.5s;

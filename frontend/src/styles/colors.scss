@@ -6,12 +6,13 @@ $foregroundFaded: #6b6b6b;
 $backgroundPrimary: #ffffff;
 $foregroundPrimary: $foregroundDark;
 $backgroundSecondary: #f5f5f5;
+$foregroundSecondary: $foregroundDark;
 
-$backgroundSuccess: hsl(107, 61%, 70%);
-$foregroundSuccess: $foregroundDark;
+$backgroundSuccess: hsl(107, 53%, 57%);
+$foregroundSuccess: $foregroundBright;
 
-$backgroundFailure: hsl(0, 61%, 70%);
-$foregroundFailure: $foregroundDark;
+$backgroundFailure: hsl(0, 69%, 62%);
+$foregroundFailure: $foregroundBright;
 
-$backgroundAccent: hsl(189, 61%, 70%);
-$foregroundAccent: $foregroundDark;
+$backgroundAccent: hsl(213, 69%, 62%);
+$foregroundAccent: $foregroundBright;

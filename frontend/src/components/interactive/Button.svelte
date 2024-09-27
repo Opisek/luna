@@ -1,11 +1,17 @@
 <script lang="ts">
+  import { addRipple } from "$lib/client/decoration";
+
   export let onClick: () => void;
 
   // TODO: could not figure out enums for this, try again later
   export let color: string;
+
+  let button: HTMLButtonElement;
+
 </script>
 
 <style lang="scss">
+  @import "../../styles/animations.scss";
   @import "../../styles/colors.scss";
   @import "../../styles/dimensions.scss";
 
@@ -20,6 +26,9 @@
     border-radius: $borderRadius;
 
     min-width: 5em;
+    
+    position: relative;
+    overflow: hidden;
   }
 
 
@@ -39,10 +48,12 @@
 </style>
 
 <button
-  on:click={onClick}
+  on:click={(e) => {onClick(); addRipple(e)}}
+  on:mousedown={addRipple}
+  bind:this={button}
   class:success={color == "success"}
   class:failure={color == "failure"}
   class:accent={color == "accent"}
 >
-  <slot></slot>
+  <slot/>
 </button>
