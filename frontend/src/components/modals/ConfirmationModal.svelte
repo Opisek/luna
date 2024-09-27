@@ -1,6 +1,6 @@
 <script lang="ts">
   import Loader from "../decoration/Loader.svelte";
-import Button from "../interactive/Button.svelte";
+  import Button from "../interactive/Button.svelte";
   import Modal from "./Modal.svelte";
 
   export let showModal: () => boolean;
