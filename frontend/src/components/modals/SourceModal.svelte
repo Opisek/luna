@@ -26,7 +26,7 @@
   let showModalInternal: () => boolean;
 
   let title: string;
-  $: title = (sourceDetailed && sourceDetailed.id) ? (editMode ? "Edit source" : "Source") : "Create source";
+  $: title = (sourceDetailed && sourceDetailed.id) ? (editMode ? "Edit source" : "Source") : "Add source";
 
   let editMode: boolean;
 
