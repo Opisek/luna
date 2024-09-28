@@ -28,12 +28,19 @@
     justify-content: flex-end;
     align-items: end;
   }
+
+  div.center {
+    justify-content: space-around;
+    align-items: center;
+    justify-items: center;
+  }
 </style>
 
 <div
   class:justify={position == "justify"}
   class:left={position == "left"}
   class:right={position == "right"}
+  class:center={position == "center"}
 >
   <slot/>
 </div>

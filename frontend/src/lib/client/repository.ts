@@ -23,31 +23,64 @@ export const fetchSources = async (): Promise<string> => {
   }
 };
 
+function getSourceFormData(source: SourceModel): FormData {
+  const formData = new FormData();
+  formData.set("name", source.name);
+  formData.set("type", source.type);
+  switch (source.type) {
+    case "caldav":
+      formData.set("url", source.settings.url);
+      break;
+    default:
+      throw new Error("Unsupported source type");
+  }
+  formData.set("auth_type", source.auth_type);
+  switch (source.auth_type) {
+    case "none":
+      break;
+    case "basic":
+      formData.set("auth_username", source.auth.username);
+      formData.set("auth_password", source.auth.password);
+      break;
+    case "bearer":
+      formData.set("auth_token", source.auth.token);
+      break;
+    default:
+      throw new Error("Unsupported auth type");
+  }
+  return formData;
+}
+
+export const createSource = async (newSource: SourceModel): Promise<string> => {
+  try {
+    let formData: FormData;
+    try {
+      formData = getSourceFormData(newSource);
+    } catch (e: any) {
+      return e.message;
+    }
+
+    const response = await fetch(`/api/sources`, { method: "PUT", body: formData });
+    if (response.ok) {
+      newSource.id = await response.text();
+      sources.update((sources) => sources.map((source => source.id === newSource.id ? newSource : source)))
+      return "";
+    } else {
+      const json = await response.json();
+      return (json ? json.error : "Could not contact the server");
+    }
+  } catch (e) {
+    return "Unexpected error occured"
+  }
+}
+
 export const editSource = async (modifiedSource: SourceModel): Promise<string> => {
   try {
-    const formData = new FormData();
-    formData.set("name", modifiedSource.name);
-    formData.set("type", modifiedSource.type);
-    switch (modifiedSource.type) {
-      case "caldav":
-        formData.set("url", modifiedSource.settings.url);
-        break;
-      default:
-        return "Unsupported source type";
-    }
-    formData.set("auth_type", modifiedSource.auth_type);
-    switch (modifiedSource.auth_type) {
-      case "none":
-        break;
-      case "basic":
-        formData.set("auth_username", modifiedSource.auth.username);
-        formData.set("auth_password", modifiedSource.auth.password);
-        break;
-      case "bearer":
-        formData.set("auth_token", modifiedSource.auth.token);
-        break;
-      default:
-        return "Unsupported auth type";
+    let formData: FormData;
+    try {
+      formData = getSourceFormData(modifiedSource);
+    } catch (e: any) {
+      return e.message;
     }
 
     const response = await fetch(`/api/sources/${modifiedSource.id}`, { method: "PATCH", body: formData });

@@ -24,6 +24,9 @@
 
   function cancelEdit() {
     editMode = false;
+    if (isNew) {
+      hideModal();
+    }
   }
 
   let awaitingEdit = false;

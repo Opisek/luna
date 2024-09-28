@@ -3,18 +3,22 @@
   import TextInput from "../forms/TextInput.svelte";
   import SelectButtons from "../forms/SelectButtons.svelte";
   import { queueNotification } from "$lib/client/notifications";
-  import { deleteSource, editSource } from "$lib/client/repository";
+  import { createSource, deleteSource, editSource } from "$lib/client/repository";
 
   export let source: SourceModel;
   let sourceDetailed: SourceModel;
 
   export const showModal = async () => {
-    const res = await fetch(`/api/sources/${source.id}`);
-    if (res.ok) {
-      sourceDetailed = await res.json();
+    if (source.id === "") {
+      sourceDetailed = source;
     } else {
-      queueNotification("failure", `Failed to fetch source details: ${res.statusText}`);
-      return
+      const res = await fetch(`/api/sources/${source.id}`);
+      if (res.ok) {
+        sourceDetailed = await res.json();
+      } else {
+        queueNotification("failure", `Failed to fetch source details: ${res.statusText}`);
+        return
+      }
     }
 
     showModalInternal();
@@ -32,7 +36,12 @@
     else return `Could not delete source: ${res}`;
   };
   const onEdit = async () => {
-    const res = await editSource(sourceDetailed);
+    let res: string;
+    if (sourceDetailed.id === "") {
+      res = await createSource(sourceDetailed);
+    } else {
+      res = await editSource(sourceDetailed);
+    }
     if (res === "") return "";
     else return `Could not edit source: ${res}`;
   };

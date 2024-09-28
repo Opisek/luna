@@ -10,12 +10,30 @@
   import { calendars, events, fetchCalendars, fetchEvents, fetchSources, sources } from "$lib/client/repository";
   import { queueNotification } from "$lib/client/notifications";
   import CalendarEntry from "../components/calendar/CalendarEntry.svelte";
+  import Title from "../components/layout/Title.svelte";
+  import Horizontal from "../components/layout/Horizontal.svelte";
+  import { PlusIcon } from "lucide-svelte";
+  import SourceModal from "../components/modals/SourceModal.svelte";
 
   let localSources: SourceModel[] = [];
   let localCalendars: CalendarModel[] = [];
   let sourceCalendars: Map<string, CalendarModel[]> = new Map();
   let localEvents: EventModel[] = [];
   let calendarEvents: Map<string, EventModel[]> = new Map();
+
+  let showNewSourceModal: () => any;
+  let newSource: SourceModel = {
+    id: "",
+    name: "",
+    type: "caldav",
+    settings: {},
+    auth_type: "none",
+    auth: {}
+  };
+
+  function createNewSource() {
+    showNewSourceModal();
+  }
 
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth() 
@@ -129,17 +147,32 @@
     flex-direction: column;
     gap: $gap;
   }
+
+  div.sources {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: $gap;
+  }
 </style>
 
 <div class="wrapper">
   <aside>
-    <h1>Calendars</h1>
-    {#each localSources as source}
-      <SourceEntry source={source}/>
-      {#each sourceCalendars.get(source.id) || [] as calendar}
-        <CalendarEntry calendar={calendar}/>
+    <Title>Luna</Title>
+    <div class="sources">
+      {#each localSources as source}
+        <SourceEntry source={source}/>
+        {#each sourceCalendars.get(source.id) || [] as calendar}
+          <CalendarEntry calendar={calendar}/>
+        {/each}
       {/each}
-    {/each}
+    </div>
+    <Horizontal position="center">
+      <IconButton callback={createNewSource}>
+        <PlusIcon/>
+      </IconButton>
+      <SourceModal bind:showModal={showNewSourceModal} source={newSource}/>
+    </Horizontal>
   </aside>
   <main>
     <div class="monthSelection">
