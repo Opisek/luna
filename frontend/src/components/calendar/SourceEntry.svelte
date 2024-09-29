@@ -29,7 +29,6 @@
     cursor: pointer;
   }
 
-
   //span :global(button) {
   //  opacity: 0;
   //  transition: all $animationSpeed $cubic;

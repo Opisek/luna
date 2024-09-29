@@ -22,7 +22,7 @@ func (q *Tables) InitializeEventsTable() error {
 		`
 		CREATE TABLE IF NOT EXISTS events (
 			id UUID PRIMARY KEY,
-			calendar UUID REFERENCES calendars(id),
+			calendar UUID REFERENCES calendars(id) ON DELETE CASCADE,
 			color BYTEA,
 			settings JSONB NOT NULL
 		);

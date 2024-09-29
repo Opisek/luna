@@ -123,6 +123,59 @@ func GetCalendars(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"calendars": convertedCals, "errored": errIDs})
 }
 
+func GetCalendarsFromSource(c *gin.Context) {
+	// Get config
+	config := context.GetConfig(c)
+	userId := context.GetUserId(c)
+	sourceId, err := context.GetId(c, "source")
+	if err != nil {
+		config.Logger.Errorf("could not get source id: %v", err)
+		util.Error(c, util.ErrorMalformedID)
+		return
+	}
+
+	tx := context.GetTransaction(c)
+	defer tx.Rollback(config.Logger)
+
+	// Get the specified source
+	source, err := tx.Queries().GetSource(userId, sourceId)
+	if err != nil {
+		config.Logger.Errorf("could not get calendars: %v", err)
+		util.Error(c, util.ErrorDatabase)
+		return
+	}
+
+	// Get the associated calendars
+	// TODO: if we stick to this pattern, we will have a method that takes a single source instead of a slice
+	cals, succeeded, err := getCalendars(config, tx, []primitives.Source{source})
+	// TODO: more verbose error reporting (succeeded is just a bool), related to the above remark
+	if err != nil || !succeeded[0] {
+		config.Logger.Errorf("could not get calendars: %v", err)
+		util.Error(c, util.ErrorUnknown)
+		return
+	}
+
+	// Convert to exposed format
+	convertedCals := make([]exposedCalendar, len(cals))
+	for i, cal := range cals {
+		convertedCals[i] = exposedCalendar{
+			Id:     cal.GetId(),
+			Source: cal.GetSource().GetId(),
+			Name:   cal.GetName(),
+			Desc:   cal.GetDesc(),
+			Color:  cal.GetColor(),
+			//Settings: cal.GetSettings(),
+		}
+	}
+
+	if tx.Commit(config.Logger) != nil {
+		util.Error(c, util.ErrorDatabase)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"calendars": convertedCals})
+}
+
 func GetCalendar(c *gin.Context) {
 	apiConfig := context.GetConfig(c)
 	calendarId, err := context.GetId(c, "calendar")

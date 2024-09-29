@@ -39,6 +39,7 @@ func run(api *config.Api) {
 	sourcesEndpoints.PUT("", handlers.PutSource)
 	sourcesEndpoints.PATCH("/:sourceId", handlers.PatchSource)
 	sourcesEndpoints.DELETE("/:sourceId", handlers.DeleteSource)
+	sourcesEndpoints.GET("/:sourceId/calendars", handlers.GetCalendarsFromSource)
 
 	// /api/calendars/*
 	calendarsEndpoints := authenticatedEndpoints.Group("/calendars")
@@ -47,6 +48,7 @@ func run(api *config.Api) {
 	calendarsEndpoints.PUT("", handlers.PutCalendar)
 	calendarsEndpoints.PATCH("/:calendarId", handlers.PatchCalendar)
 	calendarsEndpoints.DELETE("/:calendarId", handlers.DeleteCalendar)
+	calendarsEndpoints.GET("/:calendarId/events", handlers.GetEventsFromCalendar)
 
 	// /api/events/*
 	eventEndpoints := authenticatedEndpoints.Group("/events")

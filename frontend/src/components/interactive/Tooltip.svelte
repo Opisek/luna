@@ -32,6 +32,8 @@
     position: relative;
     color: $foregroundFaded;
     cursor: help;
+    display: flex;
+    justify-content: center;
   }
   div.error {
     color: $backgroundFailure;

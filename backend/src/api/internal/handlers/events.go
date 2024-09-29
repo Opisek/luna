@@ -148,6 +148,73 @@ func GetEvents(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"events": convertedEvents, "errored": errIDs})
 }
 
+func GetEventsFromCalendar(c *gin.Context) {
+	// Get config
+	config := context.GetConfig(c)
+	userId := context.GetUserId(c)
+	calendarId, err := context.GetId(c, "calendar")
+	if err != nil {
+		config.Logger.Errorf("could not get calendar id: %v", err)
+		util.Error(c, util.ErrorMalformedID)
+		return
+	}
+
+	tx := context.GetTransaction(c)
+	defer tx.Rollback(config.Logger)
+
+	// Get the requested calendar
+	calendar, err := tx.Queries().GetCalendar(userId, calendarId)
+	if err != nil {
+		config.Logger.Errorf("could not get events: %v", err)
+		util.Error(c, util.ErrorDatabase)
+		return
+	}
+
+	// Get the associated events
+	// TODO: get time from the api request
+	startTime, err := time.Parse(time.RFC3339, "2024-01-01T00:00:00+00:00")
+	if err != nil {
+		panic(err)
+	}
+	endTime, err := time.Parse(time.RFC3339, "2025-01-01T00:00:00+00:00")
+	if err != nil {
+		panic(err)
+	}
+
+	// TODO: same considerations apply as with /api/sources/id/calendars in case we stick to this pattern
+	events, succeeded, err := getEvents(config, tx, []primitives.Calendar{calendar}, startTime, endTime)
+	if err != nil || !succeeded[0] {
+		config.Logger.Errorf("could not get events: %v", err)
+		util.Error(c, util.ErrorUnknown)
+		return
+	}
+
+	// Convert to exposed format
+	convertedEvents := make([]exposedEvent, len(events))
+	for i, event := range events {
+		if event.GetName() == "" { // TODO: error handling
+			continue
+		}
+
+		convertedEvents[i] = exposedEvent{
+			Id:       event.GetId(),
+			Calendar: event.GetCalendar().GetId(),
+			Name:     event.GetName(),
+			Desc:     event.GetDesc(),
+			Color:    event.GetColor(),
+			Date:     event.GetDate(),
+			//Settings: event.GetSettings(),
+		}
+	}
+
+	if tx.Commit(config.Logger) != nil {
+		util.Error(c, util.ErrorDatabase)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"events": convertedEvents})
+}
+
 func GetEvent(c *gin.Context) {
 	apiConfig := context.GetConfig(c)
 	eventId, err := context.GetId(c, "event")

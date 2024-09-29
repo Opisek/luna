@@ -7,7 +7,7 @@
   import { browser } from "$app/environment";
   import { getMonthName } from "../lib/common/humanization";
   import SourceEntry from "../components/calendar/SourceEntry.svelte";
-  import { calendars, events, fetchCalendars, fetchEvents, fetchSources, sources } from "$lib/client/repository";
+  import { calendars, events, fetchSources, sources } from "$lib/client/repository";
   import { queueNotification } from "$lib/client/notifications";
   import CalendarEntry from "../components/calendar/CalendarEntry.svelte";
   import Title from "../components/layout/Title.svelte";
@@ -61,22 +61,6 @@
         queueNotification(
           "failure",
           `Failed to fetch sources: ${err}`
-        );
-      }
-    });
-    fetchCalendars().then(err => {
-      if (err != "") {
-        queueNotification(
-          "failure",
-          `Failed to fetch calendars: ${err}`
-        );
-      }
-    });
-    fetchEvents().then(err => {
-      if (err != "") {
-        queueNotification(
-          "failure",
-          `Failed to fetch events: ${err}`
         );
       }
     });

@@ -1,18 +1,43 @@
 import { writable } from "svelte/store";
+import { queueNotification } from "./notifications";
 
 // TODO: local storage integration
 export const sources = writable([] as SourceModel[]);
 export const calendars = writable([] as CalendarModel[]);
 export const events = writable([] as EventModel[]);
 
+export const sourceCalendars = writable(new Map<string, CalendarModel[]>());
+export const calendarEvents = writable(new Map<string, EventModel[]>());
+
 export const faultySources = writable(new Set<string>());
 export const faultyCalendars = writable(new Set<string>());
+
+sourceCalendars.subscribe((sourceCalendars) => {
+  calendars.set(Array.from(sourceCalendars.values()).flat());
+});
+
+calendarEvents.subscribe((calendarEvents) => {
+  events.set(Array.from(calendarEvents.values()).flat());
+});
 
 export const fetchSources = async (): Promise<string> => {
   try {
     const response = await fetch("/api/sources");
     if (response.ok) {
-      sources.set(await response.json());
+      const fetchedSources = await response.json() as SourceModel[];
+      sources.set(fetchedSources);
+
+      for (const source of fetchedSources) {
+        fetchCalendarsFromSource(source.id).then(err => {
+          if (err != "") {
+            queueNotification(
+              "failure",
+              `Failed to fetch calendar: ${err}`
+            );
+          }
+        });
+      }
+
       return ""
     } else {
       const json = await response.json();
@@ -62,8 +87,19 @@ export const createSource = async (newSource: SourceModel): Promise<string> => {
 
     const response = await fetch(`/api/sources`, { method: "PUT", body: formData });
     if (response.ok) {
-      newSource.id = await response.text();
+      const json = await response.json();
+      newSource.id = json.id;
       sources.update((sources) => sources.map((source => source.id === newSource.id ? newSource : source)))
+
+      fetchCalendarsFromSource(newSource.id).then(err => {
+        if (err != "") {
+          queueNotification(
+            "failure",
+            `Failed to fetch calendar: ${err}`
+          );
+        }
+      });
+
       return "";
     } else {
       const json = await response.json();
@@ -86,6 +122,16 @@ export const editSource = async (modifiedSource: SourceModel): Promise<string> =
     const response = await fetch(`/api/sources/${modifiedSource.id}`, { method: "PATCH", body: formData });
     if (response.ok) {
       sources.update((sources) => sources.map((source => source.id === modifiedSource.id ? modifiedSource : source)))
+
+      fetchCalendarsFromSource(modifiedSource.id).then(err => {
+        if (err != "") {
+          queueNotification(
+            "failure",
+            `Failed to fetch calendar: ${err}`
+          );
+        }
+      });
+
       return "";
     } else {
       const json = await response.json();
@@ -101,6 +147,8 @@ export const deleteSource = async (id: string): Promise<string> => {
     const response = await fetch(`/api/sources/${id}`, { method: "DELETE" });
     if (response.ok) {
       sources.update((sources) => sources.filter((source) => source.id !== id));
+      // TODO: also remove the events from those calendars but i'll see how i do that during the rewrite/refactor of the whole GET logic
+      sourceCalendars.update((sourceCalendars) => { sourceCalendars.delete(id); return sourceCalendars; });
       return "";
     } else {
       const json = await response.json();
@@ -111,15 +159,47 @@ export const deleteSource = async (id: string): Promise<string> => {
   }
 }
 
-export const fetchCalendars = async (): Promise<string> => {
+//export const fetchCalendars = async (): Promise<string> => {
+//  try {
+//    const response = await fetch("/api/calendars");
+//    if (response.ok) {
+//      const json = await response.json() as {calendars: CalendarModel[], errored: string[]};
+//      calendars.set(json.calendars);
+//      faultySources.set(new Set<string>(json.errored));
+//      return ""
+//    } else {
+//      const json = await response.json();
+//      return (json ? json.error : "Could not contact the server");
+//    }
+//  } catch (e) {
+//    return "Unexpected error occured"
+//  }
+//};
+
+export const fetchCalendarsFromSource = async (id: string): Promise<string> => {
   try {
-    const response = await fetch("/api/calendars");
+    const response = await fetch(`/api/sources/${id}/calendars`);
     if (response.ok) {
-      const json = await response.json() as {calendars: CalendarModel[], errored: string[]};
-      calendars.set(json.calendars);
-      faultySources.set(new Set<string>(json.errored));
+      faultySources.update((faultySources) => new Set([...faultySources].filter((faultySource) => faultySource !== id)));
+      const json = await response.json() as {calendars: CalendarModel[]};
+      const fetchCalendars = json.calendars;
+      sourceCalendars.update((sourceCalendars) => sourceCalendars.set(id, fetchCalendars));
+
+      for (const calendar of fetchCalendars) {
+        fetchEventsFromCalendar(calendar.id).then(err => {
+          if (err != "") {
+            queueNotification(
+              "failure",
+              `Failed to fetch events: ${err}`
+            );
+          }
+        });
+      }
+
       return ""
     } else {
+      faultySources.update((faultySources) => new Set(faultySources.add(id)));
+      sourceCalendars.update((sourceCalendars) => { sourceCalendars.delete(id); return sourceCalendars; });
       const json = await response.json();
       return (json ? json.error : "Could not contact the server");
     }
@@ -128,19 +208,42 @@ export const fetchCalendars = async (): Promise<string> => {
   }
 };
 
-export const fetchEvents = async (): Promise<string> => {
+//export const fetchEvents = async (): Promise<string> => {
+//  try {
+//    const response = await fetch("/api/events");
+//    if (response.ok) {
+//      const json = await response.json() as {events: EventModel[], errored: string[]};
+//      for (const event of json.events) {
+//        event.date.start = new Date(event.date.start);
+//        event.date.end = new Date(event.date.end);
+//      }
+//      events.set(json.events);
+//      faultyCalendars.set(new Set<string>(json.errored));
+//      return ""
+//    } else {
+//      const json = await response.json();
+//      return (json ? json.error : "Could not contact the server");
+//    }
+//  } catch (e) {
+//    return "Unexpected error occured"
+//  }
+//};
+
+export const fetchEventsFromCalendar = async (id: string): Promise<string> => {
   try {
-    const response = await fetch("/api/events");
+    const response = await fetch(`/api/calendars/${id}/events`);
     if (response.ok) {
-      const json = await response.json() as {events: EventModel[], errored: string[]};
+      faultyCalendars.update((faultyCalendars) => new Set([...faultyCalendars].filter((faultyCalendar) => faultyCalendar !== id)));
+      const json = await response.json() as {events: EventModel[]};
       for (const event of json.events) {
         event.date.start = new Date(event.date.start);
         event.date.end = new Date(event.date.end);
       }
-      events.set(json.events);
-      faultyCalendars.set(new Set<string>(json.errored));
+      calendarEvents.update((calendarEvents) => calendarEvents.set(id, json.events));
       return ""
     } else {
+      faultyCalendars.update((faultyCalendars) => new Set(faultyCalendars.add(id)));
+      calendarEvents.update((calendarEvents) => { calendarEvents.delete(id); return calendarEvents; });
       const json = await response.json();
       return (json ? json.error : "Could not contact the server");
     }

@@ -110,11 +110,18 @@ Depending on the `auth_type` field, additional information may need to be passed
 - **Purpose**: Fetches calendars from all of user's sources.
 - **Note**: Specifying a subset of the sources may be supported in the future.
 
+#### Get Calendars From Source
+- **Path**: ``/api/sources/<ID>/calendars``
+- **Method**: ``GET``
+- **Body**: Empty
+- **Purpose**: Fetches calendars from the specified source.
+- **Note**: This endpoint might deprecate the bulk variant [Get Calendars](#get-calendars).
+
 #### Get Calendar
 - **Path**: ``/api/calendars/<ID>``
 - **Method**: ``GET``
 - **Body**: Empty
-- **Purpose**: Fetches a specific calendar from its appropriate source. This is only possible after [Get Calendars](#get-calendars) has been called before, otherwise no mapping exists between the calendar's ID and its source.
+- **Purpose**: Fetches a specific calendar from its appropriate source.
 
 #### Put Calendar
 - **Path**: ``/api/calendars``
@@ -144,11 +151,18 @@ Depending on the `auth_type` field, additional information may need to be passed
 - **Purpose**: Fetches events from all of user's calendars.
 - **Note**: Specifying a subset of the calendars may be supported in the future.
 
+#### Get Events From Calendar
+- **Path**: ``/api/calendars/<ID>/events``
+- **Method**: ``GET``
+- **Body**: Filters, in particular time period - not yet implemented
+- **Purpose**: Fetches events from the specified calendar.
+- **Note**: This endpoint might deprecate the bulk variant [Get Events](#get-events).
+
 #### Get Event
 - **Path**: ``/api/events/<ID>``
 - **Method**: ``GET``
 - **Body**: Empty
-- **Purpose**: Fetches a specific event from its appropriate calendar. This is only possible after [Get Events](#get-events) has been called before, otherwise no mapping exists between the events's ID and its calendar.
+- **Purpose**: Fetches a specific event from its appropriate calendar.
 
 #### Put Event
 - **Path**: ``/api/events``
