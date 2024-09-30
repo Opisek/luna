@@ -191,10 +191,10 @@ func setEventProps(cal *ical.Calendar, id string, name string, desc string, date
 
 	event.Props.SetText(ical.PropUID, id)
 
-	event.Props.SetText(ical.PropSummary, name)
+	event.Props.SetText(ical.PropSummary, escapeString(name))
 
 	if desc != "" {
-		event.Props.SetText(ical.PropDescription, desc)
+		event.Props.SetText(ical.PropDescription, escapeString(desc))
 	} else {
 		event.Props.Del(ical.PropDescription)
 	}
