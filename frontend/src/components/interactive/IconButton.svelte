@@ -3,6 +3,12 @@
   export let down: () => void = () => {};
   export let click: () => void = () => {};
   export let visible: boolean = true;
+  export let style: string = "";
+
+  function clickInternal(e: MouseEvent) {
+    e.stopPropagation();
+    click();
+  }
 </script>
 
 <style lang="scss">
@@ -18,6 +24,7 @@
     padding: $paddingTiny;
     cursor: pointer;
     position: relative;
+    transition: all $cubic $animationSpeed;
   }
 
   button.hidden {
@@ -29,11 +36,11 @@
     background-color: $backgroundSecondary;
     z-index: -1;
     border-radius: 50%;
-    transition: all $cubic $animationSpeed;
     left: 50%;
     top: 50%;
     width: 0%;
     height: 0%;
+    transition: all $cubic $animationSpeed;
   }
 
   button:hover div.circle {
@@ -51,7 +58,14 @@
   }
 </style>
 
-<button on:click={click} on:mousedown={down} on:mouseleave={up} on:mouseup={up} class:hidden={!visible}>
+<button
+  on:click={clickInternal}
+  on:mousedown={down}
+  on:mouseleave={up}
+  on:mouseup={up}
+  class:hidden={!visible}
+  style={style}
+>
   <div class="circle"></div>
   <slot/>
 </button>

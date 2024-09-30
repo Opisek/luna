@@ -1,5 +1,6 @@
 import { writable } from "svelte/store";
 import { queueNotification } from "./notifications";
+import { isCalendarVisible, isSourceCollapsed } from "./localStorage";
 
 // TODO: local storage integration
 export const sources = writable([] as SourceModel[]);
@@ -25,9 +26,10 @@ export const fetchSources = async (): Promise<string> => {
     const response = await fetch("/api/sources");
     if (response.ok) {
       const fetchedSources = await response.json() as SourceModel[];
-      sources.set(fetchedSources);
 
       for (const source of fetchedSources) {
+        source.collapsed = isSourceCollapsed(source.id);
+
         fetchCalendarsFromSource(source.id).then(err => {
           if (err != "") {
             queueNotification(
@@ -37,6 +39,10 @@ export const fetchSources = async (): Promise<string> => {
           }
         });
       }
+
+      console.log(fetchedSources);
+
+      sources.set(fetchedSources);
 
       return ""
     } else {
@@ -183,9 +189,10 @@ export const fetchCalendarsFromSource = async (id: string): Promise<string> => {
       faultySources.update((faultySources) => new Set([...faultySources].filter((faultySource) => faultySource !== id)));
       const json = await response.json() as {calendars: CalendarModel[]};
       const fetchCalendars = json.calendars;
-      sourceCalendars.update((sourceCalendars) => sourceCalendars.set(id, fetchCalendars));
 
       for (const calendar of fetchCalendars) {
+        calendar.visible = isCalendarVisible(calendar.id);
+
         fetchEventsFromCalendar(calendar.id).then(err => {
           if (err != "") {
             queueNotification(
@@ -195,6 +202,8 @@ export const fetchCalendarsFromSource = async (id: string): Promise<string> => {
           }
         });
       }
+
+      sourceCalendars.update((sourceCalendars) => sourceCalendars.set(id, fetchCalendars));
 
       return ""
     } else {

@@ -28,7 +28,8 @@
     type: "caldav",
     settings: {},
     auth_type: "none",
-    auth: {}
+    auth: {},
+    collapsed: false
   };
 
   function createNewSource() {
@@ -130,6 +131,10 @@
     display: flex;
     flex-direction: column;
     gap: $gap;
+    min-width: 10em;
+    width: 20vw;
+    max-width: 20em;
+    overflow: hidden;
   }
 
   div.sources {
@@ -145,10 +150,12 @@
     <Title>Luna</Title>
     <div class="sources">
       {#each localSources as source}
-        <SourceEntry source={source}/>
-        {#each sourceCalendars.get(source.id) || [] as calendar}
-          <CalendarEntry calendar={calendar}/>
-        {/each}
+        <SourceEntry bind:source={source}/>
+        {#if (!source.collapsed)}
+          {#each sourceCalendars.get(source.id) || [] as calendar}
+            <CalendarEntry calendar={calendar}/>
+          {/each}
+        {/if}
       {/each}
     </div>
     <Horizontal position="center">

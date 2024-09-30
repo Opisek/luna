@@ -5,4 +5,5 @@ type SourceModel = {
   settings: {[key: string]: any}
   auth_type: string;
   auth: {[key: string]: any}
+  collapsed: boolean;
 }

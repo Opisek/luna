@@ -1,5 +1,6 @@
 <script lang="ts">
   import { faultyCalendars } from "$lib/client/repository";
+  import { hiddenCalendars, setCalendarVisibility } from "../../lib/client/localStorage";
   import Tooltip from "../interactive/Tooltip.svelte";
   import VisibilityToggle from "../interactive/VisibilityToggle.svelte";
 
@@ -10,7 +11,10 @@
     hasErrored = faulty.has(calendar.id);
   });
 
-  let visibleTest = true;
+  $: if (calendar && calendar.id) setCalendarVisibility(calendar.id, calendar.visible);
+  hiddenCalendars.subscribe((hidden) => {
+    calendar.visible = !hidden.has(calendar.id);
+  });
 </script>
 
 <style lang="scss">
@@ -28,6 +32,7 @@
     width: 0.75em;
     height: 0.75em;
     border-radius: 50%;
+    flex-shrink: 0;
   }
 
   span {
@@ -43,7 +48,7 @@
   <span>
     {calendar.name}
   </span>
-  <VisibilityToggle visible={visibleTest}/>
+  <VisibilityToggle bind:visible={calendar.visible}/>
   {#if hasErrored}
     <Tooltip msg="An error occurred trying to retrieve events from this calendar." error={true}/>
   {/if}

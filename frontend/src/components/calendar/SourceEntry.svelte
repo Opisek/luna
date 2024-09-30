@@ -1,5 +1,7 @@
 <script lang="ts">
   import { faultySources } from "$lib/client/repository";
+  import { collapsedSources, setSourceCollapse } from "../../lib/client/localStorage";
+  import CollapseToggle from "../interactive/CollapseToggle.svelte";
   import Tooltip from "../interactive/Tooltip.svelte";
   import SourceModal from "../modals/SourceModal.svelte";
 
@@ -11,6 +13,11 @@
   });
 
   let showModal: () => any;
+
+  $: if (source && source.id) setSourceCollapse(source.id, source.collapsed);
+  collapsedSources.subscribe((collapsed) => {
+    source.collapsed = collapsed.has(source.id);
+  });
 </script>
 
 <style lang="scss">
@@ -18,7 +25,7 @@
   @import "../../styles/dimensions.scss";
   @import "../../styles/colors.scss";
 
-  span {
+  span.row {
     margin: 0;
     color: $foregroundFaded;
     height: 1.25em;
@@ -27,6 +34,14 @@
     align-items: center;
     align-content: center;
     cursor: pointer;
+  }
+
+  span.buttons {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: $gapTiny;
+    align-items: center;
   }
 
   //span :global(button) {
@@ -39,11 +54,14 @@
   //}
 </style>
 
-<span on:click={showModal}>
-  {source.name}
+<span on:click={showModal} class="row">
+    {source.name}
+  <span class="buttons">
+    <CollapseToggle bind:collapsed={source.collapsed}/>
   {#if hasErrored}
     <Tooltip msg="An error occurred trying to retrieve calendars from this source." error={true}/>
   {/if}
+  </span>
   <!--
   <IconButton callback={showModal}>
     <PencilIcon size={16}/>

@@ -4,4 +4,5 @@ type CalendarModel = {
   name: string;
   url: string;
   color: string;
+  visible: boolean;
 }
