@@ -12,6 +12,15 @@
 
   export let password: boolean = false;
   let passwordVisible: boolean = false;
+
+  // TODO: automatic height 
+  // let textArea: HTMLTextAreaElement;
+  // let textAreaRows: number = 4;
+  // // https://stackoverflow.com/questions/2035910/how-to-get-the-number-of-lines-in-a-textarea
+  // function updateTextAreaHeight() {
+  //   if (!textArea) return;
+  //   textAreaRows = Math.ceil(textArea.scrollHeight / 18.5)
+  // }
 </script>
 
 <style lang="scss">
@@ -20,24 +29,26 @@
 
   input, textarea {
     all: unset;
-    padding: $gapSmall;
-    border-radius: $borderRadius;
     cursor: revert;
   }
 
-  input.editable, textarea.editable {
+  input, div.textarea-wrapper {
+    padding: $gapSmall;
+    border-radius: $borderRadius;
+  }
+
+  .editable {
     background: $backgroundSecondary;
     cursor: text;
   }
 
   textarea {
-    height: auto;
+    min-height: 0;
     white-space: pre-wrap;
     word-wrap: break-word;
-  }
-
-  textarea.editable {
-    height: 5em; // TODO: automatic resizing
+    width: 100%;
+    padding: 0;
+    margin: 0;
   }
 
   div.visibility {
@@ -56,13 +67,18 @@
 
 <Label name={name}>{placeholder}</Label>
 {#if multiline}
-  <textarea
-    bind:value={value}
-    name={name}
-    placeholder={placeholder}
-    disabled={!editable}
-    class:editable={editable}
-  />
+  <div
+    class="textarea-wrapper"
+    class:editable={editable} 
+  >
+    <textarea
+      bind:value={value}
+      name={name}
+      placeholder={placeholder}
+      disabled={!editable}
+      rows=6
+    />
+  </div>
 {:else if password && !passwordVisible}
   <input
     bind:value={value}
