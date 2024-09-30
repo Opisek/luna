@@ -40,9 +40,7 @@ export const fetchSources = async (): Promise<string> => {
         });
       }
 
-      console.log(fetchedSources);
-
-      sources.set(fetchedSources);
+     sources.set(fetchedSources);
 
       return ""
     } else {
