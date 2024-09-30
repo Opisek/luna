@@ -1,5 +1,5 @@
 <script lang="ts">
-  import CalendarEvent from "./CalendarEvent.svelte";
+  import EventEntry from "./EventEntry.svelte";
 
   export let date: Date;
 
@@ -84,7 +84,7 @@
   {#if isFirstDay}
     <div class="events" bind:offsetHeight={containerHeight}>
       {#each events as event, i}
-        <CalendarEvent
+        <EventEntry
           event={event}
           isFirstDay={isFirstDay}
           isLastDay={isLastDay}
@@ -104,7 +104,7 @@
   {:else}
     <div class="events">
       {#each events as event, i}
-        <CalendarEvent
+        <EventEntry
           event={event}
           isFirstDay={isFirstDay}
           isLastDay={isLastDay}

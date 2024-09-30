@@ -1,6 +1,7 @@
 <script lang="ts">
   import { parseRGB } from "$lib/common/parsing";
   import { isDark } from "$lib/common/colors";
+  import { TextIcon } from "lucide-svelte";
 
   export let visible: boolean = true;
 
@@ -63,10 +64,15 @@
     font-size: $fontSizeSmall;
     margin: 0;
 
+    display: flex;
+    gap: $gapTiny;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+
     user-select: none;
     cursor: pointer;
 
-    text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
 
@@ -103,6 +109,18 @@
   div.foregroundDark {
     color: $foregroundDark;
   }
+
+  span.name {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    min-width: 0;
+    flex-shrink: 1;
+  }
+  span.icons {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+  }
 </style>
 
 <div
@@ -123,6 +141,13 @@
   style="background-color:{event ? event.color : "transparent"}"
 >
   {#if event && isFirstDisplay}
-    {event.name}
+    <span class="name">
+      {event.name}
+    </span>
+    {#if (event.desc && event.desc != "")}
+      <span class="icons">
+        <TextIcon size={12}/>
+      </span>
+    {/if}
   {/if}
 </div>
