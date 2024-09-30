@@ -22,17 +22,18 @@
   let calendarEvents: Map<string, EventModel[]> = new Map();
 
   let showNewSourceModal: () => any;
-  let newSource: SourceModel = {
-    id: "",
-    name: "",
-    type: "caldav",
-    settings: {},
-    auth_type: "none",
-    auth: {},
-    collapsed: false
-  };
+  let newSource: SourceModel;
 
   function createNewSource() {
+    newSource = {
+      id: "",
+      name: "",
+      type: "caldav",
+      settings: {},
+      auth_type: "none",
+      auth: {},
+      collapsed: false
+    };
     showNewSourceModal();
   }
 
