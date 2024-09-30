@@ -34,26 +34,16 @@
     cursor: help;
     display: flex;
     justify-content: center;
+    padding: $paddingTiny;
   }
   div.error {
     color: $backgroundFailure;
   }
-  span {
-    opacity: 0;
-    border-radius: $borderRadius;
-    padding: $paddingSmaller;
-    background-color: $backgroundPrimary;
-    color: $foregroundPrimary;
-    transition: opacity $animationSpeed $cubic;
+  span.message {
     position: absolute;
     z-index: 10;
     pointer-events: none;
-    min-width: none;
-    width: max-content;
-    max-width: 80vw;
-    box-shadow: $boxShadow;
     left: 0;
-    white-space: nowrap;
   }
   span.over {
     bottom: calc(100% + $gapTiny);
@@ -70,6 +60,22 @@
   span.center {
     left: 50%;
     transform: translateX(-50%);
+  }
+  span.overflow-fix {
+    position: fixed;
+    opacity: 0;
+    border-radius: $borderRadius;
+    padding: $paddingSmaller;
+    background-color: $backgroundPrimary;
+    color: $foregroundPrimary;
+    transition: opacity $animationSpeed $cubic;
+    z-index: 10;
+    pointer-events: none;
+    min-width: none;
+    width: max-content;
+    max-width: 80vw;
+    box-shadow: $boxShadow;
+    white-space: nowrap;
   }
   div:hover span {
     opacity: 1;
@@ -93,7 +99,10 @@
     class:left={!right && !center}
     class:right={right && !center}
     class:center={center}
+    class="message"
   >
-    {msg}
+    <span class="overflow-fix">
+      {msg}
+    </span>
   </span>
 </div>
