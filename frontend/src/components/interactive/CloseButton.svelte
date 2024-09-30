@@ -1,11 +1,11 @@
 <script lang="ts">
   import { X } from "lucide-svelte";
 
-  import RawButton from "./RawButton.svelte";
+  import IconButton from "./IconButton.svelte";
 
   export let onClick: () => void;
 </script>
 
-<RawButton bind:onClick={onClick}>
+<IconButton bind:click={onClick}>
   <X/>
-</RawButton>
+</IconButton>

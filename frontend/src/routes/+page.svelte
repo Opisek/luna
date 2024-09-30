@@ -152,7 +152,7 @@
       {/each}
     </div>
     <Horizontal position="center">
-      <IconButton callback={createNewSource}>
+      <IconButton click={createNewSource}>
         <PlusIcon/>
       </IconButton>
       <SourceModal bind:showModal={showNewSourceModal} source={newSource}/>
@@ -160,10 +160,10 @@
   </aside>
   <main>
     <div class="monthSelection">
-      <IconButton callback={previousMonth}>
+      <IconButton click={previousMonth}>
         <LeftIcon/>
       </IconButton>
-      <IconButton callback={nextMonth}>
+      <IconButton click={nextMonth}>
         <RightIcon/>
       </IconButton>
       <span class="monthLabel">

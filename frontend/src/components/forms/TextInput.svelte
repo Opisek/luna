@@ -43,8 +43,9 @@
   div.visibility {
     text-align: right;
     position: relative;
-    top: calc(-1.25em - 2 * $gapSmall - 0.5 * $fontSize);
-    margin-bottom: calc(-1.25em - $gapSmall - 0.5 * $fontSize);
+    // TODO: don't use hard-coded values
+    top: calc(-1.31em - 2 * $gapSmall - 0.5 * $fontSize);
+    margin-bottom: calc(-1.31em - $gapSmall - 0.5 * $fontSize);
     right: calc(-100% + 1.25em + $gapSmall);
     width: fit-content;
     display: flex;

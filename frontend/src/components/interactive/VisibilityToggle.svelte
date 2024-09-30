@@ -1,5 +1,6 @@
 <script lang="ts">
   import { Eye, EyeOff } from "lucide-svelte";
+  import IconButton from "./IconButton.svelte";
 
   export let visible: boolean;
   export let momentary: boolean = false;
@@ -17,39 +18,22 @@
   }
 </script>
 
-<style lang="scss">
-  span {
-    height: 1.25em;
-    width: 1.25em;
-    cursor: pointer;
-
-    align-items: center;
-    display: flex;
-    justify-content: center;
-    justify-items: center;
-  }
-</style>
-
 {#if momentary}
-  <span
-    on:mousedown={show}
-    on:mouseup={hide} 
-    on:mouseleave={hide} 
-  >
+  <IconButton down={show} up={hide}>
     {#if visible}
       <Eye size={16}/>
     {:else}
       <EyeOff size={16}/>
     {/if}
-  </span>
+  </IconButton>
 {:else}
-  <span on:click={toggleVisibility}>
+  <IconButton click={toggleVisibility}>
     {#if visible}
       <Eye size={16}/>
     {:else}
       <EyeOff size={16}/>
     {/if}
-  </span>
+  </IconButton>
 {/if}
 
 <!-- TODO: svelte snippets once supported -->
