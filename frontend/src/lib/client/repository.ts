@@ -93,7 +93,7 @@ export const createSource = async (newSource: SourceModel): Promise<string> => {
     if (response.ok) {
       const json = await response.json();
       newSource.id = json.id;
-      sources.update((sources) => sources.map((source => source.id === newSource.id ? newSource : source)))
+      sources.update((sources) => sources.concat(newSource));
 
       fetchCalendarsFromSource(newSource.id).then(err => {
         if (err != "") {
