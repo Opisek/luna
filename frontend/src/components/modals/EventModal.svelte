@@ -6,6 +6,7 @@
 
   export let event: EventModel;
 
+  export let showCreateModal: () => boolean;
   export let showModal: () => boolean;
 
   let title: string;
@@ -28,8 +29,8 @@
 <EditableModal
   title={title}
   deleteConfirmation={`Are you sure you want to delete event "${event ? event.name : ""}"?`}
-  isNew={!(event && event.id)}
   bind:editMode={editMode}
+  bind:showCreateModal={showCreateModal}
   bind:showModal={showModal}
   onDelete={onDelete}
   onEdit={onEdit}

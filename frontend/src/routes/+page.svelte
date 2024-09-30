@@ -34,7 +34,7 @@
       auth: {},
       collapsed: false
     };
-    showNewSourceModal();
+    setTimeout(showNewSourceModal, 0);
   }
 
   const currentYear = new Date().getFullYear();
@@ -163,7 +163,7 @@
       <IconButton click={createNewSource}>
         <PlusIcon/>
       </IconButton>
-      <SourceModal bind:showModal={showNewSourceModal} source={newSource}/>
+      <SourceModal bind:showCreateModal={showNewSourceModal} source={newSource}/>
     </Horizontal>
   </aside>
   <main>

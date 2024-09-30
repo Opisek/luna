@@ -5,8 +5,14 @@
   import ConfirmationModal from "./ConfirmationModal.svelte";
   import Modal from "./Modal.svelte";
 
+  export const showCreateModal = () => {
+    creating = true;
+    editMode = true;
+    showModalInternal();
+  };
   export const showModal = () => {
-    editMode = isNew;
+    creating = false;
+    editMode = false;
     showModalInternal();
   };
   let showModalInternal: () => boolean;
@@ -14,9 +20,9 @@
 
   export let title: string;
   export let deleteConfirmation: string;
-  export let isNew: boolean;
 
   export let editMode: boolean = false;
+  let creating = false;
 
   function startEditMode() {
     editMode = true;
@@ -24,7 +30,7 @@
 
   function cancelEdit() {
     editMode = false;
-    if (isNew) {
+    if (creating) {
       hideModal();
     }
   }

@@ -8,21 +8,22 @@
   export let source: SourceModel;
   let sourceDetailed: SourceModel;
 
+  export const showCreateModal = () => {
+    sourceDetailed = source;
+    showCreateModalInternal();
+  }
   export const showModal = async () => {
-    if (source.id === "") {
-      sourceDetailed = source;
+    const res = await fetch(`/api/sources/${source.id}`);
+    if (res.ok) {
+      sourceDetailed = await res.json();
     } else {
-      const res = await fetch(`/api/sources/${source.id}`);
-      if (res.ok) {
-        sourceDetailed = await res.json();
-      } else {
-        queueNotification("failure", `Failed to fetch source details: ${res.statusText}`);
-        return
-      }
+      queueNotification("failure", `Failed to fetch source details: ${res.statusText}`);
+      return
     }
 
     showModalInternal();
   };
+  let showCreateModalInternal: () => boolean;
   let showModalInternal: () => boolean;
 
   let title: string;
@@ -50,8 +51,8 @@
 <EditableModal
   title={title}
   deleteConfirmation={`Are you sure you want to delete source "${sourceDetailed ? sourceDetailed.name : ""}"?`}
-  isNew={!(sourceDetailed && sourceDetailed.id)}
   bind:editMode={editMode}
+  bind:showCreateModal={showCreateModalInternal}
   bind:showModal={showModalInternal}
   onDelete={onDelete}
   onEdit={onEdit}
