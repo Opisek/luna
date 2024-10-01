@@ -39,22 +39,20 @@ func run(api *config.Api) {
 	sourcesEndpoints.PUT("", handlers.PutSource)
 	sourcesEndpoints.PATCH("/:sourceId", handlers.PatchSource)
 	sourcesEndpoints.DELETE("/:sourceId", handlers.DeleteSource)
-	sourcesEndpoints.GET("/:sourceId/calendars", handlers.GetCalendarsFromSource)
+	sourcesEndpoints.GET("/:sourceId/calendars", handlers.GetCalendars)
+	sourcesEndpoints.PUT("/:sourceId/calendars", handlers.PutCalendar)
 
 	// /api/calendars/*
 	calendarsEndpoints := authenticatedEndpoints.Group("/calendars")
-	calendarsEndpoints.GET("", handlers.GetCalendars)
 	calendarsEndpoints.GET("/:calendarId", handlers.GetCalendar)
-	calendarsEndpoints.PUT("", handlers.PutCalendar)
 	calendarsEndpoints.PATCH("/:calendarId", handlers.PatchCalendar)
 	calendarsEndpoints.DELETE("/:calendarId", handlers.DeleteCalendar)
-	calendarsEndpoints.GET("/:calendarId/events", handlers.GetEventsFromCalendar)
+	calendarsEndpoints.GET("/:calendarId/events", handlers.GetEvents)
+	calendarsEndpoints.PUT("/:calendarId/events", handlers.PutEvent)
 
 	// /api/events/*
 	eventEndpoints := authenticatedEndpoints.Group("/events")
-	eventEndpoints.GET("", handlers.GetEvents)
 	eventEndpoints.GET("/:eventId", handlers.GetEvent)
-	eventEndpoints.PUT("", handlers.PutEvent)
 	eventEndpoints.PATCH("/:eventId", handlers.PatchEvent)
 	eventEndpoints.DELETE("/:eventId", handlers.DeleteEvent)
 

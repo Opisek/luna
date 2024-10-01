@@ -48,7 +48,7 @@ func (q *Queries) insertCalendars(cals []primitives.Calendar) error {
 	return nil
 }
 
-func (q *Queries) getCalendarEntries(sources []primitives.Source, cals []primitives.Calendar) ([]*tables.CalendarEntry, error) {
+func (q *Queries) getCalendarEntries(cals []primitives.Calendar) ([]*tables.CalendarEntry, error) {
 	query := fmt.Sprintf(
 		`
 		SELECT id, source, color, settings
@@ -65,17 +65,10 @@ func (q *Queries) getCalendarEntries(sources []primitives.Source, cals []primiti
 		query,
 		util.JoinIds(cals, func(c primitives.Calendar) types.ID { return c.GetId() })...,
 	)
-
 	if err != nil {
 		return nil, fmt.Errorf("could not get calendars from database: %v", err)
 	}
-
 	defer rows.Close()
-
-	sourceMap := map[types.ID]primitives.Source{}
-	for _, source := range sources {
-		sourceMap[source.GetId()] = source
-	}
 
 	entries := []*tables.CalendarEntry{}
 	for rows.Next() {
@@ -92,7 +85,7 @@ func (q *Queries) getCalendarEntries(sources []primitives.Source, cals []primiti
 	return entries, nil
 }
 
-func (q *Queries) ReconcileCalendars(sources []primitives.Source, cals []primitives.Calendar) ([]primitives.Calendar, error) {
+func (q *Queries) ReconcileCalendars(cals []primitives.Calendar) ([]primitives.Calendar, error) {
 	if len(cals) == 0 {
 		return cals, nil
 	}
@@ -102,7 +95,7 @@ func (q *Queries) ReconcileCalendars(sources []primitives.Source, cals []primiti
 		calMap[cal.GetId()] = cal
 	}
 
-	dbCals, err := q.getCalendarEntries(sources, cals)
+	dbCals, err := q.getCalendarEntries(cals)
 	if err != nil {
 		return nil, fmt.Errorf("could not get cached calendars: %v", err)
 	}

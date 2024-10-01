@@ -1,15 +1,10 @@
 package handlers
 
 import (
-	"fmt"
-	"luna-backend/api/internal/config"
 	"luna-backend/api/internal/context"
 	"luna-backend/api/internal/util"
-	"luna-backend/db"
-	"luna-backend/interface/primitives"
 	"luna-backend/types"
 	"net/http"
-	"sync"
 
 	"github.com/gin-gonic/gin"
 )
@@ -23,107 +18,7 @@ type exposedCalendar struct {
 	//Settings primitives.CalendarSettings `json:"settings"` // TODO: REMOVE FROM PRODUCTION, TESTING ONLY
 }
 
-func getCalendars(config *config.Api, tx *db.Transaction, srcs []primitives.Source) ([]primitives.Calendar, []bool, error) {
-	// For each source, get its calendars
-	cals := make([][]primitives.Calendar, len(srcs))
-	success := make([]bool, len(srcs))
-
-	waitGroup := sync.WaitGroup{}
-	for i, src := range srcs {
-		waitGroup.Add(1)
-		go func(i int, source primitives.Source) {
-			defer waitGroup.Done()
-
-			calsFromSource, err := source.GetCalendars()
-			success[i] = err == nil
-
-			if err != nil {
-				cals[i] = []primitives.Calendar{}
-				config.Logger.Errorf("could not fetch calendars from source %v: %v", source.GetName(), err)
-				return
-			}
-
-			cals[i] = calsFromSource
-		}(i, src)
-	}
-
-	// Combine (flatten) all calendars
-	waitGroup.Wait()
-
-	combinedCals := []primitives.Calendar{}
-	for _, calsFromSource := range cals {
-		combinedCals = append(combinedCals, calsFromSource...)
-	}
-
-	// Reconcile with database
-	combinedCals, err := tx.Queries().ReconcileCalendars(srcs, combinedCals)
-	if err != nil {
-		return nil, nil, fmt.Errorf("could not reconcile calendars: %v", err)
-	}
-
-	return combinedCals, success, nil
-}
-
 func GetCalendars(c *gin.Context) {
-	// Get config
-	config := context.GetConfig(c)
-	userId := context.GetUserId(c)
-	tx := context.GetTransaction(c)
-	defer tx.Rollback(config.Logger)
-
-	// Get all of user's sources
-	srcs, err := getSources(config, tx, userId)
-	if err != nil {
-		config.Logger.Errorf("could not get calendars: %v", err)
-		util.Error(c, util.ErrorUnknown)
-		return
-	}
-
-	// Get their associated calendars
-	cals, succeeded, err := getCalendars(config, tx, srcs)
-	if err != nil {
-		config.Logger.Errorf("could not get calendars: %v", err)
-		util.Error(c, util.ErrorUnknown)
-		return
-	}
-
-	// Convert to exposed format
-	convertedCals := make([]exposedCalendar, len(cals))
-	for i, cal := range cals {
-		convertedCals[i] = exposedCalendar{
-			Id:     cal.GetId(),
-			Source: cal.GetSource().GetId(),
-			Name:   cal.GetName(),
-			Desc:   cal.GetDesc(),
-			Color:  cal.GetColor(),
-			//Settings: cal.GetSettings(),
-		}
-	}
-
-	if tx.Commit(config.Logger) != nil {
-		util.Error(c, util.ErrorDatabase)
-		return
-	}
-
-	errCnt := 0
-	for _, success := range succeeded {
-		if !success {
-			errCnt++
-		}
-	}
-	errIDs := make([]types.ID, errCnt)
-	j := 0
-	for i, success := range succeeded {
-		if !success {
-			errIDs[j] = srcs[i].GetId()
-			j += 1
-		}
-	}
-
-	c.JSON(http.StatusOK, gin.H{"calendars": convertedCals, "errored": errIDs})
-}
-
-func GetCalendarsFromSource(c *gin.Context) {
 	// Get config
 	config := context.GetConfig(c)
 	userId := context.GetUserId(c)
@@ -146,12 +41,18 @@ func GetCalendarsFromSource(c *gin.Context) {
 	}
 
 	// Get the associated calendars
-	// TODO: if we stick to this pattern, we will have a method that takes a single source instead of a slice
-	cals, succeeded, err := getCalendars(config, tx, []primitives.Source{source})
-	// TODO: more verbose error reporting (succeeded is just a bool), related to the above remark
-	if err != nil || !succeeded[0] {
-		config.Logger.Errorf("could not get calendars: %v", err)
+	calsFromSource, err := source.GetCalendars()
+
+	if err != nil {
+		config.Logger.Errorf("could not fetch calendars from source %v: %v", source.GetName(), err)
 		util.Error(c, util.ErrorUnknown)
+		return
+	}
+
+	cals, err := tx.Queries().ReconcileCalendars(calsFromSource)
+	if err != nil {
+		config.Logger.Errorf("could not reconcile calendars: %v", err)
+		util.Error(c, util.ErrorDatabase)
 		return
 	}
 
@@ -221,8 +122,7 @@ func PutCalendar(c *gin.Context) {
 	tx := context.GetTransaction(c)
 	defer tx.Rollback(apiConfig.Logger)
 
-	sourceIdStr := c.PostForm("source")
-	sourceId, err := types.IdFromString(sourceIdStr)
+	sourceId, err := context.GetId(c, "source")
 	if err != nil {
 		apiConfig.Logger.Error("missing or malformed source id")
 		util.ErrorDetailed(c, util.ErrorPayload, util.DetailId)

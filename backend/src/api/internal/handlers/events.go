@@ -1,15 +1,10 @@
 package handlers
 
 import (
-	"fmt"
-	"luna-backend/api/internal/config"
 	"luna-backend/api/internal/context"
 	"luna-backend/api/internal/util"
-	"luna-backend/db"
-	"luna-backend/interface/primitives"
 	"luna-backend/types"
 	"net/http"
-	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -25,130 +20,7 @@ type exposedEvent struct {
 	//Settings primitives.EventSettings `json:"settings"` // TODO: REMOVE FROM PRODUCTION, TESTING ONLY
 }
 
-func getEvents(config *config.Api, tx *db.Transaction, cals []primitives.Calendar, start time.Time, end time.Time) ([]primitives.Event, []bool, error) {
-	// For each calendar, get its events
-	events := make([][]primitives.Event, len(cals))
-	success := make([]bool, len(cals))
-
-	waitGroup := sync.WaitGroup{}
-	for i, cal := range cals {
-		waitGroup.Add(1)
-		go func(i int, cal primitives.Calendar) {
-			defer waitGroup.Done()
-
-			eventsFromCal, err := cal.GetEvents(start, end)
-			success[i] = err == nil
-
-			if err != nil {
-				events[i] = []primitives.Event{}
-				config.Logger.Errorf("could not get events: could not get events from calendar %v: %v", cal.GetName(), err)
-				return
-			}
-
-			events[i] = eventsFromCal
-		}(i, cal)
-	}
-
-	// Combine (flatten) all calendars
-	waitGroup.Wait()
-
-	combinedEvents := []primitives.Event{}
-	for _, eventsFromCal := range events {
-		combinedEvents = append(combinedEvents, eventsFromCal...)
-	}
-
-	// Reconcile with database
-	combinedEvents, err := tx.Queries().ReconcileEvents(cals, combinedEvents)
-	if err != nil {
-		return nil, nil, fmt.Errorf("could not reconcile events: %v", err)
-	}
-
-	return combinedEvents, success, nil
-}
-
 func GetEvents(c *gin.Context) {
-	// Get config
-	config := context.GetConfig(c)
-	userId := context.GetUserId(c)
-	tx := context.GetTransaction(c)
-	defer tx.Rollback(config.Logger)
-
-	// Get all of user's sources
-	srcs, err := getSources(config, tx, userId)
-	if err != nil {
-		config.Logger.Errorf("could not get events: %v", err)
-		util.Error(c, util.ErrorUnknown)
-		return
-	}
-
-	// Get their associated calendars
-	cals, _, err := getCalendars(config, tx, srcs)
-	if err != nil {
-		config.Logger.Errorf("could not get events: %v", err)
-		util.Error(c, util.ErrorUnknown)
-		return
-	}
-
-	// Get their associated events
-	// TODO: get time from the api request
-	startTime, err := time.Parse(time.RFC3339, "2024-01-01T00:00:00+00:00")
-	if err != nil {
-		panic(err)
-	}
-	endTime, err := time.Parse(time.RFC3339, "2025-01-01T00:00:00+00:00")
-	if err != nil {
-		panic(err)
-	}
-
-	events, succeeded, err := getEvents(config, tx, cals, startTime, endTime)
-	if err != nil {
-		config.Logger.Errorf("could not get events: %v", err)
-		util.Error(c, util.ErrorUnknown)
-		return
-	}
-
-	// Convert to exposed format
-	convertedEvents := make([]exposedEvent, len(events))
-	for i, event := range events {
-		if event.GetName() == "" { // TODO: error handling
-			continue
-		}
-
-		convertedEvents[i] = exposedEvent{
-			Id:       event.GetId(),
-			Calendar: event.GetCalendar().GetId(),
-			Name:     event.GetName(),
-			Desc:     event.GetDesc(),
-			Color:    event.GetColor(),
-			Date:     event.GetDate(),
-			//Settings: event.GetSettings(),
-		}
-	}
-
-	if tx.Commit(config.Logger) != nil {
-		util.Error(c, util.ErrorDatabase)
-		return
-	}
-
-	errCnt := 0
-	for _, success := range succeeded {
-		if !success {
-			errCnt++
-		}
-	}
-	errIDs := make([]types.ID, errCnt)
-	j := 0
-	for i, success := range succeeded {
-		if !success {
-			errIDs[j] = cals[i].GetId()
-			j += 1
-		}
-	}
-
-	c.JSON(http.StatusOK, gin.H{"events": convertedEvents, "errored": errIDs})
-}
-
-func GetEventsFromCalendar(c *gin.Context) {
 	// Get config
 	config := context.GetConfig(c)
 	userId := context.GetUserId(c)
@@ -182,10 +54,17 @@ func GetEventsFromCalendar(c *gin.Context) {
 	}
 
 	// TODO: same considerations apply as with /api/sources/id/calendars in case we stick to this pattern
-	events, succeeded, err := getEvents(config, tx, []primitives.Calendar{calendar}, startTime, endTime)
-	if err != nil || !succeeded[0] {
-		config.Logger.Errorf("could not get events: %v", err)
+	eventsFromCal, err := calendar.GetEvents(startTime, endTime)
+	if err != nil {
+		config.Logger.Errorf("could not get events: could not get events from calendar %v: %v", calendar.GetName(), err)
 		util.Error(c, util.ErrorUnknown)
+		return
+	}
+
+	events, err := tx.Queries().ReconcileEvents(eventsFromCal)
+	if err != nil {
+		config.Logger.Errorf("could not reconcile events: %v", err)
+		util.Error(c, util.ErrorDatabase)
 		return
 	}
 
@@ -261,8 +140,7 @@ func PutEvent(c *gin.Context) {
 	tx := context.GetTransaction(c)
 	defer tx.Rollback(apiConfig.Logger)
 
-	calendarIdStr := c.PostForm("calendar")
-	calendarId, err := types.IdFromString(calendarIdStr)
+	calendarId, err := context.GetId(c, "calendar")
 	if err != nil {
 		apiConfig.Logger.Error("missing or malformed calendar id")
 		util.ErrorDetailed(c, util.ErrorPayload, util.DetailId)

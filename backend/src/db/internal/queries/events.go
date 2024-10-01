@@ -48,7 +48,7 @@ func (q *Queries) insertEvents(cals []primitives.Event) error {
 	return nil
 }
 
-func (q *Queries) getEventEntries(calendars []primitives.Calendar, events []primitives.Event) ([]*tables.EventEntry, error) {
+func (q *Queries) getEventEntries(events []primitives.Event) ([]*tables.EventEntry, error) {
 	query := fmt.Sprintf(
 		`
 		SELECT id, calendar, color, settings
@@ -72,11 +72,6 @@ func (q *Queries) getEventEntries(calendars []primitives.Calendar, events []prim
 
 	defer rows.Close()
 
-	calMap := map[types.ID]primitives.Calendar{}
-	for _, cal := range calendars {
-		calMap[cal.GetId()] = cal
-	}
-
 	entries := []*tables.EventEntry{}
 	for rows.Next() {
 		entry := &tables.EventEntry{}
@@ -92,7 +87,7 @@ func (q *Queries) getEventEntries(calendars []primitives.Calendar, events []prim
 	return entries, nil
 }
 
-func (q *Queries) ReconcileEvents(cals []primitives.Calendar, events []primitives.Event) ([]primitives.Event, error) {
+func (q *Queries) ReconcileEvents(events []primitives.Event) ([]primitives.Event, error) {
 	if len(events) == 0 {
 		return events, nil
 	}
@@ -102,7 +97,7 @@ func (q *Queries) ReconcileEvents(cals []primitives.Calendar, events []primitive
 		eventMap[event.GetId()] = event
 	}
 
-	dbEvents, err := q.getEventEntries(cals, events)
+	dbEvents, err := q.getEventEntries(events)
 	if err != nil {
 		return nil, fmt.Errorf("could not get cached events: %v", err)
 	}

@@ -122,18 +122,10 @@ Depending on the `auth_type` field, additional information may need to be passed
 
 ### Calendars
 #### Get Calendars
-- **Path**: ``/api/calendars``
-- **Method**: ``GET``
-- **Body**: Empty
-- **Purpose**: Fetches calendars from all of user's sources.
-- **Note**: Specifying a subset of the sources may be supported in the future.
-
-#### Get Calendars From Source
 - **Path**: ``/api/sources/<ID>/calendars``
 - **Method**: ``GET``
 - **Body**: Empty
 - **Purpose**: Fetches calendars from the specified source.
-- **Note**: This endpoint might deprecate the bulk variant [Get Calendars](#get-calendars).
 
 #### Get Calendar
 - **Path**: ``/api/calendars/<ID>``
@@ -142,11 +134,10 @@ Depending on the `auth_type` field, additional information may need to be passed
 - **Purpose**: Fetches a specific calendar from its appropriate source.
 
 #### Put Calendar
-- **Path**: ``/api/calendars``
+- **Path**: ``/api/sources/<ID>/calendars``
 - **Method**: ``PUT``
-- **Body**: `name`, `color`, `source`
-- **Purpose**: Add a new calendar to a specified source in the upstream, as well as the local database.
-- **Note**: This might migrate back to ``/api/sources/<SourceID>/calendars``
+- **Body**: `name`, `color`
+- **Purpose**: Add a new calendar to the specified source in the upstream, as well as the local database.
 
 #### Patch Calendar
 - **Path**: ``/api/calendars/<ID>``
@@ -163,18 +154,10 @@ Depending on the `auth_type` field, additional information may need to be passed
 
 ### Events
 #### Get Events
-- **Path**: ``/api/events``
-- **Method**: ``GET``
-- **Body**: Filters, in particular time period - not yet implemented
-- **Purpose**: Fetches events from all of user's calendars.
-- **Note**: Specifying a subset of the calendars may be supported in the future.
-
-#### Get Events From Calendar
 - **Path**: ``/api/calendars/<ID>/events``
 - **Method**: ``GET``
 - **Body**: Filters, in particular time period - not yet implemented
 - **Purpose**: Fetches events from the specified calendar.
-- **Note**: This endpoint might deprecate the bulk variant [Get Events](#get-events).
 
 #### Get Event
 - **Path**: ``/api/events/<ID>``
@@ -183,11 +166,10 @@ Depending on the `auth_type` field, additional information may need to be passed
 - **Purpose**: Fetches a specific event from its appropriate calendar.
 
 #### Put Event
-- **Path**: ``/api/events``
+- **Path**: ``/api/calendars/<ID>/events``
 - **Method**: ``PUT``
-- **Body**: `name`, `desc`, `color`, `date_start`, `date_end`, `date_duration`, `calendar`
-- **Purpose**: Add a new event to a specified calendar in the upstream, as well as the local database.
-- **Note**: This might migrate back to ``/api/calendars/<CalendarID>/events``
+- **Body**: `name`, `desc`, `color`, `date_start`, `date_end`, `date_duration`
+- **Purpose**: Add a new event to the specified calendar in the upstream, as well as the local database.
 
 The description field is optional. Either the end date or the event duration is to be specified, not both and not neither.
 
