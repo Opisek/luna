@@ -61,7 +61,7 @@
   export let onDelete: () => Promise<string>;
 </script>
 
-<Modal title={title} bind:showModal={showModalInternal} bind:hideModal={hideModal} onModalHide={cancelEdit}>
+<Modal title={title} bind:showModal={showModalInternal} bind:hideModal={hideModal} onModalHide={() => {editMode = false}}>
   <slot/>
   <svelte:fragment slot="buttons">
     {#if editMode}

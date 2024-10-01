@@ -37,14 +37,15 @@
     else return `Could not delete source: ${res}`;
   };
   const onEdit = async () => {
-    let res: string;
     if (sourceDetailed.id === "") {
-      res = await createSource(sourceDetailed);
+      const res = await createSource(sourceDetailed);
+      if (res === "") return "";
+      else return `Could not create source: ${res}`;
     } else {
-      res = await editSource(sourceDetailed);
+      const res = await editSource(sourceDetailed);
+      if (res === "") return "";
+      else return `Could not edit source: ${res}`;
     }
-    if (res === "") return "";
-    else return `Could not edit source: ${res}`;
   };
 </script>
 

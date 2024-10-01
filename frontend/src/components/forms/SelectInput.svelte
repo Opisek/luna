@@ -25,6 +25,7 @@
   select.editable {
     background: $backgroundSecondary;
     cursor: pointer;
+    user-select: none;
   }
 
   // TODO: style the drop-down

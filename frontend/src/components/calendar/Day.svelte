@@ -1,5 +1,8 @@
 <script lang="ts">
   import EventEntry from "./EventEntry.svelte";
+  import IconButton from "../interactive/IconButton.svelte";
+  import { PlusIcon } from "lucide-svelte";
+  import EventModal from "../modals/EventModal.svelte";
 
   export let date: Date;
 
@@ -14,6 +17,33 @@
   export let currentlyClickedEvent: EventModel | null;
   export let clickCallback: (event: EventModel) => void;
 
+  let newEvent: EventModel;
+  let dummy: () => any;
+  let showCreateEventModal: () => any;
+  let createEventButtonClick = () => {
+    const start = new Date(date);
+    start.setHours(12, 0, 0, 0);
+
+    const end = new Date(date);
+    end.setHours(13, 0, 0, 0);
+
+    newEvent = {
+      id: "",
+      calendar: "",
+      name: "",
+      desc: "",
+      color: "",
+      date: {
+        start: start,
+        end: end,
+      }
+    };
+
+    setTimeout(() => {
+      showCreateEventModal();
+    }, 0);
+  };
+
   export let containerHeight: number;
   export let maxEvents: number = 1;
   let actualMaxEvents: number = 1;
@@ -21,6 +51,7 @@
 </script>
 
 <style lang="scss">
+  @import "../../styles/animations.scss";
   @import "../../styles/colors.scss";
   @import "../../styles/dimensions.scss";
 
@@ -36,7 +67,7 @@
     flex-direction: column;
     gap: $gapSmall;
     margin: calc($gapSmall / 2);
-    padding-top: $paddingSmaller;
+    padding: $paddingSmaller;
     border-radius: $borderRadiusSmall;
     background-color: $backgroundSecondary;
     height: calc(100% - $gapSmall);
@@ -46,13 +77,30 @@
     opacity: .5;
   }
 
+  span.top {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-areas: "none date add";
+  }
   span.date {
     text-align: center;
     width: 100%;
     display: block;
+    grid-area: date;
   }
-  div.sunday > span.date {
-    color: red;
+  span.sunday {
+    color: $foregroundSunday;
+  }
+  span.add {
+    grid-area: add;
+    display: flex;
+    align-items: center;
+    justify-content: right;
+    opacity: 0;
+    transition: opacity $animationSpeed;
+  }
+  div.day:hover span.add {
+    opacity: 1;
   }
 
   span.more {
@@ -76,9 +124,17 @@
 </style>
 
 <div class="day">
-  <div class="background" class:otherMonth={!isCurrentMonth} class:sunday={date.getDay() === 0}>
-    <span class="date">
-      {date.getDate()}
+  <div class="background" class:otherMonth={!isCurrentMonth}>
+    <span class="top">
+      <span class="date" class:sunday={date.getDay() === 0}>
+        {date.getDate()}
+      </span>
+      <span class="add">
+        <IconButton click={createEventButtonClick}>
+          <PlusIcon size={13}/>
+        </IconButton>
+        <EventModal bind:showCreateModal={showCreateEventModal} bind:showModal={dummy} event={newEvent}/>
+      </span>
     </span>
   </div>
   {#if isFirstDay}
@@ -95,7 +151,7 @@
           clickCallback={clickCallback}
         />
       {/each}
-      {#if events.length > maxEvents}
+      {#if events.length > maxEvents && actualMaxEvents >= 0}
         <span class="more">
           and {events.length - actualMaxEvents} more
         </span>
