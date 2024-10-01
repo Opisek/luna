@@ -13,6 +13,24 @@ Feel free to get in contact through GitHub discussions if you are interested in 
 
 You may also follow the progress in the [development roadmap](https://todo.opisek.net/share/dvEazOyRLEYThqxohVosnqKskYLyoZ4nS8rQ63G1/auth?view=280).
 
+# Deployment
+Since Luna is not ready to be used yet, this only serves as instructions on how to get Luna up and running for development purposes!
+
+## Docker
+Currently, no pre-made images are available. Instead, you can generate and run the images simply by typing `make` in the root directory of this repository.
+Make sure you have **make** and **docker** installed.
+
+## Baremetal
+For baremetal deployment, you must ensure your system has:
+- **make**
+- **node.js** (v20.11.1)
+- **go** (go1.22.4)
+- a running **postgres** (version 16) database
+
+For the backend, create an `.env` file in the `backend` directory inside the repository and fill it out accordingly to `.env.example`. To start the backend, run `make` inside the `backend` directory.
+
+Proceed in the same way for the frontend inside the `frontend` directory.
+
 # API
 ## Current State
 The current frontend does not implement all functionality provided by the backend yet. For testing and development purposes, tools like Postman can be used to interact with the API directly. Note that everything is still very much under development and is subject to change.
