@@ -22,18 +22,23 @@
 
 <style lang="scss">
   @import "../../styles/animations.scss";
+  @import "../../styles/colors.scss";
 
-  div {
+  div.ripple {
     border-radius: 50%;
     border-radius: 50%;
-    background-color: rgba(255, 255, 255, 0.7);
     position: absolute;
-    transform: scale(0);
-    animation: ripple $animationSpeedVerySlow $cubic;
     pointer-events: none;
+
+    animation: ripple $animationSpeedVerySlow $cubic;
+
+    background-color: $backgroundPrimary;
+    opacity: 0.5;
+    transform: scale(0);
   }
 </style>
 
 <div
+  class="ripple"
   bind:this={circle}
 />
