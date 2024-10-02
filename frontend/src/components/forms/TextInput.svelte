@@ -29,7 +29,6 @@
 
   input, textarea {
     all: unset;
-    cursor: revert;
   }
 
   input, div.textarea-wrapper {
@@ -39,7 +38,6 @@
 
   .editable {
     background: $backgroundSecondary;
-    cursor: text;
   }
 
   textarea {

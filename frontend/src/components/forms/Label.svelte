@@ -11,6 +11,7 @@
     margin-left: calc($gapSmall * ($fontSize / $fontSizeSmall));
     color: $foregroundFaded;
     font-size: $fontSizeSmall;
+    cursor: text;
   }
 </style>
 
