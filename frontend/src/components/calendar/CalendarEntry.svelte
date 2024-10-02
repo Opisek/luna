@@ -1,5 +1,6 @@
 <script lang="ts">
   import { faultyCalendars } from "$lib/client/repository";
+  import { GetCalendarColor } from "$lib/common/colors";
   import { hiddenCalendars, setCalendarVisibility } from "../../lib/client/localStorage";
   import Tooltip from "../interactive/Tooltip.svelte";
   import VisibilityToggle from "../interactive/VisibilityToggle.svelte";
@@ -44,7 +45,7 @@
 </style>
 
 <div class="entry">
-  <div class="color" style="background-color:{calendar.color}"></div>
+  <div class="color" style="background-color:{GetCalendarColor(calendar)}"></div>
   <span>
     {calendar.name}
   </span>

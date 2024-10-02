@@ -1,6 +1,5 @@
 <script lang="ts">
-  import { parseRGB } from "$lib/common/parsing";
-  import { isDark } from "$lib/common/colors";
+  import { GetEventColor, isDark } from "$lib/common/colors";
   import { TextIcon } from "lucide-svelte";
 
   export let visible: boolean = true;
@@ -24,7 +23,7 @@
   const isLastDisplay = isLastDay || isEventEnd;
 
   let isBackgroundDark: boolean;
-  $: isBackgroundDark = isDark(event ? parseRGB(event.color): [0,0,0]);
+  $: isBackgroundDark = isDark([50,50,50]/*GetEventColor(event)*/);
 
   function mouseEnter() {
     if (event == null) return;
@@ -138,7 +137,7 @@
   on:mouseup={mouseUp}
   role="button"
   tabindex="0"
-  style="background-color:{event ? event.color : "transparent"}"
+  style="background-color:{GetEventColor(event)}"
 >
   {#if event && isFirstDisplay}
     <span class="name">

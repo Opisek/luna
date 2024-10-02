@@ -7,7 +7,6 @@ import (
 	"strconv"
 )
 
-var ColorDefault = ColorFromVals(90, 150, 225)
 var ColorEmpty = &Color{empty: true}
 
 type Color struct {
@@ -21,7 +20,7 @@ func (c *Color) RGBA() color.RGBA {
 
 func (c *Color) String() string {
 	if c == nil {
-		return ColorDefault.String()
+		return "null"
 	}
 
 	rgba := c.RGBA()
@@ -33,7 +32,7 @@ func (c *Color) String() string {
 
 func (c *Color) Bytes() []byte {
 	if c == nil {
-		return ColorDefault.Bytes()
+		return []byte{}
 	}
 
 	rgba := c.RGBA()
@@ -42,6 +41,10 @@ func (c *Color) Bytes() []byte {
 }
 
 func ParseColor(rawColor string) (*Color, error) {
+	if rawColor == "" {
+		return ColorEmpty, nil
+	}
+
 	if len(rawColor) != 7 || rawColor[0] != '#' {
 		return nil, fmt.Errorf("invalid color format")
 	}
@@ -100,8 +103,7 @@ func ColorFromBytes(bytes []byte) *Color {
 
 func (c *Color) MarshalJSON() ([]byte, error) {
 	if c.empty {
-		//return json.Marshal(nil)
-		return json.Marshal(ColorDefault)
+		return json.Marshal(nil)
 	}
 
 	return json.Marshal(c.String())
