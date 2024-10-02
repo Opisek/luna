@@ -14,6 +14,16 @@ export const defaultEventRGB: [number, number, number] = [90, 150, 225];
 export const defaultEventColor: string = serializeRGB(defaultEventRGB);
 export const defaultCalendarRGB: [number, number, number] = [90, 150, 225];
 export const defaultCalendarColor: string = serializeRGB(defaultCalendarRGB);
+export const recommendedRGB: [number, number, number][] = [
+  [216, 110, 100], // red
+  [226, 165, 90], // orange
+  [226, 203, 90], // yellow
+  [93, 60, 62], // green
+  [90, 150, 225], // blue
+  [165, 90, 226], // purple
+  [226, 90, 151], // pink
+];
+export const recommendedColors: string[] = recommendedRGB.map(serializeRGB);
 
 export function isDark(rgb: number[]) {
   const brightness = Math.round(((rgb[0] * 299) +
