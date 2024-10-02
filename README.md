@@ -141,7 +141,7 @@ Depending on the `auth_type` field, additional information may need to be passed
 
 #### Patch Calendar
 - **Path**: ``/api/calendars/<ID>``
-- **Method**: ``PACH``
+- **Method**: ``PATCH``
 - **Body**: `name`, `color`, depending on which values should be updated.
 - **Purpose**: Updates specific fields of a calendar in the local database and the upstream source.
 - **Note**: This endpoint strives to not erase any values set by other applications that are not supported by Luna.
@@ -175,7 +175,7 @@ The description field is optional. Either the end date or the event duration is 
 
 #### Patch Event
 - **Path**: ``/api/events/<ID>``
-- **Method**: ``PUT``
+- **Method**: ``PATCH``
 - **Body**: `name`, `desc`, `color`, `date_start`, `date_end`, `date_duration`, depending on which values should be updated.
 - **Purpose**: Updates specific fields of an event in the local database and the upstream source.
 - **Note**: If `desc` should not change, it must be set to its previous values, since leaving it empty implies deleting the description. This endpoint strives to not erase any values set by other applications that are not supported by Luna.
