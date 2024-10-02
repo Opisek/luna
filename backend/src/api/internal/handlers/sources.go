@@ -171,21 +171,21 @@ func PutSource(c *gin.Context) {
 
 	sourceName := c.PostForm("name")
 	if sourceName == "" {
-		apiConfig.Logger.Error("missing name")
+		apiConfig.Logger.Warn("missing name")
 		util.ErrorDetailed(c, util.ErrorPayload, util.DetailName)
 		return
 	}
 
 	sourceAuth, err := parseAuthMethod(c)
 	if err != nil {
-		apiConfig.Logger.Errorf("could not parse auth: %v", err)
+		apiConfig.Logger.Warnf("could not parse auth: %v", err)
 		util.ErrorDetailed(c, util.ErrorPayload, util.DetailAuth)
 		return
 	}
 
 	source, err := parseSource(c, sourceName, sourceAuth)
 	if err != nil {
-		apiConfig.Logger.Errorf("could not parse source: %v", err)
+		apiConfig.Logger.Warnf("could not parse source: %v", err)
 		util.ErrorDetailed(c, util.ErrorPayload, util.DetailSource)
 		return
 	}
@@ -225,6 +225,7 @@ func PatchSource(c *gin.Context) {
 	newAuthType := c.PostForm("auth_type")
 
 	if newName == "" && newType == "" && newAuthType == "" {
+		apiConfig.Logger.Warn("no values to change")
 		util.ErrorDetailed(c, util.ErrorPayload, util.DetailFields)
 		return
 	}
@@ -233,6 +234,7 @@ func PatchSource(c *gin.Context) {
 	if newAuthType != "" {
 		newAuth, err = parseAuthMethod(c)
 		if err != nil {
+			apiConfig.Logger.Warnf("could not parse auth: %v", err)
 			util.ErrorDetailed(c, util.ErrorPayload, util.DetailAuth)
 			return
 		}
@@ -242,6 +244,7 @@ func PatchSource(c *gin.Context) {
 	if newType != "" {
 		newSource, err := parseSource(c, newName, newAuth)
 		if err != nil {
+			apiConfig.Logger.Warnf("could not parse source: %v", err)
 			util.ErrorDetailed(c, util.ErrorPayload, util.DetailSource)
 			return
 		}

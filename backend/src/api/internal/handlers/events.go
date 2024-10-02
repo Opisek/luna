@@ -142,7 +142,7 @@ func PutEvent(c *gin.Context) {
 
 	calendarId, err := context.GetId(c, "calendar")
 	if err != nil {
-		apiConfig.Logger.Error("missing or malformed calendar id")
+		apiConfig.Logger.Warn("missing or malformed calendar id")
 		util.ErrorDetailed(c, util.ErrorPayload, util.DetailId)
 		return
 	}
@@ -156,7 +156,7 @@ func PutEvent(c *gin.Context) {
 
 	eventName := c.PostForm("name")
 	if eventName == "" {
-		apiConfig.Logger.Error("missing name")
+		apiConfig.Logger.Warn("missing name")
 		util.ErrorDetailed(c, util.ErrorPayload, util.DetailName)
 		return
 	}
@@ -165,7 +165,7 @@ func PutEvent(c *gin.Context) {
 
 	eventColor, err := types.ParseColor(c.PostForm("color"))
 	if err != nil {
-		apiConfig.Logger.Errorf("missing or malformed color: %v", err)
+		apiConfig.Logger.Warnf("missing or malformed color: %v", err)
 		util.ErrorDetailed(c, util.ErrorPayload, util.DetailColor)
 		return
 	}
@@ -173,7 +173,7 @@ func PutEvent(c *gin.Context) {
 	eventDateStartStr := c.PostForm("date_start")
 	eventDateStart, err := time.Parse(time.RFC3339, eventDateStartStr)
 	if err != nil {
-		apiConfig.Logger.Errorf("missing or malformed date start: %v", err)
+		apiConfig.Logger.Warnf("missing or malformed date start: %v", err)
 		util.ErrorDetailed(c, util.ErrorPayload, util.DetailDate)
 		return
 	}
@@ -185,7 +185,7 @@ func PutEvent(c *gin.Context) {
 	eventDateDuration, durationErr := time.ParseDuration(eventDateDurationStr)
 
 	if (endErr != nil && durationErr != nil) || (endErr == nil && durationErr == nil) {
-		apiConfig.Logger.Error("missing or malformed date start")
+		apiConfig.Logger.Warn("missing or malformed date start")
 		util.ErrorDetailed(c, util.ErrorPayload, util.DetailDate)
 		return
 	}
@@ -227,7 +227,7 @@ func PatchEvent(c *gin.Context) {
 
 	eventId, err := context.GetId(c, "event")
 	if err != nil {
-		apiConfig.Logger.Error("missing or malformed event id")
+		apiConfig.Logger.Warn("missing or malformed event id")
 		util.ErrorDetailed(c, util.ErrorPayload, util.DetailId)
 		return
 	}
@@ -255,7 +255,7 @@ func PatchEvent(c *gin.Context) {
 	eventDateDuration, durationErr := time.ParseDuration(eventDateDurationStr)
 
 	if newEventName == "" && newEventDesc == event.GetDesc() && colErr != nil && startErr != nil && endErr != nil && durationErr != nil {
-		apiConfig.Logger.Error("no values to change")
+		apiConfig.Logger.Warn("no values to change")
 		util.ErrorDetailed(c, util.ErrorPayload, util.DetailFields)
 		return
 	}
@@ -284,7 +284,7 @@ func PatchEvent(c *gin.Context) {
 				newEventDate = types.NewEventDateFromEndTime(&eventDateStart, &eventDateEnd, nil)
 			}
 		} else if endErr == nil && durationErr == nil {
-			apiConfig.Logger.Error("cannot specify both end and duration")
+			apiConfig.Logger.Warn("cannot specify both end and duration")
 			util.ErrorDetailed(c, util.ErrorPayload, util.DetailDate)
 			return
 		} else if endErr == nil {

@@ -19,7 +19,7 @@ func Login(c *gin.Context) {
 
 	credentials := auth.BasicAuth{}
 	if err := c.ShouldBind(&credentials); err != nil {
-		apiConfig.Logger.Error(err)
+		apiConfig.Logger.Warn(err)
 		util.Error(c, util.ErrorPayload)
 		return
 	}
@@ -96,7 +96,7 @@ func Register(c *gin.Context) {
 
 	payload := registerPayload{}
 	if err := c.ShouldBind(&payload); err != nil {
-		apiConfig.Logger.Error(err)
+		apiConfig.Logger.Warn(err)
 		util.Error(c, util.ErrorPayload)
 		return
 	}

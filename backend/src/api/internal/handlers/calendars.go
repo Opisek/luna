@@ -124,7 +124,7 @@ func PutCalendar(c *gin.Context) {
 
 	sourceId, err := context.GetId(c, "source")
 	if err != nil {
-		apiConfig.Logger.Error("missing or malformed source id")
+		apiConfig.Logger.Warn("missing or malformed source id")
 		util.ErrorDetailed(c, util.ErrorPayload, util.DetailId)
 		return
 	}
@@ -138,14 +138,14 @@ func PutCalendar(c *gin.Context) {
 
 	calName := c.PostForm("name")
 	if calName == "" {
-		apiConfig.Logger.Error("missing calendar name")
+		apiConfig.Logger.Warn("missing calendar name")
 		util.ErrorDetailed(c, util.ErrorPayload, util.DetailName)
 		return
 	}
 
 	calColor, err := types.ParseColor(c.PostForm("color"))
 	if err != nil {
-		apiConfig.Logger.Error("missing or malformed color")
+		apiConfig.Logger.Warn("missing or malformed color")
 		util.ErrorDetailed(c, util.ErrorPayload, util.DetailColor)
 		return
 	}
@@ -180,7 +180,7 @@ func PatchCalendar(c *gin.Context) {
 
 	calendarId, err := context.GetId(c, "calendar")
 	if err != nil {
-		apiConfig.Logger.Error("missing or malformed calendar id")
+		apiConfig.Logger.Warn("missing or malformed calendar id")
 		util.ErrorDetailed(c, util.ErrorPayload, util.DetailId)
 		return
 	}
@@ -197,7 +197,7 @@ func PatchCalendar(c *gin.Context) {
 	newCalColor, colErr := types.ParseColor(c.PostForm("color"))
 
 	if newCalName == "" && colErr != nil {
-		apiConfig.Logger.Error("no values to change")
+		apiConfig.Logger.Warn("no values to change")
 		util.ErrorDetailed(c, util.ErrorPayload, util.DetailFields)
 		return
 	}
