@@ -18,7 +18,7 @@ export const recommendedRGB: [number, number, number][] = [
   [216, 110, 100], // red
   [226, 165, 90], // orange
   [226, 203, 90], // yellow
-  [93, 60, 62], // green
+  [151, 226, 90], // green
   [90, 150, 225], // blue
   [165, 90, 226], // purple
   [226, 90, 151], // pink
@@ -71,4 +71,10 @@ export const GetCalendarColor = (calendar: CalendarModel | null) => {
   } else {
     return defaultCalendarColor;
   }
+}
+
+export const isValidColor = (color: string | null | undefined) => {
+  console.log("is valid?")
+  console.log(color !== null && color !== undefined && color.length === 7 && /^#[0-9a-fA-F]+$/.test(color));
+  return color !== null && color !== undefined && color.length === 7 && /^#[0-9a-fA-F]+$/.test(color);
 }

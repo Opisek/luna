@@ -1,5 +1,6 @@
 <script lang="ts">
   import { createEvent, deleteEvent, editEvent, getCalendars } from "$lib/client/repository";
+  import ColorInput from "../forms/ColorInput.svelte";
   import DateTimeInput from "../forms/DateTimeInput.svelte";
   import SelectInput from "../forms/SelectInput.svelte";
   import TextInput from "../forms/TextInput.svelte";
@@ -57,6 +58,7 @@
     {#if (event.id === "")}
       <SelectInput bind:value={event.calendar} name="calendar" placeholder="Calendar" options={currentCalendars.map(x => ({ value: x.id, name: x.name }))} editable={editMode} />
     {/if}
+    <ColorInput bind:color={event.color} name="color" editable={editMode} />
     <TextInput bind:value={event.desc} name="desc" placeholder="Description" multiline={true} editable={editMode} />
     <DateTimeInput bind:value={event.date.start} name="date_start" placeholder="Start" />
     <DateTimeInput bind:value={event.date.end} name="date_end" placeholder="End" />

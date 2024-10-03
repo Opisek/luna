@@ -4,6 +4,7 @@
   import { hiddenCalendars, setCalendarVisibility } from "../../lib/client/localStorage";
   import Tooltip from "../interactive/Tooltip.svelte";
   import VisibilityToggle from "../interactive/VisibilityToggle.svelte";
+  import ColorCircle from "../misc/ColorCircle.svelte";
 
   export let calendar: CalendarModel;
 
@@ -29,12 +30,6 @@
     align-items: center;
   }
 
-  div.color {
-    width: 0.75em;
-    height: 0.75em;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
 
   span {
     flex-grow: 1;
@@ -45,7 +40,10 @@
 </style>
 
 <div class="entry">
-  <div class="color" style="background-color:{GetCalendarColor(calendar)}"></div>
+  <ColorCircle
+    color={GetCalendarColor(calendar)}
+    size="small"
+  />
   <span>
     {calendar.name}
   </span>

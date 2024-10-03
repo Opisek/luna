@@ -13,6 +13,11 @@
   export let password: boolean = false;
   let passwordVisible: boolean = false;
 
+  export let label: boolean = false;
+
+  export let onChange: (value: string) => any = () => {};
+  export let onFocus: () => any = () => {};
+
   // TODO: automatic height 
   // let textArea: HTMLTextAreaElement;
   // let textAreaRows: number = 4;
@@ -63,7 +68,9 @@
   }
 </style>
 
+{#if label}
 <Label name={name}>{placeholder}</Label>
+{/if}
 {#if multiline}
   <div
     class="textarea-wrapper"
@@ -71,6 +78,8 @@
   >
     <textarea
       bind:value={value}
+      on:change={() => onChange(value)}
+      on:focus={() => onFocus()}
       name={name}
       placeholder={placeholder}
       disabled={!editable}
@@ -80,6 +89,8 @@
 {:else if password && !passwordVisible}
   <input
     bind:value={value}
+    on:change={() => onChange(value)}
+    on:focus={() => onFocus()}
     name={name}
     placeholder={placeholder}
     disabled={!editable}
@@ -89,6 +100,8 @@
 {:else}
   <input
     bind:value={value}
+    on:change={() => onChange(value)}
+    on:focus={() => onFocus()}
     name={name}
     placeholder={placeholder}
     disabled={!editable}
