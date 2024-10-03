@@ -58,7 +58,9 @@
     {#if (event.id === "")}
       <SelectInput bind:value={event.calendar} name="calendar" placeholder="Calendar" options={currentCalendars.map(x => ({ value: x.id, name: x.name }))} editable={editMode} />
     {/if}
-    <ColorInput bind:color={event.color} name="color" editable={editMode} />
+    {#if editMode}
+      <ColorInput bind:color={event.color} name="color" editable={editMode} />
+    {/if}
     <TextInput bind:value={event.desc} name="desc" placeholder="Description" multiline={true} editable={editMode} />
     <DateTimeInput bind:value={event.date.start} name="date_start" placeholder="Start" />
     <DateTimeInput bind:value={event.date.end} name="date_end" placeholder="End" />

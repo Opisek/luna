@@ -13,7 +13,7 @@
   export let password: boolean = false;
   let passwordVisible: boolean = false;
 
-  export let label: boolean = false;
+  export let label: boolean = true;
 
   export let onChange: (value: string) => any = () => {};
   export let onFocus: () => any = () => {};
