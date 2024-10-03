@@ -11,6 +11,9 @@
   let currentColor: string;
   let currentHSL: [number, number, number] = [0, 100, 50];
 
+  let picker: HTMLElement;
+  let hue: HTMLElement;
+
   let pickerActive = false;
   let hueActive = false;
 
@@ -81,8 +84,8 @@
     }
   }
 
-  function calculateCoordsRelativeToElement(e: MouseEvent): [number, number] {
-    const target = e.target as HTMLElement;
+  function calculateCoordsRelativeToElement(e: MouseEvent, target: HTMLElement): [number, number] {
+    if (!target) return [0, 0];
 
     const rect = target.getBoundingClientRect();
 
@@ -99,14 +102,15 @@
   }
 
   function pickerDown(e: MouseEvent) {
+    if (pickerActive || hueActive) return;
     e.stopPropagation();
     pickerActive = true;
     pickerMove(e);
   }
   function pickerMove(e: MouseEvent) {
-    e.stopPropagation();
     if (!pickerActive) return;
-    const [x,y] = calculateCoordsRelativeToElement(e);
+    e.stopPropagation();
+    const [x,y] = calculateCoordsRelativeToElement(e, picker);
 
     const s = 100 - y;
     const minL = 0.5 * s;
@@ -123,14 +127,15 @@
   }
 
   function hueDown(e: MouseEvent) {
+    if (pickerActive || hueActive) return;
     e.stopPropagation();
     hueActive = true;
     hueMove(e);
   }
   function hueMove(e: MouseEvent) {
-    e.stopPropagation();
     if (!hueActive) return;
-    const [x,_] = calculateCoordsRelativeToElement(e);
+    e.stopPropagation();
+    const [x,_] = calculateCoordsRelativeToElement(e, hue);
 
     currentHSL[0] = x / 100 * 360;
     setColorFromHSL();
@@ -144,6 +149,10 @@
     window.addEventListener("mouseup", (e) => {
       if (pickerActive) pickerUp(e);
       if (hueActive) hueUp(e);
+    });
+    window.addEventListener("mousemove", (e) => {
+      pickerMove(e);
+      hueMove(e);
     });
   }
 </script>
@@ -190,6 +199,7 @@
   <div class="grid">
     <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div
+      bind:this={picker}
       class="picker"
       style="background: linear-gradient(0deg, hsl({currentHSL[0]} 0 0), hsl({currentHSL[0]} 100% 50%))"
       on:mousedown={pickerDown}
@@ -198,6 +208,7 @@
     ></div>
     <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div
+      bind:this={hue}
       class="hue"
       style="background: linear-gradient(90deg in hsl longer hue, hsl(0 {currentHSL[1]}% {currentHSL[2]}%), hsl(360 {currentHSL[1]}% {currentHSL[2]}%))"
       on:mousedown={hueDown}
