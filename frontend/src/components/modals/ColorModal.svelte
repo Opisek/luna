@@ -173,6 +173,7 @@
     mask: linear-gradient(270deg, white, transparent);
     padding-bottom: 100%;
     border-radius: $borderRadius;
+    cursor: pointer;
   }
 
   div.hue {
@@ -181,6 +182,7 @@
     flex-grow: 1;
     padding: $gapSmall;
     border-radius: $borderRadius;
+    cursor: pointer;
   }
 </style>
 
