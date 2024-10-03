@@ -15,13 +15,13 @@ export const defaultEventColor: string = serializeRGB(defaultEventRGB);
 export const defaultCalendarRGB: [number, number, number] = [90, 150, 225];
 export const defaultCalendarColor: string = serializeRGB(defaultCalendarRGB);
 export const recommendedRGB: [number, number, number][] = [
-  [216, 110, 100], // red
-  [226, 165, 90], // orange
+  [225, 90, 90], // red
+  [225, 165, 90], // orange
   [226, 203, 90], // yellow
-  [151, 226, 90], // green
+  [151, 225, 90], // green
   [90, 150, 225], // blue
-  [165, 90, 226], // purple
-  [226, 90, 151], // pink
+  [165, 90, 225], // purple
+  [225, 90, 151], // pink
 ];
 export const recommendedColors: string[] = recommendedRGB.map(serializeRGB);
 
