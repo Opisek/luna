@@ -7,7 +7,7 @@ export const parseRGB = (color: string): [number, number, number] => {
 }
 
 export const serializeRGB = (rgb: [number, number, number]): string => {
-  return `#${rgb[0].toString(16).padStart(2, '0')}${rgb[1].toString(16).padStart(2, '0')}${rgb[2].toString(16).padStart(2, '0')}`;
+  return `#${rgb[0].toString(16).padStart(2, '0')}${rgb[1].toString(16).padStart(2, '0')}${rgb[2].toString(16).padStart(2, '0')}`.toUpperCase();
 }
 
 export const defaultEventRGB: [number, number, number] = [90, 150, 225];
@@ -32,15 +32,62 @@ export function isDark(rgb: number[]) {
   return brightness <= 141;
 }
 
-// credit: https://stackoverflow.com/questions/8022885/rgb-to-hsv-color-in-javascript
-export const RGBtoHSV = (rgb: number[]): [number, number, number] => {
+// credit: https://gist.github.com/mjackson/5311256
+export const RGBtoHSL = (rgb: number[]): [number, number, number] => {
   const r = rgb[0] / 255
   const g = rgb[1] / 255
   const b = rgb[2] / 255
 
-  let v=Math.max(r,g,b), c=v-Math.min(r,g,b);
-  let h= c && ((v==r) ? (g-b)/c : ((v==g) ? 2+(b-r)/c : 4+(r-g)/c)); 
-  return [60*(h<0?h+6:h), v&&c/v, v];
+  var max = Math.max(r, g, b), min = Math.min(r, g, b);
+  var h, s, l = (max + min) / 2;
+
+  if (max == min) {
+    h = s = 0; // achromatic
+  } else {
+    var d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+
+    switch (max) {
+      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+      case g: h = (b - r) / d + 2; break;
+      case b: h = (r - g) / d + 4; break;
+    }
+  }
+
+  if (h === undefined) {
+    h = 0;
+  }
+
+  return [Math.round(h * 60), Math.round(s * 100), Math.round(l * 100)];
+}
+export const HSLtoRGB = (hsl: [number, number, number]): [number, number, number] => {
+  const h = hsl[0] / 360;
+  const s = hsl[1] / 100;
+  const l = hsl[2] / 100;
+
+  let r, g, b;
+
+  if (s == 0) {
+    r = g = b = l; // achromatic
+  } else {
+    function hue2rgb(p: number, q: number, t: number): number {
+      if (t < 0) t += 1;
+      if (t > 1) t -= 1;
+      if (t < 1/6) return p + (q - p) * 6 * t;
+      if (t < 1/2) return q;
+      if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+      return p;
+    }
+
+    let q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    let p = 2 * l - q;
+
+    r = hue2rgb(p, q, h + 1/3);
+    g = hue2rgb(p, q, h);
+    b = hue2rgb(p, q, h - 1/3);
+  }
+
+  return [ Math.round(r * 255), Math.round(g * 255), Math.round(b * 255) ];
 }
 
 // TODO: would prefer event.getColor() but i could not figure out how to do this without creating an additional interface or class
@@ -74,7 +121,5 @@ export const GetCalendarColor = (calendar: CalendarModel | null) => {
 }
 
 export const isValidColor = (color: string | null | undefined) => {
-  console.log("is valid?")
-  console.log(color !== null && color !== undefined && color.length === 7 && /^#[0-9a-fA-F]+$/.test(color));
   return color !== null && color !== undefined && color.length === 7 && /^#[0-9a-fA-F]+$/.test(color);
 }
