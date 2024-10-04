@@ -8,6 +8,12 @@
   export let editable: boolean;
 
   let showModal = () => {};
+
+  function dateClick() {
+    if (editable) {
+      showModal();
+    }
+  }
 </script>
 
 <style lang="scss">
@@ -27,18 +33,19 @@
 
   div > span {
     border-radius: $borderRadius;
-    cursor: pointer;
+    cursor: text;
   }
 
   div.editable > span {
     padding: $gapSmall;
     background: $backgroundSecondary;
+    cursor: pointer;
   }
 </style>
 
 <Label name={name}>{placeholder}</Label>
 <div class:editable={editable}>
-  <span on:click={showModal}>{value.toLocaleDateString()}</span>
+  <span on:click={dateClick}>{value.toLocaleDateString()}</span>
   <span>{value.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"})}</span>
 </div>
 
