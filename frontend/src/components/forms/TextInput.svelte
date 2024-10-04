@@ -79,7 +79,8 @@
     <textarea
       bind:value={value}
       on:change={() => onChange(value)}
-      on:focus={() => onFocus()}
+      on:focusout={() => onChange(value)}
+      on:focusin={() => onFocus()}
       name={name}
       placeholder={placeholder}
       disabled={!editable}
@@ -90,7 +91,8 @@
   <input
     bind:value={value}
     on:change={() => onChange(value)}
-    on:focus={() => onFocus()}
+    on:focusout={() => onChange(value)}
+    on:focusin={() => onFocus()}
     name={name}
     placeholder={placeholder}
     disabled={!editable}
@@ -101,7 +103,8 @@
   <input
     bind:value={value}
     on:change={() => onChange(value)}
-    on:focus={() => onFocus()}
+    on:focusout={() => onChange(value)}
+    on:focusin={() => onFocus()}
     name={name}
     placeholder={placeholder}
     disabled={!editable}
