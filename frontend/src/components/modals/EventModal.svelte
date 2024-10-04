@@ -62,7 +62,7 @@
       <ColorInput bind:color={event.color} name="color" editable={editMode} />
     {/if}
     <TextInput bind:value={event.desc} name="desc" placeholder="Description" multiline={true} editable={editMode} />
-    <DateTimeInput bind:value={event.date.start} name="date_start" placeholder="Start" />
-    <DateTimeInput bind:value={event.date.end} name="date_end" placeholder="End" />
+    <DateTimeInput bind:value={event.date.start} name="date_start" placeholder="Start" editable={editMode} />
+    <DateTimeInput bind:value={event.date.end} name="date_end" placeholder="End" editable={editMode}/>
   {/if}
 </EditableModal>

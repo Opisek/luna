@@ -14,6 +14,7 @@
   import Horizontal from "../components/layout/Horizontal.svelte";
   import { PlusIcon } from "lucide-svelte";
   import SourceModal from "../components/modals/SourceModal.svelte";
+  import SmallCalendar from "../components/interactive/SmallCalendar.svelte";
 
   let localSources: SourceModel[] = [];
   let localCalendars: CalendarModel[] = [];
@@ -149,6 +150,10 @@
 <div class="wrapper">
   <aside>
     <Title>Luna</Title>
+
+    <!-- SmallCalendar put here only for testing purposes but might consider leaving it if it can serve some useful purpose -->
+    <!--<SmallCalendar year={selectedYear} month={selectedMonth}/>-->
+
     <div class="sources">
       {#each localSources as source}
         <SourceEntry bind:source={source}/>
