@@ -33,6 +33,13 @@
     gap: $gapSmall;
     align-items: center;
     position: relative;
+    width: max-content;
+    user-select: none;
+  }
+
+  button {
+    all: unset;
+    cursor: pointer;
   }
 </style>
 
@@ -43,8 +50,8 @@
   <IconButton click={nextMonth}>
     <RightIcon/>
   </IconButton>
-  <span on:click={showPopup}>
+  <button on:click={showPopup}>
     {`${getMonthName(month)} ${year}`}
-  </span>
-  <MonthPopup bind:show={showPopup}/>
+  </button>
+  <MonthPopup bind:show={showPopup} bind:year={year} bind:month={month}/>
 </div>

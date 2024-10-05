@@ -2,6 +2,8 @@
   export let month: number;
   export let year: number;
 
+  export let onDayClick: (date: Date) => any = () => {};
+
   let days: Date[] = [];
   let amountOfRows: number = 0;
 
@@ -23,7 +25,6 @@
     days = [];
 
     const dateIterator = new Date(firstViewDay);
-    let eventIterator = 0;
 
     for (let i = 0; i < 7 * amountOfRows; i++) {
       days.push(new Date(dateIterator));
@@ -39,33 +40,40 @@
   div.calendar {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: $gapTiny; 
+    gap: $gapSmall; 
   }
 
-  div.day {
+  button.day {
+    all: unset;
     display: flex;
     justify-content: center;
     align-items: center;
     border-radius: $borderRadiusSmall;
-    font-size: $fontSizeSmall;
     color: $foregroundSecondary;
     background-color: $backgroundSecondary;
     padding: $paddingTiny;
+    cursor: pointer;
+    user-select: none;
   }
 
-  div.day.sunday {
+  button.day.sunday {
     color: $foregroundSunday;
   }
 
-  div.day.otherMonth {
+  button.day.otherMonth {
     opacity: 0.5;
   }
 </style>
 
 <div class="calendar" style="grid-template-rows: repeat({amountOfRows}, 1fr)">
   {#each days as day}
-    <div class="day" class:sunday={day.getDay() == 0} class:otherMonth={day.getMonth() != month}>
+    <button
+      class="day"
+      class:sunday={day.getDay() == 0}
+      class:otherMonth={day.getMonth() != month}
+      on:click={() => (onDayClick(day))}
+    >
       {day.getDate()}
-    </div>
+    </button>
   {/each}
 </div>

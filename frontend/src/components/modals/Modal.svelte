@@ -9,10 +9,22 @@
   let visible = false;
   let dialog: HTMLDialogElement;
 
+  function clickOutside(event: MouseEvent) {
+    if (!dialog) return;
+    if (event.target === dialog) {
+      hideModal();
+      event.stopPropagation();
+    }
+  }
+
   $: if (dialog && visible) dialog.showModal();
 
-  export const showModal = () => (visible = true);
+  export const showModal = () => {
+    window.addEventListener("click", clickOutside);
+    visible = true
+  }
   export const hideModal = () => {
+    window.removeEventListener("click", clickOutside);
     dialog.close();
     onModalHide();
   }
@@ -26,10 +38,10 @@
 
   dialog {
     border: 0;
-    padding: $gap $gapLarge $gapLarge $gapLarge;
-    border-radius: $borderRadius;
     max-width: 50vw;
     min-width: 30em;
+    border-radius: $borderRadius;
+    padding: 0;
   }
   dialog::backdrop {
     backdrop-filter: blur($blur);
@@ -40,6 +52,8 @@
 	}
   
   div {
+    padding: $gap $gapLarge $gapLarge $gapLarge;
+    border-radius: $borderRadius;
     display: flex;
     width: 100%;
     flex-direction: column;
@@ -48,15 +62,12 @@
   }
 </style>
 
-<!-- svelte-ignore a11y-click-events-have-key-events a11y-no-noninteractive-element-interactions -->
 <dialog
   bind:this={dialog}
   on:close={() => (visible = false)}
-  on:click|self={() => dialog.close()}
   class:closed={visible}
 >
-  <!-- svelte-ignore a11y-no-static-element-interactions -->
-	<div on:click|stopPropagation>
+	<div>
     <Horizontal>
       <Title>
         {title}

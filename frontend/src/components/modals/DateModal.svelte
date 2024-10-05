@@ -16,6 +16,13 @@
 
   let showModalInternal: () => any;
   let hideModalInternal: () => any;
+
+  function dateSelected(selectedDate: Date) {
+    // keep the time of day the same:
+    selectedDate.setHours(date.getHours(), date.getMinutes(), date.getSeconds(), date.getMilliseconds());
+    date = selectedDate;
+    hideModalInternal();
+  }
 </script>
 
 <style lang="scss">
@@ -24,5 +31,5 @@
 
 <Modal title="Pick Date" bind:showModal={showModalInternal} bind:hideModal={hideModalInternal}>
   <MonthSelection bind:month={currentMonth} bind:year={currentYear} />
-  <SmallCalendar year={currentYear} month={currentMonth} />
+  <SmallCalendar year={currentYear} month={currentMonth} onDayClick={dateSelected} />
 </Modal>

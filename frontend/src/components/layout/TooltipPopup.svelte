@@ -1,5 +1,6 @@
 <script lang="ts">
   import { browser } from "$app/environment";
+  import { calculateOptimalPopupPosition } from "../../lib/common/calculations";
 
   let popup: HTMLElement;
 
@@ -18,14 +19,11 @@
   function checkPosition() {
     if (!popup || !popup.parentElement || !browser) return;
 
-    const rect = popup.parentElement.getBoundingClientRect();
+    const res = calculateOptimalPopupPosition(popup, 3);
 
-    const x = rect.left + (rect.right - rect.left) / 2;
-    const y = rect.top + (rect.bottom - rect.top) / 2;
-
-    bottom = y > window.innerHeight / 2;
-    right = x > window.innerWidth / 2;
-    center = x < window.innerWidth / 3 * 2 && x > window.innerWidth / 3;
+    bottom = res.bottom;
+    right = res.right;
+    center = res.center;
   }
 </script>
 
