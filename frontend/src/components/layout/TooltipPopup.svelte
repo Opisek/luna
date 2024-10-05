@@ -18,8 +18,6 @@
   function checkPosition() {
     if (!popup || !popup.parentElement || !browser) return;
 
-    console.log("check position!");
-
     const rect = popup.parentElement.getBoundingClientRect();
 
     const x = rect.left + (rect.right - rect.left) / 2;
@@ -28,8 +26,6 @@
     bottom = y > window.innerHeight / 2;
     right = x > window.innerWidth / 2;
     center = x < window.innerWidth / 3 * 2 && x > window.innerWidth / 3;
-
-    console.log(bottom, right, center);
   }
 </script>
 

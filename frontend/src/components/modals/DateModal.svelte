@@ -1,4 +1,5 @@
 <script lang="ts">
+  import MonthSelection from "../interactive/MonthSelection.svelte";
   import SmallCalendar from "../interactive/SmallCalendar.svelte";
   import Modal from "./Modal.svelte";
 
@@ -22,5 +23,6 @@
 </style>
 
 <Modal title="Pick Date" bind:showModal={showModalInternal} bind:hideModal={hideModalInternal}>
+  <MonthSelection bind:month={currentMonth} bind:year={currentYear} />
   <SmallCalendar year={currentYear} month={currentMonth} />
 </Modal>

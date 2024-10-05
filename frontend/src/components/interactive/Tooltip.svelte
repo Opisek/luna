@@ -1,6 +1,7 @@
 <script lang="ts">
   import { CircleAlert, Info } from "lucide-svelte";
-  import Popup from "../layout/Popup.svelte";
+  import Popup from "../layout/TooltipPopup.svelte";
+  import TooltipPopup from "../layout/TooltipPopup.svelte";
 
   export let msg: string;
   export let error: boolean = false;
@@ -34,7 +35,7 @@
     <Info size={16}/>
   {/if}
 
-  <Popup>
+  <TooltipPopup>
     {msg}
-  </Popup>
+  </TooltipPopup>
 </div>

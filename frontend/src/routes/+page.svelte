@@ -1,11 +1,8 @@
 <script lang="ts">
   import Calendar from "../components/calendar/Calendar.svelte";
   import IconButton from "../components/interactive/IconButton.svelte";
-  import LeftIcon from "lucide-svelte/icons/chevron-left";
-  import RightIcon from "lucide-svelte/icons/chevron-right";
 
   import { browser } from "$app/environment";
-  import { getMonthName } from "../lib/common/humanization";
   import SourceEntry from "../components/calendar/SourceEntry.svelte";
   import { calendars, events, fetchSources, sources } from "$lib/client/repository";
   import { queueNotification } from "$lib/client/notifications";
@@ -15,6 +12,7 @@
   import { PlusIcon } from "lucide-svelte";
   import SourceModal from "../components/modals/SourceModal.svelte";
   import SmallCalendar from "../components/interactive/SmallCalendar.svelte";
+  import MonthSelection from "../components/interactive/MonthSelection.svelte";
 
   let localSources: SourceModel[] = [];
   let localCalendars: CalendarModel[] = [];
@@ -42,20 +40,6 @@
   const currentMonth = new Date().getMonth() 
   let selectedYear = currentYear;
   let selectedMonth = currentMonth;
-
-  function previousMonth() {
-    selectedMonth--;
-    if (selectedMonth === -1) {
-      selectedMonth = 11;
-      selectedYear--;
-    }
-  }
-
-  function nextMonth() {
-    if (selectedMonth === 11) selectedYear++;
-    selectedMonth = (selectedMonth + 1) % 12;
-  }
-
   (async () => {
     if (!browser) return;
 
@@ -113,13 +97,6 @@
     gap: $gap;
   }
 
-  div.monthSelection {
-    display: flex;
-    flex-direction: row;
-    gap: $gapSmall;
-    align-items: center;
-  }
-
   div.wrapper {
     display: flex;
     flex-direction: row;
@@ -172,18 +149,7 @@
     </Horizontal>
   </aside>
   <main>
-    <div class="monthSelection">
-      <IconButton click={previousMonth}>
-        <LeftIcon/>
-      </IconButton>
-      <IconButton click={nextMonth}>
-        <RightIcon/>
-      </IconButton>
-      <span class="monthLabel">
-        {`${getMonthName(selectedMonth)} ${selectedYear}`}
-      </span>
-    </div>
-
+    <MonthSelection bind:month={selectedMonth} bind:year={selectedYear}/>
     <Calendar
       year={selectedYear}
       month={selectedMonth}
