@@ -12,13 +12,14 @@
   let currentCalendars: CalendarModel[] = [];
 
   export const showCreateModal = () => {
+    eventCopy = event;
     currentCalendars = getCalendars();
     setTimeout(showCreateModalInternal, 0);
   }
   export const showModal = () => {
     eventCopy = { ...event };
-    console.log(eventCopy);
-    setTimeout(showCreateModalInternal, 0);
+    editMode = false;
+    setTimeout(showModalInternal, 0);
   };
 
   let showCreateModalInternal: () => boolean;
