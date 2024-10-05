@@ -87,6 +87,7 @@
     width: 100%;
     display: block;
     grid-area: date;
+    user-select: none;
   }
   span.sunday {
     color: $foregroundSunday;
