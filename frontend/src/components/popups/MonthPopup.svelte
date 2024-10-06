@@ -31,6 +31,7 @@
   }
 
   function clickYear(e: MouseEvent, i: number) {
+    e.stopPropagation();
     //addRipple(e);
     selectedYear = decadeStart + i;
     selectingMonth = true;
