@@ -1,5 +1,6 @@
 <script lang="ts">
   import DateModal from "../modals/DateModal.svelte";
+  import TimeModal from "../modals/TimeModal.svelte";
   import Label from "./Label.svelte";
 
   export let value: Date;
@@ -7,11 +8,18 @@
   export let name: string;
   export let editable: boolean;
 
-  let showModal = () => {};
+  let showDateModal = () => {};
+  let showTimeModal = () => {};
 
   function dateClick() {
     if (editable) {
-      showModal();
+      showDateModal();
+    }
+  }
+
+  function timeClick() {
+    if (editable) {
+      showTimeModal();
     }
   }
 </script>
@@ -31,12 +39,13 @@
     margin: 0;
   }
 
-  div > span {
+  div > button {
+    all: unset;
     border-radius: $borderRadius;
     cursor: text;
   }
 
-  div.editable > span {
+  div.editable > button {
     padding: $gapSmall;
     background: $backgroundSecondary;
     cursor: pointer;
@@ -45,8 +54,9 @@
 
 <Label name={name}>{placeholder}</Label>
 <div class:editable={editable}>
-  <span on:click={dateClick}>{value.toLocaleDateString()}</span>
-  <span>{value.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"})}</span>
+  <button on:click={dateClick}>{value.toLocaleDateString()}</button>
+  <button on:click={timeClick}>{value.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"})}</button>
 </div>
 
-<DateModal bind:date={value} bind:showModal={showModal}/>
+<DateModal bind:date={value} bind:showModal={showDateModal}/>
+<TimeModal bind:date={value} bind:showModal={showTimeModal}/>
