@@ -3,11 +3,13 @@
 import Modal from "./Modal.svelte";
 
   export let date: Date;
+  export let dateCopy: Date;
 
   let pickingHour: boolean;
   let amPm: string;
 
   export const showModal = () => {
+    dateCopy = new Date(date);
     pickingHour = true;
     amPm = "am";
     showModalInternal();
@@ -16,11 +18,8 @@ import Modal from "./Modal.svelte";
   let showModalInternal: () => any;
   let hideModalInternal: () => any;
 
-  function dateSelected(selectedDate: Date) {
-    selectedDate.setDate(date.getDate());
-    selectedDate.setMonth(date.getMonth());
-    selectedDate.setFullYear(date.getFullYear());
-    date = selectedDate;
+  function dateSelected() {
+    date = dateCopy;
     hideModalInternal();
   }
 </script>
@@ -38,7 +37,7 @@ import Modal from "./Modal.svelte";
     align-items: center;
     width: 100%;
     margin-top: 5em;
-    margin-bottom: 5em;
+    margin-bottom: 6.5em + $paddingSmaller;
   }
 
   button {
@@ -69,18 +68,26 @@ import Modal from "./Modal.svelte";
 </style>
 
 <Modal title="Pick Time" bind:showModal={showModalInternal} bind:hideModal={hideModalInternal}>
-  {#if pickingHour}
-    <SelectButtons bind:value={amPm} name="AM/PM" placeholder="AM/PM" editable={true} options={[{name: "AM", value: "am"}, {name: "PM", value: "PM"}]} label={false}/>
-
-    <div>
-        {#each Array(12) as _, i}
+  <div>
+      {#each Array(12) as _, i}
+        {#if pickingHour}
           <button class="button hour radial-{i}/12" on:click={() => {
-            date.setHours(i * 2);
+            dateCopy.setHours((i == 0 ? 12 : i) + (amPm === "am" ? 0 : 12));
             pickingHour = false;
           }}>
           {(i == 0 ? 12 : i) + (amPm === "am" ? 0 : 12)}
           </button>
-        {/each}
-    </div>
+        {:else}
+          <button class="button hour radial-{i}/12" on:click={() => {
+            dateCopy.setMinutes(i * 5);
+            dateSelected();
+          }}>
+          {i * 5}
+          </button>
+        {/if}
+      {/each}
+  </div>
+  {#if pickingHour}
+  <SelectButtons bind:value={amPm} name="AM/PM" placeholder="AM/PM" editable={true} options={[{name: "AM", value: "am"}, {name: "PM", value: "PM"}]} label={false}/>
   {/if}
 </Modal>
