@@ -5,6 +5,7 @@
   export let value: string;
   export let name: string;
   export let placeholder: string;
+  export let label: boolean = true;
 
   export let editable: boolean = true;
 
@@ -59,7 +60,9 @@
   }
 </style>
 
+{#if label}
 <Label name={name}>{placeholder}</Label>
+{/if}
 {#if editable}
   <div class="buttons">
     {#each options as option, i}
