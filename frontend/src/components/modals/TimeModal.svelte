@@ -147,6 +147,11 @@
           pickingHour = false;
           minuteInput.focus();
         }}
+        on:input={() => {
+          if (hourInput.value.length >= 2) {
+            minuteInput.focus();
+          }
+        }}
         on:focusin={() => {
           pickingHour = true;
           hourInput.value = "";
@@ -179,6 +184,11 @@
           dateCopy = dateCopy;
 
           dateSelected();
+        }}
+        on:input={() => {
+          if (minuteInput.value.length >= 2) {
+            minuteInput.blur();
+          }
         }}
         on:focusin={() => {
           pickingHour = false;
