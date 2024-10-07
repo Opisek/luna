@@ -1,12 +1,15 @@
 <script lang="ts">
   import SelectButtons from "../forms/SelectButtons.svelte";
-import Modal from "./Modal.svelte";
+  import Modal from "./Modal.svelte";
 
   export let date: Date;
   export let dateCopy: Date = new Date();
 
   let pickingHour: boolean;
   let amPm: string;
+
+  let hourInput: HTMLInputElement;
+  let minuteInput: HTMLInputElement;
 
   $: if (amPm === "am") {
     dateCopy.setHours(dateCopy.getHours() % 12);
@@ -24,10 +27,14 @@ import Modal from "./Modal.svelte";
 
   export const showModal = () => {
     dateCopy = new Date(date);
-    dateCopy.setHours(0);
-    dateCopy.setMinutes(0);
+    //dateCopy.setHours(0);
+    //dateCopy.setMinutes(0);
+    if (dateCopy.getHours() > 12 || dateCopy.getHours() === 0) {
+      amPm = "pm";
+    } else {
+      amPm = "am";
+    }
     pickingHour = true;
-    amPm = "am";
     setTimeout(showModalInternal, 0);
   };
 
@@ -59,6 +66,11 @@ import Modal from "./Modal.svelte";
     position: relative;
   }
 
+  input {
+    all: unset;
+    width: 100%;
+  }
+
   span.selecting::after {
     visibility: visible;
     position: absolute;
@@ -68,7 +80,7 @@ import Modal from "./Modal.svelte";
     background-color: $foregroundPrimary;
     width: 100%;
     height: $borderWidth;
-    border-radius: $borderWidth / 2;
+    border-radius: calc($borderWidth / 2);
     content: "";
   }
 
@@ -110,13 +122,74 @@ import Modal from "./Modal.svelte";
 <Modal title="Pick Time" bind:showModal={showModalInternal} bind:hideModal={hideModalInternal}>
   <div class="time">
     <span class="time" class:selecting={pickingHour}>
-      {dateCopy.getHours().toString().padStart(2, "0")}
+      <input
+        bind:this={hourInput}
+        type="numeric"
+        min="0"
+        max="23"
+        value={dateCopy.getHours().toString().padStart(2, "0")}
+        on:change={() => {
+          let hours = parseInt(hourInput.value);
+          if (hours < 0 || hours > 23) {
+            hours = 0;
+          }
+          hourInput.value = hours.toString().padStart(2, "0");
+
+          dateCopy.setHours(hours);
+          dateCopy = dateCopy;
+
+          if (hours > 12 || hours === 0) {
+            amPm = "pm";
+          } else {
+            amPm = "am";
+          }
+
+          pickingHour = false;
+          minuteInput.focus();
+        }}
+        on:focusin={() => {
+          pickingHour = true;
+          hourInput.value = "";
+        }}
+        on:focusout={() => {
+          if (hourInput.value === "") {
+            hourInput.value = dateCopy.getHours().toString().padStart(2, "0");
+          }
+        }}
+      />
     </span>
     <span>
       :
     </span>
     <span class="time" class:selecting={!pickingHour}>
-      {dateCopy.getMinutes().toString().padStart(2, "0")}
+      <input
+        bind:this={minuteInput}
+        type="numeric"
+        min="0"
+        max="23"
+        value={dateCopy.getMinutes().toString().padStart(2, "0")}
+        on:change={() => {
+          let minutes = parseInt(minuteInput.value);
+          if (minutes < 0 || minutes > 59) {
+            minutes = 0;
+          }
+          minuteInput.value = minutes.toString().padStart(2, "0");
+
+          dateCopy.setMinutes(minutes);
+          dateCopy = dateCopy;
+
+          dateSelected();
+        }}
+        on:focusin={() => {
+          pickingHour = false;
+          minuteInput.value = "";
+        }}
+        on:focusout={() => {
+          if (minuteInput.value === "") {
+            minuteInput.value = dateCopy.getMinutes().toString().padStart(2, "0");
+          }
+        }}
+      />
     </span>
   </div>
   <div class="clock">
@@ -140,5 +213,5 @@ import Modal from "./Modal.svelte";
         {/if}
       {/each}
   </div>
-  <SelectButtons bind:value={amPm} name="AM/PM" placeholder="AM/PM" editable={true} options={[{name: "AM", value: "am"}, {name: "PM", value: "PM"}]} label={false}/>
+  <SelectButtons bind:value={amPm} name="AM/PM" placeholder="AM/PM" editable={true} options={[{name: "AM", value: "am"}, {name: "PM", value: "pm"}]} label={false}/>
 </Modal>
