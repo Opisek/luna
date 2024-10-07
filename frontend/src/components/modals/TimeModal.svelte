@@ -1,5 +1,6 @@
 <script lang="ts">
   import SelectButtons from "../forms/SelectButtons.svelte";
+  import Button from "../interactive/Button.svelte";
   import Modal from "./Modal.svelte";
 
   export let date: Date;
@@ -224,4 +225,8 @@
       {/each}
   </div>
   <SelectButtons bind:value={amPm} name="AM/PM" placeholder="AM/PM" editable={true} options={[{name: "AM", value: "am"}, {name: "PM", value: "pm"}]} label={false}/>
+  <svelte:fragment slot="buttons">
+    <Button onClick={dateSelected} color="success">Confirm</Button>
+    <Button onClick={hideModalInternal} color="failure">Cancel</Button>
+  </svelte:fragment>
 </Modal>
