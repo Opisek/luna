@@ -8,11 +8,13 @@
 
   export let event: EventModel;
   let eventCopy: EventModel;
+  let lastStartDate: Date;
 
   let currentCalendars: CalendarModel[] = [];
 
   export const showCreateModal = () => {
     eventCopy = event;
+    lastStartDate = eventCopy.date.start;
     currentCalendars = getCalendars();
     setTimeout(showCreateModalInternal, 0);
   }
@@ -48,7 +50,12 @@
   };
 
   $: if (eventCopy && eventCopy.date && eventCopy.date.start && eventCopy.date.end && eventCopy.date.start.getTime() > eventCopy.date.end.getTime()) {
-    eventCopy.date.end = new Date(eventCopy.date.start);
+    if (eventCopy.date.start === lastStartDate) {
+      eventCopy.date.start = new Date(eventCopy.date.end);
+    } else {
+      eventCopy.date.end = new Date(eventCopy.date.start);
+      lastStartDate = eventCopy.date.start;
+    }
   }
 </script>
 
