@@ -43,17 +43,29 @@ func GetEvents(c *gin.Context) {
 	}
 
 	// Get the associated events
-	// TODO: get time from the api request
-	startTime, err := time.Parse(time.RFC3339, "2024-01-01T00:00:00+00:00")
+	startStr := c.Query("start")
+	startTime, err := time.Parse(time.RFC3339, startStr)
 	if err != nil {
-		panic(err)
+		config.Logger.Warnf("could not get events: could not parse start time: %v", err)
+		util.ErrorDetailed(c, util.ErrorPayload, util.DetailTime)
+		return
 	}
-	endTime, err := time.Parse(time.RFC3339, "2025-01-01T00:00:00+00:00")
+	endStr := c.Query("end")
+	endTime, err := time.Parse(time.RFC3339, endStr)
 	if err != nil {
-		panic(err)
+		config.Logger.Warnf("could not get events: could not parse end time: %v", err)
+		util.ErrorDetailed(c, util.ErrorPayload, util.DetailTime)
+		return
+	}
+	if startTime.After(endTime) {
+		config.Logger.Warn("start time is after end time")
+		util.ErrorDetailed(c, util.ErrorPayload, util.DetailTime)
+		return
+	}
+	if endTime.Sub(startTime) > time.Hour*24*365 {
+		endTime = startTime.Add(time.Hour * 24 * 365)
 	}
 
-	// TODO: same considerations apply as with /api/sources/id/calendars in case we stick to this pattern
 	eventsFromCal, err := calendar.GetEvents(startTime, endTime)
 	if err != nil {
 		config.Logger.Errorf("could not get events: could not get events from calendar %v: %v", calendar.GetName(), err)

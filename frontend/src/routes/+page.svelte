@@ -4,14 +4,13 @@
 
   import { browser } from "$app/environment";
   import SourceEntry from "../components/calendar/SourceEntry.svelte";
-  import { calendars, events, fetchSources, sources } from "$lib/client/repository";
+  import { calendars, events, fetchAllEvents, fetchSources, sources } from "$lib/client/repository";
   import { queueNotification } from "$lib/client/notifications";
   import CalendarEntry from "../components/calendar/CalendarEntry.svelte";
   import Title from "../components/layout/Title.svelte";
   import Horizontal from "../components/layout/Horizontal.svelte";
   import { PlusIcon } from "lucide-svelte";
   import SourceModal from "../components/modals/SourceModal.svelte";
-  import SmallCalendar from "../components/interactive/SmallCalendar.svelte";
   import MonthSelection from "../components/interactive/MonthSelection.svelte";
 
   let localSources: SourceModel[] = [];
@@ -40,6 +39,10 @@
   const currentMonth = new Date().getMonth() 
   let selectedYear = currentYear;
   let selectedMonth = currentMonth;
+
+  let rangeStart = new Date(selectedYear, selectedMonth - 1, 1);
+  let rangeEnd = new Date(selectedYear, selectedMonth + 2, 0);
+
   (async () => {
     if (!browser) return;
 
@@ -84,6 +87,23 @@
       localSources = newSources;
     });
   })();
+
+  $: ((year: number, month: number) => {
+    const firstDayNextMonth = new Date(year, month + 1, 1);
+    const lastDayPreviousMonth = new Date(year, month, 0);
+
+    if (lastDayPreviousMonth < rangeStart) {
+      const lastStart = rangeStart;
+      rangeStart = new Date(year, month - 2, 1);
+      fetchAllEvents(rangeStart, lastStart);
+    }
+
+    if (firstDayNextMonth > rangeEnd) {
+      const lastEnd = rangeEnd;
+      rangeEnd = new Date(year, month + 3, 0);
+      fetchAllEvents(lastEnd, rangeEnd);
+    }
+  })(selectedYear, selectedMonth);
 </script>
 
 <style lang="scss">

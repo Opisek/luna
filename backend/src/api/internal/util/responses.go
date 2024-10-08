@@ -46,6 +46,7 @@ const (
 	DetailId       = "Malformed or missing ID"
 	DetailDate     = "Malformed or missing date"
 	DetailFields   = "Nothing to update"
+	DetailTime     = "Malformed or missing time"
 )
 
 type errorResponse struct {
