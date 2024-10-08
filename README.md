@@ -156,7 +156,7 @@ Depending on the `auth_type` field, additional information may need to be passed
 #### Get Events
 - **Path**: ``/api/calendars/<ID>/events``
 - **Method**: ``GET``
-- **Body**: Filters, in particular time period - not yet implemented
+- **Search Parameters**: `start`, `end` (both in RFC-3339 format and at most one year apart)
 - **Purpose**: Fetches events from the specified calendar.
 
 #### Get Event
