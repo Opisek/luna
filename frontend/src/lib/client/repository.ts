@@ -4,10 +4,8 @@ import { isCalendarVisible, isSourceCollapsed } from "./localStorage";
 
 // TODO: local storage integration for PWA offline support (longterm goal)
 
-let localCalendars: CalendarModel[] = [];
-
 export const sources = writable([] as SourceModel[]);
-export const calendars = writable(localCalendars);
+export const calendars = writable([] as CalendarModel[]);
 export const events = writable([] as EventModel[]);
 
 let sourceCalendars = new Map<string, Set<CalendarModel>>();
@@ -232,7 +230,7 @@ export const fetchCalendars = async (id: string): Promise<string> => {
   }
 };
 
-export const getCalendars = () => localCalendars;
+export const getCalendars = () => allCalendars();
 
 export const fetchAllEvents = async (start: Date, end: Date) => {
   lastStart = start;
