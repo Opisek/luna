@@ -16,11 +16,11 @@
   const nextDate = new Date(date);
   nextDate.setDate(date.getDate() + 1);
 
-  const isEventStart = event && event.date.start.getTime() >= date.getTime();
-  const isEventEnd = event && nextDate.getTime() >= event.date.end.getTime();
-
-  const isFirstDisplay = isFirstDay || isEventStart;
-  const isLastDisplay = isLastDay || isEventEnd;
+  let isEventStart, isEventEnd, isFirstDisplay, isLastDisplay: boolean;
+  $: isEventStart = event !== null && event.date.start.getTime() >= date.getTime();
+  $: isEventEnd = event !== null && nextDate.getTime() >= event.date.end.getTime();
+  $: isFirstDisplay = isFirstDay || isEventStart;
+  $: isLastDisplay = isLastDay || isEventEnd;
 
   let isBackgroundDark: boolean;
   $: isBackgroundDark = isDark([50,50,50]/*GetEventColor(event)*/);
