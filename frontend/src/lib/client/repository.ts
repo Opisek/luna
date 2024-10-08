@@ -13,6 +13,8 @@ export const events = writable([] as EventModel[]);
 let sourceCalendars = new Map<string, Set<CalendarModel>>();
 let calendarEvents = new Map<string, Set<EventModel>>();
 
+let calendarMap = new Map<string, CalendarModel>();
+
 export const faultySources = writable(new Set<string>());
 export const faultyCalendars = writable(new Set<string>());
 
@@ -25,11 +27,19 @@ lastEnd.setMonth(lastEnd.getMonth() + 2);
 lastEnd.setDate(0);
 
 function allEvents(): EventModel[] {
-  return Array.from(calendarEvents.values().map(x => Array.from(x))).flat();
+  return Array.from(
+    calendarEvents
+      .entries()
+      .filter(x => calendarMap.get(x[0])?.visible)
+      .map(x => Array.from(x[1])
+    )
+  ).flat();
 }
 
 function allCalendars(): CalendarModel[] {
-  return Array.from(sourceCalendars.values().map(x => Array.from(x))).flat();
+  const allCalendars = Array.from(sourceCalendars.values().map(x => Array.from(x))).flat();
+  calendarMap = new Map(allCalendars.map(calendar => [calendar.id, calendar]));
+  return allCalendars;
 }
 
 function compileEvents() {
@@ -332,4 +342,8 @@ export const deleteEvent = async (id: string): Promise<string> => {
   } catch (e) {
     return "Unexpected error occured"
   }
+}
+
+export const recalculateEventVisibility = () => {
+  compileEvents();
 }
