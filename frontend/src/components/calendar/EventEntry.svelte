@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { GetEventColor, isDark } from "$lib/common/colors";
+  import { GetEventColor, GetEventRGB, isDark } from "$lib/common/colors";
   import { TextIcon } from "lucide-svelte";
 
   export let visible: boolean = true;
@@ -25,7 +25,7 @@
   $: isLastDisplay = isLastDay || isEventEnd;
 
   let isBackgroundDark: boolean;
-  $: isBackgroundDark = isDark([50,50,50]/*GetEventColor(event)*/);
+  $: isBackgroundDark = event ? isDark(GetEventRGB(event)) : false;
 
   function mouseEnter() {
     if (event == null) return;
