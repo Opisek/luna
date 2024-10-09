@@ -8,13 +8,15 @@
   export let isFirstDay: boolean;
   export let isLastDay: boolean;
   export let date: Date;
+  let nextDate: Date;
+  $: if (date) {
+    nextDate = new Date(date);
+    nextDate.setDate(date.getDate() + 1);
+  }
 
   export let currentlyHoveredEvent: EventModel | null;
   export let currentlyClickedEvent: EventModel | null;
   export let clickCallback: (event: EventModel) => void;
-
-  const nextDate = new Date(date);
-  nextDate.setDate(date.getDate() + 1);
 
   let isEventStart, isEventEnd, isFirstDisplay, isLastDisplay: boolean;
   $: isEventStart = event !== null && event.date.start.getTime() >= date.getTime();
