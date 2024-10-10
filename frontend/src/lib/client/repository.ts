@@ -12,6 +12,7 @@ let sourceCalendars = new Map<string, Set<CalendarModel>>();
 let calendarEvents = new Map<string, Set<EventModel>>();
 
 let calendarMap = new Map<string, CalendarModel>();
+let eventsMap = new Map<string, EventModel>();
 
 export const faultySources = writable(new Set<string>());
 export const faultyCalendars = writable(new Set<string>());
@@ -25,13 +26,15 @@ lastEnd.setMonth(lastEnd.getMonth() + 2);
 lastEnd.setDate(0);
 
 function allEvents(): EventModel[] {
-  return Array.from(
+  const allEvents = Array.from(
     calendarEvents
       .entries()
       .filter(x => calendarMap.get(x[0])?.visible)
       .map(x => Array.from(x[1])
     )
   ).flat();
+  eventsMap = new Map(allEvents.map(event => [event.id, event]));
+  return allEvents;
 }
 
 function allCalendars(): CalendarModel[] {
@@ -298,7 +301,9 @@ export const createEvent = async (newEvent: EventModel): Promise<string> => {
     if (response.ok) {
       const json = await response.json();
       newEvent.id = json.id;
-      events.update((events) => events.concat(newEvent));
+
+      calendarEvents.set(newEvent.calendar, new Set([...calendarEvents.get(newEvent.calendar) || [], newEvent]));
+      compileEvents();
 
       return "";
     } else {
@@ -316,7 +321,8 @@ export const editEvent = async (modifiedEvent: EventModel): Promise<string> => {
 
     const response = await fetch(`/api/events/${modifiedEvent.id}`, { method: "PATCH", body: formData });
     if (response.ok) {
-      events.update((events) => events.map((event => event.id === modifiedEvent.id ? modifiedEvent : event)))
+      calendarEvents.set(modifiedEvent.calendar, new Set([...calendarEvents.get(modifiedEvent.calendar) || []].map((event) => event.id === modifiedEvent.id ? modifiedEvent : event)));
+      compileEvents();
       return "";
     } else {
       const json = await response.json();
@@ -331,7 +337,12 @@ export const deleteEvent = async (id: string): Promise<string> => {
   try {
     const response = await fetch(`/api/events/${id}`, { method: "DELETE" });
     if (response.ok) {
-      events.update((events) => events.filter((event) => event.id !== id));
+      const event = eventsMap.get(id);
+      const calendarId = event?.calendar;
+      if (calendarId) {
+        calendarEvents.set(calendarId, new Set([...calendarEvents.get(calendarId) || []].filter((event) => event.id !== id)));
+        compileEvents();
+      }
       return "";
     } else {
       const json = await response.json();
