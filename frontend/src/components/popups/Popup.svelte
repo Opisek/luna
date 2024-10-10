@@ -2,6 +2,8 @@
   import { browser } from "$app/environment";
   import { calculateOptimalPopupPosition } from "../../lib/common/calculations";
 
+  export let visible: boolean = false;
+
   let dialog: HTMLDialogElement;
 
   function clickOutside(event: MouseEvent) {
@@ -24,6 +26,7 @@
   }
 
   export const show = () => {
+    visible = true;
     checkPosition();
     if (browser) {
       window.addEventListener("click", clickOutside);
@@ -32,6 +35,7 @@
   }
 
   export const close = () => {
+    visible = false;
     dialog.close();
     if (browser) {
       window.removeEventListener("click", clickOutside);

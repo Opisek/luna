@@ -3,9 +3,11 @@
   import { getMonthName } from "../../lib/common/humanization";
   import IconButton from "../interactive/IconButton.svelte";
   import Popup from "./Popup.svelte";
-  import { addRipple } from "../../lib/client/decoration";
+
+  let popupVisible: boolean = false;
 
   export const show = () => {
+    if (popupVisible) return;
     selectedYear = year;
     selectingMonth = true;
     setTimeout(internalShow, 0);
@@ -101,7 +103,7 @@
   }
 </style>
 
-<Popup bind:show={internalShow} bind:close={internalClose}>
+<Popup bind:show={internalShow} bind:close={internalClose} bind:visible={popupVisible}>
   <div class="topRow">
     <IconButton click={prev}>
       <ChevronLeft/>
