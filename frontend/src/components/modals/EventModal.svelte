@@ -1,5 +1,6 @@
 <script lang="ts">
   import { createEvent, deleteEvent, editEvent, getCalendars } from "$lib/client/repository";
+  import CheckboxInput from "../forms/CheckboxInput.svelte";
   import ColorInput from "../forms/ColorInput.svelte";
   import DateTimeInput from "../forms/DateTimeInput.svelte";
   import SelectInput from "../forms/SelectInput.svelte";
@@ -8,6 +9,7 @@
 
   export let event: EventModel;
   let eventCopy: EventModel;
+  let allDay: boolean;
   let lastStartDate: Date;
 
   let currentCalendars: CalendarModel[] = [];
@@ -15,6 +17,7 @@
   export const showCreateModal = () => {
     eventCopy = event;
     lastStartDate = eventCopy.date.start;
+    allDay = false; // TODO: determine based on date format
     currentCalendars = getCalendars();
     setTimeout(showCreateModalInternal, 0);
   }
@@ -77,6 +80,9 @@
       <ColorInput bind:color={eventCopy.color} name="color" editable={editMode} />
     {/if}
     <TextInput bind:value={eventCopy.desc} name="desc" placeholder="Description" multiline={true} editable={editMode} />
+    {#if editMode}
+        <CheckboxInput bind:value={allDay} name="all_day" description="All Day"/>
+    {/if}
     <DateTimeInput bind:value={eventCopy.date.start} name="date_start" placeholder="Start" editable={editMode} />
     <DateTimeInput bind:value={eventCopy.date.end} name="date_end" placeholder="End" editable={editMode}/>
   {/if}
