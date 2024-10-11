@@ -4,6 +4,7 @@
   import Label from "./Label.svelte";
 
   export let value: Date;
+  export let allDay: boolean;
   export let placeholder: string;
   export let name: string;
   export let editable: boolean;
@@ -55,7 +56,9 @@
 <Label name={name}>{placeholder}</Label>
 <div class:editable={editable}>
   <button on:click={dateClick}>{value.toLocaleDateString()}</button>
-  <button on:click={timeClick}>{value.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"})}</button>
+  {#if !allDay}
+    <button on:click={timeClick}>{value.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"})}</button>
+  {/if}
 </div>
 
 <DateModal bind:date={value} bind:showModal={showDateModal}/>

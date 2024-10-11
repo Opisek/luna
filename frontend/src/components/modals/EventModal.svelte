@@ -83,7 +83,7 @@
     {#if editMode}
         <CheckboxInput bind:value={allDay} name="all_day" description="All Day"/>
     {/if}
-    <DateTimeInput bind:value={eventCopy.date.start} name="date_start" placeholder="Start" editable={editMode} />
-    <DateTimeInput bind:value={eventCopy.date.end} name="date_end" placeholder="End" editable={editMode}/>
+    <DateTimeInput bind:value={eventCopy.date.start} name="date_start" placeholder="Start" editable={editMode} allDay={allDay}/>
+    <DateTimeInput bind:value={eventCopy.date.end} name="date_end" placeholder="End" editable={editMode} allDay={allDay}/>
   {/if}
 </EditableModal>
