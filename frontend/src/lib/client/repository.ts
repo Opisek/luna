@@ -250,6 +250,10 @@ export const fetchAllEvents = async (start: Date, end: Date) => {
   }
 }
 
+export const fetchSourceCalendars = async (id: string) => {
+  return Array.from(sourceCalendars.get(id) || new Set<CalendarModel>());
+}
+
 export const fetchEvents = async (id: string, start: Date, end: Date): Promise<string> => {
   try {
     const url = `/api/calendars/${id}/events?start=${encodeURIComponent(start.toISOString())}&end=${encodeURIComponent(end.toISOString())}`

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { faultySources } from "$lib/client/repository";
+  import { calendars, faultySources, fetchSourceCalendars } from "$lib/client/repository";
   import { collapsedSources, setSourceCollapse } from "../../lib/client/localStorage";
   import CollapseToggle from "../interactive/CollapseToggle.svelte";
   import Tooltip from "../interactive/Tooltip.svelte";
@@ -11,6 +11,11 @@
   faultySources.subscribe((faulty) => {
     hasErrored = faulty.has(source.id);
   });
+
+  let hasCals = false;
+  calendars.subscribe(async () => {
+    hasCals = (await fetchSourceCalendars(source.id)).length > 0;
+  })
 
   let showModal: () => any;
 
@@ -25,8 +30,8 @@
   @import "../../styles/dimensions.scss";
   @import "../../styles/colors.scss";
 
-  span.row {
-    margin: 0;
+  button.row {
+    all: unset;
     color: $foregroundFaded;
     height: 1.25em;
     display: flex;
@@ -54,13 +59,15 @@
   //}
 </style>
 
-<span on:click={showModal} class="row">
+<button on:click={showModal} class="row">
     {source.name}
   <span class="buttons">
-    <CollapseToggle bind:collapsed={source.collapsed}/>
-  {#if hasErrored}
-    <Tooltip msg="An error occurred trying to retrieve calendars from this source." error={true}/>
-  {/if}
+    {#if hasCals}
+      <CollapseToggle bind:collapsed={source.collapsed}/>
+    {/if}
+    {#if hasErrored}
+      <Tooltip msg="An error occurred trying to retrieve calendars from this source." error={true}/>
+    {/if}
   </span>
   <!--
   <IconButton callback={showModal}>
@@ -69,7 +76,7 @@
     <CogIcon size={16}/>
   </IconButton>
   -->
-</span>
+</button>
 
 <SourceModal
   bind:showModal={showModal}
