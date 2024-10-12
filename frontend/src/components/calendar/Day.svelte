@@ -36,6 +36,7 @@
       date: {
         start: start,
         end: end,
+        allDay: false,
       }
     };
 

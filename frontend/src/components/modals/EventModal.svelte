@@ -14,14 +14,29 @@
   let currentCalendars: CalendarModel[] = [];
 
   export const showCreateModal = () => {
+    editMode = false;
     eventCopy = event;
     lastStartDate = eventCopy.date.start;
     currentCalendars = getCalendars();
     setTimeout(showCreateModalInternal, 0);
   }
   export const showModal = () => {
-    eventCopy = { ...event };
     editMode = false;
+    eventCopy = {
+      id: event.id,
+      calendar: event.calendar,
+      name: event.name,
+      desc: event.desc,
+      color: event.color,
+      date: {
+        start: new Date(event.date.start),
+        end: new Date(event.date.end),
+        allDay: event.date.allDay,
+      }
+    }
+    if (eventCopy.date.allDay) {
+      eventCopy.date.end.setDate(eventCopy.date.end.getDate() - 1);
+    }
     setTimeout(showModalInternal, 0);
   };
 
@@ -39,6 +54,9 @@
     else return `Could not delete event: ${res}`;
   };
   const onEdit = async () => {
+    if (eventCopy.date.allDay) {
+      eventCopy.date.end.setDate(eventCopy.date.end.getDate() + 1);
+    }
     if (eventCopy.id === "") {
       const res = await createEvent(eventCopy);
       if (res === "") return "";
@@ -50,12 +68,15 @@
     }
   };
 
-  $: if (eventCopy && eventCopy.date && eventCopy.date.start && eventCopy.date.end && eventCopy.date.start.getTime() > eventCopy.date.end.getTime()) {
-    if (eventCopy.date.start === lastStartDate) {
-      eventCopy.date.start = new Date(eventCopy.date.end);
-    } else {
-      eventCopy.date.end = new Date(eventCopy.date.start);
-      lastStartDate = eventCopy.date.start;
+  const changeEnd = (value: Date) => {
+    if (value.getTime() < eventCopy.date.start.getTime()) {
+      eventCopy.date.start = new Date(value);
+    }
+  }
+
+  const changeStart = (value: Date) => {
+    if (value.getTime() > eventCopy.date.end.getTime()) {
+      eventCopy.date.end = new Date(value);
     }
   }
 </script>
@@ -81,7 +102,7 @@
     {#if editMode}
         <CheckboxInput bind:value={eventCopy.date.allDay} name="all_day" description="All Day"/>
     {/if}
-    <DateTimeInput bind:value={eventCopy.date.start} name="date_start" placeholder="Start" editable={editMode} allDay={eventCopy.date.allDay}/>
-    <DateTimeInput bind:value={eventCopy.date.end} name="date_end" placeholder="End" editable={editMode} allDay={eventCopy.date.allDay}/>
+    <DateTimeInput bind:value={eventCopy.date.start} name="date_start" placeholder="Start" editable={editMode} allDay={eventCopy.date.allDay} onChange={changeStart}/>
+    <DateTimeInput bind:value={eventCopy.date.end} name="date_end" placeholder="End" editable={editMode} allDay={eventCopy.date.allDay} onChange={changeEnd}/>
   {/if}
 </EditableModal>

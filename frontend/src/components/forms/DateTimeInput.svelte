@@ -9,6 +9,8 @@
   export let name: string;
   export let editable: boolean;
 
+  export let onChange: (value: Date) => void = () => {};
+
   let showDateModal = () => {};
   let showTimeModal = () => {};
 
@@ -61,5 +63,5 @@
   {/if}
 </div>
 
-<DateModal bind:date={value} bind:showModal={showDateModal}/>
-<TimeModal bind:date={value} bind:showModal={showTimeModal}/>
+<DateModal bind:date={value} bind:showModal={showDateModal} onChange={onChange}/>
+<TimeModal bind:date={value} bind:showModal={showTimeModal} onChange={onChange}/>

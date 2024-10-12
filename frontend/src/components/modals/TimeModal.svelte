@@ -6,6 +6,8 @@
   export let date: Date;
   export let dateCopy: Date = new Date();
 
+  export let onChange: (date: Date) => void = () => {};
+
   let pickingHour: boolean;
   let amPm: string;
 
@@ -45,6 +47,7 @@
   function dateSelected() {
     date = dateCopy;
     hideModalInternal();
+    onChange(date);
   }
 </script>
 

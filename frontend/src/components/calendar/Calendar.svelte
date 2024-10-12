@@ -29,7 +29,9 @@
     lastViewDay.setDate(firstMonthDay.getDate() + 7 * amountOfRows - 1);
 
     // Event pre-processing
-    const filteredEvents = events.sort(compareEventsByStartDate).filter(e => e.date.start.getTime() >= firstViewDay.getTime() && e.date.end.getTime() < lastViewDay.getTime());
+    const filteredEvents = events
+      .sort(compareEventsByStartDate)
+      .filter(e => e.date.start.getTime() >= firstViewDay.getTime() && e.date.end.getTime() < lastViewDay.getTime());
 
     // Fill
     days = [];

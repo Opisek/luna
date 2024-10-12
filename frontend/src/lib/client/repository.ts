@@ -264,6 +264,11 @@ export const fetchEvents = async (id: string, start: Date, end: Date): Promise<s
       for (const event of json.events) {
         event.date.start = new Date(event.date.start);
         event.date.end = new Date(event.date.end);
+
+        if (event.date.allDay) {
+          event.date.start.setHours(0, 0, 0, 0);
+          event.date.end.setHours(0, 0, 0, 0);
+        }
       }
 
       // Do not remove events outside the requested range
@@ -296,6 +301,11 @@ function getEventFormData(event: EventModel): FormData {
 
 export const createEvent = async (newEvent: EventModel): Promise<string> => {
   try {
+    if (newEvent.date.allDay) {
+      newEvent.date.start.setHours(0, 0, 0, 0);
+      newEvent.date.end.setHours(0, 0, 0, 0);
+    }
+
     const formData = getEventFormData(newEvent);
     // TODO: add color picker to the frontend
     formData.set("color", "#FF0000")
@@ -320,6 +330,11 @@ export const createEvent = async (newEvent: EventModel): Promise<string> => {
 
 export const editEvent = async (modifiedEvent: EventModel): Promise<string> => {
   try {
+    if (modifiedEvent.date.allDay) {
+      modifiedEvent.date.start.setHours(0, 0, 0, 0);
+      modifiedEvent.date.end.setHours(0, 0, 0, 0);
+    }
+
     const formData = getEventFormData(modifiedEvent);
 
     const response = await fetch(`/api/events/${modifiedEvent.id}`, { method: "PATCH", body: formData });

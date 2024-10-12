@@ -4,6 +4,7 @@
   import Modal from "./Modal.svelte";
 
   export let date: Date;
+  export let onChange: (date: Date) => void = () => {};
 
   let currentYear: number;
   let currentMonth: number;
@@ -22,6 +23,7 @@
     selectedDate.setHours(date.getHours(), date.getMinutes(), date.getSeconds(), date.getMilliseconds());
     date = selectedDate;
     hideModalInternal();
+    onChange(date);
   }
 </script>
 
