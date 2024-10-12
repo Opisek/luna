@@ -253,7 +253,6 @@ export const fetchAllEvents = async (start: Date, end: Date) => {
 export const fetchEvents = async (id: string, start: Date, end: Date): Promise<string> => {
   try {
     const url = `/api/calendars/${id}/events?start=${encodeURIComponent(start.toISOString())}&end=${encodeURIComponent(end.toISOString())}`
-    console.log(url)
     const response = await fetch(url);
     if (response.ok) {
       faultyCalendars.update((faultyCalendars) => new Set([...faultyCalendars].filter((faultyCalendar) => faultyCalendar !== id)));

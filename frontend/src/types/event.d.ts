@@ -7,5 +7,6 @@ type EventModel = {
   date: {
     start: Date;
     end: Date;
+    allDay: boolean;
   }
 };

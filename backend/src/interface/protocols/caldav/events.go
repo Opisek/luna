@@ -95,6 +95,10 @@ func eventFromCaldav(calendar *CaldavCalendar, obj *caldav.CalendarObject) (*Cal
 		return nil, fmt.Errorf("could not parse start time %v: %v", dtstart.Value, err)
 	}
 
+	if startTime.Location() == time.Local {
+		fmt.Println(summaryStr)
+	}
+
 	dtend := obj.Data.Children[eventIndex].Props.Get("DTEND")
 	duration := obj.Data.Children[eventIndex].Props.Get("DURATION")
 

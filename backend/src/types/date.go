@@ -12,6 +12,7 @@ type EventDate struct {
 	end             *time.Time
 	duration        *time.Duration
 	specifyDuration bool
+	allDay          bool
 	recurrence      *EventRecurrence
 }
 
@@ -19,6 +20,7 @@ func NewEventDateFromEndTime(start *time.Time, end *time.Time, recurrence *Event
 	return &EventDate{
 		start:           start,
 		end:             end,
+		allDay:          start.Location() == time.Local && end.Location() == time.Local && start.Hour() == 0 && start.Minute() == 0 && start.Second() == 0 && end.Hour() == 0 && end.Minute() == 0 && end.Second() == 0,
 		recurrence:      recurrence,
 		specifyDuration: false,
 	}
@@ -28,6 +30,7 @@ func NewEventDateFromDuration(start *time.Time, duration *time.Duration, recurre
 	return &EventDate{
 		start:           start,
 		duration:        duration,
+		allDay:          start.Location() == time.Local && start.Hour() == 0 && start.Minute() == 0 && start.Second() == 0,
 		recurrence:      recurrence,
 		specifyDuration: true,
 	}
@@ -63,16 +66,22 @@ func (ed *EventDate) SpecifyDuration() bool {
 //	return ed.recurrence
 //}
 
+func (ed *EventDate) AllDay() bool {
+	return ed.allDay
+}
+
 type eventDateMarshalEnd struct {
 	Start      *time.Time       `json:"start"`
 	End        *time.Time       `json:"end"`
 	Recurrence *EventRecurrence `json:"recurrence"`
+	AllDay     bool             `json:"allDay"`
 }
 
 type eventDateMarshalDuration struct {
 	Start      *time.Time       `json:"start"`
 	Duration   *time.Duration   `json:"duration"`
 	Recurrence *EventRecurrence `json:"recurrence"`
+	AllDay     bool             `json:"allDay"`
 }
 
 func (ed *EventDate) MarshalJSON() ([]byte, error) {
@@ -81,12 +90,14 @@ func (ed *EventDate) MarshalJSON() ([]byte, error) {
 			Start:      ed.start,
 			Duration:   ed.duration,
 			Recurrence: ed.recurrence,
+			AllDay:     ed.allDay,
 		})
 	} else {
 		return json.Marshal(eventDateMarshalEnd{
 			Start:      ed.start,
 			End:        ed.end,
 			Recurrence: ed.recurrence,
+			AllDay:     ed.allDay,
 		})
 	}
 }

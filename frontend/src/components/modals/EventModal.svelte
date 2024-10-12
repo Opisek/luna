@@ -9,7 +9,6 @@
 
   export let event: EventModel;
   let eventCopy: EventModel;
-  let allDay: boolean;
   let lastStartDate: Date;
 
   let currentCalendars: CalendarModel[] = [];
@@ -17,7 +16,6 @@
   export const showCreateModal = () => {
     eventCopy = event;
     lastStartDate = eventCopy.date.start;
-    allDay = false; // TODO: determine based on date format
     currentCalendars = getCalendars();
     setTimeout(showCreateModalInternal, 0);
   }
@@ -81,9 +79,9 @@
     {/if}
     <TextInput bind:value={eventCopy.desc} name="desc" placeholder="Description" multiline={true} editable={editMode} />
     {#if editMode}
-        <CheckboxInput bind:value={allDay} name="all_day" description="All Day"/>
+        <CheckboxInput bind:value={eventCopy.date.allDay} name="all_day" description="All Day"/>
     {/if}
-    <DateTimeInput bind:value={eventCopy.date.start} name="date_start" placeholder="Start" editable={editMode} allDay={allDay}/>
-    <DateTimeInput bind:value={eventCopy.date.end} name="date_end" placeholder="End" editable={editMode} allDay={allDay}/>
+    <DateTimeInput bind:value={eventCopy.date.start} name="date_start" placeholder="Start" editable={editMode} allDay={eventCopy.date.allDay}/>
+    <DateTimeInput bind:value={eventCopy.date.end} name="date_end" placeholder="End" editable={editMode} allDay={eventCopy.date.allDay}/>
   {/if}
 </EditableModal>
