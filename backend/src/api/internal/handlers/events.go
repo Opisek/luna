@@ -182,6 +182,8 @@ func PutEvent(c *gin.Context) {
 		return
 	}
 
+	eventDateAllDay := c.PostForm("date_all_day") == "true"
+
 	eventDateStartStr := c.PostForm("date_start")
 	eventDateStart, err := time.Parse(time.RFC3339, eventDateStartStr)
 	if err != nil {
@@ -204,9 +206,9 @@ func PutEvent(c *gin.Context) {
 
 	var date *types.EventDate
 	if endErr == nil {
-		date = types.NewEventDateFromEndTime(&eventDateStart, &eventDateEnd, nil)
+		date = types.NewEventDateFromEndTime(&eventDateStart, &eventDateEnd, eventDateAllDay, nil)
 	} else {
-		date = types.NewEventDateFromDuration(&eventDateStart, &eventDateDuration, nil)
+		date = types.NewEventDateFromDuration(&eventDateStart, &eventDateDuration, eventDateAllDay, nil)
 	}
 
 	event, err := calendar.AddEvent(eventName, eventDesc, eventColor, date)
@@ -257,6 +259,8 @@ func PatchEvent(c *gin.Context) {
 
 	newEventColor, colErr := types.ParseColor(c.PostForm("color"))
 
+	eventDateAllDay := c.PostForm("date_all_day") == "true"
+
 	eventDateStartStr := c.PostForm("date_start")
 	eventDateStart, startErr := time.Parse(time.RFC3339, eventDateStartStr)
 
@@ -290,19 +294,19 @@ func PatchEvent(c *gin.Context) {
 		if endErr != nil && durationErr == nil {
 			if event.GetDate().SpecifyDuration() {
 				eventDateDuration = *event.GetDate().Duration()
-				newEventDate = types.NewEventDateFromDuration(&eventDateStart, &eventDateDuration, nil)
+				newEventDate = types.NewEventDateFromDuration(&eventDateStart, &eventDateDuration, eventDateAllDay, nil)
 			} else {
 				eventDateEnd = *event.GetDate().End()
-				newEventDate = types.NewEventDateFromEndTime(&eventDateStart, &eventDateEnd, nil)
+				newEventDate = types.NewEventDateFromEndTime(&eventDateStart, &eventDateEnd, eventDateAllDay, nil)
 			}
 		} else if endErr == nil && durationErr == nil {
 			apiConfig.Logger.Warn("cannot specify both end and duration")
 			util.ErrorDetailed(c, util.ErrorPayload, util.DetailDate)
 			return
 		} else if endErr == nil {
-			newEventDate = types.NewEventDateFromEndTime(&eventDateStart, &eventDateEnd, nil)
+			newEventDate = types.NewEventDateFromEndTime(&eventDateStart, &eventDateEnd, eventDateAllDay, nil)
 		} else {
-			newEventDate = types.NewEventDateFromDuration(&eventDateStart, &eventDateDuration, nil)
+			newEventDate = types.NewEventDateFromDuration(&eventDateStart, &eventDateDuration, eventDateAllDay, nil)
 		}
 	}
 

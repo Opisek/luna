@@ -124,13 +124,19 @@ func eventFromCaldav(calendar *CaldavCalendar, obj *caldav.CalendarObject) (*Cal
 		if err != nil {
 			return nil, fmt.Errorf("could not parse end time %v: %v", dtend.Value, err)
 		}
-		eventDate = types.NewEventDateFromEndTime(startTime, endTime, eventRecurrence)
+
+		allDay := startTime.Location() == time.Local && endTime.Location() == time.Local && startTime.Hour() == 0 && startTime.Minute() == 0 && startTime.Second() == 0 && endTime.Hour() == 0 && endTime.Minute() == 0 && endTime.Second() == 0
+
+		eventDate = types.NewEventDateFromEndTime(startTime, endTime, allDay, eventRecurrence)
 	} else {
 		dur, err := time.ParseDuration(duration.Value)
 		if err != nil {
 			return nil, fmt.Errorf("could not parse duration %v: %v", duration.Value, err)
 		}
-		eventDate = types.NewEventDateFromDuration(startTime, &dur, eventRecurrence)
+
+		allDay := startTime.Location() == time.Local && startTime.Hour() == 0 && startTime.Minute() == 0 && startTime.Second() == 0 && dur%(24*time.Hour) == 0
+
+		eventDate = types.NewEventDateFromDuration(startTime, &dur, allDay, eventRecurrence)
 	}
 
 	url, err := types.NewUrl(obj.Path)

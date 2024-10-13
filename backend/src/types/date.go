@@ -16,21 +16,43 @@ type EventDate struct {
 	recurrence      *EventRecurrence
 }
 
-func NewEventDateFromEndTime(start *time.Time, end *time.Time, recurrence *EventRecurrence) *EventDate {
+func NewEventDateFromEndTime(start *time.Time, end *time.Time, allDay bool, recurrence *EventRecurrence) *EventDate {
+	if allDay {
+		fmt.Println(start)
+		fmt.Println(end)
+
+		_, offset := start.Zone()
+		newStart := start.Add(time.Duration(offset) * time.Second).UTC()
+		start = &newStart
+
+		_, offset = end.Zone()
+		newEnd := end.Add(time.Duration(offset) * time.Second).UTC()
+		end = &newEnd
+
+		fmt.Println(start)
+		fmt.Println(end)
+	}
+
 	return &EventDate{
 		start:           start,
 		end:             end,
-		allDay:          start.Location() == time.Local && end.Location() == time.Local && start.Hour() == 0 && start.Minute() == 0 && start.Second() == 0 && end.Hour() == 0 && end.Minute() == 0 && end.Second() == 0,
+		allDay:          allDay,
 		recurrence:      recurrence,
 		specifyDuration: false,
 	}
 }
 
-func NewEventDateFromDuration(start *time.Time, duration *time.Duration, recurrence *EventRecurrence) *EventDate {
+func NewEventDateFromDuration(start *time.Time, duration *time.Duration, allDay bool, recurrence *EventRecurrence) *EventDate {
+	if allDay {
+		_, offset := start.Zone()
+		newStart := start.Add(time.Duration(offset) * time.Second).UTC()
+		start = &newStart
+	}
+
 	return &EventDate{
 		start:           start,
 		duration:        duration,
-		allDay:          start.Location() == time.Local && start.Hour() == 0 && start.Minute() == 0 && start.Second() == 0,
+		allDay:          allDay,
 		recurrence:      recurrence,
 		specifyDuration: true,
 	}

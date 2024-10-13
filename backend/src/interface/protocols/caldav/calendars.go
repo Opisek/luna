@@ -199,13 +199,21 @@ func setEventProps(cal *ical.Calendar, id string, name string, desc string, date
 		event.Props.Del(ical.PropDescription)
 	}
 
-	event.Props.SetDateTime(ical.PropDateTimeStart, *date.Start())
+	if date.AllDay() {
+		event.Props.SetDate(ical.PropDateTimeStart, *date.Start())
+	} else {
+		event.Props.SetDateTime(ical.PropDateTimeStart, *date.Start())
+	}
 	if date.SpecifyDuration() {
 		// TODO: figure this out
 		return fmt.Errorf("not implemented")
 		//event.Props.SetText(ical.PropDuration, *date.Duration())
 	} else {
-		event.Props.SetDateTime(ical.PropDateTimeEnd, *date.End())
+		if date.AllDay() {
+			event.Props.SetDate(ical.PropDateTimeEnd, *date.End())
+		} else {
+			event.Props.SetDateTime(ical.PropDateTimeEnd, *date.End())
+		}
 		event.Props.Del(ical.PropDuration)
 	}
 	event.Props.SetDateTime(ical.PropDateTimeStamp, time.Now())
