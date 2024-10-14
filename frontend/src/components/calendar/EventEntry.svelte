@@ -59,6 +59,7 @@
 <style lang="scss">
   @import "../../styles/colors.scss";
   @import "../../styles/dimensions.scss";
+  @import "../../styles/text.scss";
 
   div {
     padding: $paddingTiny;
@@ -117,6 +118,13 @@
     min-width: 0;
     flex-shrink: 1;
   }
+  span.time {
+    flex-shrink: 0;
+    text-align: center;
+    font-weight: $fontWeightLight;
+    font-family: $fontFamilyTime;
+    font-size: $fontSizeSmaller;
+  }
   span.icons {
     flex-shrink: 0;
     display: flex;
@@ -142,6 +150,11 @@
   style="background-color:{GetEventColor(event)}"
 >
   {#if event && isFirstDisplay}
+    {#if !event.date.allDay}
+    <span class="time">
+      {event.date.start.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
+    </span>
+    {/if}
     <span class="name">
       {event.name}
     </span>

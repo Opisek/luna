@@ -5,6 +5,7 @@
 <style lang="scss">
   @import "../../styles/colors.scss";
   @import "../../styles/dimensions.scss";
+  @import "../../styles/text.scss";
 
   label {
     margin-bottom: -2 * $gapSmall;

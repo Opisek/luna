@@ -56,9 +56,11 @@
 
   @import "../../styles/colors.scss";
   @import "../../styles/dimensions.scss";
+  @import "../../styles/text.scss";
 
   div.time {
     font-size: $fontSizeLarge;
+    //font-family: $fontFamilyTime;
     display: flex;
     justify-content: center;
     gap: $gapSmaller;

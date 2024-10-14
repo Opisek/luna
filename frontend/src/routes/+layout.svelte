@@ -15,6 +15,7 @@
 
 <style lang="scss">
   @import "../styles/dimensions.scss";
+  @import "../styles/text.scss";
 
   :global(*) {
     box-sizing: border-box;
@@ -24,7 +25,7 @@
     margin: 0;
     padding: 0;
     height: 100vh;
-    font-family: 'Karla', serif;
+    font-family: $fontFamilyText;
     font-size: $fontSize;
   }
 

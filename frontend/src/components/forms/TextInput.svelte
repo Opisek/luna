@@ -31,6 +31,7 @@
 <style lang="scss">
   @import "../../styles/colors.scss";
   @import "../../styles/dimensions.scss";
+  @import "../../styles/text.scss";
 
   input, textarea {
     all: unset;
