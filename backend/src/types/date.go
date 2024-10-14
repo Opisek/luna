@@ -18,16 +18,13 @@ type EventDate struct {
 
 func NewEventDateFromEndTime(start *time.Time, end *time.Time, allDay bool, recurrence *EventRecurrence) *EventDate {
 	if allDay {
-		//_, offset := start.Zone()
-		//newStart := start.Add(time.Duration(offset) * time.Second).UTC()
-		//start = &newStart
+		_, offset := start.Zone()
+		newStart := start.Add(time.Duration(offset) * time.Second).UTC()
+		start = &newStart
 
-		//_, offset = end.Zone()
-		//newEnd := end.Add(time.Duration(offset) * time.Second).UTC()
-		//end = &newEnd
-
-		fmt.Println(start)
-		fmt.Println(end)
+		_, offset = end.Zone()
+		newEnd := end.Add(time.Duration(offset) * time.Second).UTC()
+		end = &newEnd
 	}
 
 	return &EventDate{
