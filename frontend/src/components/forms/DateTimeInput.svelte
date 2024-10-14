@@ -30,12 +30,15 @@
 <style lang="scss">
   @import "../../styles/colors.scss";
   @import "../../styles/dimensions.scss";
+  @import "../../styles/text.scss";
 
   div {
     display: flex;
     flex-direction: row;
     gap: $gapSmall;
     margin: $gapSmall;
+    font-family: $fontFamilyTime;
+    font-size: $fontSizeSmall;
   }
 
   div.editable {

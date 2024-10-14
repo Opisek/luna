@@ -60,7 +60,7 @@
 
   div.time {
     font-size: $fontSizeLarge;
-    //font-family: $fontFamilyTime;
+    font-family: $fontFamilyTime;
     display: flex;
     justify-content: center;
     gap: $gapSmaller;
@@ -98,6 +98,7 @@
     width: 100%;
     margin-top: 5em;
     margin-bottom: 7em + $paddingSmaller;
+    font-family: $fontFamilyTime;
   }
 
   button {
