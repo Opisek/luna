@@ -288,7 +288,7 @@ func PatchEvent(c *gin.Context) {
 	if startErr != nil && endErr != nil && durationErr != nil {
 		newEventDate = event.GetDate()
 	} else {
-		if startErr == nil {
+		if startErr != nil {
 			eventDateStart = *event.GetDate().Start()
 		}
 		if endErr != nil && durationErr == nil {

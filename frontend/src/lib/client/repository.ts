@@ -294,8 +294,15 @@ function getEventFormData(event: EventModel): FormData {
   const formData = new FormData();
   formData.set("name", event.name);
   formData.set("desc", event.desc);
-  formData.set("date_start", event.date.start.toISOString());
-  formData.set("date_end", event.date.end.toISOString());
+  if (event.date.allDay) {
+    const start = new Date(event.date.start.getTime() - (event.date.start.getTimezoneOffset() * 60000));
+    const end = new Date(event.date.end.getTime() - (event.date.end.getTimezoneOffset() * 60000));
+    formData.set("date_start", start.toISOString());
+    formData.set("date_end", end.toISOString());
+  } else {
+    formData.set("date_start", event.date.start.toISOString());
+    formData.set("date_end", event.date.end.toISOString());
+  }
   formData.set("date_all_day", event.date.allDay ? "true" : "false");
   return formData;
 }
@@ -304,9 +311,7 @@ export const createEvent = async (newEvent: EventModel): Promise<string> => {
   try {
     if (newEvent.date.allDay) {
       newEvent.date.start.setHours(0, 0, 0, 0);
-      newEvent.date.start.setTime(newEvent.date.start.getTime() + newEvent.date.start.getTimezoneOffset() * 60 * 1000);
       newEvent.date.end.setHours(0, 0, 0, 0);
-      newEvent.date.end.setTime(newEvent.date.end.getTime() + newEvent.date.end.getTimezoneOffset() * 60 * 1000);
     }
 
     const formData = getEventFormData(newEvent);
@@ -335,9 +340,8 @@ export const editEvent = async (modifiedEvent: EventModel): Promise<string> => {
   try {
     if (modifiedEvent.date.allDay) {
       modifiedEvent.date.start.setHours(0, 0, 0, 0);
-      modifiedEvent.date.start.setTime(modifiedEvent.date.start.getTime() + modifiedEvent.date.start.getTimezoneOffset() * 60 * 1000);
       modifiedEvent.date.end.setHours(0, 0, 0, 0);
-      modifiedEvent.date.end.setTime(modifiedEvent.date.end.getTime() + modifiedEvent.date.end.getTimezoneOffset() * 60 * 1000);
+      console.log(modifiedEvent);
     }
 
     const formData = getEventFormData(modifiedEvent);
