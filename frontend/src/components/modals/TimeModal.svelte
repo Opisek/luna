@@ -155,7 +155,7 @@
           minuteInput.focus();
         }}
         on:input={() => {
-          if (hourInput.value.length >= 2) {
+          if (Number.parseInt(hourInput.value) >= 2) {
             minuteInput.focus();
           }
         }}
@@ -193,7 +193,7 @@
           dateSelected();
         }}
         on:input={() => {
-          if (minuteInput.value.length >= 2) {
+          if (Number.parseInt(minuteInput.value) >= 6) {
             minuteInput.blur();
           }
         }}
