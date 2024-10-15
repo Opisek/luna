@@ -1,6 +1,7 @@
 <script lang="ts">
   import SelectButtons from "../forms/SelectButtons.svelte";
   import Button from "../interactive/Button.svelte";
+  import Horizontal from "../layout/Horizontal.svelte";
   import Modal from "./Modal.svelte";
 
   export let date: Date;
@@ -9,6 +10,7 @@
   export let onChange: (date: Date) => void = () => {};
 
   let pickingHour: boolean;
+  let goBackToHour: boolean;
   let amPm: string;
 
   let hourInput: HTMLInputElement;
@@ -38,6 +40,7 @@
       amPm = "am";
     }
     pickingHour = true;
+    goBackToHour = false;
     setTimeout(showModalInternal, 0);
   };
 
@@ -152,16 +155,19 @@
           }
 
           pickingHour = false;
+          goBackToHour = false;
           minuteInput.focus();
         }}
         on:input={() => {
-          if (Number.parseInt(hourInput.value) >= 2) {
+          if (Number.parseInt(hourInput.value) >= 3) {
             minuteInput.focus();
           }
         }}
         on:focusin={() => {
           pickingHour = true;
-          hourInput.value = "";
+          if (!goBackToHour || hourInput.value.length >= 1 && hourInput.value[0] === "0") hourInput.value = "";
+          else hourInput.value = hourInput.value.substring(0, hourInput.value.length);
+          goBackToHour = false;
         }}
         on:focusout={() => {
           if (hourInput.value === "") {
@@ -193,14 +199,13 @@
           dateSelected();
         }}
         on:input={() => {
-          if (minuteInput.value === "") {
-            hourInput.focus();
-          } else if (Number.parseInt(minuteInput.value) >= 6) {
+          if (Number.parseInt(minuteInput.value) >= 6) {
             minuteInput.blur();
           }
         }}
         on:keydown={(e) => {
           if ((e.key === "Backspace" || e.key === "Delete") && minuteInput.value === "") {
+            goBackToHour = true;
             hourInput.focus();
           }
         }}
