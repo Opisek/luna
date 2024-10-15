@@ -193,8 +193,15 @@
           dateSelected();
         }}
         on:input={() => {
-          if (Number.parseInt(minuteInput.value) >= 6) {
+          if (minuteInput.value === "") {
+            hourInput.focus();
+          } else if (Number.parseInt(minuteInput.value) >= 6) {
             minuteInput.blur();
+          }
+        }}
+        on:keydown={(e) => {
+          if ((e.key === "Backspace" || e.key === "Delete") && minuteInput.value === "") {
+            hourInput.focus();
           }
         }}
         on:focusin={() => {
