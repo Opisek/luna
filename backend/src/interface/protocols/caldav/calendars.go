@@ -175,7 +175,7 @@ func (calendar *CaldavCalendar) GetEvent(settings primitives.EventSettings) (pri
 	return cal, nil
 }
 
-func setEventProps(cal *ical.Calendar, id string, name string, desc string, date *types.EventDate) error {
+func setEventProps(cal *ical.Calendar, id string, name string, desc string, color *types.Color, date *types.EventDate) error {
 	var event *ical.Event = nil
 	for _, child := range cal.Children {
 		if child.Name == "VEVENT" {
@@ -197,6 +197,13 @@ func setEventProps(cal *ical.Calendar, id string, name string, desc string, date
 		event.Props.SetText(ical.PropDescription, escapeString(desc))
 	} else {
 		event.Props.Del(ical.PropDescription)
+	}
+
+	if color.IsEmpty() {
+		event.Props.Del(ical.PropColor)
+	} else {
+		// TODO: technically this is against the spec and we should only use CSS color names, not hex values
+		event.Props.SetText(ical.PropColor, color.String())
 	}
 
 	if date.AllDay() {
@@ -228,7 +235,7 @@ func (calendar *CaldavCalendar) AddEvent(name string, desc string, color *types.
 	id := types.RandomId()
 	cal := ical.NewCalendar()
 
-	err := setEventProps(cal, id.String(), name, desc, date)
+	err := setEventProps(cal, id.String(), name, desc, color, date)
 	if err != nil {
 		return nil, fmt.Errorf("could not set ical properties: %w", err)
 	}
@@ -259,7 +266,7 @@ func (calendar *CaldavCalendar) EditEvent(originalEvent primitives.Event, name s
 	originalRawEvent := originalCaldavEvent.settings.rawEvent
 	cal := originalRawEvent.Data
 
-	err := setEventProps(cal, uid, name, desc, date)
+	err := setEventProps(cal, uid, name, desc, color, date)
 	if err != nil {
 		return nil, fmt.Errorf("could not set ical properties: %w", err)
 	}

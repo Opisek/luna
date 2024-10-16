@@ -88,6 +88,22 @@ func eventFromCaldav(calendar *CaldavCalendar, obj *caldav.CalendarObject) (*Cal
 		descStr = ""
 	}
 
+	// Color
+	colorProp := obj.Data.Children[eventIndex].Props.Get("COLOR")
+	var color *types.Color
+	if colorProp == nil {
+		color = types.ColorEmpty
+	} else {
+		color = types.ColorFromName(colorProp.Value)
+		if color.IsEmpty() {
+			var err error
+			color, err = types.ParseColor(colorProp.Value)
+			if err != nil {
+				color = types.ColorEmpty
+			}
+		}
+	}
+
 	// Date
 	dtstart := obj.Data.Children[eventIndex].Props.Get("DTSTART")
 	startTime, err := parseTime(dtstart)
@@ -141,8 +157,9 @@ func eventFromCaldav(calendar *CaldavCalendar, obj *caldav.CalendarObject) (*Cal
 	}
 
 	return &CaldavEvent{
-		name: summaryStr,
-		desc: descStr,
+		name:  summaryStr,
+		desc:  descStr,
+		color: color,
 		settings: &CaldavEventSettings{
 			Url:      url,
 			Uid:      uid.Value,
