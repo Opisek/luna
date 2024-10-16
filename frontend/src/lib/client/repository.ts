@@ -304,6 +304,11 @@ function getEventFormData(event: EventModel): FormData {
     formData.set("date_end", event.date.end.toISOString());
   }
   formData.set("date_all_day", event.date.allDay ? "true" : "false");
+  if (event.color && event.color !== "") {
+    formData.set("color", event.color);
+  } else {
+    formData.set("color", "null");
+  }
   return formData;
 }
 
@@ -315,8 +320,6 @@ export const createEvent = async (newEvent: EventModel): Promise<string> => {
     }
 
     const formData = getEventFormData(newEvent);
-    // TODO: add color picker to the frontend
-    formData.set("color", "#FF0000")
 
     const response = await fetch(`/api/calendars/${newEvent.calendar}/events`, { method: "PUT", body: formData });
     if (response.ok) {
@@ -341,7 +344,6 @@ export const editEvent = async (modifiedEvent: EventModel): Promise<string> => {
     if (modifiedEvent.date.allDay) {
       modifiedEvent.date.start.setHours(0, 0, 0, 0);
       modifiedEvent.date.end.setHours(0, 0, 0, 0);
-      console.log(modifiedEvent);
     }
 
     const formData = getEventFormData(modifiedEvent);
