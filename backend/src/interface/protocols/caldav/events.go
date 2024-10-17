@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"luna-backend/crypto"
 	"luna-backend/interface/primitives"
+	util "luna-backend/interface/protocols/caldav/internal"
 	"luna-backend/types"
 	"strings"
 	"time"
@@ -90,16 +91,24 @@ func eventFromCaldav(calendar *CaldavCalendar, obj *caldav.CalendarObject) (*Cal
 
 	// Color
 	colorProp := obj.Data.Children[eventIndex].Props.Get("COLOR")
+	lunaColorProp := obj.Data.Children[eventIndex].Props.Get(util.PropColor)
+	// TODO: delete custom color props if the color is ever chaged by another client
+	//lunaLastColorNameProp := obj.Data.Children[eventIndex].Props.Get(util.PropLastColorName)
 	var color *types.Color
-	if colorProp == nil {
-		color = types.ColorEmpty
-	} else {
-		color = types.ColorFromName(colorProp.Value)
-		if color.IsEmpty() {
-			var err error
-			color, err = types.ParseColor(colorProp.Value)
-			if err != nil {
-				color = types.ColorEmpty
+	var err error
+	if lunaColorProp != nil {
+		color, err = types.ParseColor(lunaColorProp.Value)
+	}
+	if lunaColorProp == nil || err != nil {
+		if colorProp == nil {
+			color = types.ColorEmpty
+		} else {
+			color = types.ColorFromName(colorProp.Value)
+			if color.IsEmpty() {
+				color, err = types.ParseColor(colorProp.Value)
+				if err != nil {
+					color = types.ColorEmpty
+				}
 			}
 		}
 	}

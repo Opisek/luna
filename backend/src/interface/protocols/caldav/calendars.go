@@ -7,6 +7,7 @@ import (
 	"luna-backend/auth"
 	"luna-backend/crypto"
 	"luna-backend/interface/primitives"
+	util "luna-backend/interface/protocols/caldav/internal"
 	"luna-backend/types"
 	"time"
 
@@ -201,9 +202,24 @@ func setEventProps(cal *ical.Calendar, id string, name string, desc string, colo
 
 	if color.IsEmpty() {
 		event.Props.Del(ical.PropColor)
+		event.Props.Del(util.PropColor)
+		event.Props.Del(util.PropLastColorName)
 	} else {
-		// TODO: technically this is against the spec and we should only use CSS color names, not hex values
-		event.Props.SetText(ical.PropColor, color.String())
+		colorName, exact := types.ColorToName(color)
+
+		// According to the specification, the "COLOR" property must be a named CSS color.
+		// To ensure compatibility, we map colors to the closest named CSS color for other clients,
+		// and use a custom property for the exac color displayed in Luna.
+
+		event.Props.SetText(ical.PropColor, colorName)
+		if exact {
+			event.Props.Del(util.PropColor)
+			event.Props.Del(util.PropLastColorName)
+		} else {
+			event.Props.SetText(util.PropColor, color.String())
+			// To detect when the color is changed by another client, we store the last color name in a custom property.
+			event.Props.SetText(util.PropLastColorName, colorName)
+		}
 	}
 
 	if date.AllDay() {
@@ -223,7 +239,10 @@ func setEventProps(cal *ical.Calendar, id string, name string, desc string, colo
 		}
 		event.Props.Del(ical.PropDuration)
 	}
-	event.Props.SetDateTime(ical.PropDateTimeStamp, time.Now())
+
+	timestamp := time.Now()
+	event.Props.SetDateTime(ical.PropDateTimeStamp, timestamp)
+	//event.Props.SetDateTime(util.PropTimestamp, timestamp)
 
 	cal.Props.SetText(ical.PropProductID, "Luna")
 	cal.Props.SetText(ical.PropVersion, "0.1.0") // TODO: access version from CommonConfig
