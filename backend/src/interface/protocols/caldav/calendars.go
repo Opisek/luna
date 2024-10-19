@@ -306,7 +306,6 @@ func (calendar *CaldavCalendar) EditEvent(originalEvent primitives.Event, name s
 	}
 
 	return finishedEvent, nil
-
 }
 
 func (calendar *CaldavCalendar) DeleteEvent(event primitives.Event) error {

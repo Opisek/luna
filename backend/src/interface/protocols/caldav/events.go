@@ -66,6 +66,8 @@ func parseTime(icalTime *ical.Prop) (*time.Time, error) {
 }
 
 func eventFromCaldav(calendar *CaldavCalendar, obj *caldav.CalendarObject) (*CaldavEvent, error) {
+	mustUpdate := false
+
 	eventIndex := -1
 	for i, child := range obj.Data.Children {
 		if child.Name == "VEVENT" {
@@ -92,8 +94,16 @@ func eventFromCaldav(calendar *CaldavCalendar, obj *caldav.CalendarObject) (*Cal
 	// Color
 	colorProp := obj.Data.Children[eventIndex].Props.Get("COLOR")
 	lunaColorProp := obj.Data.Children[eventIndex].Props.Get(util.PropColor)
-	// TODO: delete custom color props if the color is ever chaged by another client
-	//lunaLastColorNameProp := obj.Data.Children[eventIndex].Props.Get(util.PropLastColorName)
+	lunaLastColorNameProp := obj.Data.Children[eventIndex].Props.Get(util.PropLastColorName)
+
+	// If a different client has changed the color, delete the custom properties and display the new color
+	if (colorProp != nil && lunaLastColorNameProp != nil && colorProp.Value != lunaLastColorNameProp.Value) || (colorProp == nil && lunaLastColorNameProp != nil) {
+		lunaColorProp = nil
+		lunaLastColorNameProp = nil
+		mustUpdate = true
+	}
+
+	// Otherwise, parse the color normally
 	var color *types.Color
 	var err error
 	if lunaColorProp != nil {
@@ -165,7 +175,7 @@ func eventFromCaldav(calendar *CaldavCalendar, obj *caldav.CalendarObject) (*Cal
 		return nil, fmt.Errorf("could not parse event URL %v: %w", obj.Path, err)
 	}
 
-	return &CaldavEvent{
+	event := &CaldavEvent{
 		name:  summaryStr,
 		desc:  descStr,
 		color: color,
@@ -176,7 +186,14 @@ func eventFromCaldav(calendar *CaldavCalendar, obj *caldav.CalendarObject) (*Cal
 		},
 		calendar:  calendar,
 		eventDate: eventDate,
-	}, nil
+	}
+
+	if mustUpdate {
+		calendar.EditEvent(event, summaryStr, descStr, color, eventDate)
+		// TODO: we might want to catch errors and display them as notifications here
+	}
+
+	return event, nil
 }
 
 func (settings *CaldavEventSettings) Bytes() []byte {
