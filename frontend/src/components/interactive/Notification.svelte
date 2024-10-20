@@ -1,5 +1,6 @@
 <script lang="ts">
   import { browser } from "$app/environment";
+  import { afterNavigate, beforeNavigate, onNavigate } from "$app/navigation";
 
   export let notification: NotificationModel;
   export let shift: number;
@@ -43,6 +44,8 @@
     padding: $paddingSmall;
     border-radius: $borderRadius;
     cursor: pointer;
+    position: relative;
+    overflow: hidden;
   }
 
   .success {
@@ -67,6 +70,18 @@
   .surpress {
     transition: none !important;
   }
+
+  div.timer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    background-color: black;
+    opacity: 0.2;
+    content: "";
+    width: 100%;
+    height: 0.5em;
+    animation: notification-timer $notificationExpireTime linear forwards;
+  }
 </style>
 
 <div
@@ -85,5 +100,6 @@
     on:keypress={notification.remove}
   >
     {notification.message}
+    <div class="timer"/>
   </div>
 </div>

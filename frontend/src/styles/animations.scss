@@ -1,3 +1,14 @@
+@keyframes notification-timer {
+  from {
+    width: 0%;
+    //transform: scaleX(0) translateX(-50%);
+  }
+  to {
+    width: 100%;
+    //transform: scaleX(1) translateX(0);
+  }
+}
+
 @keyframes zoom {
   from {
     transform: scale(0.95);
@@ -30,3 +41,5 @@ $animationSpeedFast: .1s;
 $animationSpeed: .25s;
 $animationSpeedSlow: .5s;
 $animationSpeedVerySlow: 1.5s;
+
+$notificationExpireTime: 5s;
