@@ -26,7 +26,6 @@
     padding: $gap $gapLarge $gapLarge $gapLarge;
     border-radius: $borderRadius;
     display: flex;
-    width: 100%;
     flex-direction: column;
     flex-wrap: nowrap;
     gap: $gap;
