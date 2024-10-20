@@ -115,7 +115,7 @@ func Register(c *gin.Context) {
 		Admin:    !usersExist,
 	}
 
-	err = tx.Queries().AddUser(user)
+	userId, err := tx.Queries().AddUser(user)
 	if err != nil {
 		apiConfig.Logger.Errorf("%v: could not add user: %v", topErr, err)
 		util.Error(c, util.ErrorDatabase)
@@ -136,10 +136,18 @@ func Register(c *gin.Context) {
 		return
 	}
 
+	// Generate the token
+	token, err := auth.NewToken(apiConfig.CommonConfig, userId)
+	if err != nil {
+		apiConfig.Logger.Errorf("%v: could not generate token: %v", topErr, err)
+		util.Error(c, util.ErrorInternal)
+		return
+	}
+
 	if tx.Commit(apiConfig.Logger) != nil {
 		util.Error(c, util.ErrorDatabase)
 		return
 	}
 
-	util.Success(c)
+	c.JSON(http.StatusOK, gin.H{"token": token})
 }

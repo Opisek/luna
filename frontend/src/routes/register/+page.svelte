@@ -24,10 +24,13 @@
 </style>
 
 <div>
-  <Form title="Login">
+  <Form title="Register">
     <TextInput name="username" placeholder="Username"/>
+    <TextInput name="email" placeholder="Email"/>
     <TextInput name="password" placeholder="Password" password={true}/>
-    <Link href="/register?redirect={encodeURIComponent(redirect)}">No account yet?</Link>
-    <Link href="/recover?redirect={encodeURIComponent(redirect)}">Forgot password?</Link>
+    <TextInput name="passwordRepeat" placeholder="Repeat Password" password={true}/>
+    <Link href="/login?redirect={encodeURIComponent(redirect)}">Already got an account?</Link>
   </Form>
 </div>
+
+

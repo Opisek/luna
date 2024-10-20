@@ -7,6 +7,10 @@
   export let title: string;
 
   let loading = false;
+
+  function onSubmit() {
+    loading = true;
+  }
 </script>
 
 <style lang="scss">
@@ -30,15 +34,15 @@
   }
 </style>
 
-<form method="POST">
+<form method="POST" on:submit={onSubmit}>
   <Title>{title}</Title>
   <slot/>
   <Horizontal position="right">
-    <Button type="submit" color="success" onClick={ () => (loading = true) }>
+    <Button type="submit" color="success">
       {#if loading}
         <Loader/>
       {:else}
-        Save
+        Submit
       {/if}
     </Button>
   </Horizontal>

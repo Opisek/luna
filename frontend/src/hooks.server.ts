@@ -5,7 +5,8 @@ import "dotenv/config"
 
 const loginPaths = [
   "login",
-  "register"
+  "register",
+  "recover"
 ]
 
 const unprivilegedPaths = loginPaths.concat([

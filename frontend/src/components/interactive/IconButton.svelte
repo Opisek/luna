@@ -65,6 +65,7 @@
   on:mouseup={up}
   class:hidden={!visible}
   style={style}
+  tabindex="-1"
 >
   <div class="circle"></div>
   <slot/>

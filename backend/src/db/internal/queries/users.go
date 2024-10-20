@@ -8,8 +8,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// TODO: return the created user's ID
-func (q *Queries) AddUser(user *types.User) error {
+func (q *Queries) AddUser(user *types.User) (types.ID, error) {
 	var err error
 
 	query := `
@@ -21,12 +20,12 @@ func (q *Queries) AddUser(user *types.User) error {
 	var id types.ID
 	err = q.Tx.QueryRow(context.TODO(), query, user.Username, user.Email, user.Admin).Scan(&id)
 	if err != nil {
-		return fmt.Errorf("could not add user: %v", err)
+		return types.EmptyId(), fmt.Errorf("could not add user: %v", err)
 	}
 
 	user.Id = id
 
-	return nil
+	return id, err
 }
 
 func (q *Queries) GetUserIdFromEmail(email string) (uuid.UUID, error) {
