@@ -1,13 +1,13 @@
 <script lang="ts">
   import { addRipple } from "$lib/client/decoration";
 
-  export let onClick: () => void;
+  export let onClick: () => void = () => {};
 
   // TODO: could not figure out enums for this, try again later
   export let color: string;
+  export let type: "button" | "submit" = "button";
 
   let button: HTMLButtonElement;
-
 </script>
 
 <style lang="scss">
@@ -54,6 +54,7 @@
   class:success={color == "success"}
   class:failure={color == "failure"}
   class:accent={color == "accent"}
+  type={type}
 >
   <slot/>
 </button>

@@ -2,7 +2,7 @@
   import VisibilityToggle from "../interactive/VisibilityToggle.svelte";
   import Label from "./Label.svelte";
 
-  export let value: string;
+  export let value: string = "";
   export let placeholder: string;
   export let name: string;
 

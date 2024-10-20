@@ -1,17 +1,27 @@
 <script lang="ts">
   import type { ActionData } from './$types';
-  import { page } from '$app/stores';
-  import { goto } from '$app/navigation';
+  import TextInput from '../../components/forms/TextInput.svelte';
+  import Form from '../../components/forms/Form.svelte';
+  import { queueNotification } from '../../lib/client/notifications';
 
   export let form: ActionData;
+
+  $: if (form?.error) queueNotification("failure", form.error);
 </script>
 
-{ #if form?.error }
-  <p>Error: {form.error}</p>
-{/if}
-<form method="POST">
-  <input name="username" type="text" placeholder="Username" />
-  <input name="password" type="password" placeholder="Password" />
-  <button type="submit">Login</button>
-  <a href="/register">Register</a>
-</form>
+<style lang="scss">
+  div {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+</style>
+
+<div>
+  <Form title="Login">
+    <TextInput name="username" placeholder="Username"/>
+    <TextInput name="password" placeholder="Password" password={true}/>
+  </Form>
+</div>
