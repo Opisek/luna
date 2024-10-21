@@ -163,16 +163,18 @@
   {:else}
     <div class="events">
       {#each events as event, i}
-        <EventEntry
-          event={event}
-          isFirstDay={isFirstDay}
-          isLastDay={isLastDay}
-          date={date}
-          visible={i < actualMaxEvents}
-          bind:currentlyHoveredEvent={currentlyHoveredEvent}
-          bind:currentlyClickedEvent={currentlyClickedEvent}
-          clickCallback={clickCallback}
-        />
+        {#if isFirstDay || (event && event.date.start.getTime() >= date.getTime())}
+          <EventEntry
+            event={event}
+            isFirstDay={isFirstDay}
+            isLastDay={isLastDay}
+            date={date}
+            visible={i < actualMaxEvents}
+            bind:currentlyHoveredEvent={currentlyHoveredEvent}
+            bind:currentlyClickedEvent={currentlyClickedEvent}
+            clickCallback={clickCallback}
+          />
+        {/if}
       {/each}
       {#if events.length > maxEvents && actualMaxEvents >= 0}
         <span class="more">

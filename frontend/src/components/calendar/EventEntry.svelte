@@ -9,9 +9,11 @@
   export let isLastDay: boolean;
   export let date: Date;
   let nextDate: Date;
+  let remainingDaysThisWeek: number;
   $: if (date) {
     nextDate = new Date(date);
     nextDate.setDate(date.getDate() + 1);
+    remainingDaysThisWeek = (7 - date.getDay()) % 6 + 1;
   }
 
   export let currentlyHoveredEvent: EventModel | null;
@@ -26,6 +28,9 @@
 
   let isBackgroundDark: boolean;
   $: isBackgroundDark = event ? isDark(GetEventRGB(event)) : false;
+
+  let eventLengthThisWeek: number;
+  $: eventLengthThisWeek = event ? Math.min(Math.floor((event.date.end.getTime() - date.getTime()) / (1000 * 3600 * 24)) + 1, remainingDaysThisWeek) : 0;
 
   function mouseEnter() {
     if (event == null) return;
@@ -141,13 +146,14 @@
   class:hidden={!visible}
   class:foregroundBright={isBackgroundDark}
   class:foregroundDark={!isBackgroundDark}
+  class:test={isFirstDisplay}
   on:mouseenter={mouseEnter}
   on:mouseleave={mouseLeave}
   on:mousedown={mouseDown}
   on:mouseup={mouseUp}
   role="button"
   tabindex="0"
-  style="background-color:{GetEventColor(event)}"
+  style="background-color:{GetEventColor(event)}; width: {eventLengthThisWeek * 100}%;"
 >
   {#if event && isFirstDisplay}
     {#if !event.date.allDay}
