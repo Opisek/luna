@@ -12,6 +12,7 @@
   import { PlusIcon } from "lucide-svelte";
   import SourceModal from "../components/modals/SourceModal.svelte";
   import MonthSelection from "../components/interactive/MonthSelection.svelte";
+  import { afterNavigate } from "$app/navigation";
 
   let localSources: SourceModel[] = [];
   let localCalendars: CalendarModel[] = [];
@@ -35,13 +36,38 @@
     setTimeout(showNewSourceModal, 0);
   }
 
+  let loaded: boolean = false;
+
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth() 
-  let selectedYear = currentYear;
-  let selectedMonth = currentMonth;
 
-  let rangeStart = new Date(selectedYear, selectedMonth - 1, 1);
-  let rangeEnd = new Date(selectedYear, selectedMonth + 2, 0);
+  let selectedMonth: number;
+  let selectedYear: number;
+  let rangeStart: Date;
+  let rangeEnd: Date;
+
+  function getRangeFromStorage() {
+    const storedYear = browser ? sessionStorage.getItem("selectedYear") : null;
+    selectedYear = storedYear === null ? currentYear : parseInt(storedYear);
+    const storedMonth = browser ? sessionStorage.getItem("selectedMonth") : null;
+    selectedMonth = storedMonth === null ? currentMonth : parseInt(storedMonth);
+    rangeStart = new Date(selectedYear, selectedMonth - 1, 1);
+    rangeEnd = new Date(selectedYear, selectedMonth + 2, 0);
+  }
+
+  if (browser) {
+    getRangeFromStorage();
+    loaded = true;
+  } else {
+    selectedYear = currentYear;
+    selectedMonth = currentMonth;
+    rangeStart = new Date(selectedYear, selectedMonth - 1, 1);
+    rangeEnd = new Date(selectedYear, selectedMonth + 2, 0);
+  }
+
+  afterNavigate(() => {
+    getRangeFromStorage();
+  });
 
   (async () => {
     if (!browser) return;
@@ -88,7 +114,12 @@
     });
   })();
 
-  $: ((year: number, month: number) => {
+  $: ((year: number, month: number, loaded: boolean) => {
+    if (!browser || !loaded) return;
+
+    sessionStorage.setItem("selectedYear", year.toString());
+    sessionStorage.setItem("selectedMonth", month.toString());
+    
     const firstDayNextMonth = new Date(year, month + 1, 1);
     const lastDayPreviousMonth = new Date(year, month, 0);
 
@@ -103,7 +134,7 @@
       rangeEnd = new Date(year, month + 3, 0);
       fetchAllEvents(lastEnd, rangeEnd);
     }
-  })(selectedYear, selectedMonth);
+  })(selectedYear, selectedMonth, loaded);
 </script>
 
 <style lang="scss">
