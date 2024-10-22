@@ -19,7 +19,7 @@
   function checkPosition() {
     if (!popup || !popup.parentElement || !browser) return;
 
-    const res = calculateOptimalPopupPosition(popup, 3);
+    const res = calculateOptimalPopupPosition(popup.parentElement, 3);
 
     bottom = res.bottom;
     right = res.right;
