@@ -104,7 +104,7 @@
     background-color: $backgroundSecondary;
   }
 
-  // TODO: style the drop-down
+  // TODO: clicking outside closes the popup, proper "above" styling
 </style>
 
 <Label name={name}>{placeholder}</Label>
