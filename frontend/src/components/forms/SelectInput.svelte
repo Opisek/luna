@@ -81,14 +81,6 @@
     overflow: hidden;
   }
   
-  div.optons.above {
-    top: -100%;
-  }
-
-  div.options.below {
-    top: 100%;
-  }
-  
   div.options.hidden {
     display: none;
   }
@@ -140,8 +132,7 @@
   <div
     class="options"
     class:hidden={!active}
-    class:above={optionsAbove}
-    class:below={!optionsAbove}
+    style="top: {optionsAbove ? -100 * options.length : 100}%"
   >
     {#each options as option}
       <button
