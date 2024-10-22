@@ -2,6 +2,7 @@
   import { ChevronDown } from "lucide-svelte";
   import Label from "./Label.svelte";
   import { calculateOptimalPopupPosition } from "$lib/common/calculations";
+  import { browser } from "$app/environment";
 
   export let value: string;
   export let placeholder: string;
@@ -15,17 +16,30 @@
   let selectedOption: Option | null = options.length > 0 ? options[1] : null;
   $: if (selectedOption) value = selectedOption.value;
 
+
   let selectWrapper: HTMLElement;
   function selectClick() {
     if (!active) {
       const res = calculateOptimalPopupPosition(selectWrapper)
       optionsAbove = res.bottom;
+      if (browser) {
+        window.addEventListener("click", clickOutside);
+      }
+    } else {
+      window.removeEventListener("click", clickOutside);
     }
     active = !active;
   }
 
   function optionClick(option: Option) {
     selectedOption = option;
+  }
+
+  function clickOutside(event: MouseEvent) {
+    if (!selectWrapper || selectWrapper == event.target as Node || selectWrapper.contains(event.target as Node)) return;
+
+    active = false;
+    event.stopPropagation();
   }
 </script>
 
