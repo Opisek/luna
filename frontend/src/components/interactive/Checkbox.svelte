@@ -9,10 +9,10 @@
 
   export let enabled: boolean = true;
 
-  export function click(e: MouseEvent) {
+  export function toggle(e: MouseEvent | KeyboardEvent) {
     value = !value;
     onChange(value);
-    addRipple(e, false);
+    if (e instanceof MouseEvent) addRipple(e, false);
     e.stopPropagation();
   }
 </script>
@@ -63,7 +63,7 @@
   }
 </style>
 
-<button type="button" class:check={value} class:disabled={!enabled} on:click={click}>
+<button type="button" class:check={value} class:disabled={!enabled} on:click={toggle}>
   {#if value}
     <CheckIcon size={16}/>
   {/if}

@@ -9,7 +9,7 @@
 
   export let onChange: (value: boolean) => any = () => {};
 
-  let click: () => any;
+  let click: (e: MouseEvent | KeyboardEvent) => void;
 </script>
 
 <style lang="scss">
@@ -33,9 +33,9 @@
   }
 </style>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
   on:click={click}
-  on:keypress={click}
   role="checkbox"
   tabindex="-1"
   aria-checked={value}
@@ -45,7 +45,7 @@
     name={name}
     onChange={onChange}
     enabled={editable}
-    bind:click={click}
+    bind:toggle={click}
   />
   <label for={name}>
     {description}
