@@ -197,7 +197,6 @@
         <PlusIcon/>
       </IconButton>
       <SourceModal bind:showCreateModal={showNewSourceModal} source={newSource}/>
-      <button on:click={() => queueNotification("success", "test")}>test</button>
     </Horizontal>
   </aside>
   <main>
