@@ -1,29 +1,11 @@
 <script lang="ts">
-  import { browser } from "$app/environment";
-  import { afterNavigate, beforeNavigate, onNavigate } from "$app/navigation";
-
   export let notification: NotificationModel;
   export let shift: number;
-
-  let surpressAnimation: boolean;
 
   let actualShift = 0;
   $: ((requestedShift: number) => {
     actualShift = requestedShift;
   })(shift);
-
-  let lastNotification: NotificationModel | null = null;
-  $: ((newNotification: NotificationModel) => {
-    if (lastNotification != null && lastNotification.created.getTime() < newNotification.created.getTime()) {
-      // TODO: i hate this surpress animation solution, because in certain edge cases, it will still look off.
-      // TODO: find a better way to do the exit animation giving svelte's constraints.
-      surpressAnimation = true;
-      setTimeout(() => {
-        surpressAnimation = false;
-      }, 10);
-    }
-    lastNotification = newNotification;
-  })(notification);
 </script>
 
 <style lang="scss">
@@ -67,10 +49,6 @@
     opacity: 0;
   }
 
-  .surpress {
-    transition: none !important;
-  }
-
   div.timer {
     position: absolute;
     bottom: 0;
@@ -88,7 +66,6 @@
   class="wrapper"
   class:disappear={notification.disappear}
   style="transform: translateY({actualShift * -100}%);"
-  class:surpress={surpressAnimation}
 >
 <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div
