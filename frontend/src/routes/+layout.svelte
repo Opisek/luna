@@ -41,7 +41,7 @@
 <slot/>
 
 <div class="notifications">
-  {#each notifs as notification, i}
+  {#each notifs as notification, i (notification.created.getTime())}
     <Notification
       notification={notification}
       shift={notifsCount - i - 1}

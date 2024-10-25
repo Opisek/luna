@@ -5,6 +5,7 @@
   import type { ActionData } from './$types';
   import { queueNotification } from '../../lib/client/notifications';
   import { page } from '$app/stores';
+  import CheckboxInput from '../../components/forms/CheckboxInput.svelte';
 
   export let form: ActionData;
 
@@ -27,6 +28,7 @@
   <Form title="Login">
     <TextInput name="username" placeholder="Username"/>
     <TextInput name="password" placeholder="Password" password={true}/>
+    <CheckboxInput name="remember" description="Remember me"/>
     <Link href="/register?redirect={encodeURIComponent(redirect)}">No account yet?</Link>
     <Link href="/recover?redirect={encodeURIComponent(redirect)}">Forgot password?</Link>
   </Form>

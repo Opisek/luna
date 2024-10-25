@@ -9,10 +9,11 @@
 
   export let enabled: boolean = true;
 
-  function click(e: MouseEvent) {
+  export function toggle(e: MouseEvent | KeyboardEvent) {
     value = !value;
     onChange(value);
-    addRipple(e, false);
+    if (e instanceof MouseEvent) addRipple(e, false);
+    e.stopPropagation();
   }
 </script>
 
@@ -49,7 +50,7 @@
     cursor: unset;
   }
 
-  div :global(*) {
+  button :global(*) {
     pointer-events: none;
   }
 
@@ -62,18 +63,9 @@
   }
 </style>
 
-<button class:check={value} class:disabled={!enabled} on:click={click}>
+<button type="button" class:check={value} class:disabled={!enabled} on:click={toggle}>
   {#if value}
-    <CheckIcon size={20}/>
+    <CheckIcon size={16}/>
   {/if}
+  <input type="hidden" name={name} value={value}>
 </button>
-
-<!--
-<input
-  bind:checked={value}
-  on:change={() => onChange(value)}
-  type="checkbox"
-  disabled={!enabled}
-  name={name}
->
--->

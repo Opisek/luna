@@ -1,5 +1,5 @@
 # Base image
-FROM golang:1.22.4-alpine AS base
+FROM golang:1.23-alpine AS base
 WORKDIR /app
 RUN apk add make
 

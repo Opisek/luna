@@ -49,7 +49,7 @@
   function checkPosition() {
     if (!dialog || !dialog.parentElement || !browser) return;
 
-    const res = calculateOptimalPopupPosition(dialog, 5);
+    const res = calculateOptimalPopupPosition(dialog.parentElement, 5);
 
     bottom = res.bottom;
     right = res.right;
