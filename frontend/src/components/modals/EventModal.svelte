@@ -9,14 +9,12 @@
 
   export let event: EventModel;
   let eventCopy: EventModel;
-  let lastStartDate: Date;
 
   let currentCalendars: CalendarModel[] = [];
 
   export const showCreateModal = () => {
     editMode = false;
     eventCopy = event;
-    lastStartDate = eventCopy.date.start;
     currentCalendars = getCalendars();
     setTimeout(showCreateModalInternal, 0);
   }
@@ -70,13 +68,23 @@
 
   const changeEnd = (value: Date) => {
     if (value.getTime() < eventCopy.date.start.getTime()) {
+      const previousStart = eventCopy.date.start;
       eventCopy.date.start = new Date(value);
+
+      if (Math.abs(previousStart.getTime() - value.getTime()) >= 24 * 60 * 60 * 1000) {
+        eventCopy.date.start.setHours(previousStart.getHours(), previousStart.getMinutes(), previousStart.getSeconds(), previousStart.getMilliseconds());
+      }
     }
   }
 
   const changeStart = (value: Date) => {
     if (value.getTime() > eventCopy.date.end.getTime()) {
+      const previousEnd = eventCopy.date.end;
       eventCopy.date.end = new Date(value);
+
+      if (Math.abs(previousEnd.getTime() - value.getTime()) >= 24 * 60 * 60 * 1000) {
+        eventCopy.date.end.setHours(previousEnd.getHours(), previousEnd.getMinutes(), previousEnd.getSeconds(), previousEnd.getMilliseconds());
+      }
     }
   }
 </script>
