@@ -22,6 +22,9 @@
   export const showModal = () => {
     window.addEventListener("click", clickOutside);
     visible = true
+    setTimeout(() => {
+      dialog.focus();
+    }, 0);
   }
   export const hideModal = () => {
     window.removeEventListener("click", clickOutside);

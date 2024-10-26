@@ -55,10 +55,6 @@
     margin: 0;
   }
 
-  .display {
-    width: max-content;
-  }
-
   div.visibility {
     text-align: right;
     position: relative;
@@ -90,7 +86,6 @@
       name={name}
       placeholder={placeholder}
       disabled={!editable}
-      class:display={!editable}
       rows=6
       tabindex={editable ? 0 : -1}
     />
@@ -105,7 +100,6 @@
     placeholder={placeholder}
     disabled={!editable}
     class:editable={editable}
-    class:display={!editable}
     tabindex={editable ? 0 : -1}
     type="password"
   />
@@ -119,7 +113,6 @@
     placeholder={placeholder}
     disabled={!editable}
     class:editable={editable}
-    class:display={!editable}
     tabindex={editable ? 0 : -1}
     type="text"
   />
