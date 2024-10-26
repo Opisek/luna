@@ -31,7 +31,10 @@
     if (browser) {
       window.addEventListener("click", clickOutside);
     }
-    setTimeout(() => dialog.show(), 0);
+    dialog.show();
+    setTimeout(() => {
+      dialog.focus();
+    }, 0);
   }
 
   export const close = () => {

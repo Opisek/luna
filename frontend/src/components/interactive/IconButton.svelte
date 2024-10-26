@@ -7,9 +7,16 @@
 
   export let tabindex: number = 0;
 
+  let button: HTMLButtonElement;
+
   function clickInternal(e: MouseEvent) {
     e.stopPropagation();
     click();
+  }
+
+  function leaveInternal(e: MouseEvent) {
+    button.blur();
+    up();
   }
 </script>
 
@@ -61,9 +68,10 @@
 </style>
 
 <button
+  bind:this={button}
   on:click={clickInternal}
   on:mousedown={down}
-  on:mouseleave={up}
+  on:mouseleave={leaveInternal}
   on:mouseup={up}
   class:hidden={!visible}
   style={style}
