@@ -53,6 +53,10 @@
   dialog[open] {
 		animation: zoom $animationSpeed $cubic forwards;
 	}
+
+  dialog:focus {
+    outline: none;
+  }
   
   div {
     padding: $gap $gapLarge $gapLarge $gapLarge;
