@@ -123,3 +123,17 @@ export const GetCalendarColor = (calendar: CalendarModel | null) => {
 export const isValidColor = (color: string | null | undefined) => {
   return color !== null && color !== undefined && color.length === 7 && /^#[0-9a-fA-F]+$/.test(color);
 }
+
+export function calculateSecondaryColor(rgb: [number, number, number]): [number, number, number] {
+  const hsl = RGBtoHSL(rgb);
+  isDark(rgb) ? hsl[2] += 15 : hsl[2] -= 15;
+  return HSLtoRGB(hsl);
+}
+
+export const GetEventHoverColor = (event: EventModel | null) => {
+  if (event && event.color) {
+    return serializeRGB(calculateSecondaryColor(parseRGB(event.color)));
+  } else {
+    return serializeRGB(calculateSecondaryColor(defaultEventRGB));
+  }
+}

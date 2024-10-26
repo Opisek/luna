@@ -133,7 +133,7 @@
         {date.getDate()}
       </span>
       <span class="add">
-        <IconButton click={createEventButtonClick}>
+        <IconButton click={createEventButtonClick} tabindex={-1}>
           <PlusIcon size={13}/>
         </IconButton>
         <EventModal bind:showCreateModal={showCreateEventModal} bind:showModal={dummy} event={newEvent}/>

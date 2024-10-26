@@ -5,6 +5,8 @@
   export let visible: boolean = true;
   export let style: string = "";
 
+  export let tabindex: number = 0;
+
   function clickInternal(e: MouseEvent) {
     e.stopPropagation();
     click();
@@ -43,7 +45,7 @@
     transition: all $cubic $animationSpeed;
   }
 
-  button:hover div.circle {
+  button:hover div.circle, button:focus div.circle {
     left: 0;
     top: 0;
     width: 100%;
@@ -65,7 +67,7 @@
   on:mouseup={up}
   class:hidden={!visible}
   style={style}
-  tabindex="-1"
+  tabindex="{tabindex}"
 >
   <div class="circle"></div>
   <slot/>

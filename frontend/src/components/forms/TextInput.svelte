@@ -80,6 +80,7 @@
   <div
     class="textarea-wrapper"
     class:editable={editable} 
+    tabindex="-1"
   >
     <textarea
       bind:value={value}
@@ -91,6 +92,7 @@
       disabled={!editable}
       class:display={!editable}
       rows=6
+      tabindex={editable ? 0 : -1}
     />
   </div>
 {:else if password && !passwordVisible}
@@ -104,6 +106,7 @@
     disabled={!editable}
     class:editable={editable}
     class:display={!editable}
+    tabindex={editable ? 0 : -1}
     type="password"
   />
 {:else}
@@ -117,6 +120,7 @@
     disabled={!editable}
     class:editable={editable}
     class:display={!editable}
+    tabindex={editable ? 0 : -1}
     type="text"
   />
 {/if}

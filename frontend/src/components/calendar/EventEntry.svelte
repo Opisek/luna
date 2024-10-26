@@ -1,6 +1,7 @@
 <script lang="ts">
-  import { GetEventColor, GetEventRGB, isDark } from "$lib/common/colors";
+  import { GetEventColor, GetEventHoverColor, GetEventRGB, isDark } from "$lib/common/colors";
   import { TextIcon } from "lucide-svelte";
+  import { passIfEnter } from "../../lib/common/inputs";
 
   export let visible: boolean = true;
 
@@ -13,6 +14,8 @@
     nextDate = new Date(date);
     nextDate.setDate(date.getDate() + 1);
   }
+
+  let element: HTMLDivElement;
 
   export let currentlyHoveredEvent: EventModel | null;
   export let currentlyClickedEvent: EventModel | null;
@@ -51,12 +54,19 @@
     if (currentlyClickedEvent == event) {
       currentlyClickedEvent = null;
       clickCallback(event);
+      element.blur();
     }
-  
+  }
+  function keyPress(e: KeyboardEvent) {
+    passIfEnter(e, () => {
+      if (event) clickCallback(event);
+      element.blur();
+    });
   }
 </script>
 
 <style lang="scss">
+  @import "../../styles/animations.scss";
   @import "../../styles/colors.scss";
   @import "../../styles/dimensions.scss";
   @import "../../styles/text.scss";
@@ -79,10 +89,14 @@
     overflow: hidden;
 
     flex-shrink: 0;
+
+    transition: background-color linear $animationSpeedFast;
   }
-  div.hover {
-    opacity: 0.7;
+
+  div:focus {
+    outline: none;
   }
+
   div::after {
     content: ".";
     visibility: hidden;
@@ -133,6 +147,7 @@
 </style>
 
 <div
+  bind:this={element}
   class:placeholder={!event}
   class:start={isFirstDisplay}
   class:end={isLastDisplay}
@@ -145,9 +160,12 @@
   on:mouseleave={mouseLeave}
   on:mousedown={mouseDown}
   on:mouseup={mouseUp}
+  on:focusin={mouseEnter}
+  on:focusout={mouseLeave}
+  on:keypress={keyPress}
   role="button"
-  tabindex="0"
-  style="background-color:{GetEventColor(event)}"
+  tabindex={isFirstDisplay ? 0 : -1}
+  style="background-color:{currentlyHoveredEvent == event ? GetEventHoverColor(event) : GetEventColor(event)}"
 >
   {#if event && isFirstDisplay}
     {#if !event.date.allDay}
