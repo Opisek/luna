@@ -18,6 +18,10 @@
     button.blur();
     up();
   }
+  function upInternal(e: MouseEvent) {
+    button.blur();
+    up();
+  }
 </script>
 
 <style lang="scss">
@@ -72,7 +76,7 @@
   on:click={clickInternal}
   on:mousedown={down}
   on:mouseleave={leaveInternal}
-  on:mouseup={up}
+  on:mouseup={upInternal}
   class:hidden={!visible}
   style={style}
   tabindex="{tabindex}"
