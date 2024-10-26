@@ -126,7 +126,7 @@ export const isValidColor = (color: string | null | undefined) => {
 
 export function calculateSecondaryColor(rgb: [number, number, number]): [number, number, number] {
   const hsl = RGBtoHSL(rgb);
-  isDark(rgb) ? hsl[2] += 10 : hsl[2] -= 10;
+  isDark(rgb) ? hsl[2] += 10 : hsl[2] -= 5;
   return HSLtoRGB(hsl);
 }
 
