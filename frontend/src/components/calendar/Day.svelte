@@ -162,7 +162,7 @@
     </div>
   {:else}
     <div class="events">
-      {#each events as event, i}
+      {#each events as event, i (event?.id)}
         <EventEntry
           event={event}
           isFirstDay={isFirstDay}
