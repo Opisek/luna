@@ -5,18 +5,40 @@ $foregroundFaded: #6b6b6b;
 
 $backgroundPrimary: #ffffff;
 $foregroundPrimary: $foregroundDark;
+
 $backgroundSecondary: #f0f0f0;
 $foregroundSecondary: $foregroundDark;
 
 $backgroundSuccess: hsl(107, 53%, 57%);
+$backgroundSuccessActive: hsl(107, 53%, 67%);
 $foregroundSuccess: $foregroundBright;
 
 $backgroundFailure: hsl(0, 69%, 62%);
+$backgroundFailureActive: hsl(0, 69%, 72%);
 $foregroundFailure: $foregroundBright;
 
 $backgroundAccent: hsl(213, 69%, 62%);
+$backgroundAccentActive: hsl(213, 69%, 72%);
 $foregroundAccent: $foregroundBright;
 
 $foregroundSunday: hsl(0, 71%, 58%);
 
 $foregroundLink: hsl(213, 69%, 42%);
+
+$specialColors: (
+  success: (
+    background: $backgroundSuccess,
+    backgroundActive: $backgroundSuccessActive,
+    foreground: $foregroundSuccess,
+  ),
+  failure: (
+    background: $backgroundFailure,
+    backgroundActive: $backgroundFailureActive,
+    foreground: $foregroundFailure,
+  ),
+  accent: (
+    background: $backgroundAccent,
+    backgroundActive: $backgroundAccentActive,
+    foreground: $foregroundAccent,
+  ),
+)

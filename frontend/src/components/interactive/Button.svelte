@@ -28,29 +28,27 @@
     min-width: 5em;
     
     position: relative;
-    overflow: hidden;
+    overflow: hidden; 
+
+    transition: background-color $cubic $animationSpeed;
   }
 
-
-  // TODO: might change to an scss loop later
-  button.success {
-    background-color: $backgroundSuccess;
-    color: $foregroundSuccess;
-  }
-  button.failure {
-    background-color: $backgroundFailure;
-    color: $foregroundFailure;
-  }
-  button.accent {
-    background-color: $backgroundAccent;
-    color: $foregroundAccent;
+  @each $key, $val in $specialColors {
+    button.#{$key} {
+      background-color: map-get($val, "background");
+      color: map-get($val, "foreground");
+    }
+    button.#{$key}:hover, button.#{$key}:focus {
+      background-color: map-get($val, "backgroundActive");
+    }
   }
 </style>
 
 <button
+  bind:this={button}
   on:click={onClick}
   on:mousedown={addRipple}
-  bind:this={button}
+  on:mouseleave={button.blur}
   class:success={color == "success"}
   class:failure={color == "failure"}
   class:accent={color == "accent"}
