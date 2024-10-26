@@ -97,7 +97,11 @@
       currentColor = "#" + currentColor;
     }
 
-    currentColor = currentColor.replaceAll(/(.+)[^0-9A-Fa-f]/g, "$1");
+    let replacementColor = currentColor; 
+    do {
+      currentColor = replacementColor;
+      replacementColor = replacementColor.replaceAll(/(.+)[^0-9A-Fa-f]/g, "$1");
+    } while (replacementColor != currentColor);
 
     if (currentColor.length > 7) {
       currentColor = currentColor.slice(0, 7);
