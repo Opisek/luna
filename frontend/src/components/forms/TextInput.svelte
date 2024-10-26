@@ -16,6 +16,7 @@
   export let label: boolean = true;
 
   export let onChange: (value: string) => any = () => {};
+  export let onInput: (value: string) => any = () => {};
   export let onFocus: () => any = () => {};
 
   // TODO: automatic height 
@@ -81,6 +82,7 @@
     <textarea
       bind:value={value}
       on:change={() => onChange(value)}
+      on:input={() => onInput(value)}
       on:focusout={() => onChange(value)}
       on:focusin={() => onFocus()}
       name={name}
@@ -94,6 +96,7 @@
   <input
     bind:value={value}
     on:change={() => onChange(value)}
+    on:input={() => onInput(value)}
     on:focusout={() => onChange(value)}
     on:focusin={() => onFocus()}
     name={name}
@@ -107,6 +110,7 @@
   <input
     bind:value={value}
     on:change={() => onChange(value)}
+    on:input={() => onInput(value)}
     on:focusout={() => onChange(value)}
     on:focusin={() => onFocus()}
     name={name}

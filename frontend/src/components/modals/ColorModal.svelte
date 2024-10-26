@@ -58,12 +58,19 @@
   }
 
   function validateColor() {
+    if (!currentColor.startsWith("#")) {
+      currentColor = "#" + currentColor;
+    }
     if (!isValidColor(currentColor)) {
-      currentColor = color || "";
-      return;
+      if (currentColor == "#") {
+        currentColor = "";
+      } else {
+        currentColor = color || "";
+      }
     } else {
       // @ts-ignore currentColor cant't be null due to isValidColor check
       currentColor = currentColor.toUpperCase();
+      currentHSL = RGBtoHSL(parseRGB(currentColor));
     }
   }
 
@@ -81,6 +88,19 @@
   function codeFocus() {
     if (!currentColor || currentColor.length == 0) {
       currentColor = "#";
+    }
+  }
+  function codeInput() {
+    if (!currentColor || currentColor.length == 0) {
+      currentColor = "#";
+    } else if (!currentColor.startsWith("#")) {
+      currentColor = "#" + currentColor;
+    }
+
+    currentColor = currentColor.replaceAll(/(.+)[^0-9A-Fa-f]/g, "$1");
+
+    if (currentColor.length > 7) {
+      currentColor = currentColor.slice(0, 7);
     }
   }
 
@@ -222,6 +242,7 @@
       name="color"
       editable={true}
       label={false}
+      onInput={codeInput}
       onChange={validateColor}
       onFocus={codeFocus}
     />
