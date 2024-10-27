@@ -11,28 +11,38 @@
 
   export let onChange: (value: Date) => void = () => {};
 
+  let dateButton: HTMLButtonElement;
+  let timeButton: HTMLButtonElement;
+
   let showDateModal = () => {};
   let showTimeModal = () => {};
 
-  function dateClick() {
+  function dateClick(e: MouseEvent | KeyboardEvent) {
     if (editable) {
       showDateModal();
+      if (e.detail !== 0) {
+        dateButton.blur();
+      }
     }
   }
 
-  function timeClick() {
+  function timeClick(e: MouseEvent | KeyboardEvent) {
     if (editable) {
       showTimeModal();
+      if (e.detail !== 0) {
+        timeButton.blur();
+      }
     }
   }
 </script>
 
 <style lang="scss">
+  @import "../../styles/animations.scss";
   @import "../../styles/colors.scss";
   @import "../../styles/dimensions.scss";
   @import "../../styles/text.scss";
 
-  div {
+  div.row {
     display: flex;
     flex-direction: row;
     gap: $gapSmall;
@@ -43,24 +53,59 @@
     margin: 0;
   }
 
-  div > button {
+  button {
     all: unset;
     border-radius: $borderRadius;
     cursor: text;
+    transition: padding $animationSpeedFast linear, border-radius $animationSpeedFast linear;
+    padding: $gapSmall;
+    margin: -$gapSmall;
   }
 
-  div.editable > button {
-    padding: $gapSmall;
+  div.editable button {
     background: $backgroundSecondary;
     cursor: pointer;
+    margin: 0;
+  }
+
+  div.editable > div.wrapper {
+    background-color: $backgroundAccent;
+    border-radius: calc($borderRadius + 0.1em);
+    transition: padding $animationSpeedFast linear;
+  } 
+  div.editable > div.wrapper:focus-within {
+    padding-left: $borderActiveWidth;
+    border-top-left-radius: $borderRadius;
+    border-bottom-left-radius: $borderRadius;
+  }
+  div.editable > div.wrapper:focus-within > button {
+    padding-left: calc($gapSmall - $borderActiveWidth);
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
   }
 </style>
 
 <Label name={name}>{placeholder}</Label>
-<div class:editable={editable}>
-  <button on:click={dateClick}>{value.toLocaleDateString()}</button>
+<div class="row" class:editable={editable}>
+  <div class="wrapper">
+    <button
+      bind:this={dateButton}
+      on:click={dateClick}
+      type="button"
+    >
+      {value.toLocaleDateString()}
+    </button>
+  </div>
   {#if !allDay}
-    <button on:click={timeClick}>{value.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"})}</button>
+    <div class="wrapper">
+      <button
+        bind:this={timeButton}
+        on:click={timeClick}
+        type="button"
+      >
+        {value.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"})}
+      </button>
+    </div>
   {/if}
 </div>
 

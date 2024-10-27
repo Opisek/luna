@@ -219,7 +219,7 @@
   }
 </style>
 
-<Modal title="Pick Color" bind:showModal={showModalInternal} bind:hideModal={hideModalInternal}>
+<Modal title="Pick Color" bind:showModal={showModalInternal} bind:hideModal={hideModalInternal} onModalSubmit={confirm}>
   <div class="grid">
     <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div

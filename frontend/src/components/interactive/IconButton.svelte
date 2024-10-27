@@ -78,6 +78,7 @@
   on:mouseleave={leaveInternal}
   on:mouseup={upInternal}
   class:hidden={!visible}
+  type="button"
   style={style}
   tabindex="{tabindex}"
 >

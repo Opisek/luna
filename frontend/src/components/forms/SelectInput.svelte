@@ -33,6 +33,7 @@
 
   function optionClick(option: Option) {
     selectedOption = option;
+    selectWrapper.focus();
   }
 
   function clickOutside(event: MouseEvent) {
@@ -59,6 +60,7 @@
     gap: $gapSmall;
     justify-content: space-between;
     position: relative;
+    transition: padding $animationSpeedFast linear, border-radius $animationSpeedFast linear, width $animationSpeedFast linear;
   }
 
   button.editable {
@@ -106,43 +108,63 @@
     padding: $gapSmall;
   }
 
-  button.option:hover {
+  button.option:hover, button.option:focus {
     background-color: $backgroundSecondary;
   }
 
-  // TODO: clicking outside closes the popup, proper "above" styling
+  div.wrapper {
+    width: 100%;
+    padding-right: 2 * $gapSmall;
+    position: relative;
+  }
+  button {
+    width: 100% !important;
+  }
+  div.wrapper.editable {
+    background-color: $backgroundAccent;
+    border-radius: calc($borderRadius + 0.1em);
+    transition: padding $animationSpeedFast linear;
+  } 
+  div.wrapper.editable:focus-within {
+    padding-left: $borderActiveWidth;
+    border-top-left-radius: $borderRadius;
+    border-bottom-left-radius: $borderRadius;
+  }
+  div.wrapper.editable:focus-within > button {
+    padding-left: calc($gapSmall - $borderActiveWidth);
+    width: calc(100% + $borderActiveWidth) !important;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
 </style>
 
 <Label name={name}>{placeholder}</Label>
-<button
-  bind:this={selectWrapper}
-  class="select"
-  class:editable={editable}
-  on:click={selectClick}
->
+<div class="wrapper" class:editable={editable}>
   <select
     bind:value={value}
     name={name}
     placeholder={placeholder}
     disabled={!editable}
+  ></select>
+  <button
+    bind:this={selectWrapper}
+    class="select"
+    class:editable={editable}
+    on:click={selectClick}
+    type="button"
   >
-  <!--
-    {#each options as option}
-      <option value={option.value}>{option.name}</option>
-    {/each}
-  -->
-  </select>
-  {#if selectedOption !== null}
-    {selectedOption.name}
-  {/if}
-  {#if editable}
-    <span
-      class="arrow"
-      class:active={active} 
-    >
-    <ChevronDown size={16}/>
-    </span>
-  {/if}
+    {#if selectedOption !== null}
+      {selectedOption.name}
+    {/if}
+    {#if editable}
+      <span
+        class="arrow"
+        class:active={active} 
+      >
+      <ChevronDown size={16}/>
+      </span>
+    {/if}
+  </button>
   <div
     class="options"
     class:hidden={!active}
@@ -152,9 +174,10 @@
       <button
         class="option" 
         on:click={() => optionClick(option)}
+        type="button"
       >
         {option.name}
       </button>
     {/each}
   </div>
-</button>
+</div>

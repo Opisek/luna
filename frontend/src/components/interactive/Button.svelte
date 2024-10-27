@@ -47,7 +47,6 @@
 <button
   bind:this={button}
   on:click={onClick}
-  on:mousedown={addRipple}
   on:mouseleave={button.blur}
   class:success={color == "success"}
   class:failure={color == "failure"}

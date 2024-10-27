@@ -4,10 +4,12 @@
   import Horizontal from "../layout/Horizontal.svelte";
   import Title from "../layout/Title.svelte";
 
+  let dialog: HTMLDialogElement;
+
   export let title: string;
+  export let focusElement: HTMLElement | null = null;
 
   let visible = false;
-  let dialog: HTMLDialogElement;
 
   function clickOutside(event: MouseEvent) {
     if (!dialog) return;
@@ -23,7 +25,8 @@
     window.addEventListener("click", clickOutside);
     visible = true
     setTimeout(() => {
-      dialog.focus();
+      if (focusElement) focusElement.focus();
+      else dialog.focus();
     }, 0);
   }
   export const hideModal = () => {
@@ -32,6 +35,14 @@
     onModalHide();
   }
   export let onModalHide = () => {};
+
+  export let onModalSubmit = hideModal;
+
+  function submitInternal(event: Event) {
+    event.preventDefault();
+    onModalSubmit();
+    return false;
+  }
 </script>
 
 <style lang="scss">
@@ -58,7 +69,7 @@
     outline: none;
   }
   
-  div {
+  form {
     padding: $gap $gapLarge $gapLarge $gapLarge;
     border-radius: $borderRadius;
     display: flex;
@@ -74,7 +85,7 @@
   on:close={() => (visible = false)}
   class:closed={visible}
 >
-	<div>
+	<form on:submit={submitInternal}>
     <Horizontal>
       <Title>
         {title}
@@ -87,5 +98,5 @@
         <Button onClick={hideModal} color="accent">Close</Button>
       </slot>
     </Horizontal>
-	</div>
+	</form>
 </dialog>

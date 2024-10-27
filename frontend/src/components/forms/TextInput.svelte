@@ -30,20 +30,32 @@
 </script>
 
 <style lang="scss">
+  @import "../../styles/animations.scss";
   @import "../../styles/colors.scss";
   @import "../../styles/dimensions.scss";
   @import "../../styles/text.scss";
 
+  div.wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: $gap;
+    position: relative;
+    transition: padding $animationSpeedFast linear;
+    border-radius: calc($borderRadius + 0.1em);
+  }
+
+  div.wrapper.editable {
+    background-color: $backgroundAccent;
+  }
+
   input, textarea {
     all: unset;
-  }
-
-  input, div.textarea-wrapper {
     padding: $gapSmall;
     border-radius: $borderRadius;
+    transition: padding $animationSpeedFast linear, border-radius $animationSpeedFast linear;
   }
 
-  .editable {
+  div.editable > input, div.editable > textarea {
     background: $backgroundSecondary;
   }
 
@@ -51,35 +63,55 @@
     min-height: 0;
     white-space: pre-wrap;
     word-wrap: break-word;
-    width: 100%;
-    padding: 0;
-    margin: 0;
+    //padding: 0;
+    //margin: 0;
   }
 
   div.visibility {
-    text-align: right;
-    position: relative;
-    // TODO: don't use hard-coded values
-    top: calc(-1.31em - 2 * $gapSmall - 0.5 * $fontSize);
-    margin-bottom: calc(-1.5em - $gapSmall - 0.5 * $fontSize);
-    right: calc(-100% + 1.25em + $gapSmall);
-    width: fit-content;
-    display: flex;
-    justify-content: flex-end;
+    position: absolute;
+    //height: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    right: $gapSmaller;
     color: $foregroundFaded;
+  }
+
+  div.wrapper.editable:focus-within {
+    padding-left: $borderActiveWidth;
+    border-top-left-radius: $borderRadius;
+    border-bottom-left-radius: $borderRadius;
+  }
+  div.wrapper.editable:focus-within > input, 
+  div.wrapper.editable:focus-within > textarea {
+    padding-left: calc($gapSmall - $borderActiveWidth);
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
   }
 </style>
 
 {#if label}
-<Label name={name}>{placeholder}</Label>
+  <Label name={name}>{placeholder}</Label>
 {/if}
-{#if multiline}
-  <div
-    class="textarea-wrapper"
-    class:editable={editable} 
-    tabindex="-1"
-  >
-    <textarea
+<div
+  class="wrapper"
+  class:editable={editable} 
+  tabindex="-1"
+>
+  {#if multiline}
+      <textarea
+        bind:value={value}
+        on:change={() => onChange(value)}
+        on:input={() => onInput(value)}
+        on:focusout={() => onChange(value)}
+        on:focusin={() => onFocus()}
+        name={name}
+        placeholder={placeholder}
+        disabled={!editable}
+        rows=6
+        tabindex={editable ? 0 : -1}
+      />
+  {:else if password && !passwordVisible}
+    <input
       bind:value={value}
       on:change={() => onChange(value)}
       on:input={() => onInput(value)}
@@ -88,41 +120,28 @@
       name={name}
       placeholder={placeholder}
       disabled={!editable}
-      rows=6
+      class:editable={editable}
       tabindex={editable ? 0 : -1}
+      type="password"
     />
+  {:else}
+    <input
+      bind:value={value}
+      on:change={() => onChange(value)}
+      on:input={() => onInput(value)}
+      on:focusout={() => onChange(value)}
+      on:focusin={() => onFocus()}
+      name={name}
+      placeholder={placeholder}
+      disabled={!editable}
+      class:editable={editable}
+      tabindex={editable ? 0 : -1}
+      type="text"
+    />
+  {/if}
+  {#if password && editable}
+  <div class="visibility">
+    <VisibilityToggle bind:visible={passwordVisible} momentary={true} />
   </div>
-{:else if password && !passwordVisible}
-  <input
-    bind:value={value}
-    on:change={() => onChange(value)}
-    on:input={() => onInput(value)}
-    on:focusout={() => onChange(value)}
-    on:focusin={() => onFocus()}
-    name={name}
-    placeholder={placeholder}
-    disabled={!editable}
-    class:editable={editable}
-    tabindex={editable ? 0 : -1}
-    type="password"
-  />
-{:else}
-  <input
-    bind:value={value}
-    on:change={() => onChange(value)}
-    on:input={() => onInput(value)}
-    on:focusout={() => onChange(value)}
-    on:focusin={() => onFocus()}
-    name={name}
-    placeholder={placeholder}
-    disabled={!editable}
-    class:editable={editable}
-    tabindex={editable ? 0 : -1}
-    type="text"
-  />
-{/if}
-{#if password && editable}
-<div class="visibility">
-  <VisibilityToggle bind:visible={passwordVisible} momentary={true} />
+  {/if}
 </div>
-{/if}

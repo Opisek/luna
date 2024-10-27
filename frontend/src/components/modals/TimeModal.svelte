@@ -1,7 +1,6 @@
 <script lang="ts">
   import SelectButtons from "../forms/SelectButtons.svelte";
   import Button from "../interactive/Button.svelte";
-  import Horizontal from "../layout/Horizontal.svelte";
   import Modal from "./Modal.svelte";
 
   export let date: Date;
@@ -32,8 +31,6 @@
 
   export const showModal = () => {
     dateCopy = new Date(date);
-    //dateCopy.setHours(0);
-    //dateCopy.setMinutes(0);
     if (dateCopy.getHours() > 12 || dateCopy.getHours() === 0) {
       amPm = "pm";
     } else {
@@ -129,7 +126,7 @@
   }
 </style>
 
-<Modal title="Pick Time" bind:showModal={showModalInternal} bind:hideModal={hideModalInternal}>
+<Modal title="Pick Time" bind:showModal={showModalInternal} bind:hideModal={hideModalInternal} focusElement={hourInput}>
   <div class="time">
     <span class="time" class:selecting={pickingHour}>
       <input
@@ -224,15 +221,16 @@
   <div class="clock">
       {#each Array(12) as _, i}
         {#if pickingHour}
-          <button class="button hour radial-{i}/12" on:click={() => {
+          <button class="button hour radial-{i}/12" tabindex="-11" on:click={() => {
             dateCopy.setHours(((i == 0 ? 12 : i) + (amPm === "am" ? 0 : 12)) % 24);
             dateCopy = dateCopy;
             pickingHour = false;
+            minuteInput.focus();
           }}>
           {((i == 0 ? 12 : i) + (amPm === "am" ? 0 : 12)) % 24}
           </button>
         {:else}
-          <button class="button hour radial-{i}/12" on:click={() => {
+          <button class="button hour radial-{i}/12" tabindex="-1" on:click={() => {
             dateCopy.setMinutes(i * 5);
             dateCopy = dateCopy;
             dateSelected();

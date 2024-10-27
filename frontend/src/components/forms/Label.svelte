@@ -16,6 +16,6 @@
   }
 </style>
 
-<label for={name}>
+<label for={name} tabindex="-1">
   <slot/>
 </label>
