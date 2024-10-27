@@ -19,7 +19,7 @@
 </script>
 
 {#if momentary}
-  <IconButton down={show} up={hide}>
+  <IconButton down={show} up={hide} tabindex={-1}>
     {#if visible}
       <Eye size={16}/>
     {:else}
@@ -27,7 +27,7 @@
     {/if}
   </IconButton>
 {:else}
-  <IconButton click={toggleVisibility}>
+  <IconButton click={toggleVisibility} tabindex={-1}>
     {#if visible}
       <Eye size={16}/>
     {:else}
