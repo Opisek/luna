@@ -3,6 +3,7 @@
   import Label from "./Label.svelte";
   import { calculateOptimalPopupPosition } from "$lib/common/calculations";
   import { browser } from "$app/environment";
+  import { addRipple } from "../../lib/client/decoration";
 
   export let value: string;
   export let placeholder: string;
@@ -61,6 +62,7 @@
     justify-content: space-between;
     position: relative;
     transition: padding $animationSpeedFast linear, border-radius $animationSpeedFast linear, width $animationSpeedFast linear;
+    overflow: hidden;
   }
 
   button.editable {
@@ -151,6 +153,7 @@
     class="select"
     class:editable={editable}
     on:click={selectClick}
+    on:mousedown={addRipple}
     type="button"
   >
     {#if selectedOption !== null}
