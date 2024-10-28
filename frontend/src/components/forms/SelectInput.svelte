@@ -43,6 +43,8 @@
     active = false;
     event.stopPropagation();
   }
+
+  let clickedWithMouse = false;
 </script>
 
 <style lang="scss">
@@ -122,21 +124,20 @@
   button {
     width: 100% !important;
   }
-  div.wrapper.editable {
+
+  div.focus {
     background-color: $backgroundAccent;
-    border-radius: calc($borderRadius + 0.1em);
-    transition: padding $animationSpeedFast linear;
-  } 
-  div.wrapper.editable:focus-within {
-    padding-left: $borderActiveWidth;
-    border-top-left-radius: $borderRadius;
-    border-bottom-left-radius: $borderRadius;
+    height: 100%;
+    width: $borderActiveWidth;
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform: translateX(-100%);
+    transition: transform $animationSpeedFast linear;
   }
-  div.wrapper.editable:focus-within > button {
-    padding-left: calc($gapSmall - $borderActiveWidth);
-    width: calc(100% + $borderActiveWidth) !important;
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
+
+  button.select:focus-within:not(.click) > div.focus {
+    transform: none;
   }
 </style>
 
@@ -152,8 +153,10 @@
     bind:this={selectWrapper}
     class="select"
     class:editable={editable}
+    class:click={clickedWithMouse}
     on:click={selectClick}
-    on:mousedown={addRipple}
+    on:mousedown={(e) => {addRipple(e); clickedWithMouse = true}}
+    on:focusout={() => {if (!active) clickedWithMouse = false}}
     type="button"
   >
     {#if selectedOption !== null}
@@ -167,6 +170,7 @@
       <ChevronDown size={16}/>
       </span>
     {/if}
+    <div class="focus"></div>
   </button>
   <div
     class="options"
