@@ -34,6 +34,9 @@
       }
     }
   }
+
+  let dateClickedWithMouse = false;
+  let timeClickedWithMouse = false;
 </script>
 
 <style lang="scss">
@@ -60,6 +63,8 @@
     transition: padding $animationSpeedFast linear, border-radius $animationSpeedFast linear;
     padding: $gapSmall;
     margin: -$gapSmall;
+    position: relative;
+    overflow: hidden;
   }
 
   div.editable button {
@@ -68,44 +73,47 @@
     margin: 0;
   }
 
-  div.editable > div.wrapper {
+  div.focus {
     background-color: $backgroundAccent;
-    border-radius: calc($borderRadius + 0.1em);
-    transition: padding $animationSpeedFast linear;
-  } 
-  div.editable > div.wrapper:focus-within {
-    padding-left: $borderActiveWidth;
-    border-top-left-radius: $borderRadius;
-    border-bottom-left-radius: $borderRadius;
+    height: 100%;
+    width: $borderActiveWidth;
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform: translateX(-100%);
+    transition: transform $animationSpeedFast linear;
   }
-  div.editable > div.wrapper:focus-within > button {
-    padding-left: calc($gapSmall - $borderActiveWidth);
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
+
+  button:focus-within:not(.click) > div.focus {
+    transform: translateX(0);
   }
 </style>
 
 <Label name={name}>{placeholder}</Label>
 <div class="row" class:editable={editable}>
-  <div class="wrapper">
+  <button
+    bind:this={dateButton}
+    on:click={dateClick}
+    on:mousedown={() => dateClickedWithMouse = true}
+    on:focusout={() => dateClickedWithMouse = false}
+    class:click={dateClickedWithMouse}
+    type="button"
+  >
+    <div class="focus"></div>
+    {value.toLocaleDateString()}
+  </button>
+  {#if !allDay}
     <button
-      bind:this={dateButton}
-      on:click={dateClick}
+      bind:this={timeButton}
+      on:click={timeClick}
+      on:mousedown={() => timeClickedWithMouse = true}
+      on:focusout={() => timeClickedWithMouse = false}
+      class:click={timeClickedWithMouse}
       type="button"
     >
-      {value.toLocaleDateString()}
+      <div class="focus"></div>
+      {value.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"})}
     </button>
-  </div>
-  {#if !allDay}
-    <div class="wrapper">
-      <button
-        bind:this={timeButton}
-        on:click={timeClick}
-        type="button"
-      >
-        {value.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"})}
-      </button>
-    </div>
   {/if}
 </div>
 
