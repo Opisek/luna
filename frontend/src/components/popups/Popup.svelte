@@ -7,7 +7,7 @@
   let dialog: HTMLDialogElement;
 
   function clickOutside(event: MouseEvent) {
-    if (!dialog) return;
+    if (!dialog || event.detail === 0) return;
 
     const clickX = event.clientX;
     const clickY = event.clientY;
@@ -80,6 +80,10 @@
   dialog[open] {
 		animation: zoom $animationSpeed $cubic forwards;
 	}
+
+  dialog:focus {
+    outline: none;
+  }
 
   div.contents {
     display: flex;

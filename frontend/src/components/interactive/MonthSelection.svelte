@@ -50,7 +50,7 @@
   <IconButton click={nextMonth}>
     <RightIcon/>
   </IconButton>
-  <button on:click={showPopup}>
+  <button on:click={showPopup} type="button">
     {`${getMonthName(month)} ${year}`}
   </button>
   <MonthPopup bind:show={showPopup} bind:year={year} bind:month={month}/>

@@ -31,9 +31,12 @@
       dateIterator.setDate(dateIterator.getDate() + 1);
     }
   })(month, year);
+
+  let clickedDay = -1;
 </script>
 
 <style lang="scss">
+  @import "../../styles/animations.scss";
   @import "../../styles/colors.scss";
   @import "../../styles/dimensions.scss";
 
@@ -54,6 +57,8 @@
     padding: $paddingTiny;
     cursor: pointer;
     user-select: none;
+    position: relative;
+    overflow: hidden;
   }
 
   button.day.sunday {
@@ -63,17 +68,37 @@
   button.day.otherMonth {
     opacity: 0.5;
   }
+
+  div.focus {
+    background-color: $backgroundAccent;
+    height: 100%;
+    width: $borderActiveWidth;
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform: translateX(-100%);
+    transition: transform $animationSpeedFast linear;
+  }
+
+  button.day:focus:not(.click) > div.focus {
+    transform: translateX(0);
+  }
 </style>
 
 <div class="calendar" style="grid-template-rows: repeat({amountOfRows}, 1fr)">
-  {#each days as day}
+  {#each days as day, i}
     <button
       class="day"
       class:sunday={day.getDay() == 0}
       class:otherMonth={day.getMonth() != month}
+      class:click={clickedDay === i}
+      type="button"
       on:click={() => (onDayClick(day))}
+      on:mousedown={() => (clickedDay = i)}
+      on:focusout={() => {if (clickedDay === i) clickedDay = -1;}}
     >
       {day.getDate()}
+      <div class="focus"></div>
     </button>
   {/each}
 </div>

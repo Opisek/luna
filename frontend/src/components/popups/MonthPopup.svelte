@@ -48,9 +48,13 @@
     if (selectingMonth) selectedYear ++;
     else selectedYear += 10;
   }
+
+  let clickedMonth = -1;
+  let clickedYear = -1;
 </script>
 
 <style lang="scss">
+  @import "../../styles/animations.scss";
   @import "../../styles/colors.scss";
   @import "../../styles/dimensions.scss";
 
@@ -96,10 +100,31 @@
     padding: $paddingSmaller;
     cursor: pointer;
     user-select: none;
+    position: relative;
+    overflow: hidden;
+  }
+
+  button.month {
+    width: 2em;
   }
 
   button.year {
     width: 3em;
+  }
+  
+  div.focus {
+    background-color: $backgroundAccent;
+    height: 100%;
+    width: $borderActiveWidth;
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform: translateX(-100%);
+    transition: transform $animationSpeedFast linear;
+  }
+
+  button:focus-within:not(.click) > div.focus {
+    transform: translateX(0);
   }
 </style>
 
@@ -108,15 +133,17 @@
     <IconButton click={prev}>
       <ChevronLeft/>
     </IconButton>
-    {#if selectingMonth}
-      <button class="display year" on:click={() => {selectingMonth = false}}>
-        {selectedYear}
+      <button
+        class="display"
+        type="button"
+        on:click={() => {selectingMonth = !selectingMonth}}
+      >
+        {#if selectingMonth}
+          {selectedYear}
+        {:else}
+          {decadeStart} - {decadeStart + 9}
+        {/if}
       </button>
-    {:else}
-      <button class="display decade" on:click={() => {selectingMonth = true}}>
-        {decadeStart} - {decadeStart + 9}
-      </button>
-    {/if}
     <IconButton click={next}>
       <ChevronRight/>
     </IconButton>
@@ -124,16 +151,32 @@
   {#if selectingMonth}
   <div class="grid month">
     {#each Array(12) as _, i}
-      <button class="button month" on:click={(e) => clickMonth(e, i)}>
+      <button
+        class="button month"
+        class:click={clickedMonth === i}
+        type="button"
+        on:click={(e) => clickMonth(e, i)}
+        on:mousedown={() => clickedMonth = i}
+        on:focusout={() => {if (clickedMonth === i) clickedMonth = -1;}}
+      >
         {getMonthName(i).substring(0, 3)}
+        <div class="focus"></div>
       </button>
     {/each}
   </div>
   {:else}
   <div class="grid year">
     {#each Array(10) as _, i}
-      <button class="button year" on:click={(e) => clickYear(e, i)}>
+      <button
+        class="button year"
+        class:click={clickedYear === i}
+        type="button"
+        on:click={(e) => clickYear(e, i)}
+        on:mousedown={() => clickedYear = i}
+        on:focusout={() => {if (clickedYear === i) clickedYear = -1;}}
+      >
         {decadeStart + i}
+        <div class="focus"></div>
       </button>
     {/each}
   </div>
