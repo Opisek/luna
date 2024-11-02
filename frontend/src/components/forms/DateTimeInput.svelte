@@ -78,6 +78,7 @@
     bind:this={dateButton}
     on:click={dateClick}
     type="button"
+    tabindex={editable ? 0 : -1}
     use:barFocusIndicator
   >
     {value.toLocaleDateString()}
@@ -87,6 +88,7 @@
       bind:this={timeButton}
       on:click={timeClick}
       type="button"
+      tabindex={editable ? 0 : -1}
       use:barFocusIndicator
     >
       {value.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"})}
