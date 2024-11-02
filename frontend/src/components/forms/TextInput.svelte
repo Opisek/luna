@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { barFocusIndicator } from "../../lib/client/decoration";
   import VisibilityToggle from "../interactive/VisibilityToggle.svelte";
   import Label from "./Label.svelte";
 
@@ -40,19 +41,14 @@
     flex-direction: column;
     gap: $gap;
     position: relative;
-    transition: padding $animationSpeedFast linear;
     border-radius: calc($borderRadius + 0.1em);
-  }
-
-  div.wrapper.editable {
-    background-color: $backgroundAccent;
+    overflow: hidden;
   }
 
   input, textarea {
     all: unset;
     padding: $gapSmall;
     border-radius: $borderRadius;
-    transition: padding $animationSpeedFast linear, border-radius $animationSpeedFast linear;
   }
 
   div.editable > input, div.editable > textarea {
@@ -75,19 +71,6 @@
     right: $gapSmaller;
     color: $foregroundFaded;
   }
-
-  // TODO: maybe utilize `use:barFocusIndicator` instead
-  div.wrapper.editable:focus-within {
-    padding-left: $borderActiveWidth;
-    border-top-left-radius: $borderRadius;
-    border-bottom-left-radius: $borderRadius;
-  }
-  div.wrapper.editable:focus-within > input, 
-  div.wrapper.editable:focus-within > textarea {
-    padding-left: calc($gapSmall - $borderActiveWidth);
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-  }
 </style>
 
 {#if label}
@@ -97,6 +80,7 @@
   class="wrapper"
   class:editable={editable} 
   tabindex="-1"
+  use:barFocusIndicator
 >
   {#if multiline}
       <textarea
