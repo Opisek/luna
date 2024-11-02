@@ -59,7 +59,7 @@
   button.selected {
     background-color: $backgroundAccent;
     color: $foregroundAccent;
-    --barFocusIndicatorColor: #{$backgroundSecondary};
+    --barFocusIndicatorColor: #{$barFocusIndicatorColorAlt};
   }
 </style>
 

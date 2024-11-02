@@ -45,7 +45,7 @@
   button.check {
     color: $foregroundAccent;
     background-color: $backgroundAccent;
-    --barFocusIndicatorColor: #{$backgroundSecondary};
+    --barFocusIndicatorColor: #{$barFocusIndicatorColorAlt};
   }
 
   button.disabled {
