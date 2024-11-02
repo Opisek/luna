@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { addRipple } from "$lib/client/decoration";
+  import { addRipple, barFocusIndicator } from "$lib/client/decoration";
   import { CheckIcon } from "lucide-svelte";
 
   export let value: boolean;
@@ -18,6 +18,7 @@
 </script>
 
 <style lang="scss">
+  @import "../../styles/animations.scss";
   @import "../../styles/colors.scss";
   @import "../../styles/dimensions.scss";
   @import "../../styles/text.scss";
@@ -44,6 +45,7 @@
   button.check {
     color: $foregroundAccent;
     background-color: $backgroundAccent;
+    --barFocusIndicatorColor: #{$backgroundSecondary};
   }
 
   button.disabled {
@@ -63,7 +65,13 @@
   }
 </style>
 
-<button type="button" class:check={value} class:disabled={!enabled} on:click={toggle}>
+<button
+  type="button"
+  class:check={value}
+  class:disabled={!enabled}
+  on:click={toggle}
+  use:barFocusIndicator
+>
   {#if value}
     <CheckIcon size={16}/>
   {/if}

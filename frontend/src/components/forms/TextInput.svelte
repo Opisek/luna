@@ -76,6 +76,7 @@
     color: $foregroundFaded;
   }
 
+  // TODO: maybe utilize `use:barFocusIndicator` instead
   div.wrapper.editable:focus-within {
     padding-left: $borderActiveWidth;
     border-top-left-radius: $borderRadius;

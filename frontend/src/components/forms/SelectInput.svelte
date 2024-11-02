@@ -3,7 +3,7 @@
   import Label from "./Label.svelte";
   import { calculateOptimalPopupPosition } from "$lib/common/calculations";
   import { browser } from "$app/environment";
-  import { addRipple } from "../../lib/client/decoration";
+  import { addRipple, barFocusIndicator } from "../../lib/client/decoration";
 
   export let value: string;
   export let placeholder: string;
@@ -43,8 +43,6 @@
     active = false;
     event.stopPropagation();
   }
-
-  let clickedWithMouse = false;
 </script>
 
 <style lang="scss">
@@ -124,21 +122,6 @@
   button {
     width: 100% !important;
   }
-
-  div.focus {
-    background-color: $backgroundAccent;
-    height: 100%;
-    width: $borderActiveWidth;
-    position: absolute;
-    left: 0;
-    top: 0;
-    transform: translateX(-100%);
-    transition: transform $animationSpeedFast linear;
-  }
-
-  button.select:focus-within:not(.click) > div.focus {
-    transform: none;
-  }
 </style>
 
 <Label name={name}>{placeholder}</Label>
@@ -153,11 +136,9 @@
     bind:this={selectWrapper}
     class="select"
     class:editable={editable}
-    class:click={clickedWithMouse}
     on:click={selectClick}
-    on:mousedown={(e) => {addRipple(e); clickedWithMouse = true}}
-    on:focusout={() => {if (!active) clickedWithMouse = false}}
     type="button"
+    use:barFocusIndicator={"option"}
   >
     {#if selectedOption !== null}
       {selectedOption.name}
@@ -170,7 +151,6 @@
       <ChevronDown size={16}/>
       </span>
     {/if}
-    <div class="focus"></div>
   </button>
   <div
     class="options"

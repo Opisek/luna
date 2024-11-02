@@ -1,3 +1,4 @@
+import BarFocusIndicator from "../../components/decoration/BarFocusIndicator.svelte";
 import Ripple from "../../components/decoration/Ripple.svelte"
 
 export const addRipple = (e: MouseEvent, addToParent: boolean = true) => {
@@ -21,3 +22,25 @@ export const addRipple = (e: MouseEvent, addToParent: boolean = true) => {
 //
 //  return;
 //}
+
+export const barFocusIndicator = (node: HTMLElement, ignore: string | null = null) =>{
+  const mouseDown = (e: MouseEvent) => {
+    node.classList.add("clicked");
+  }
+
+  const focusOut = (e: FocusEvent) => {
+    if (ignore == null || !(e.relatedTarget as HTMLElement).classList.contains(ignore)) node.classList.remove("clicked");
+  }
+
+  new BarFocusIndicator({ target: node });
+
+  node.addEventListener("mousedown", mouseDown);
+  node.addEventListener("focusout", focusOut);
+
+  return {
+    destroy() {
+      node.removeEventListener("mousedown", mouseDown);
+      node.removeEventListener("focusout", focusOut);
+    }
+  }
+}

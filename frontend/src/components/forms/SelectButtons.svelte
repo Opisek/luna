@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { addRipple } from "$lib/client/decoration";
+  import { addRipple, barFocusIndicator } from "$lib/client/decoration";
   import Label from "./Label.svelte";
 
   export let value: string;
@@ -13,8 +13,6 @@
   // TODO: redo this
   let selected: Option = options[0];
   $: selected = options.filter(option => option.value === value)[0];
-
-  let clickedWithMouse = -1;
 </script>
 
 <style lang="scss">
@@ -61,29 +59,7 @@
   button.selected {
     background-color: $backgroundAccent;
     color: $foregroundAccent;
-  }
-
-  div.focus {
-    background-color: $backgroundAccent;
-    height: 100%;
-    width: $borderActiveWidth;
-    position: absolute;
-    left: 0;
-    top: 0;
-    transform: translateX(-100%);
-    transition: transform $animationSpeedFast linear;
-  }
-
-  div.buttons:not(.click) > button:focus-within > div.focus {
-    transform: none;
-  }
-
-  button.selected > div.focus {
-    background-color: $backgroundSecondary;
-  }
-
-  div.buttons.click > button > div.focus {
-    visibility: hidden;
+    --barFocusIndicatorColor: #{$backgroundSecondary};
   }
 </style>
 
@@ -91,19 +67,17 @@
 <Label name={name}>{placeholder}</Label>
 {/if}
 {#if editable}
-  <div class="buttons" class:click={clickedWithMouse != -1}>
+  <div class="buttons">
     {#each options as option, i}
       <button
         type="button"
         class:selected={option.value === value}
         class:first={i === 0}
         class:last={i === options.length - 1}
-        on:mousedown={() => clickedWithMouse = i}
         on:click={() => {value = option.value}}
-        on:focusout={() => {if (clickedWithMouse == i) clickedWithMouse = -1}}
         on:mousedown={addRipple}
+        use:barFocusIndicator
       >
-        <div class="focus"></div>
         {option.name}
       </button>
     {/each}

@@ -3,6 +3,7 @@
   import { getMonthName } from "../../lib/common/humanization";
   import IconButton from "../interactive/IconButton.svelte";
   import Popup from "./Popup.svelte";
+  import { barFocusIndicator } from "../../lib/client/decoration";
 
   let popupVisible: boolean = false;
 
@@ -111,21 +112,6 @@
   button.year {
     width: 3em;
   }
-  
-  div.focus {
-    background-color: $backgroundAccent;
-    height: 100%;
-    width: $borderActiveWidth;
-    position: absolute;
-    left: 0;
-    top: 0;
-    transform: translateX(-100%);
-    transition: transform $animationSpeedFast linear;
-  }
-
-  button:focus-within:not(.click) > div.focus {
-    transform: translateX(0);
-  }
 </style>
 
 <Popup bind:show={internalShow} bind:close={internalClose} bind:visible={popupVisible}>
@@ -156,11 +142,9 @@
         class:click={clickedMonth === i}
         type="button"
         on:click={(e) => clickMonth(e, i)}
-        on:mousedown={() => clickedMonth = i}
-        on:focusout={() => {if (clickedMonth === i) clickedMonth = -1;}}
+        use:barFocusIndicator
       >
         {getMonthName(i).substring(0, 3)}
-        <div class="focus"></div>
       </button>
     {/each}
   </div>
@@ -172,11 +156,9 @@
         class:click={clickedYear === i}
         type="button"
         on:click={(e) => clickYear(e, i)}
-        on:mousedown={() => clickedYear = i}
-        on:focusout={() => {if (clickedYear === i) clickedYear = -1;}}
+        use:barFocusIndicator
       >
         {decadeStart + i}
-        <div class="focus"></div>
       </button>
     {/each}
   </div>

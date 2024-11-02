@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { barFocusIndicator } from "../../lib/client/decoration";
   import DateModal from "../modals/DateModal.svelte";
   import TimeModal from "../modals/TimeModal.svelte";
   import Label from "./Label.svelte";
@@ -34,9 +35,6 @@
       }
     }
   }
-
-  let dateClickedWithMouse = false;
-  let timeClickedWithMouse = false;
 </script>
 
 <style lang="scss">
@@ -72,21 +70,6 @@
     cursor: pointer;
     margin: 0;
   }
-
-  div.focus {
-    background-color: $backgroundAccent;
-    height: 100%;
-    width: $borderActiveWidth;
-    position: absolute;
-    left: 0;
-    top: 0;
-    transform: translateX(-100%);
-    transition: transform $animationSpeedFast linear;
-  }
-
-  button:focus-within:not(.click) > div.focus {
-    transform: translateX(0);
-  }
 </style>
 
 <Label name={name}>{placeholder}</Label>
@@ -94,24 +77,18 @@
   <button
     bind:this={dateButton}
     on:click={dateClick}
-    on:mousedown={() => dateClickedWithMouse = true}
-    on:focusout={() => dateClickedWithMouse = false}
-    class:click={dateClickedWithMouse}
     type="button"
+    use:barFocusIndicator
   >
-    <div class="focus"></div>
     {value.toLocaleDateString()}
   </button>
   {#if !allDay}
     <button
       bind:this={timeButton}
       on:click={timeClick}
-      on:mousedown={() => timeClickedWithMouse = true}
-      on:focusout={() => timeClickedWithMouse = false}
-      class:click={timeClickedWithMouse}
       type="button"
+      use:barFocusIndicator
     >
-      <div class="focus"></div>
       {value.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"})}
     </button>
   {/if}
