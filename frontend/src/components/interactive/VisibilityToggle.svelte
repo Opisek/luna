@@ -27,7 +27,7 @@
     {/if}
   </IconButton>
 {:else}
-  <IconButton click={toggleVisibility} tabindex={-1}>
+  <IconButton click={toggleVisibility}>
     {#if visible}
       <Eye size={16}/>
     {:else}
