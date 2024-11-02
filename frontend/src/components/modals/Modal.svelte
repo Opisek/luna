@@ -24,10 +24,7 @@
   export const showModal = () => {
     window.addEventListener("click", clickOutside);
     visible = true
-    setTimeout(() => {
-      if (focusElement) focusElement.focus();
-      else dialog.focus();
-    }, 0);
+    setTimeout(resetFocus, 0);
   }
   export const hideModal = () => {
     window.removeEventListener("click", clickOutside);
@@ -42,6 +39,11 @@
     event.preventDefault();
     onModalSubmit();
     return false;
+  }
+
+  export let resetFocus = () => {
+    if (focusElement) focusElement.focus();
+    else dialog.focus();
   }
 </script>
 

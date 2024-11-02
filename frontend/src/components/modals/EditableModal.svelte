@@ -24,11 +24,15 @@
   export let editMode: boolean = false;
   let creating = false;
 
+  let resetFocus: () => any;
+
   function startEditMode() {
+    resetFocus();
     editMode = true;
   }
 
   function cancelEdit() {
+    resetFocus();
     editMode = false;
     if (creating) {
       hideModal();
@@ -61,7 +65,7 @@
   export let onDelete: () => Promise<string>;
 </script>
 
-<Modal title={title} bind:showModal={showModalInternal} bind:hideModal={hideModal} onModalHide={() => {editMode = false}}>
+<Modal title={title} bind:showModal={showModalInternal} bind:hideModal={hideModal} onModalHide={() => {editMode = false}} bind:resetFocus>
   <slot/>
   <svelte:fragment slot="buttons">
     {#if editMode}
