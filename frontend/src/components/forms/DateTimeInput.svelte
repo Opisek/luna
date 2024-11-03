@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { barFocusIndicator } from "../../lib/client/decoration";
+  import { focusIndicator } from "../../lib/client/decoration";
   import DateModal from "../modals/DateModal.svelte";
   import TimeModal from "../modals/TimeModal.svelte";
   import Label from "./Label.svelte";
@@ -79,7 +79,7 @@
     on:click={dateClick}
     type="button"
     tabindex={editable ? 0 : -1}
-    use:barFocusIndicator
+    use:focusIndicator
   >
     {value.toLocaleDateString()}
   </button>
@@ -89,7 +89,7 @@
       on:click={timeClick}
       type="button"
       tabindex={editable ? 0 : -1}
-      use:barFocusIndicator
+      use:focusIndicator
     >
       {value.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"})}
     </button>

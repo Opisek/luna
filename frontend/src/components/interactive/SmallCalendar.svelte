@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { barFocusIndicator } from "../../lib/client/decoration";
+  import { focusIndicator } from "../../lib/client/decoration";
 
   export let month: number;
   export let year: number;
@@ -78,7 +78,7 @@
       class:otherMonth={day.getMonth() != month}
       type="button"
       on:click={() => (onDayClick(day))}
-      use:barFocusIndicator
+      use:focusIndicator
     >
       {day.getDate()}
     </button>

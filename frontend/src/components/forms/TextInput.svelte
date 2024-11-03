@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { barFocusIndicator } from "../../lib/client/decoration";
+  import { focusIndicator } from "../../lib/client/decoration";
   import VisibilityToggle from "../interactive/VisibilityToggle.svelte";
   import Label from "./Label.svelte";
 
@@ -80,7 +80,7 @@
   class="wrapper"
   class:editable={editable} 
   tabindex="-1"
-  use:barFocusIndicator
+  use:focusIndicator
 >
   {#if multiline}
       <textarea

@@ -3,7 +3,7 @@
   import Label from "./Label.svelte";
   import { calculateOptimalPopupPosition } from "$lib/common/calculations";
   import { browser } from "$app/environment";
-  import { addRipple, barFocusIndicator } from "../../lib/client/decoration";
+  import { addRipple, focusIndicator } from "../../lib/client/decoration";
 
   export let value: string;
   export let placeholder: string;
@@ -138,7 +138,7 @@
     class:editable={editable}
     on:click={selectClick}
     type="button"
-    use:barFocusIndicator={"option"}
+    use:focusIndicator={{ type: "bar", ignoreClass: "option" }}
   >
     {#if selectedOption !== null}
       {selectedOption.name}

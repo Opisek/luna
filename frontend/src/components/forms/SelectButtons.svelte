@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { addRipple, barFocusIndicator } from "$lib/client/decoration";
+  import { addRipple, focusIndicator } from "$lib/client/decoration";
   import Label from "./Label.svelte";
 
   export let value: string;
@@ -76,7 +76,7 @@
         class:last={i === options.length - 1}
         on:click={() => {value = option.value}}
         on:mousedown={addRipple}
-        use:barFocusIndicator
+        use:focusIndicator
       >
         {option.name}
       </button>

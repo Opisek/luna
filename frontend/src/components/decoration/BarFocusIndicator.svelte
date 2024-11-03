@@ -7,7 +7,7 @@
   @import "../../styles/dimensions.scss";
 
   div {
-    background-color: var(--barFocusIndicatorColor, $barFocusIndicatorColor);
+    background-color: var(--barFcusIndicatorColor, $barFocusIndicatorColor);
     height: 100%;
     width: $borderActiveWidth;
     position: absolute;

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { addRipple, barFocusIndicator } from "$lib/client/decoration";
+  import { addRipple, focusIndicator } from "$lib/client/decoration";
   import { CheckIcon } from "lucide-svelte";
 
   export let value: boolean;
@@ -70,7 +70,7 @@
   class:check={value}
   class:disabled={!enabled}
   on:click={toggle}
-  use:barFocusIndicator
+  use:focusIndicator
 >
   {#if value}
     <CheckIcon size={16}/>

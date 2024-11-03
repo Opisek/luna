@@ -3,7 +3,7 @@
   import { getMonthName } from "../../lib/common/humanization";
   import IconButton from "../interactive/IconButton.svelte";
   import Popup from "./Popup.svelte";
-  import { barFocusIndicator } from "../../lib/client/decoration";
+  import { focusIndicator } from "../../lib/client/decoration";
 
   let popupVisible: boolean = false;
 
@@ -142,7 +142,7 @@
         class:click={clickedMonth === i}
         type="button"
         on:click={(e) => clickMonth(e, i)}
-        use:barFocusIndicator
+        use:focusIndicator
       >
         {getMonthName(i).substring(0, 3)}
       </button>
@@ -156,7 +156,7 @@
         class:click={clickedYear === i}
         type="button"
         on:click={(e) => clickYear(e, i)}
-        use:barFocusIndicator
+        use:focusIndicator
       >
         {decadeStart + i}
       </button>
