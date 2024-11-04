@@ -19,6 +19,7 @@
 
 
   let selectWrapper: HTMLElement;
+  let optionsWrapper: HTMLElement;
   function selectClick() {
     if (!active) {
       const res = calculateOptimalPopupPosition(selectWrapper)
@@ -30,6 +31,9 @@
       window.removeEventListener("click", clickOutside);
     }
     active = !active;
+    setTimeout(() => {
+      (optionsWrapper.getElementsByClassName("selected")[0] as HTMLElement).focus();
+    }, 0);
   }
 
   function optionClick(option: Option) {
@@ -156,12 +160,14 @@
     class="options"
     class:hidden={!active}
     style="top: {optionsAbove ? -100 * options.length : 100}%"
+    bind:this={optionsWrapper}
   >
     {#each options as option}
       <button
         class="option" 
         on:click={() => optionClick(option)}
         type="button"
+        class:selected={option.value === value}
       >
         {option.name}
       </button>
