@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { focusIndicator } from "$lib/client/decoration";
   import { getMonthName } from "../../lib/common/humanization";
   import MonthPopup from "../popups/MonthPopup.svelte";
   import IconButton from "./IconButton.svelte";
@@ -40,6 +41,7 @@
   button {
     all: unset;
     cursor: pointer;
+    position: relative;
   }
 </style>
 
@@ -50,7 +52,7 @@
   <IconButton click={nextMonth}>
     <RightIcon/>
   </IconButton>
-  <button on:click={showPopup} type="button">
+  <button on:click={showPopup} type="button" use:focusIndicator={{ type: "underline", ignoreParent: true }}>
     {`${getMonthName(month)} ${year}`}
   </button>
   <MonthPopup bind:show={showPopup} bind:year={year} bind:month={month}/>

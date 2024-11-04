@@ -76,8 +76,8 @@
 
   div.topRow {
     display: flex;
-    justify-content: center;
-    align-items: space-between;
+    justify-content: space-between;
+    align-items: center;
   }
 
   button.display {
@@ -85,9 +85,9 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 100%;
     cursor: pointer;
     user-select: none;
+    position: relative;
   } 
 
   button.button {
@@ -119,17 +119,18 @@
     <IconButton click={prev}>
       <ChevronLeft/>
     </IconButton>
-      <button
-        class="display"
-        type="button"
-        on:click={() => {selectingMonth = !selectingMonth}}
-      >
-        {#if selectingMonth}
-          {selectedYear}
-        {:else}
-          {decadeStart} - {decadeStart + 9}
-        {/if}
-      </button>
+    <button
+      class="display"
+      type="button"
+      on:click={() => {selectingMonth = !selectingMonth}}
+      use:focusIndicator={{ type: "underline" }}
+    >
+      {#if selectingMonth}
+        {selectedYear}
+      {:else}
+        {decadeStart} - {decadeStart + 9}
+      {/if}
+    </button>
     <IconButton click={next}>
       <ChevronRight/>
     </IconButton>

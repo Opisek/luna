@@ -1,4 +1,5 @@
-import BarFocusIndicator from "../../components/decoration/BarFocusIndicator.svelte";
+import BarFocusIndicator from "../../components/decoration/focus/BarFocusIndicator.svelte";
+import UnderlineFocusIndicator from "../../components/decoration/focus/UnderlineFocusIndicator.svelte";
 import Ripple from "../../components/decoration/Ripple.svelte"
 
 export const addRipple = (e: MouseEvent, addToParent: boolean = true) => {
@@ -24,15 +25,24 @@ export const addRipple = (e: MouseEvent, addToParent: boolean = true) => {
 //}
 
 export const focusIndicator = (node: HTMLElement, settings: FocusIndicatorSettings = { type: "bar" }) =>{
-  const mouseDown = (e: MouseEvent) => {
+  const mouseDown = () => {
     node.classList.add("clicked");
   }
 
   const focusOut = (e: FocusEvent) => {
-    if (!settings.ignoreClass || !(e.relatedTarget as HTMLElement).classList.contains(settings.ignoreClass)) node.classList.remove("clicked");
+    if (settings.ignoreParent && e.relatedTarget && node.parentElement?.contains(e.relatedTarget as HTMLElement)) return;
+    node.classList.remove("clicked");
   }
 
-  new BarFocusIndicator({ target: node });
+  switch (settings.type) {
+    case "bar":
+      new BarFocusIndicator({ target: node });
+      break;
+    case "underline":
+      new UnderlineFocusIndicator({ target: node });
+      break;
+  }
+
 
   node.addEventListener("mousedown", mouseDown);
   node.addEventListener("focusout", focusOut);

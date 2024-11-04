@@ -5,5 +5,5 @@ type Option = {
 
 type FocusIndicatorSettings = {
   type: "bar" | "underline";
-  ignoreClass?: string;
+  ignoreParent?: boolean;
 }

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { focusIndicator } from "$lib/client/decoration";
   import { calendars, faultySources, fetchSourceCalendars } from "$lib/client/repository";
   import { collapsedSources, setSourceCollapse } from "../../lib/client/localStorage";
   import CollapseToggle from "../interactive/CollapseToggle.svelte";
@@ -30,23 +31,29 @@
   @import "../../styles/dimensions.scss";
   @import "../../styles/colors.scss";
 
-  button.row {
-    all: unset;
+  div {
     color: $foregroundFaded;
     height: 1.25em;
     display: flex;
     justify-content: space-between;
     align-items: center;
     align-content: center;
-    cursor: pointer;
   }
 
-  span.buttons {
+  span {
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
     gap: $gapTiny;
     align-items: center;
+  }
+
+  button {
+    all: unset;
+    cursor: pointer;
+    display: inline;
+    width: max-content;
+    position: relative;
   }
 
   //span :global(button) {
@@ -59,9 +66,11 @@
   //}
 </style>
 
-<button on:click={showModal} class="row">
+<div>
+  <button on:click={showModal} use:focusIndicator={{ type: "underline", ignoreParent: true }}>
     {source.name}
-  <span class="buttons">
+  </button>
+  <span>
     {#if hasCals}
       <CollapseToggle bind:collapsed={source.collapsed}/>
     {/if}
@@ -76,9 +85,9 @@
     <CogIcon size={16}/>
   </IconButton>
   -->
-</button>
 
-<SourceModal
-  bind:showModal={showModal}
-  source={source}
-/>
+  <SourceModal
+    bind:showModal={showModal}
+    source={source}
+  />
+</div>

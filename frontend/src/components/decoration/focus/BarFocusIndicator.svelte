@@ -2,14 +2,14 @@
 </script>
 
 <style lang="scss">
-  @import "../../styles/animations.scss";
-  @import "../../styles/colors.scss";
-  @import "../../styles/dimensions.scss";
+  @import "../../../styles/animations.scss";
+  @import "../../../styles/colors.scss";
+  @import "../../../styles/dimensions.scss";
 
   div {
-    background-color: var(--barFcusIndicatorColor, $barFocusIndicatorColor);
+    background-color: var(--barFocusIndicatorColor, $barFocusIndicatorColor);
     height: 100%;
-    width: $borderActiveWidth;
+    width: $barFocusIndicatorWidth;
     position: absolute;
     left: 0;
     top: 0;
