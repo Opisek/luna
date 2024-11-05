@@ -18,6 +18,7 @@
     display: flex;
     justify-content: center;
     padding: $paddingTiny;
+    outline: 0;
   }
   div.error {
     color: $backgroundFailure;
@@ -25,9 +26,11 @@
 
 </style>
 
+<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 <div
   class:error={error}
   role="tooltip"
+  tabindex="0"
 >
   {#if error}
     <CircleAlert size={16}/>

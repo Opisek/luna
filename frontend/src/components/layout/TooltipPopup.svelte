@@ -74,7 +74,8 @@
     box-shadow: $boxShadow;
     white-space: nowrap;
   }
-  :global(*:hover) > span.popup > span.contents {
+  :global(*:hover) > span.popup > span.contents,
+  :global(*:focus-within) > span.popup > span.contents {
     opacity: 1;
   }
 </style>
