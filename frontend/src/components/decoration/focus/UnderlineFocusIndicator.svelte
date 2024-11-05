@@ -11,6 +11,7 @@
     height: $underlineWidth;
     width: 100%;
     bottom: -$underlineWidth;
+    bottom: 0;
     transition: padding $animationSpeedFast linear;
     padding: 0 50%;
   }
