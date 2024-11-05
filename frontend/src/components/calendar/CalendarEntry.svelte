@@ -26,7 +26,7 @@
   div.entry {
     display: flex;
     flex-direction: row;
-    gap: $gapSmall;
+    gap: $gapTiny;
     width: 100%;
     align-items: center;
     justify-content: space-between;
@@ -35,9 +35,16 @@
   span {
     display: flex;
     flex-direction: row;
-    gap: $gapSmall;
     align-items: center;
-    flex-shrink: 1;
+  }
+
+  span.name {
+    gap: $gapSmall;
+    min-width: 0;
+  }
+
+  span.buttons {
+    gap: $gapTiny;
   }
 
   button {
@@ -46,12 +53,15 @@
     display: inline;
     width: max-content;
     position: relative;
+    text-wrap: nowrap;
     text-overflow: ellipsis;
+    min-width: 0;
+    overflow: hidden;
   }
 </style>
 
 <div class="entry">
-  <span>
+  <span class="name">
     <ColorCircle
       color={GetCalendarColor(calendar)}
       size="small"
@@ -60,7 +70,7 @@
       {calendar.name}
     </button>
   </span>
-  <span>
+  <span class="buttons">
     <VisibilityToggle bind:visible={calendar.visible}/>
     {#if hasErrored}
       <Tooltip msg="An error occurred trying to retrieve events from this calendar." error={true}/>
