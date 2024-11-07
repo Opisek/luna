@@ -12,6 +12,8 @@ const invalidResponse = (message: string): Validity => {
   }
 }
 
+export const alwaysValid: InputValidation = (input) => validResponse;
+
 export const isValidUsername: InputValidation = (username) => {
   if (username.length < 3)
     return invalidResponse("Username must be at least 3 characters long.");

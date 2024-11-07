@@ -1,5 +1,6 @@
 <script lang="ts">
   import { focusIndicator } from "../../lib/client/decoration";
+  import { alwaysValid } from "../../lib/client/validation";
   import VisibilityToggle from "../interactive/VisibilityToggle.svelte";
   import Label from "./Label.svelte";
 
@@ -19,6 +20,8 @@
   export let onChange: (value: string) => any = () => {};
   export let onInput: (value: string) => any = () => {};
   export let onFocus: () => any = () => {};
+
+  export let validation: InputValidation = alwaysValid;
 
   // TODO: automatic height 
   // let textArea: HTMLTextAreaElement;
