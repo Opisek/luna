@@ -4,6 +4,7 @@
   import SelectButtons from "../forms/SelectButtons.svelte";
   import { queueNotification } from "$lib/client/notifications";
   import { createSource, deleteSource, editSource } from "$lib/client/repository";
+  import { isValidUrl } from "../../lib/client/validation";
 
   export let source: SourceModel;
   let sourceDetailed: SourceModel;
@@ -83,10 +84,10 @@
       }
     ]}/>
     {#if sourceDetailed.type === "caldav"}
-      <TextInput bind:value={sourceDetailed.settings.url} name="caldav_url" placeholder="CalDav URL" editable={editMode} />
+      <TextInput bind:value={sourceDetailed.settings.url} name="caldav_url" placeholder="CalDav URL" editable={editMode} validation={isValidUrl} />
     {/if}
     {#if sourceDetailed.type === "ical"}
-      <TextInput bind:value={sourceDetailed.settings.url} name="ical_url" placeholder="iCal URL" editable={editMode} />
+      <TextInput bind:value={sourceDetailed.settings.url} name="ical_url" placeholder="iCal URL" editable={editMode} validation={isValidUrl} />
     {/if}
     
     <SelectButtons bind:value={sourceDetailed.auth_type} name="auth_type" placeholder={"Authentication Type"} editable={editMode} options={[

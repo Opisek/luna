@@ -6,12 +6,15 @@
   import { queueNotification } from '../../lib/client/notifications';
   import { page } from '$app/stores';
   import CheckboxInput from '../../components/forms/CheckboxInput.svelte';
+  import { isValidEmail, isValidPassword, isValidRepeatPassword, isValidUsername } from '../../lib/client/validation';
 
   export let form: ActionData;
 
   $: if (form?.error) queueNotification("failure", form.error);
 
   const redirect = $page.url.searchParams.get('redirect') || "/";
+
+  let password: string = "";
 </script>
 
 <style lang="scss">
@@ -26,10 +29,10 @@
 
 <div>
   <Form title="Register">
-    <TextInput name="username" placeholder="Username"/>
-    <TextInput name="email" placeholder="Email"/>
-    <TextInput name="password" placeholder="Password" password={true}/>
-    <TextInput name="passwordRepeat" placeholder="Repeat Password" password={true}/>
+    <TextInput name="username" placeholder="Username" validation={isValidUsername}/>
+    <TextInput name="email" placeholder="Email" validation={isValidEmail}/>
+    <TextInput name="password" placeholder="Password" password={true} validation={isValidPassword} bind:value={password}/>
+    <TextInput name="passwordRepeat" placeholder="Repeat Password" password={true} validation={isValidRepeatPassword(password)}/>
     <CheckboxInput name="remember" description="Remember me"/>
     <Link href="/login?redirect={encodeURIComponent(redirect)}">Already got an account?</Link>
   </Form>
