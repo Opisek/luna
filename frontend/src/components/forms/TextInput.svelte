@@ -21,6 +21,22 @@
   export let onInput: (value: string) => any = () => {};
   export let onFocus: () => any = () => {};
 
+  let errored = false;
+  function internalOnChange(value: string) {
+    if (value === "") {
+      errored = false;
+    } else {
+      const res = validation(value);
+      errored = !res.valid;
+      console.log(errored);
+    }
+    onChange(value);
+  }
+
+  $: ((_) => {
+    internalOnChange(value);
+  })(validation);
+
   export let validation: InputValidation = alwaysValid;
 
   // TODO: automatic height 
@@ -84,13 +100,14 @@
   class:editable={editable} 
   tabindex="-1"
   use:focusIndicator
+  class:error={errored}
 >
   {#if multiline}
       <textarea
         bind:value={value}
-        on:change={() => onChange(value)}
+        on:change={() => internalOnChange(value)}
         on:input={() => onInput(value)}
-        on:focusout={() => onChange(value)}
+        on:focusout={() => internalOnChange(value)}
         on:focusin={() => onFocus()}
         name={name}
         placeholder={placeholder}
@@ -101,9 +118,9 @@
   {:else if password && !passwordVisible}
     <input
       bind:value={value}
-      on:change={() => onChange(value)}
+      on:change={() => internalOnChange(value)}
       on:input={() => onInput(value)}
-      on:focusout={() => onChange(value)}
+      on:focusout={() => internalOnChange(value)}
       on:focusin={() => onFocus()}
       name={name}
       placeholder={placeholder}
@@ -115,9 +132,9 @@
   {:else}
     <input
       bind:value={value}
-      on:change={() => onChange(value)}
+      on:change={() => internalOnChange(value)}
       on:input={() => onInput(value)}
-      on:focusout={() => onChange(value)}
+      on:focusout={() => internalOnChange(value)}
       on:focusin={() => onFocus()}
       name={name}
       placeholder={placeholder}

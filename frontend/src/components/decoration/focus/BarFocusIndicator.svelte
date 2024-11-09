@@ -17,8 +17,13 @@
     transition: transform $animationSpeedFast linear;
   }
 
-  :global(*:focus-within:not(.clicked)) > div {
+  :global(*:focus-within:not(.clicked)) > div, 
+  :global(*.error) > div {
     transform: translateX(0);
+  }
+
+  :global(*.error:not(:focus-within:not(.clicked))) > div {
+    background-color: $backgroundFailure;
   }
 </style>
 
