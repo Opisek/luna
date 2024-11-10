@@ -28,14 +28,14 @@
     } else {
       const res = validation(value);
       errored = !res.valid;
-      console.log(errored);
     }
     onChange(value);
   }
 
-  $: ((_) => {
-    internalOnChange(value);
-  })(validation);
+  // TODO: svelte reactivity triggers too often here!
+  //$: ((_) => {
+  //  internalOnChange(value);
+  //})(validation);
 
   export let validation: InputValidation = alwaysValid;
 
