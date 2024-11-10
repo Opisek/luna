@@ -7,10 +7,22 @@
   import { page } from '$app/stores';
   import CheckboxInput from '../../components/forms/CheckboxInput.svelte';
   import { isValidPassword, isValidUsername } from '../../lib/client/validation';
+  import { beforeNavigate } from '$app/navigation';
 
   export let form: ActionData;
 
-  $: if (form?.error) queueNotification("failure", form.error);
+  // TODO: easier way to prevent double notifications?
+  let alreadyShownError = false;
+  $: ((form) => {
+    if (form?.error && !alreadyShownError) {
+      alreadyShownError = true;
+      queueNotification("failure", form.error);
+    }
+  })(form)
+  beforeNavigate(() => {
+    form = null;
+    alreadyShownError = false;
+  });
 
   const redirect = $page.url.searchParams.get('redirect') || "/";
 </script>
