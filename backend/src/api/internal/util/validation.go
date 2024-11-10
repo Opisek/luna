@@ -33,13 +33,6 @@ func IsValidPassword(password string) error {
 	return nil
 }
 
-func IsValidRepeatPassword(password string, repeatPassword string) error {
-	if password != repeatPassword {
-		return errors.New("passwords do not match")
-	}
-	return nil
-}
-
 func IsValidUrl(url string) error {
 	if !strings.HasPrefix(url, "http://") && !strings.HasPrefix(url, "https://") {
 		return errors.New("url must start with \"http://\" or \"https://\"")

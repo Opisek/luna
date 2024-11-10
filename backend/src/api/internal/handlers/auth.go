@@ -25,6 +25,12 @@ func Login(c *gin.Context) {
 	}
 	topErr := fmt.Errorf("failed to log in with credentials %v, %v", credentials.Username, credentials.Password)
 
+	if util.IsValidUsername(credentials.Username) != nil || util.IsValidPassword(credentials.Password) != nil {
+		apiConfig.Logger.Warnf("%v: user input failed validation", topErr)
+		util.Error(c, util.ErrorPayload)
+		return
+	}
+
 	// Check if the user exists
 	userId, err := tx.Queries().GetUserIdFromUsername(credentials.Username)
 	if err != nil {
@@ -101,6 +107,12 @@ func Register(c *gin.Context) {
 		return
 	}
 	topErr := fmt.Errorf("failed to register user %v", payload.Username)
+
+	if util.IsValidUsername(payload.Username) != nil || util.IsValidPassword(payload.Password) != nil || util.IsValidEmail(payload.Email) != nil {
+		apiConfig.Logger.Warnf("%v: user input failed validation", topErr)
+		util.Error(c, util.ErrorPayload)
+		return
+	}
 
 	usersExist, err := tx.Queries().AnyUsersExist()
 	if err != nil {
