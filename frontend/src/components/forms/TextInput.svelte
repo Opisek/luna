@@ -23,12 +23,16 @@
   export let onInput: (value: string) => any = () => {};
   export let onFocus: () => any = () => {};
 
+  let lastValidationFunction = alwaysValid;
   export let validation: InputValidation = alwaysValid;
   export let validity = validation(value);
 
   // If the value is set programmatically, update the validity.
   // For example when opening a new form
+  let lastValue: string | null = null;
   $: ((value) => {
+    if (value === lastValue) return; // prevents some infinite loop that i don't understand, might be a svelte bug
+    lastValue = value;
     if (wrapper != null && (document.activeElement === wrapper || wrapper.contains(document.activeElement))) return;
     validity = value ? validation(value) : valid;
   })(value);
@@ -52,10 +56,13 @@
     onInput(value);
   }
 
-  // TODO: svelte reactivity triggers too often here!
-  //$: ((_) => {
-  //  internalOnChange(value);
-  //})(validation);
+  // If the validation function changes, like for the repeat password field,
+  // rerun the validation function.
+  $: ((_) => {
+    if (validation === lastValidationFunction) return;
+    lastValidationFunction = validation;
+    internalOnChange();
+  })(validation);
 
   // TODO: automatic height 
   // let textArea: HTMLTextAreaElement;
