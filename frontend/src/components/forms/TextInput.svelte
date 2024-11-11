@@ -108,10 +108,31 @@
     right: $gapSmaller;
     color: $foregroundFaded;
   }
+
+  span.label {
+    margin-bottom: -2 * $gapSmall;
+    padding: 0 calc($gapSmall * ($fontSize / $fontSizeSmall));
+    display: flex;
+    justify-content: space-between;
+  }
+
+  span.errorMessage {
+    color: $backgroundFailure;
+    font-size: $fontSizeSmall;
+  }
 </style>
 
-{#if label}
-  <Label name={name}>{placeholder}</Label>
+{#if label || (!validity.valid && !empty)}
+<span class="label">
+  {#if label}
+    <Label name={name} ownPositioning={false}>{placeholder}</Label>
+  {/if}
+  {#if !validity.valid && !empty}
+    <span class="errorMessage">
+      {validity.message}
+    </span>
+  {/if}
+</span>
 {/if}
 <div
   class="wrapper"
