@@ -24,7 +24,7 @@ export const addRipple = (e: MouseEvent, addToParent: boolean = true) => {
 //  return;
 //}
 
-export const focusIndicator = (node: HTMLElement, settings: FocusIndicatorSettings = { type: "bar" }) =>{
+export const focusIndicator = (node: HTMLElement, settings: FocusIndicatorSettings = { type: "bar" }) => {
   const mouseDown = () => {
     node.classList.add("clicked");
   }

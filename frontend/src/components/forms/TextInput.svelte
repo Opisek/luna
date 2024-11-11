@@ -1,6 +1,6 @@
 <script lang="ts">
   import { focusIndicator } from "../../lib/client/decoration";
-  import { alwaysValid } from "../../lib/client/validation";
+  import { alwaysValid, valid } from "../../lib/client/validation";
   import VisibilityToggle from "../interactive/VisibilityToggle.svelte";
   import Label from "./Label.svelte";
 
@@ -17,6 +17,8 @@
 
   export let label: boolean = true;
 
+  let wrapper: HTMLDivElement | null = null;
+
   export let onChange: (value: string) => any = () => {};
   export let onInput: (value: string) => any = () => {};
   export let onFocus: () => any = () => {};
@@ -24,15 +26,28 @@
   export let validation: InputValidation = alwaysValid;
   export let validity = validation(value);
 
-  function internalOnChange(value: string) {
+  // If the value is set programmatically, update the validity.
+  // For example when opening a new form
+  $: ((value) => {
+    if (wrapper != null && (document.activeElement === wrapper || wrapper.contains(document.activeElement))) return;
+    validity = value ? validation(value) : valid;
+  })(value);
+
+  // This determines whether input has errored due to empty value.
+  // This is still considered an error, but we don't want to display it.
+  let empty = value === "";
+
+  // Once the user has finished typing, update the validity.
+  function internalOnChange() {
     validity = validation(value);
+    empty = value === "";
     onChange(value);
   }
 
-  function internalOnInput(value: string) {
+  // Immediately tell the user if the input becomes valid,
+  // but not if it becomes invalid, as they are not done typing yet.
+  function internalOnInput() {
     const res = validation(value);
-    // immediately tell the user if the input becomes valid,
-    // but not if it becomes invalid, as they are not done typing yet
     if (res.valid) validity = res;
     onInput(value);
   }
@@ -103,15 +118,16 @@
   class:editable={editable} 
   tabindex="-1"
   use:focusIndicator
-  class:error={!validity.valid && value !== ""}
+  class:error={!validity.valid && !empty}
+  bind:this={wrapper}
 >
   {#if multiline}
       <textarea
         bind:value={value}
-        on:change={() => internalOnChange(value)}
-        on:input={() => internalOnInput(value)}
-        on:focusout={() => internalOnChange(value)}
-        on:focusin={() => onFocus()}
+        on:change={internalOnChange}
+        on:input={internalOnInput}
+        on:focusout={internalOnChange}
+        on:focusin={onFocus}
         name={name}
         placeholder={placeholder}
         disabled={!editable}
@@ -121,10 +137,10 @@
   {:else if password && !passwordVisible}
     <input
       bind:value={value}
-      on:change={() => internalOnChange(value)}
-      on:input={() => internalOnInput(value)}
-      on:focusout={() => internalOnChange(value)}
-      on:focusin={() => onFocus()}
+      on:change={internalOnChange}
+      on:input={internalOnInput}
+      on:focusout={internalOnChange}
+      on:focusin={onFocus}
       name={name}
       placeholder={placeholder}
       disabled={!editable}
@@ -135,10 +151,10 @@
   {:else}
     <input
       bind:value={value}
-      on:change={() => internalOnChange(value)}
-      on:input={() => internalOnInput(value)}
-      on:focusout={() => internalOnChange(value)}
-      on:focusin={() => onFocus()}
+      on:change={internalOnChange}
+      on:input={internalOnInput}
+      on:focusout={internalOnChange}
+      on:focusin={onFocus}
       name={name}
       placeholder={placeholder}
       disabled={!editable}
