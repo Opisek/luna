@@ -71,8 +71,7 @@
     />
     <TextInput
       name="passwordRepeat"
-      placeholder="Repeat
-      Password"
+      placeholder="Repeat Password"
       password={true}
       validation={isValidRepeatPassword(password)}
       bind:validity={passwordRepeatValidity}

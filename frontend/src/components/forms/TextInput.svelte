@@ -122,17 +122,17 @@
   }
 </style>
 
-{#if label || (!validity.valid && !empty)}
-<span class="label">
-  {#if label}
-    <Label name={name} ownPositioning={false}>{placeholder}</Label>
-  {/if}
-  {#if !validity.valid && !empty}
-    <span class="errorMessage">
-      {validity.message}
-    </span>
-  {/if}
-</span>
+{#if label || (!validity?.valid && !empty)}
+  <span class="label">
+    {#if label}
+      <Label name={name} ownPositioning={false}>{placeholder}</Label>
+    {/if}
+    {#if !validity?.valid && !empty}
+      <span class="errorMessage">
+        {validity.message}
+      </span>
+    {/if}
+  </span>
 {/if}
 <div
   class="wrapper"
