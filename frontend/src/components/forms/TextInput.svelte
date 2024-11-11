@@ -23,13 +23,13 @@
   export let onInput: (value: string) => any = () => {};
   export let onFocus: () => any = () => {};
 
-  let lastValidationFunction = alwaysValid;
+  let lastValidationFunction = alwaysValid; // TODO: check if still needed in svelte 5
   export let validation: InputValidation = alwaysValid;
   export let validity = validation(value);
 
   // If the value is set programmatically, update the validity.
   // For example when opening a new form
-  let lastValue: string | null = null;
+  let lastValue: string | null = null; // TODO: check if still needed in svelte 5
   $: ((value) => {
     if (value === lastValue) return; // prevents some infinite loop that i don't understand, might be a svelte bug
     lastValue = value;
