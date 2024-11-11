@@ -29,6 +29,14 @@
     onChange(value);
   }
 
+  function internalOnInput(value: string) {
+    const res = validation(value);
+    // immediately tell the user if the input becomes valid,
+    // but not if it becomes invalid, as they are not done typing yet
+    if (res.valid) validity = res;
+    onInput(value);
+  }
+
   // TODO: svelte reactivity triggers too often here!
   //$: ((_) => {
   //  internalOnChange(value);
@@ -101,7 +109,7 @@
       <textarea
         bind:value={value}
         on:change={() => internalOnChange(value)}
-        on:input={() => onInput(value)}
+        on:input={() => internalOnInput(value)}
         on:focusout={() => internalOnChange(value)}
         on:focusin={() => onFocus()}
         name={name}
@@ -114,7 +122,7 @@
     <input
       bind:value={value}
       on:change={() => internalOnChange(value)}
-      on:input={() => onInput(value)}
+      on:input={() => internalOnInput(value)}
       on:focusout={() => internalOnChange(value)}
       on:focusin={() => onFocus()}
       name={name}
@@ -128,7 +136,7 @@
     <input
       bind:value={value}
       on:change={() => internalOnChange(value)}
-      on:input={() => onInput(value)}
+      on:input={() => internalOnInput(value)}
       on:focusout={() => internalOnChange(value)}
       on:focusin={() => onFocus()}
       name={name}
