@@ -27,6 +27,14 @@
   const redirect = $page.url.searchParams.get('redirect') || "/";
 
   let password: string = "";
+
+  let usernameValidity: Validity;
+  let emailValidity: Validity;
+  let passwordValidity: Validity;
+  let passwordRepeatValidity: Validity;
+
+  let canSubmit: boolean;
+  $: canSubmit = usernameValidity?.valid && emailValidity?.valid && passwordValidity?.valid && passwordRepeatValidity?.valid;
 </script>
 
 <style lang="scss">
@@ -40,12 +48,39 @@
 </style>
 
 <div>
-  <Form title="Register">
-    <TextInput name="username" placeholder="Username" validation={isValidUsername}/>
-    <TextInput name="email" placeholder="Email" validation={isValidEmail}/>
-    <TextInput name="password" placeholder="Password" password={true} validation={isValidPassword} bind:value={password}/>
-    <TextInput name="passwordRepeat" placeholder="Repeat Password" password={true} validation={isValidRepeatPassword(password)}/>
-    <CheckboxInput name="remember" description="Remember me"/>
+  <Form title="Register" submittable={canSubmit}>
+    <TextInput
+      name="username"
+      placeholder="Username"
+      validation={isValidUsername}
+      bind:validity={usernameValidity}
+    />
+    <TextInput
+      name="email"
+      placeholder="Email"
+      validation={isValidEmail}
+      bind:validity={emailValidity}
+    />
+    <TextInput
+      name="password"
+      placeholder="Password"
+      password={true}
+      validation={isValidPassword}
+      bind:value={password}
+      bind:validity={passwordValidity}
+    />
+    <TextInput
+      name="passwordRepeat"
+      placeholder="Repeat
+      Password"
+      password={true}
+      validation={isValidRepeatPassword(password)}
+      bind:validity={passwordRepeatValidity}
+    />
+    <CheckboxInput
+      name="remember"
+      description="Remember me"
+    />
     <Link href="/login?redirect={encodeURIComponent(redirect)}">Already got an account?</Link>
   </Form>
 </div>

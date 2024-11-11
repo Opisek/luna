@@ -21,14 +21,11 @@
   export let onInput: (value: string) => any = () => {};
   export let onFocus: () => any = () => {};
 
-  let errored = false;
+  export let validation: InputValidation = alwaysValid;
+  export let validity = validation(value);
+
   function internalOnChange(value: string) {
-    if (value === "") {
-      errored = false;
-    } else {
-      const res = validation(value);
-      errored = !res.valid;
-    }
+    validity = validation(value);
     onChange(value);
   }
 
@@ -36,8 +33,6 @@
   //$: ((_) => {
   //  internalOnChange(value);
   //})(validation);
-
-  export let validation: InputValidation = alwaysValid;
 
   // TODO: automatic height 
   // let textArea: HTMLTextAreaElement;
@@ -100,7 +95,7 @@
   class:editable={editable} 
   tabindex="-1"
   use:focusIndicator
-  class:error={errored}
+  class:error={!validity.valid && value !== ""}
 >
   {#if multiline}
       <textarea

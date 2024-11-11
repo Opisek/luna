@@ -5,10 +5,15 @@
   import Title from "../layout/Title.svelte";
 
   export let title: string;
+  export let submittable: boolean = true;
 
   let loading = false;
 
-  function onSubmit() {
+  function onSubmit(e: SubmitEvent) {
+    if (!submittable) {
+      e.preventDefault();
+      return; // TODO: add some user feedback when a form fails to submit
+    }
     loading = true;
   }
 </script>
@@ -37,7 +42,7 @@
   <Title>{title}</Title>
   <slot/>
   <Horizontal position="right">
-    <Button type="submit" color="success">
+    <Button type="submit" color="success" enabled={submittable}>
       {#if loading}
         <Loader/>
       {:else}

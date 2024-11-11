@@ -5,6 +5,14 @@
   import ConfirmationModal from "./ConfirmationModal.svelte";
   import Modal from "./Modal.svelte";
 
+  export let title: string;
+  export let deleteConfirmation: string;
+
+  export let editMode: boolean = false;
+  let creating = false;
+
+  export let submittable = true;
+
   export const showCreateModal = () => {
     creating = true;
     editMode = true;
@@ -18,11 +26,6 @@
   let showModalInternal: () => boolean;
   let hideModal: () => boolean;
 
-  export let title: string;
-  export let deleteConfirmation: string;
-
-  export let editMode: boolean = false;
-  let creating = false;
 
   let resetFocus: () => any;
 
@@ -69,7 +72,7 @@
   <slot/>
   <svelte:fragment slot="buttons">
     {#if editMode}
-      <Button onClick={saveEdit} color="success">
+      <Button onClick={saveEdit} color="success" enabled={submittable}>
         {#if awaitingEdit}
           <Loader/>
         {:else}

@@ -6,6 +6,7 @@
   // TODO: could not figure out enums for this, try again later
   export let color: string;
   export let type: "button" | "submit" = "button";
+  export let enabled: boolean = true;
 
   let button: HTMLButtonElement;
 </script>
@@ -33,12 +34,16 @@
     transition: background-color $cubic $animationSpeed;
   }
 
+  .disabled {
+    cursor: not-allowed;
+  }
+
   @each $key, $val in $specialColors {
     button.#{$key} {
       background-color: map-get($val, "background");
       color: map-get($val, "foreground");
     }
-    button.#{$key}:hover, button.#{$key}:focus {
+    button.#{$key}:hover:not(.disabled), button.#{$key}:focus:not(.disabled) {
       background-color: map-get($val, "backgroundActive");
     }
   }
@@ -52,6 +57,8 @@
   class:failure={color == "failure"}
   class:accent={color == "accent"}
   type={type}
+  disabled={!enabled}
+  class:disabled={!enabled}
 >
   <slot/>
 </button>

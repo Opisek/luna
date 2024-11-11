@@ -48,6 +48,15 @@
       else return `Could not edit source: ${res}`;
     }
   };
+
+  let caldavLinkValidity: Validity;
+  let icalLinkValidity: Validity;
+
+  let canSubmit: boolean;
+  $: canSubmit = sourceDetailed && sourceDetailed.name !== "" && sourceDetailed.type !== "" && (
+    (sourceDetailed.type === "caldav" && caldavLinkValidity?.valid) ||
+    (sourceDetailed.type === "ical" && icalLinkValidity?.valid)
+  );
 </script>
 
 <EditableModal
@@ -58,6 +67,7 @@
   bind:showModal={showModalInternal}
   onDelete={onDelete}
   onEdit={onEdit}
+  submittable={canSubmit}
 >
   {#if sourceDetailed}
     <TextInput bind:value={sourceDetailed.name} name="name" placeholder="Name" editable={editMode} />
@@ -84,10 +94,10 @@
       }
     ]}/>
     {#if sourceDetailed.type === "caldav"}
-      <TextInput bind:value={sourceDetailed.settings.url} name="caldav_url" placeholder="CalDav URL" editable={editMode} validation={isValidUrl} />
+      <TextInput bind:value={sourceDetailed.settings.url} name="caldav_url" placeholder="CalDav URL" editable={editMode} validation={isValidUrl} bind:validity={caldavLinkValidity} />
     {/if}
     {#if sourceDetailed.type === "ical"}
-      <TextInput bind:value={sourceDetailed.settings.url} name="ical_url" placeholder="iCal URL" editable={editMode} validation={isValidUrl} />
+      <TextInput bind:value={sourceDetailed.settings.url} name="ical_url" placeholder="iCal URL" editable={editMode} validation={isValidUrl} bind:validity={icalLinkValidity} />
     {/if}
     
     <SelectButtons bind:value={sourceDetailed.auth_type} name="auth_type" placeholder={"Authentication Type"} editable={editMode} options={[

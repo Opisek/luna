@@ -25,6 +25,13 @@
   });
 
   const redirect = $page.url.searchParams.get('redirect') || "/";
+
+  let usernameValidity: Validity;
+  let passwordValidity: Validity;
+
+  let canSubmit: boolean;
+  $: canSubmit = usernameValidity?.valid && passwordValidity?.valid;
+  $: console.log(canSubmit);
 </script>
 
 <style lang="scss">
@@ -38,10 +45,24 @@
 </style>
 
 <div>
-  <Form title="Login">
-    <TextInput name="username" placeholder="Username" validation={isValidUsername}/>
-    <TextInput name="password" placeholder="Password" password={true} validation={isValidPassword}/>
-    <CheckboxInput name="remember" description="Remember me"/>
+  <Form title="Login" submittable={canSubmit}>
+    <TextInput
+      name="username"
+      placeholder="Username"
+      validation={isValidUsername}
+      bind:validity={usernameValidity}
+    />
+    <TextInput
+      name="password"
+      placeholder="Password"
+      password={true}
+      validation={isValidPassword}
+      bind:validity={passwordValidity}
+    />
+    <CheckboxInput
+      name="remember"
+      description="Remember me"
+    />
     <Link href="/register?redirect={encodeURIComponent(redirect)}">No account yet?</Link>
     <Link href="/recover?redirect={encodeURIComponent(redirect)}">Forgot password?</Link>
   </Form>
