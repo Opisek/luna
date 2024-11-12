@@ -4,6 +4,7 @@
   import { browser } from "$app/environment";
 
   import { calculateOptimalPopupPosition } from "$lib/common/calculations";
+  import { NoOp } from "../../lib/client/placeholders";
 
   interface Props {
     visible?: boolean;
@@ -16,7 +17,7 @@
     visible = $bindable(false),
     children,
     showPopup = $bindable(),
-    hidePopup = $bindable()
+    hidePopup = $bindable(NoOp)
   }: Props = $props();
 
   let dialog: HTMLDialogElement;
@@ -35,7 +36,7 @@
     const maxY = rect.bottom;
 
     if (clickX < minX || clickX > maxX || clickY < minY || clickY > maxY) {
-      close();
+      hidePopup();
       event.stopPropagation();
     }
   }
