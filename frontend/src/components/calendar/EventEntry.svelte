@@ -1,34 +1,40 @@
 <script lang="ts">
-  import { GetEventColor, GetEventHoverColor, GetEventRGB, isDark } from "$lib/common/colors";
   import { TextIcon } from "lucide-svelte";
-  import { passIfEnter } from "../../lib/common/inputs";
 
-  export let visible: boolean = true;
+  import { GetEventColor, GetEventHoverColor, GetEventRGB, isDark } from "$lib/common/colors";
+  import { passIfEnter } from "$lib/common/inputs";
 
-  export let event: EventModel | null;
-  export let isFirstDay: boolean;
-  export let isLastDay: boolean;
-  export let date: Date;
-  let nextDate: Date;
-  $: if (date) {
-    nextDate = new Date(date);
-    nextDate.setDate(date.getDate() + 1);
+  interface Props {
+    visible?: boolean;
+    event: EventModel | null;
+    isFirstDay: boolean;
+    isLastDay: boolean;
+    date: Date;
+    currentlyHoveredEvent: EventModel | null;
+    currentlyClickedEvent: EventModel | null;
+    clickCallback: (event: EventModel) => void;
   }
 
-  let element: HTMLDivElement;
+  let {
+    visible = true,
+    event,
+    isFirstDay,
+    isLastDay,
+    date,
+    currentlyHoveredEvent = $bindable(),
+    currentlyClickedEvent = $bindable(),
+    clickCallback
+  }: Props = $props();
 
-  export let currentlyHoveredEvent: EventModel | null;
-  export let currentlyClickedEvent: EventModel | null;
-  export let clickCallback: (event: EventModel) => void;
+  let nextDate: Date = $derived(new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1))
+  let element: HTMLDivElement = $state(new HTMLDivElement()); // TODO: do we really need to make a new element when we just want to bind to something else?
 
-  let isEventStart, isEventEnd, isFirstDisplay, isLastDisplay: boolean;
-  $: isEventStart = event !== null && event.date.start.getTime() >= date.getTime();
-  $: isEventEnd = event !== null && nextDate.getTime() >= event.date.end.getTime();
-  $: isFirstDisplay = isFirstDay || isEventStart;
-  $: isLastDisplay = isLastDay || isEventEnd;
+  let isEventStart = $derived(event !== null && event.date.start.getTime() >= date.getTime());
+  let isEventEnd = $derived(event !== null && nextDate.getTime() >= event.date.end.getTime());
+  let isFirstDisplay = $derived(isFirstDay || isEventStart);
+  let isLastDisplay: boolean = $derived(isLastDay || isEventEnd);
 
-  let isBackgroundDark: boolean;
-  $: isBackgroundDark = event ? isDark(GetEventRGB(event)) : false;
+  let isBackgroundDark: boolean = $derived(event ? isDark(GetEventRGB(event)) : false);
 
   function mouseEnter() {
     if (event == null) return;
@@ -156,13 +162,13 @@
   class:hidden={!visible}
   class:foregroundBright={isBackgroundDark}
   class:foregroundDark={!isBackgroundDark}
-  on:mouseenter={mouseEnter}
-  on:mouseleave={mouseLeave}
-  on:mousedown={mouseDown}
-  on:mouseup={mouseUp}
-  on:focusin={mouseEnter}
-  on:focusout={mouseLeave}
-  on:keypress={keyPress}
+  onmouseenter={mouseEnter}
+  onmouseleave={mouseLeave}
+  onmousedown={mouseDown}
+  onmouseup={mouseUp}
+  onfocusin={mouseEnter}
+  onfocusout={mouseLeave}
+  onkeypress={keyPress}
   role="button"
   tabindex={isFirstDisplay ? 0 : -1}
   style="background-color:{currentlyHoveredEvent == event ? GetEventHoverColor(event) : GetEventColor(event)}"

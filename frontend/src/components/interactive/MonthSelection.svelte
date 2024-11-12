@@ -1,15 +1,22 @@
 <script lang="ts">
-  import { focusIndicator } from "$lib/client/decoration";
-  import { getMonthName } from "../../lib/common/humanization";
-  import MonthPopup from "../popups/MonthPopup.svelte";
-  import IconButton from "./IconButton.svelte";
   import LeftIcon from "lucide-svelte/icons/chevron-left";
   import RightIcon from "lucide-svelte/icons/chevron-right";
 
-  export let month: number;
-  export let year: number;
+  import IconButton from "./IconButton.svelte";
+  import MonthPopup from "../popups/MonthPopup.svelte";
 
-  let showPopup: () => any;
+  import { NoOp } from "$lib/client/placeholders";
+  import { focusIndicator } from "$lib/client/decoration";
+  import { getMonthName } from "$lib/common/humanization";
+
+  interface Props {
+    month: number;
+    year: number;
+  }
+
+  let { month = $bindable(), year = $bindable() }: Props = $props();
+
+  let showPopup: () => any = $state(NoOp);
 
   function previousMonth() {
     month--;
@@ -52,8 +59,8 @@
   <IconButton click={nextMonth}>
     <RightIcon/>
   </IconButton>
-  <button on:click={showPopup} type="button" use:focusIndicator={{ type: "underline", ignoreParent: true }}>
+  <button onclick={showPopup} type="button" use:focusIndicator={{ type: "underline", ignoreParent: true }}>
     {`${getMonthName(month)} ${year}`}
   </button>
-  <MonthPopup bind:show={showPopup} bind:year={year} bind:month={month}/>
+  <MonthPopup bind:showPopup bind:year={year} bind:month={month}/>
 </div>

@@ -1,25 +1,40 @@
 <script lang="ts">
   import { ChevronDown } from "lucide-svelte";
-  import Label from "./Label.svelte";
-  import { calculateOptimalPopupPosition } from "$lib/common/calculations";
+
   import { browser } from "$app/environment";
-  import { focusIndicator } from "../../lib/client/decoration";
 
-  export let value: string;
-  export let placeholder: string;
-  export let name: string;
+  import Label from "./Label.svelte";
 
-  export let editable: boolean = true;
-  let active = false;
-  let optionsAbove = false;
+  import { calculateOptimalPopupPosition } from "$lib/common/calculations";
+  import { focusIndicator } from "$lib/client/decoration";
 
-  export let options: Option[];
-  let selectedOption: Option | null = options.length > 0 ? options[1] : null;
-  $: if (selectedOption) value = selectedOption.value;
+  let active = $state(false);
+  let optionsAbove = $state(false);
 
+  interface Props {
+    value: string;
+    placeholder: string;
+    name: string;
+    editable?: boolean;
+    options: Option[];
+  }
 
-  let selectWrapper: HTMLElement;
-  let optionsWrapper: HTMLElement;
+  let {
+    value = $bindable(),
+    placeholder,
+    name,
+    editable = true,
+    options
+  }: Props = $props();
+
+  let selectedOption: Option | null = $state(options.length > 0 ? options[1] : null);
+  $effect(() => {
+    if (selectedOption) value = selectedOption.value;
+  });
+
+  let selectWrapper: HTMLElement = $state(new HTMLElement());
+  let optionsWrapper: HTMLElement = $state(new HTMLElement());
+
   function selectClick() {
     if (!active) {
       const res = calculateOptimalPopupPosition(selectWrapper)
@@ -140,7 +155,7 @@
     bind:this={selectWrapper}
     class="select"
     class:editable={editable}
-    on:click={selectClick}
+    onclick={selectClick}
     type="button"
     use:focusIndicator={{ type: "bar", ignoreParent: true }}
   >
@@ -165,7 +180,7 @@
     {#each options as option}
       <button
         class="option" 
-        on:click={() => optionClick(option)}
+        onclick={() => optionClick(option)}
         type="button"
         class:selected={option.value === value}
       >

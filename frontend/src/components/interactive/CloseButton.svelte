@@ -3,9 +3,15 @@
 
   import IconButton from "./IconButton.svelte";
 
-  export let onClick: () => void;
+  interface Props {
+    onClick: () => void;
+  }
+
+  let {
+    onClick = $bindable()
+  }: Props = $props();
 </script>
 
-<IconButton bind:click={onClick}>
+<IconButton click={onClick}>
   <X/>
 </IconButton>

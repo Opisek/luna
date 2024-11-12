@@ -1,6 +1,3 @@
-<script lang="ts">
-</script>
-
 <style lang="scss">
   @import "../../../styles/animations.scss";
   @import "../../../styles/colors.scss";

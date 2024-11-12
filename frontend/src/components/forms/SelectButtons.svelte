@@ -1,18 +1,29 @@
 <script lang="ts">
-  import { addRipple, focusIndicator } from "$lib/client/decoration";
   import Label from "./Label.svelte";
 
-  export let value: string;
-  export let name: string;
-  export let placeholder: string;
-  export let label: boolean = true;
+  import { addRipple, focusIndicator } from "$lib/client/decoration";
+  import { EmptyOption } from "../../lib/client/placeholders";
 
-  export let editable: boolean = true;
+  interface Props {
+    value: string;
+    name: string;
+    placeholder: string;
+    label?: boolean;
+    editable?: boolean;
+    options: Option[];
+  }
 
-  export let options: Option[];
+  let {
+    value = $bindable(),
+    name,
+    placeholder,
+    label = true,
+    editable = true,
+    options
+  }: Props = $props();
+
   // TODO: redo this
-  let selected: Option = options[0];
-  $: selected = options.filter(option => option.value === value)[0];
+  let selected: Option = $derived(options.filter(option => option.value === value)[0] || options[0] || EmptyOption);
 </script>
 
 <style lang="scss">
@@ -55,7 +66,6 @@
     border-bottom-right-radius: $borderRadius;
   }
 
-
   button.selected {
     background-color: $backgroundAccent;
     color: $foregroundAccent;
@@ -64,7 +74,7 @@
 </style>
 
 {#if label}
-<Label name={name}>{placeholder}</Label>
+  <Label name={name}>{placeholder}</Label>
 {/if}
 {#if editable}
   <div class="buttons">
@@ -74,8 +84,8 @@
         class:selected={option.value === value}
         class:first={i === 0}
         class:last={i === options.length - 1}
-        on:click={() => {value = option.value}}
-        on:mousedown={addRipple}
+        onclick={() => {value = option.value}}
+        onmousedown={addRipple}
         use:focusIndicator
       >
         {option.name}

@@ -1,15 +1,23 @@
 <script lang="ts">
-  import { focusIndicator } from "../../lib/client/decoration";
+  import { NoOp } from "$lib/client/placeholders";
+  import { focusIndicator } from "$lib/client/decoration";
 
-  export let month: number;
-  export let year: number;
+  interface Props {
+    month: number;
+    year: number;
+    onDayClick?: (date: Date) => any;
+  }
 
-  export let onDayClick: (date: Date) => any = () => {};
+  let {
+    month,
+    year,
+    onDayClick = NoOp
+  }: Props = $props();
 
-  let days: Date[] = [];
-  let amountOfRows: number = 0;
+  let days: Date[] = $state([]);
+  let amountOfRows: number = $state(0);
 
-  $: ((month: number, year: number) => {
+  function updateCalendar(month: number, year: number) {
     // Date calculation
     const firstMonthDay = new Date(year, month, 1);
     const lastMonthDay = new Date(year, month + 1, 0);
@@ -32,7 +40,11 @@
       days.push(new Date(dateIterator));
       dateIterator.setDate(dateIterator.getDate() + 1);
     }
-  })(month, year);
+  }
+  
+  $effect(() => {
+    updateCalendar(month, year);
+  });
 </script>
 
 <style lang="scss">
@@ -77,7 +89,7 @@
       class:sunday={day.getDay() == 0}
       class:otherMonth={day.getMonth() != month}
       type="button"
-      on:click={() => (onDayClick(day))}
+      onclick={() => (onDayClick(day))}
       use:focusIndicator
     >
       {day.getDate()}

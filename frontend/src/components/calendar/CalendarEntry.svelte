@@ -1,20 +1,27 @@
 <script lang="ts">
-  import { focusIndicator } from "$lib/client/decoration";
-  import { faultyCalendars } from "$lib/client/repository";
-  import { GetCalendarColor } from "$lib/common/colors";
-  import { hiddenCalendars, setCalendarVisibility } from "../../lib/client/localStorage";
+  import ColorCircle from "../misc/ColorCircle.svelte";
   import Tooltip from "../interactive/Tooltip.svelte";
   import VisibilityToggle from "../interactive/VisibilityToggle.svelte";
-  import ColorCircle from "../misc/ColorCircle.svelte";
 
-  export let calendar: CalendarModel;
+  import { GetCalendarColor } from "$lib/common/colors";
+  import { faultyCalendars } from "$lib/client/repository";
+  import { focusIndicator } from "$lib/client/decoration";
+  import { hiddenCalendars, setCalendarVisibility } from "$lib/client/localStorage";
 
-  let hasErrored = false;
+  interface Props {
+    calendar: CalendarModel;
+  }
+
+  let { calendar = $bindable() }: Props = $props();
+
+  let hasErrored = $state(false);
   faultyCalendars.subscribe((faulty) => {
     hasErrored = faulty.has(calendar.id);
   });
 
-  $: if (calendar && calendar.id) setCalendarVisibility(calendar.id, calendar.visible);
+  $effect(() => {
+    if (calendar && calendar.id) setCalendarVisibility(calendar.id, calendar.visible);
+  });
   hiddenCalendars.subscribe((hidden) => {
     calendar.visible = !hidden.has(calendar.id);
   });

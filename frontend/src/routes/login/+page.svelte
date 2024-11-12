@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   import Form from '../../components/forms/Form.svelte';
   import Link from '../../components/forms/Link.svelte';
   import TextInput from '../../components/forms/TextInput.svelte';
@@ -9,16 +11,22 @@
   import { isValidPassword, isValidUsername } from '../../lib/client/validation';
   import { beforeNavigate } from '$app/navigation';
 
-  export let form: ActionData;
+  interface Props {
+    form: ActionData;
+  }
+
+  let { form = $bindable() }: Props = $props();
 
   // TODO: easier way to prevent double notifications?
-  let alreadyShownError = false;
-  $: ((form) => {
-    if (form?.error && !alreadyShownError) {
-      alreadyShownError = true;
-      queueNotification("failure", form.error);
-    }
-  })(form)
+  let alreadyShownError = $state(false);
+  run(() => {
+    ((form) => {
+      if (form?.error && !alreadyShownError) {
+        alreadyShownError = true;
+        queueNotification("failure", form.error);
+      }
+    })(form)
+  });
   beforeNavigate(() => {
     form = null;
     alreadyShownError = false;
@@ -26,12 +34,16 @@
 
   const redirect = $page.url.searchParams.get('redirect') || "/";
 
-  let usernameValidity: Validity;
-  let passwordValidity: Validity;
+  let usernameValidity: Validity = $state();
+  let passwordValidity: Validity = $state();
 
-  let canSubmit: boolean;
-  $: canSubmit = usernameValidity?.valid && passwordValidity?.valid;
-  $: console.log(canSubmit);
+  let canSubmit: boolean = $state();
+  run(() => {
+    canSubmit = usernameValidity?.valid && passwordValidity?.valid;
+  });
+  run(() => {
+    console.log(canSubmit);
+  });
 </script>
 
 <style lang="scss">

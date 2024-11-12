@@ -1,15 +1,25 @@
 <script lang="ts">
   import Checkbox from "../interactive/Checkbox.svelte";
 
-  export let value: boolean = false;
-  export let description: string;
-  export let name: string;
+  import { NoOp } from "$lib/client/placeholders";
 
-  export let editable: boolean = true;
+  interface Props {
+    value?: boolean;
+    description: string;
+    name: string;
+    editable?: boolean;
+    onChange?: (value: boolean) => any;
+  }
 
-  export let onChange: (value: boolean) => any = () => {};
+  let {
+    value = $bindable(false),
+    description,
+    name,
+    editable = true,
+    onChange = NoOp,
+  }: Props = $props();
 
-  let click: (e: MouseEvent | KeyboardEvent) => void;
+  let click: (e: MouseEvent | KeyboardEvent) => void = $state(() => {});
 </script>
 
 <style lang="scss">
@@ -33,9 +43,9 @@
   }
 </style>
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y_click_events_have_key_events -->
 <div
-  on:click={click}
+  onclick={click}
   role="checkbox"
   tabindex="-1"
   aria-checked={value}

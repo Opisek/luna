@@ -1,13 +1,14 @@
 import BarFocusIndicator from "../../components/decoration/focus/BarFocusIndicator.svelte";
 import UnderlineFocusIndicator from "../../components/decoration/focus/UnderlineFocusIndicator.svelte";
 import Ripple from "../../components/decoration/Ripple.svelte"
+import { mount } from "svelte";
 
 export const addRipple = (e: MouseEvent, addToParent: boolean = true) => {
   if (!e.target) return;
 
   const parent = e.target as HTMLElement;
 
-  new Ripple({ target: addToParent ? parent : e.target as HTMLElement, props: { event: e, parent: parent } });
+  mount(Ripple, { target: addToParent ? parent : e.target as HTMLElement, props: { event: e, parent: parent } });
 }
 
 //export const removeRipple = (e: MouseEvent) => {
@@ -36,10 +37,10 @@ export const focusIndicator = (node: HTMLElement, settings: FocusIndicatorSettin
 
   switch (settings.type) {
     case "bar":
-      new BarFocusIndicator({ target: node });
+      mount(BarFocusIndicator, { target: node });
       break;
     case "underline":
-      new UnderlineFocusIndicator({ target: node });
+      mount(UnderlineFocusIndicator, { target: node });
       break;
   }
 

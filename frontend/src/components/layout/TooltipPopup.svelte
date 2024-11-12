@@ -1,14 +1,21 @@
 <script lang="ts">
+  import type { Snippet } from 'svelte';
+
   import { browser } from "$app/environment";
-  import { calculateOptimalPopupPosition } from "../../lib/common/calculations";
 
-  let popup: HTMLElement;
+  import { calculateOptimalPopupPosition } from "$lib/common/calculations";
 
-  let bottom: boolean = false;
-  let center: boolean = false;
-  let right: boolean = false;
+  interface Props {
+    children?: Snippet;
+  }
 
-  $: setupListener(popup);
+  let { children }: Props = $props();
+
+  let popup: HTMLElement = $state(new HTMLElement());
+
+  let bottom: boolean = $state(false);
+  let center: boolean = $state(false);
+  let right: boolean = $state(false);
 
   function setupListener(popup: HTMLElement) {
     if (!popup || !popup.parentElement) return;
@@ -25,6 +32,10 @@
     right = res.right;
     center = res.center;
   }
+
+  $effect(() => {
+    setupListener(popup);
+  });
 </script>
 
 <style lang="scss">
@@ -92,6 +103,6 @@
     class:right={right && !center}
     class:center={center}
   >
-    <slot/>
+    {@render children?.()}
   </span>
 </span>

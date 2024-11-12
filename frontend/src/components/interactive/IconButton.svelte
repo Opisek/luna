@@ -1,13 +1,29 @@
 <script lang="ts">
-  export let up: () => void = () => {};
-  export let down: () => void = () => {};
-  export let click: () => void = () => {};
-  export let visible: boolean = true;
-  export let style: string = "";
+  import type { Snippet } from "svelte";
 
-  export let tabindex: number = 0;
+  import { NoOp } from "$lib/client/placeholders";
 
-  let button: HTMLButtonElement;
+  interface Props {
+    up?: () => void;
+    down?: () => void;
+    click?: () => void;
+    visible?: boolean;
+    style?: string;
+    tabindex?: number;
+    children?: Snippet;
+  }
+
+  let {
+    up = NoOp,
+    down = NoOp,
+    click = NoOp,
+    visible = true,
+    style = "",
+    tabindex = 0,
+    children
+  }: Props = $props();
+
+  let button: HTMLElement = $state(new HTMLElement());
 
   function clickInternal(e: MouseEvent) {
     e.stopPropagation();
@@ -73,15 +89,15 @@
 
 <button
   bind:this={button}
-  on:click={clickInternal}
-  on:mousedown={down}
-  on:mouseleave={leaveInternal}
-  on:mouseup={upInternal}
+  onclick={clickInternal}
+  onmousedown={down}
+  onmouseleave={leaveInternal}
+  onmouseup={upInternal}
   class:hidden={!visible}
   type="button"
   style={style}
   tabindex="{tabindex}"
 >
   <div class="circle"></div>
-  <slot/>
+  {@render children?.()}
 </button>

@@ -1,15 +1,25 @@
 <script lang="ts">
-  import { addRipple, focusIndicator } from "$lib/client/decoration";
   import { CheckIcon } from "lucide-svelte";
 
-  export let value: boolean;
-  export let name: string;
+  import { addRipple, focusIndicator } from "$lib/client/decoration";
 
-  export let onChange: (value: boolean) => any = () => {};
+  interface Props {
+    value: boolean;
+    name: string;
+    enabled?: boolean;
+    onChange?: (value: boolean) => any;
+    toggle: (e: MouseEvent | KeyboardEvent) => void;
+  }
 
-  export let enabled: boolean = true;
+  let {
+    value = $bindable(),
+    name,
+    enabled = true,
+    onChange = () => {},
+    toggle = $bindable()
+  }: Props = $props();
 
-  export function toggle(e: MouseEvent | KeyboardEvent) {
+  toggle = (e: MouseEvent | KeyboardEvent) => {
     value = !value;
     onChange(value);
     if (e instanceof MouseEvent) addRipple(e, false);
@@ -69,7 +79,7 @@
   type="button"
   class:check={value}
   class:disabled={!enabled}
-  on:click={toggle}
+  onclick={toggle}
   use:focusIndicator
 >
   {#if value}

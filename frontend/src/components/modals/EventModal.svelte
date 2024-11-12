@@ -1,24 +1,37 @@
 <script lang="ts">
-  import { createEvent, deleteEvent, editEvent, getCalendars } from "$lib/client/repository";
   import CheckboxInput from "../forms/CheckboxInput.svelte";
   import ColorInput from "../forms/ColorInput.svelte";
   import DateTimeInput from "../forms/DateTimeInput.svelte";
+  import EditableModal from "./EditableModal.svelte";
   import SelectInput from "../forms/SelectInput.svelte";
   import TextInput from "../forms/TextInput.svelte";
-  import EditableModal from "./EditableModal.svelte";
 
-  export let event: EventModel;
-  let eventCopy: EventModel;
+  import { EmptyEvent } from "$lib/client/placeholders";
+  import { createEvent, deleteEvent, editEvent, getCalendars } from "$lib/client/repository";
 
-  let currentCalendars: CalendarModel[] = [];
+  interface Props {
+    event: EventModel;
+    showCreateModal?: () => any;
+    showModal?: () => any;
+  }
 
-  export const showCreateModal = () => {
+  let {
+    event,
+    showCreateModal = $bindable(),
+    showModal = $bindable(),
+  }: Props = $props();
+
+  let eventCopy: EventModel = $state(EmptyEvent);
+  let currentCalendars: CalendarModel[] = $state([]);
+
+  showCreateModal = () => {
     editMode = false;
     eventCopy = event;
     currentCalendars = getCalendars();
     setTimeout(showCreateModalInternal, 0);
   }
-  export const showModal = () => {
+
+  showModal = () => {
     editMode = false;
     eventCopy = {
       id: event.id,
@@ -38,13 +51,11 @@
     setTimeout(showModalInternal, 0);
   };
 
-  let showCreateModalInternal: () => boolean;
-  let showModalInternal: () => boolean;
+  let showCreateModalInternal: () => boolean = $state(() => false);
+  let showModalInternal: () => boolean = $state(() => false);
 
-  let title: string;
-  $: title = (eventCopy && eventCopy.id) ? (editMode ? "Edit event" : "Event") : "Create event";
-
-  let editMode: boolean;
+  let editMode: boolean = $state(false);
+  let title: string = $derived((eventCopy && eventCopy.id) ? (editMode ? "Edit event" : "Event") : "Create event");
 
   const onDelete = async () => {
     const res = await deleteEvent(eventCopy.id);
@@ -87,6 +98,7 @@
       }
     }
   }
+  
 </script>
 
 <EditableModal

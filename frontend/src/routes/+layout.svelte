@@ -1,9 +1,14 @@
 <script lang="ts">
   import { notifications, notificationCount } from "$lib/client/notifications";
   import Notification from "../components/interactive/Notification.svelte";
+  interface Props {
+    children?: import('svelte').Snippet;
+  }
 
-  let notifs: NotificationModel[] = [];
-  let notifsCount = 0;
+  let { children }: Props = $props();
+
+  let notifs: NotificationModel[] = $state([]);
+  let notifsCount = $state(0);
 
   notifications.subscribe((active) => {
     notifs = active;
@@ -38,7 +43,7 @@
   }
 </style>
 
-<slot/>
+{@render children?.()}
 
 <div class="notifications">
   {#each notifs as notification, i (notification.created.getTime())}

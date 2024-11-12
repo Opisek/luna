@@ -1,22 +1,39 @@
 <script lang="ts">
+  import Modal from "./Modal.svelte";
   import MonthSelection from "../interactive/MonthSelection.svelte";
   import SmallCalendar from "../interactive/SmallCalendar.svelte";
-  import Modal from "./Modal.svelte";
 
-  export let date: Date;
-  export let onChange: (date: Date) => void = () => {};
+  import { NoOp } from "$lib/client/placeholders";
 
-  let currentYear: number;
-  let currentMonth: number;
+  interface Props {
+    date: Date;
+    onChange?: (date: Date) => void;
+    showModal?: () => any;
+    hideModal?: () => any;
+  }
 
-  export const showModal = () => {
+  let {
+    date = $bindable(),
+    onChange = NoOp,
+    showModal = $bindable(),
+    hideModal = $bindable()
+  }: Props = $props();
+
+  let currentYear: number = $state(0);
+  let currentMonth: number = $state(0);
+
+  let showModalInternal: () => any = $state(NoOp);
+  let hideModalInternal: () => any = $state(NoOp);
+
+  showModal = () => {
     currentYear = date.getFullYear();
     currentMonth = date.getMonth();
     showModalInternal();
   };
 
-  let showModalInternal: () => any;
-  let hideModalInternal: () => any;
+  hideModal = () => {
+    hideModalInternal();
+  };
 
   function dateSelected(selectedDate: Date) {
     // keep the time of day the same:
@@ -31,7 +48,7 @@
 
 </style>
 
-<Modal title="Pick Date" bind:showModal={showModalInternal} bind:hideModal={hideModalInternal}>
+<Modal title="Pick Date" bind:showModal={showModalInternal} bind:hideModal={hideModal}>
   <MonthSelection bind:month={currentMonth} bind:year={currentYear} />
   <SmallCalendar year={currentYear} month={currentMonth} onDayClick={dateSelected} />
 </Modal>

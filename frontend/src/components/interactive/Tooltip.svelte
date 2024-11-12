@@ -1,10 +1,17 @@
 <script lang="ts">
   import { CircleAlert, Info } from "lucide-svelte";
-  import Popup from "../layout/TooltipPopup.svelte";
+
   import TooltipPopup from "../layout/TooltipPopup.svelte";
 
-  export let msg: string;
-  export let error: boolean = false;
+  interface Props {
+    msg: string;
+    error?: boolean;
+  }
+
+  let {
+    msg,
+    error = false
+  }: Props = $props();
 </script>
 
 <style lang="scss">
@@ -20,13 +27,13 @@
     padding: $paddingTiny;
     outline: 0;
   }
+
   div.error {
     color: $backgroundFailure;
   }
-
 </style>
 
-<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 <div
   class:error={error}
   role="tooltip"

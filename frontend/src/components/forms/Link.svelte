@@ -1,6 +1,19 @@
 <script lang="ts">
-  export let href: string;
-  export let onClick: () => any = () => {};
+  import type { Snippet } from "svelte";
+
+  import { NoOp } from "$lib/client/placeholders";
+
+  interface Props {
+    href: string;
+    onClick?: () => any;
+    children?: Snippet;
+  }
+
+  let {
+    href,
+    onClick = NoOp,
+    children
+  }: Props = $props();
 </script>
 
 <style lang="scss">
@@ -13,4 +26,4 @@
   }
 </style>
 
-<a href={href} on:click={onClick()}><slot/></a>
+<a href={href} onclick={onClick()}>{@render children?.()}</a>

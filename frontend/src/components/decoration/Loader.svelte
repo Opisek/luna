@@ -42,6 +42,6 @@
 
 <span class="loader">
   {#each Array(3) as _}
-    <span class="dot"/>
+    <span class="dot"></span>
   {/each}
 </span>

@@ -1,11 +1,13 @@
 <script lang="ts">
-  export let notification: NotificationModel;
-  export let shift: number;
+  interface Props {
+    notification: NotificationModel;
+    shift: number;
+  }
 
-  let actualShift = 0;
-  $: ((requestedShift: number) => {
-    actualShift = requestedShift;
-  })(shift);
+  let {
+    notification,
+    shift
+  }: Props = $props();
 </script>
 
 <style lang="scss">
@@ -65,18 +67,18 @@
 <div
   class="wrapper"
   class:disappear={notification.disappear}
-  style="transform: translateY({actualShift * -100}%);"
+  style="transform: translateY({shift * -100}%);"
 >
-<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
   <div
     class="box"
     class:success={notification.type === "success"}
     class:failure={notification.type === "failure"}
     class:info={notification.type === "info"}
-    on:click={notification.remove}
-    on:keypress={notification.remove}
+    onclick={notification.remove}
+    onkeypress={notification.remove}
   >
     {notification.message}
-    <div class="timer"/>
+    <div class="timer"></div>
   </div>
 </div>

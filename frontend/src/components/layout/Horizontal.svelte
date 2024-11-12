@@ -1,5 +1,15 @@
 <script lang="ts">
-  export let position: string = "justify";
+  import type { Snippet } from "svelte";
+
+  interface Props {
+    position?: "left" | "center" | "right" | "justify";
+    children?: Snippet;
+  }
+
+  let {
+    position = "justify",
+    children
+  }: Props = $props();
 </script>
 
 <style lang="scss">
@@ -42,5 +52,5 @@
   class:right={position == "right"}
   class:center={position == "center"}
 >
-  <slot/>
+  {@render children?.()}
 </div>

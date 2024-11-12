@@ -1,14 +1,24 @@
 <script lang="ts">
-  import { addRipple } from "$lib/client/decoration";
+  import type { Snippet } from "svelte";
 
-  export let onClick: () => void = () => {};
+  interface Props {
+    onClick?: () => void;
+    // TODO: could not figure out enums for this, try again later
+    color: string;
+    type?: "button" | "submit";
+    enabled?: boolean;
+    children?: Snippet;
+  }
 
-  // TODO: could not figure out enums for this, try again later
-  export let color: string;
-  export let type: "button" | "submit" = "button";
-  export let enabled: boolean = true;
+  let {
+    onClick = () => {},
+    color,
+    type = "button",
+    enabled = true,
+    children
+  }: Props = $props();
 
-  let button: HTMLButtonElement;
+  let button: HTMLButtonElement = $state(new HTMLButtonElement());
 </script>
 
 <style lang="scss">
@@ -51,8 +61,8 @@
 
 <button
   bind:this={button}
-  on:click={onClick}
-  on:mouseleave={button.blur}
+  onclick={onClick}
+  onmouseleave={button.blur}
   class:success={color == "success"}
   class:failure={color == "failure"}
   class:accent={color == "accent"}
@@ -60,5 +70,5 @@
   disabled={!enabled}
   class:disabled={!enabled}
 >
-  <slot/>
+  {@render children?.()}
 </button>

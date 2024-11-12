@@ -1,26 +1,36 @@
 <script lang="ts">
-  import { focusIndicator } from "$lib/client/decoration";
-  import { calendars, faultySources, fetchSourceCalendars } from "$lib/client/repository";
-  import { collapsedSources, setSourceCollapse } from "../../lib/client/localStorage";
   import CollapseToggle from "../interactive/CollapseToggle.svelte";
-  import Tooltip from "../interactive/Tooltip.svelte";
   import SourceModal from "../modals/SourceModal.svelte";
+  import Tooltip from "../interactive/Tooltip.svelte";
 
-  export let source: SourceModel;
+  import { NoOp } from "$lib/client/placeholders";
+  import { calendars, faultySources, fetchSourceCalendars } from "$lib/client/repository";
+  import { collapsedSources, setSourceCollapse } from "$lib/client/localStorage";
+  import { focusIndicator } from "$lib/client/decoration";
 
-  let hasErrored = false;
+  interface Props {
+    source: SourceModel;
+  }
+
+  let {
+    source = $bindable()
+  }: Props = $props();
+
+  let hasErrored = $state(false);
   faultySources.subscribe((faulty) => {
     hasErrored = faulty.has(source.id);
   });
 
-  let hasCals = false;
+  let hasCals = $state(false);
   calendars.subscribe(async () => {
     hasCals = (await fetchSourceCalendars(source.id)).length > 0;
   })
 
-  let showModal: () => any;
+  let showModal: () => any = $state(NoOp);
 
-  $: if (source && source.id) setSourceCollapse(source.id, source.collapsed);
+  $effect(() => {
+    if (source.id) setSourceCollapse(source.id, source.collapsed);
+  })
   collapsedSources.subscribe((collapsed) => {
     source.collapsed = collapsed.has(source.id);
   });
@@ -67,7 +77,7 @@
 </style>
 
 <div>
-  <button on:click={showModal} use:focusIndicator={{ type: "underline", ignoreParent: true }}>
+  <button onclick={showModal} use:focusIndicator={{ type: "underline", ignoreParent: true }}>
     {source.name}
   </button>
   <span>

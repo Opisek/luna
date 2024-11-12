@@ -1,25 +1,41 @@
 <script lang="ts">
-  import EventEntry from "./EventEntry.svelte";
-  import IconButton from "../interactive/IconButton.svelte";
   import { PlusIcon } from "lucide-svelte";
+
+  import EventEntry from "./EventEntry.svelte";
   import EventModal from "../modals/EventModal.svelte";
+  import IconButton from "../interactive/IconButton.svelte";
 
-  export let date: Date;
+  import { EmptyEvent, NoOp } from '$lib/client/placeholders';
 
-  export let isCurrentMonth: boolean;
+  interface Props {
+    date: Date;
+    isCurrentMonth: boolean;
+    isFirstDay: boolean;
+    isLastDay: boolean;
+    events: (EventModel | null)[];
+    maxEvents?: number;
+    currentlyHoveredEvent: EventModel;
+    currentlyClickedEvent: EventModel;
+    containerHeight: number;
+    clickCallback: (event: EventModel) => void;
+  }
 
-  export let isFirstDay: boolean;
-  export let isLastDay: boolean;
+  let {
+    date,
+    isCurrentMonth,
+    isFirstDay,
+    isLastDay,
+    events,
+    maxEvents = 1,
+    currentlyHoveredEvent = $bindable(),
+    currentlyClickedEvent = $bindable(),
+    containerHeight = $bindable(),
+    clickCallback
+  }: Props = $props();
 
-  export let events: (EventModel | null)[];
-  
-  export let currentlyHoveredEvent: EventModel | null;
-  export let currentlyClickedEvent: EventModel | null;
-  export let clickCallback: (event: EventModel) => void;
+  let newEvent: EventModel = $state(EmptyEvent);
+  let showCreateEventModal: () => any = $state(NoOp);
 
-  let newEvent: EventModel;
-  let dummy: () => any;
-  let showCreateEventModal: () => any;
   let createEventButtonClick = () => {
     const start = new Date(date);
     start.setHours(12, 0, 0, 0);
@@ -27,28 +43,14 @@
     const end = new Date(date);
     end.setHours(13, 0, 0, 0);
 
-    newEvent = {
-      id: "",
-      calendar: "",
-      name: "",
-      desc: "",
-      color: "",
-      date: {
-        start: start,
-        end: end,
-        allDay: false,
-      }
-    };
+    newEvent = EmptyEvent;
 
     setTimeout(() => {
       showCreateEventModal();
     }, 0);
   };
 
-  export let containerHeight: number;
-  export let maxEvents: number = 1;
-  let actualMaxEvents: number = 1;
-  $: actualMaxEvents = maxEvents <= events.length - 1 ? maxEvents - 1 : maxEvents;
+  let actualMaxEvents: number = $derived(maxEvents <= events.length - 1 ? maxEvents - 1 : maxEvents);
 </script>
 
 <style lang="scss">
@@ -136,59 +138,24 @@
         <IconButton click={createEventButtonClick} tabindex={-1}>
           <PlusIcon size={13}/>
         </IconButton>
-        <EventModal bind:showCreateModal={showCreateEventModal} bind:showModal={dummy} event={newEvent}/>
+        <EventModal bind:showCreateModal={showCreateEventModal} event={newEvent}/>
       </span>
     </span>
   </div>
   {#if isFirstDay}
     <div class="events" bind:offsetHeight={containerHeight}>
-      {#each events as event, i}
-        <EventEntry
-          event={event}
-          isFirstDay={isFirstDay}
-          isLastDay={isLastDay}
-          date={date}
-          visible={i < actualMaxEvents}
-          bind:currentlyHoveredEvent={currentlyHoveredEvent}
-          bind:currentlyClickedEvent={currentlyClickedEvent}
-          clickCallback={clickCallback}
-        />
-      {/each}
-      {#if events.length > maxEvents && actualMaxEvents >= 0}
-        <span class="more">
-          and {events.length - actualMaxEvents} more
-        </span>
-      {/if}
+      {@render eventRows()}
     </div>
   {:else}
     <div class="events">
-      {#each events as event, i (event?.id)}
-        <EventEntry
-          event={event}
-          isFirstDay={isFirstDay}
-          isLastDay={isLastDay}
-          date={date}
-          visible={i < actualMaxEvents}
-          bind:currentlyHoveredEvent={currentlyHoveredEvent}
-          bind:currentlyClickedEvent={currentlyClickedEvent}
-          clickCallback={clickCallback}
-        />
-      {/each}
-      {#if events.length > maxEvents && actualMaxEvents >= 0}
-        <span class="more">
-          and {events.length - actualMaxEvents} more
-        </span>
-      {/if}
+      {@render eventRows()}
     </div>
   {/if}
 </div>
 
-
-<!--
-TODO: use snippets when svelte 5 is out
-{#snippet eventRows}
+{#snippet eventRows()}
   {#each events as event, i}
-    <CalendarEvent
+    <EventEntry
       event={event}
       isFirstDay={isFirstDay}
       isLastDay={isLastDay}
@@ -199,10 +166,9 @@ TODO: use snippets when svelte 5 is out
       clickCallback={clickCallback}
     />
   {/each}
-  {#if events.length > maxEvents}
+  {#if events.length > maxEvents && actualMaxEvents >= 0}
     <span class="more">
       and {events.length - actualMaxEvents} more
     </span>
   {/if}
 {/snippet}
--->

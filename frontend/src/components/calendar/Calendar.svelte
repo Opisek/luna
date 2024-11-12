@@ -1,99 +1,110 @@
 <script lang="ts">
   import Day from "./Day.svelte";
-  import { getDayName } from "../../lib/common/humanization";
-  import { compareEventsByStartDate } from "../../lib/common/comparators";
   import EventModal from "../modals/EventModal.svelte";
 
-  export let month: number;
-  export let year: number;
-  export let events: EventModel[];
+  import { EmptyEvent } from "$lib/client/placeholders";
+  import { compareEventsByStartDate } from "$lib/common/comparators";
+  import { getDayName } from "$lib/common/humanization";
 
-  let currentlyHoveredEvent: EventModel | null = null;
-  let currentlyClickedEvent: EventModel | null = null;
+  interface Props {
+    month: number;
+    year: number;
+    events: EventModel[];
+    showModal: () => boolean;
+  }
 
-  let days: Date[] = [];
-  let amountOfRows: number = 0;
-  let processedEvents: (EventModel | null)[][] = [];
+  let { month, year, events, showModal }: Props = $props();
 
-  $: ((month: number, year: number, events: EventModel[]) => {
-    // Date calculation
-    const firstMonthDay = new Date(year, month, 1);
-    const lastMonthDay = new Date(year, month + 1, 0);
-    const firstDayOfWeek = (firstMonthDay.getDay() + 6) % 7;
+  let currentlyHoveredEvent: EventModel = $state(EmptyEvent);
+  let currentlyClickedEvent: EventModel = $state(EmptyEvent);
 
-    amountOfRows = Math.ceil((lastMonthDay.getDate() + firstDayOfWeek) / 7);
+  let days: Date[] = $state([]);
+  let amountOfRows: number = $state(0);
+  let processedEvents: (EventModel | null)[][] = $state([]);
 
-    const firstViewDay = new Date(firstMonthDay);
-    firstViewDay.setDate(firstMonthDay.getDate() - firstDayOfWeek);
-    const lastViewDay = new Date(firstMonthDay);
-    lastViewDay.setDate(firstMonthDay.getDate() + 7 * amountOfRows - 1);
+  function updateCalendar(month: number, year: number, events: EventModel[]) {
+      // Date calculation
+      const firstMonthDay = new Date(year, month, 1);
+      const lastMonthDay = new Date(year, month + 1, 0);
+      const firstDayOfWeek = (firstMonthDay.getDay() + 6) % 7;
 
-    // Event pre-processing
-    const filteredEvents = events
-      .sort(compareEventsByStartDate)
-      .filter(e => e.date.start.getTime() >= firstViewDay.getTime() && e.date.end.getTime() < lastViewDay.getTime());
+      amountOfRows = Math.ceil((lastMonthDay.getDate() + firstDayOfWeek) / 7);
 
-    // Fill
-    days = [];
-    processedEvents = [];
+      const firstViewDay = new Date(firstMonthDay);
+      firstViewDay.setDate(firstMonthDay.getDate() - firstDayOfWeek);
+      const lastViewDay = new Date(firstMonthDay);
+      lastViewDay.setDate(firstMonthDay.getDate() + 7 * amountOfRows - 1);
 
-    const dateIterator = new Date(firstViewDay);
-    let eventIterator = 0;
+      // Event pre-processing
+      const filteredEvents = events
+        .sort(compareEventsByStartDate)
+        .filter(e => e.date.start.getTime() >= firstViewDay.getTime() && e.date.end.getTime() < lastViewDay.getTime());
 
-    for (let i = 0; i < 7 * amountOfRows; i++) {
-      // Copy events from previous day and remove whichever are over
-      const dayEvents =
-        i == 0
-          ? []
-          : processedEvents[i - 1]
-            .map(
-              e => e === null || e.date.end.getTime() <= dateIterator.getTime()
-                ? null
-                : e
-            );
-            
-      
-      days.push(new Date(dateIterator));
-      dateIterator.setDate(dateIterator.getDate() + 1);
-      
-      // Fit new events in fitting slots
-      let emptyIterator = 0;
-      while (
-        eventIterator < filteredEvents.length &&
-        filteredEvents[eventIterator].date.start.getTime() < dateIterator.getTime() &&
-        filteredEvents[eventIterator].date.start.getTime() >= days[days.length - 1].getTime()
-      ) {
-        while (emptyIterator < dayEvents.length && dayEvents[emptyIterator] != null) emptyIterator++;
-        if (emptyIterator < dayEvents.length) dayEvents[emptyIterator] = filteredEvents[eventIterator];
-        else dayEvents.push(filteredEvents[eventIterator]);
-        emptyIterator++;
-        eventIterator++;
+      // Fill
+      days = [];
+      processedEvents = [];
+
+      const dateIterator = new Date(firstViewDay);
+      let eventIterator = 0;
+
+      for (let i = 0; i < 7 * amountOfRows; i++) {
+        // Copy events from previous day and remove whichever are over
+        const dayEvents =
+          i == 0
+            ? []
+            : processedEvents[i - 1]
+              .map(
+                e => e === null || e.date.end.getTime() <= dateIterator.getTime()
+                  ? null
+                  : e
+              );
+              
+        
+        days.push(new Date(dateIterator));
+        dateIterator.setDate(dateIterator.getDate() + 1);
+        
+        // Fit new events in fitting slots
+        let emptyIterator = 0;
+        while (
+          eventIterator < filteredEvents.length &&
+          filteredEvents[eventIterator].date.start.getTime() < dateIterator.getTime() &&
+          filteredEvents[eventIterator].date.start.getTime() >= days[days.length - 1].getTime()
+        ) {
+          while (emptyIterator < dayEvents.length && dayEvents[emptyIterator] != null) emptyIterator++;
+          if (emptyIterator < dayEvents.length) dayEvents[emptyIterator] = filteredEvents[eventIterator];
+          else dayEvents.push(filteredEvents[eventIterator]);
+          emptyIterator++;
+          eventIterator++;
+        }
+
+        // Remove unnecessary nulls
+        while(dayEvents.length > 0 && dayEvents[dayEvents.length - 1] == null) dayEvents.pop();
+        processedEvents.push(dayEvents);
       }
-
-      // Remove unnecessary nulls
-      while(dayEvents.length > 0 && dayEvents[dayEvents.length - 1] == null) dayEvents.pop();
-      processedEvents.push(dayEvents);
     }
-  })(month, year, events);
 
-  let showModal: () => boolean;
-  let clickedEvent: EventModel;
+  $effect(() => {
+    updateCalendar(month, year, events);
+  });
+
+  let clickedEvent: EventModel = $state(EmptyEvent);
   function eventClick(event: EventModel) {
     if (!event) return
     clickedEvent = event;
     setTimeout(() => showModal(), 0);
   }
 
-  let containerHeight: number = 0;
-  let maxEvents: number;
-  $: ((height: number) => {
+  let containerHeight: number = $state(0);
+  let maxEvents: number = $state(0);
+  function calculateMaxEvents(height: number) {
     if (height == 0) {
       maxEvents = 0;
       return;
     }
-    // TODO: figure out how to extract the proper height (instead of hard-coded values)
-    maxEvents = Math.max(Math.floor((height - 35) / 27), 0)
-  })(containerHeight);
+  }
+  $effect(() => {
+    calculateMaxEvents(containerHeight);
+  });
 </script>
 
 <style lang="scss">
@@ -153,4 +164,4 @@
   </div>
 </div>
 
-<EventModal bind:showModal={showModal} event={clickedEvent}/>
+<EventModal bind:showModal event={clickedEvent}/>

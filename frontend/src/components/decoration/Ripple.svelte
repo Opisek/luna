@@ -1,22 +1,28 @@
 <!-- based on https://github.com/GeekLaunch/button-ripple-effect/ -->
 <script lang="ts">
-  export let event: MouseEvent;
-  export let parent: HTMLElement;
+  interface Props {
+    event: MouseEvent;
+    parent: HTMLElement;
+  }
 
-  let circle: HTMLDivElement;
+  let { event, parent }: Props = $props();
 
-  $: ((circle: HTMLDivElement) => {
-    if (!circle) return;
+  let circle: HTMLDivElement = $state(new HTMLDivElement());
 
-    let diameter = Math.max((parent.clientWidth, parent.clientHeight));
-    circle.style.width = circle.style.height = `${diameter}px`;
+  $effect(() => {
+    ((circle: HTMLDivElement) => {
+      if (!circle) return;
 
-    let rect = parent.getBoundingClientRect();
-    circle.style.left = `${event.clientX - rect.left -diameter/2}px`;
-    circle.style.top = `${event.clientY - rect.top -diameter/2}px`;
+      let diameter = Math.max((parent.clientWidth, parent.clientHeight));
+      circle.style.width = circle.style.height = `${diameter}px`;
 
-    setTimeout(() => circle.remove(), 1500);
-  })(circle);
+      let rect = parent.getBoundingClientRect();
+      circle.style.left = `${event.clientX - rect.left -diameter/2}px`;
+      circle.style.top = `${event.clientY - rect.top -diameter/2}px`;
+
+      setTimeout(() => circle.remove(), 1500);
+    })(circle);
+  });
 
 </script>
 
@@ -41,4 +47,4 @@
 <div
   class="ripple"
   bind:this={circle}
-/>
+></div>

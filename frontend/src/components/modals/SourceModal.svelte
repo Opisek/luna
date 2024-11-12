@@ -1,19 +1,32 @@
 <script lang="ts">
   import EditableModal from "./EditableModal.svelte";
-  import TextInput from "../forms/TextInput.svelte";
   import SelectButtons from "../forms/SelectButtons.svelte";
-  import { queueNotification } from "$lib/client/notifications";
+  import TextInput from "../forms/TextInput.svelte";
+
+  import { EmptySource, NoOp } from "$lib/client/placeholders";
   import { createSource, deleteSource, editSource } from "$lib/client/repository";
-  import { isValidUrl } from "../../lib/client/validation";
+  import { isValidUrl, valid } from "$lib/client/validation";
+  import { queueNotification } from "$lib/client/notifications";
 
-  export let source: SourceModel;
-  let sourceDetailed: SourceModel;
+  interface Props {
+    source: SourceModel;
+    showCreateModal?: () => any;
+    showModal?: () => any;
+  }
 
-  export const showCreateModal = () => {
+  let {
+    source,
+    showCreateModal = $bindable(),
+    showModal = $bindable(),
+  }: Props = $props();
+
+  let sourceDetailed: SourceModel = $state(EmptySource);
+
+  showCreateModal = () => {
     sourceDetailed = source;
     showCreateModalInternal();
   }
-  export const showModal = async () => {
+  showModal = async () => {
     const res = await fetch(`/api/sources/${source.id}`);
     if (res.ok) {
       sourceDetailed = await res.json();
@@ -24,13 +37,12 @@
 
     showModalInternal();
   };
-  let showCreateModalInternal: () => boolean;
-  let showModalInternal: () => boolean;
 
-  let title: string;
-  $: title = (sourceDetailed && sourceDetailed.id) ? (editMode ? "Edit source" : "Source") : "Add source";
+  let showCreateModalInternal: () => any = $state(NoOp);
+  let showModalInternal: () => any = $state(NoOp);
 
-  let editMode: boolean;
+  let editMode: boolean = $state(false);
+  let title: string = $derived(sourceDetailed.id ? (editMode ? "Edit source" : "Source") : "Add source");
 
   const onDelete = async () => {
     const res = await deleteSource(sourceDetailed.id);
@@ -49,14 +61,13 @@
     }
   };
 
-  let caldavLinkValidity: Validity;
-  let icalLinkValidity: Validity;
+  let caldavLinkValidity: Validity = $state(valid);
+  let icalLinkValidity: Validity = $state(valid);
 
-  let canSubmit: boolean;
-  $: canSubmit = sourceDetailed && sourceDetailed.name !== "" && sourceDetailed.type !== "" && (
+  let canSubmit: boolean = $derived(sourceDetailed && sourceDetailed.name !== "" && sourceDetailed.type !== "" && (
     (sourceDetailed.type === "caldav" && caldavLinkValidity?.valid) ||
     (sourceDetailed.type === "ical" && icalLinkValidity?.valid)
-  );
+  ));
 </script>
 
 <EditableModal

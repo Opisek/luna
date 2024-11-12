@@ -1,15 +1,40 @@
 <script lang="ts">
+  import type { Snippet } from "svelte";
+
   import Button from "../interactive/Button.svelte";
   import CloseButton from "../interactive/CloseButton.svelte";
   import Horizontal from "../layout/Horizontal.svelte";
   import Title from "../layout/Title.svelte";
 
-  let dialog: HTMLDialogElement;
+  import { NoOp } from "$lib/client/placeholders";
 
-  export let title: string;
-  export let focusElement: HTMLElement | null = null;
+  interface Props {
+    title: string;
+    focusElement?: HTMLElement | null;
+    onModalHide?: any;
+    onModalSubmit?: any;
+    showModal?: () => any;
+    hideModal?: () => any;
+    resetFocus?: () => any;
+    children?: Snippet;
+    buttons?: Snippet;
+  }
 
-  let visible = false;
+  let {
+    title,
+    focusElement = null,
+    onModalHide = () => {},
+    showModal = $bindable(),
+    hideModal = $bindable(NoOp),
+    resetFocus = $bindable(),
+    onModalSubmit = hideModal,
+    children,
+    buttons
+  }: Props = $props();
+
+  let dialog: HTMLDialogElement = $state(new HTMLDialogElement());
+
+  let visible = $state(false);
 
   function clickOutside(event: MouseEvent) {
     if (!dialog) return;
@@ -19,31 +44,29 @@
     }
   }
 
-  $: if (dialog && visible) dialog.showModal();
+  $effect(() => {
+    if (visible) dialog.showModal();
+  });
 
-  export const showModal = () => {
+  resetFocus = () => {
+    if (focusElement) focusElement.focus();
+    else dialog.focus();
+  }
+  showModal = () => {
     window.addEventListener("click", clickOutside);
     visible = true
     setTimeout(resetFocus, 0);
   }
-  export const hideModal = () => {
+  hideModal = () => {
     window.removeEventListener("click", clickOutside);
     dialog.close();
     onModalHide();
   }
-  export let onModalHide = () => {};
-
-  export let onModalSubmit = hideModal;
 
   function submitInternal(event: Event) {
     event.preventDefault();
     onModalSubmit();
     return false;
-  }
-
-  export let resetFocus = () => {
-    if (focusElement) focusElement.focus();
-    else dialog.focus();
   }
 </script>
 
@@ -84,21 +107,21 @@
 
 <dialog
   bind:this={dialog}
-  on:close={() => (visible = false)}
+  onclose={() => (visible = false)}
   class:closed={visible}
 >
-	<form on:submit={submitInternal}>
+	<form onsubmit={submitInternal}>
     <Horizontal>
       <Title>
         {title}
       </Title>
       <CloseButton onClick={hideModal} />
     </Horizontal>
-		<slot />
+		{@render children?.()}
     <Horizontal position="right">
-      <slot name="buttons">
+      {#if buttons}{@render buttons()}{:else}
         <Button onClick={hideModal} color="accent">Close</Button>
-      </slot>
+      {/if}
     </Horizontal>
 	</form>
 </dialog>

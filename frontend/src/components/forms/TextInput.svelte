@@ -1,45 +1,66 @@
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   import { focusIndicator } from "../../lib/client/decoration";
   import { alwaysValid, valid } from "../../lib/client/validation";
   import VisibilityToggle from "../interactive/VisibilityToggle.svelte";
   import Label from "./Label.svelte";
 
-  export let value: string = "";
-  export let placeholder: string;
-  export let name: string;
 
-  export let editable: boolean = true;
 
-  export let multiline: boolean = false;
 
-  export let password: boolean = false;
-  let passwordVisible: boolean = false;
+  let passwordVisible: boolean = $state(false);
 
-  export let label: boolean = true;
 
-  let wrapper: HTMLDivElement | null = null;
+  let wrapper: HTMLDivElement | null = $state(null);
 
-  export let onChange: (value: string) => any = () => {};
-  export let onInput: (value: string) => any = () => {};
-  export let onFocus: () => any = () => {};
 
-  let lastValidationFunction = alwaysValid; // TODO: check if still needed in svelte 5
-  export let validation: InputValidation = alwaysValid;
-  export let validity = validation(value);
+  let lastValidationFunction = $state(alwaysValid); // TODO: check if still needed in svelte 5
+  interface Props {
+    value?: string;
+    placeholder: string;
+    name: string;
+    editable?: boolean;
+    multiline?: boolean;
+    password?: boolean;
+    label?: boolean;
+    onChange?: (value: string) => any;
+    onInput?: (value: string) => any;
+    onFocus?: () => any;
+    validation?: InputValidation;
+    validity?: any;
+  }
+
+  let {
+    value = $bindable(""),
+    placeholder,
+    name,
+    editable = true,
+    multiline = false,
+    password = false,
+    label = true,
+    onChange = () => {},
+    onInput = () => {},
+    onFocus = () => {},
+    validation = alwaysValid,
+    validity = $bindable(validation(value))
+  }: Props = $props();
 
   // If the value is set programmatically, update the validity.
   // For example when opening a new form
-  let lastValue: string | null = null; // TODO: check if still needed in svelte 5
-  $: ((value) => {
-    if (value === lastValue) return; // prevents some infinite loop that i don't understand, might be a svelte bug
-    lastValue = value;
-    if (wrapper != null && (document.activeElement === wrapper || wrapper.contains(document.activeElement))) return;
-    validity = value ? validation(value) : valid;
-  })(value);
+  let lastValue: string | null = $state(null); // TODO: check if still needed in svelte 5
+  run(() => {
+    ((value) => {
+      if (value === lastValue) return; // prevents some infinite loop that i don't understand, might be a svelte bug
+      lastValue = value;
+      if (wrapper != null && (document.activeElement === wrapper || wrapper.contains(document.activeElement))) return;
+      validity = value ? validation(value) : valid;
+    })(value);
+  });
 
   // This determines whether input has errored due to empty value.
   // This is still considered an error, but we don't want to display it.
-  let empty = value === "";
+  let empty = $state(value === "");
 
   // Once the user has finished typing, update the validity.
   function internalOnChange() {
@@ -58,11 +79,13 @@
 
   // If the validation function changes, like for the repeat password field,
   // rerun the validation function.
-  $: ((_) => {
-    if (validation === lastValidationFunction) return;
-    lastValidationFunction = validation;
-    internalOnChange();
-  })(validation);
+  run(() => {
+    ((_) => {
+      if (validation === lastValidationFunction) return;
+      lastValidationFunction = validation;
+      internalOnChange();
+    })(validation);
+  });
 
   // TODO: automatic height 
   // let textArea: HTMLTextAreaElement;
@@ -152,23 +175,23 @@
   {#if multiline}
       <textarea
         bind:value={value}
-        on:change={internalOnChange}
-        on:input={internalOnInput}
-        on:focusout={internalOnChange}
-        on:focusin={onFocus}
+        onchange={internalOnChange}
+        oninput={internalOnInput}
+        onfocusout={internalOnChange}
+        onfocusin={onFocus}
         name={name}
         placeholder={placeholder}
         disabled={!editable}
         rows=6
         tabindex={editable ? 0 : -1}
-      />
+></textarea>
   {:else if password && !passwordVisible}
     <input
       bind:value={value}
-      on:change={internalOnChange}
-      on:input={internalOnInput}
-      on:focusout={internalOnChange}
-      on:focusin={onFocus}
+      onchange={internalOnChange}
+      oninput={internalOnInput}
+      onfocusout={internalOnChange}
+      onfocusin={onFocus}
       name={name}
       placeholder={placeholder}
       disabled={!editable}
@@ -179,10 +202,10 @@
   {:else}
     <input
       bind:value={value}
-      on:change={internalOnChange}
-      on:input={internalOnInput}
-      on:focusout={internalOnChange}
-      on:focusin={onFocus}
+      onchange={internalOnChange}
+      oninput={internalOnInput}
+      onfocusout={internalOnChange}
+      onfocusin={onFocus}
       name={name}
       placeholder={placeholder}
       disabled={!editable}
@@ -197,3 +220,5 @@
   </div>
   {/if}
 </div>
+
+<!-- TODO: snippets and svelte:element in conjuction with {...otherProps} to reduce amount of rewritten code -->

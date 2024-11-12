@@ -1,6 +1,17 @@
 <script lang="ts">
-  export let name: string;
-  export let ownPositioning: boolean = true;
+  import type { Snippet } from "svelte";
+
+  interface Props {
+    name: string;
+    ownPositioning?: boolean;
+    children?: Snippet;
+  }
+
+  let {
+    name,
+    ownPositioning = true,
+    children
+  }: Props = $props();
 </script>
 
 <style lang="scss">
@@ -21,5 +32,5 @@
 </style>
 
 <label for={name} tabindex="-1" class:ownPositioning={ownPositioning}>
-  <slot/>
+  {@render children?.()}
 </label>

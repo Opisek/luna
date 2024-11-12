@@ -1,13 +1,18 @@
 <script lang="ts">
-  import Loader from "../decoration/Loader.svelte";
   import Button from "../interactive/Button.svelte";
   import Horizontal from "../layout/Horizontal.svelte";
+  import Loader from "../decoration/Loader.svelte";
   import Title from "../layout/Title.svelte";
 
-  export let title: string;
-  export let submittable: boolean = true;
+  interface Props {
+    title: string;
+    submittable?: boolean;
+    children?: import('svelte').Snippet;
+  }
 
-  let loading = false;
+  let { title, submittable = true, children }: Props = $props();
+
+  let loading = $state(false);
 
   function onSubmit(e: SubmitEvent) {
     if (!submittable) {
@@ -38,9 +43,9 @@
   }
 </style>
 
-<form method="POST" on:submit={onSubmit}>
+<form method="POST" onsubmit={onSubmit}>
   <Title>{title}</Title>
-  <slot/>
+  {@render children?.()}
   <Horizontal position="right">
     <Button type="submit" color="success" enabled={submittable}>
       {#if loading}

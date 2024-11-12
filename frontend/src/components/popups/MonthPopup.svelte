@@ -1,30 +1,46 @@
 <script lang="ts">
   import { ChevronLeft, ChevronRight } from "lucide-svelte";
-  import { getMonthName } from "../../lib/common/humanization";
+
   import IconButton from "../interactive/IconButton.svelte";
   import Popup from "./Popup.svelte";
-  import { focusIndicator } from "../../lib/client/decoration";
 
-  let popupVisible: boolean = false;
+  import { NoOp } from '$lib/client/placeholders';
+  import { focusIndicator } from "$lib/client/decoration";
+  import { getMonthName } from "$lib/common/humanization";
 
-  export const show = () => {
+  interface Props {
+    month: number;
+    year: number;
+    showPopup?: () => any;
+    hidePopup?: () => any;
+  }
+
+  let {
+    month = $bindable(),
+    year = $bindable(),
+    showPopup = $bindable(),
+    hidePopup = $bindable()
+  }: Props = $props();
+
+  let popupVisible: boolean = $state(false);
+  let selectingMonth: boolean = $state(true);
+
+  let internalShow: () => void = $state(NoOp);
+  let internalClose: () => void = $state(NoOp);
+
+  showPopup = () => {
     if (popupVisible) return;
     selectedYear = year;
     selectingMonth = true;
     setTimeout(internalShow, 0);
   }
-  let internalShow: () => void;
-  let internalClose: () => void;
 
-  export let month: number;
-  export let year: number;
+  hidePopup = () => {
+    internalClose();
+  }
 
-  let selectedYear: number;
-  let decadeStart: number;
-
-  $: decadeStart = Math.floor(selectedYear / 10) * 10;
-
-  let selectingMonth: boolean;
+  let selectedYear: number = $state(0);
+  let decadeStart: number = $derived(Math.floor(selectedYear / 10) * 10);
 
   function clickMonth(e: MouseEvent, i: number) {
     //addRipple(e);
@@ -49,9 +65,6 @@
     if (selectingMonth) selectedYear ++;
     else selectedYear += 10;
   }
-
-  let clickedMonth = -1;
-  let clickedYear = -1;
 </script>
 
 <style lang="scss">
@@ -114,7 +127,7 @@
   }
 </style>
 
-<Popup bind:show={internalShow} bind:close={internalClose} bind:visible={popupVisible}>
+<Popup bind:showPopup={internalShow} bind:hidePopup={internalClose} bind:visible={popupVisible}>
   <div class="topRow">
     <IconButton click={prev}>
       <ChevronLeft/>
@@ -122,7 +135,7 @@
     <button
       class="display"
       type="button"
-      on:click={() => {selectingMonth = !selectingMonth}}
+      onclick={() => {selectingMonth = !selectingMonth}}
       use:focusIndicator={{ type: "underline" }}
     >
       {#if selectingMonth}
@@ -140,9 +153,8 @@
     {#each Array(12) as _, i}
       <button
         class="button month"
-        class:click={clickedMonth === i}
         type="button"
-        on:click={(e) => clickMonth(e, i)}
+        onclick={(e) => clickMonth(e, i)}
         use:focusIndicator
       >
         {getMonthName(i).substring(0, 3)}
@@ -154,9 +166,8 @@
     {#each Array(10) as _, i}
       <button
         class="button year"
-        class:click={clickedYear === i}
         type="button"
-        on:click={(e) => clickYear(e, i)}
+        onclick={(e) => clickYear(e, i)}
         use:focusIndicator
       >
         {decadeStart + i}

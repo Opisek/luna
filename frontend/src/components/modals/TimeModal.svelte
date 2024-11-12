@@ -1,35 +1,54 @@
 <script lang="ts">
-  import SelectButtons from "../forms/SelectButtons.svelte";
   import Button from "../interactive/Button.svelte";
   import Modal from "./Modal.svelte";
+  import SelectButtons from "../forms/SelectButtons.svelte";
 
-  export let date: Date;
-  export let dateCopy: Date = new Date();
+  import { NoOp } from '$lib/client/placeholders';
 
-  export let onChange: (date: Date) => void = () => {};
-
-  let pickingHour: boolean;
-  let goBackToHour: boolean;
-  let amPm: string;
-
-  let hourInput: HTMLInputElement;
-  let minuteInput: HTMLInputElement;
-
-  $: if (amPm === "am") {
-    dateCopy.setHours(dateCopy.getHours() % 12);
-    if (dateCopy.getHours() === 0) {
-      dateCopy.setHours(12);
-    }
-    dateCopy = dateCopy;
-  } else {
-    dateCopy.setHours(dateCopy.getHours() % 12 + 12);
-    if (dateCopy.getHours() === 12) {
-      dateCopy.setHours(24);
-    }
-    dateCopy = dateCopy;
+  interface Props {
+    date: Date;
+    dateCopy?: Date;
+    onChange?: (date: Date) => void;
+    showModal?: () => any;
+    hideModal?: () => any;
   }
 
-  export const showModal = () => {
+  let {
+    date = $bindable(),
+    onChange = NoOp,
+    showModal = $bindable(),
+    hideModal = $bindable()
+  }: Props = $props();
+
+  let dateCopy: Date = $state(date);
+
+  let pickingHour: boolean = $state(true);
+  let goBackToHour: boolean = $state(false);
+  let amPm: string = $state("am");
+
+  let hourInput: HTMLInputElement = $state(new HTMLInputElement());
+  let minuteInput: HTMLInputElement = $state(new HTMLInputElement());
+
+  $effect(() => {
+    if (amPm === "am") {
+      dateCopy.setHours(dateCopy.getHours() % 12);
+      if (dateCopy.getHours() === 0) {
+        dateCopy.setHours(12);
+      }
+      dateCopy = dateCopy;
+    } else {
+      dateCopy.setHours(dateCopy.getHours() % 12 + 12);
+      if (dateCopy.getHours() === 12) {
+        dateCopy.setHours(24);
+      }
+      dateCopy = dateCopy;
+    }
+  });
+
+  let showModalInternal: () => any = $state(NoOp);
+  let hideModalInternal: () => any = $state(NoOp);
+
+  showModal = () => {
     dateCopy = new Date(date);
     if (dateCopy.getHours() > 12 || dateCopy.getHours() === 0) {
       amPm = "pm";
@@ -41,8 +60,9 @@
     setTimeout(showModalInternal, 0);
   };
 
-  let showModalInternal: () => any;
-  let hideModalInternal: () => any;
+  hideModal = () => {
+    hideModalInternal();
+  };
 
   function dateSelected() {
     date = dateCopy;
@@ -135,7 +155,7 @@
         min="0"
         max="23"
         value={dateCopy.getHours().toString().padStart(2, "0")}
-        on:change={() => {
+        onchange={() => {
           let hours = parseInt(hourInput.value);
           if (hours < 0 || hours > 23) {
             hours = 0;
@@ -155,18 +175,18 @@
           goBackToHour = false;
           minuteInput.focus();
         }}
-        on:input={() => {
+        oninput={() => {
           if (Number.parseInt(hourInput.value) >= 3) {
             minuteInput.focus();
           }
         }}
-        on:focusin={() => {
+        onfocusin={() => {
           pickingHour = true;
           if (!goBackToHour || hourInput.value.length >= 1 && hourInput.value[0] === "0") hourInput.value = "";
           else hourInput.value = hourInput.value.substring(0, hourInput.value.length);
           goBackToHour = false;
         }}
-        on:focusout={() => {
+        onfocusout={() => {
           if (hourInput.value === "") {
             hourInput.value = dateCopy.getHours().toString().padStart(2, "0");
           }
@@ -183,7 +203,7 @@
         min="0"
         max="23"
         value={dateCopy.getMinutes().toString().padStart(2, "0")}
-        on:change={() => {
+        onchange={() => {
           let minutes = parseInt(minuteInput.value);
           if (minutes < 0 || minutes > 59) {
             minutes = 0;
@@ -195,22 +215,22 @@
 
           dateSelected();
         }}
-        on:input={() => {
+        oninput={() => {
           if (Number.parseInt(minuteInput.value) >= 6) {
             minuteInput.blur();
           }
         }}
-        on:keydown={(e) => {
+        onkeydown={(e) => {
           if ((e.key === "Backspace" || e.key === "Delete") && minuteInput.value === "") {
             goBackToHour = true;
             hourInput.focus();
           }
         }}
-        on:focusin={() => {
+        onfocusin={() => {
           pickingHour = false;
           minuteInput.value = "";
         }}
-        on:focusout={() => {
+        onfocusout={() => {
           if (minuteInput.value === "") {
             minuteInput.value = dateCopy.getMinutes().toString().padStart(2, "0");
           }
@@ -221,7 +241,7 @@
   <div class="clock">
       {#each Array(12) as _, i}
         {#if pickingHour}
-          <button class="button hour radial-{i}/12" tabindex="-11" on:click={() => {
+          <button class="button hour radial-{i}/12" tabindex="-11" onclick={() => {
             dateCopy.setHours(((i == 0 ? 12 : i) + (amPm === "am" ? 0 : 12)) % 24);
             dateCopy = dateCopy;
             pickingHour = false;
@@ -230,7 +250,7 @@
           {((i == 0 ? 12 : i) + (amPm === "am" ? 0 : 12)) % 24}
           </button>
         {:else}
-          <button class="button hour radial-{i}/12" tabindex="-1" on:click={() => {
+          <button class="button hour radial-{i}/12" tabindex="-1" onclick={() => {
             dateCopy.setMinutes(i * 5);
             dateCopy = dateCopy;
             dateSelected();
@@ -241,8 +261,8 @@
       {/each}
   </div>
   <SelectButtons bind:value={amPm} name="AM/PM" placeholder="AM/PM" editable={true} options={[{name: "AM", value: "am"}, {name: "PM", value: "pm"}]} label={false}/>
-  <svelte:fragment slot="buttons">
-    <Button onClick={dateSelected} color="success">Confirm</Button>
-    <Button onClick={hideModalInternal} color="failure">Cancel</Button>
-  </svelte:fragment>
+  {#snippet buttons()}
+      <Button onClick={dateSelected} color="success">Confirm</Button>
+      <Button onClick={hideModalInternal} color="failure">Cancel</Button>
+  {/snippet}
 </Modal>

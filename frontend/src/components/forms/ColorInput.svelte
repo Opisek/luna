@@ -1,14 +1,20 @@
 <script lang="ts">
-  import IconButton from "../interactive/IconButton.svelte";
   import ColorCircle from "../misc/ColorCircle.svelte";
   import ColorModal from "../modals/ColorModal.svelte";
+  import IconButton from "../interactive/IconButton.svelte";
   import Label from "./Label.svelte";
 
-  export let color: string;
-  export let name: string;
-  export let editable: boolean;
+  import { NoOp } from "$lib/client/placeholders";
 
-  let showModal: () => any;
+  interface Props {
+    color: string;
+    name: string;
+    editable: boolean;
+  }
+
+  let { color = $bindable(), name, editable }: Props = $props();
+
+  let showModal: () => any = $state(NoOp);
 </script>
 
 <style lang="scss">
@@ -28,15 +34,17 @@
 >
   {#if editable}
     <IconButton click={showModal}>
-      <ColorCircle color={color} size="medium"/>
+      {@render circle()}
     </IconButton>
     <ColorModal
       bind:showModal={showModal} 
       bind:color={color}
     />
   {:else}
-    <ColorCircle color={color} size="medium"/>
+    {@render circle()}
   {/if}
 </div>
 
-<!-- TODO: svelte snippet once out -->
+{#snippet circle()}
+  <ColorCircle color={color} size="medium"/>
+{/snippet}

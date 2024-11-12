@@ -1,22 +1,34 @@
 <script lang="ts">
-  import { focusIndicator } from "../../lib/client/decoration";
   import DateModal from "../modals/DateModal.svelte";
-  import TimeModal from "../modals/TimeModal.svelte";
   import Label from "./Label.svelte";
+  import TimeModal from "../modals/TimeModal.svelte";
 
-  export let value: Date;
-  export let allDay: boolean;
-  export let placeholder: string;
-  export let name: string;
-  export let editable: boolean;
+  import { NoOp } from "$lib/client/placeholders";
+  import { focusIndicator } from "$lib/client/decoration";
 
-  export let onChange: (value: Date) => void = () => {};
+  interface Props {
+    value: Date;
+    allDay: boolean;
+    placeholder: string;
+    name: string;
+    editable: boolean;
+    onChange?: (value: Date) => void;
+  }
 
-  let dateButton: HTMLButtonElement;
-  let timeButton: HTMLButtonElement;
+  let {
+    value = $bindable(),
+    allDay,
+    placeholder,
+    name,
+    editable,
+    onChange = NoOp
+  }: Props = $props();
 
-  let showDateModal = () => {};
-  let showTimeModal = () => {};
+  let dateButton: HTMLButtonElement = $state(new HTMLButtonElement());
+  let timeButton: HTMLButtonElement = $state(new HTMLButtonElement());
+
+  let showDateModal = $state(NoOp);
+  let showTimeModal = $state(NoOp);
 
   function dateClick(e: MouseEvent | KeyboardEvent) {
     if (editable) {
@@ -76,7 +88,7 @@
 <div class="row" class:editable={editable}>
   <button
     bind:this={dateButton}
-    on:click={dateClick}
+    onclick={dateClick}
     type="button"
     tabindex={editable ? 0 : -1}
     use:focusIndicator
@@ -86,7 +98,7 @@
   {#if !allDay}
     <button
       bind:this={timeButton}
-      on:click={timeClick}
+      onclick={timeClick}
       type="button"
       tabindex={editable ? 0 : -1}
       use:focusIndicator

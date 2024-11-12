@@ -1,21 +1,74 @@
 <script lang="ts">
   import { browser } from "$app/environment";
-  import { HSLtoRGB, isValidColor, parseRGB, recommendedColors, RGBtoHSL, serializeRGB } from "../../lib/common/colors";
-  import TextInput from "../forms/TextInput.svelte";
+
   import Button from "../interactive/Button.svelte";
-  import IconButton from "../interactive/IconButton.svelte";
   import ColorCircle from "../misc/ColorCircle.svelte";
+  import IconButton from "../interactive/IconButton.svelte";
   import Modal from "./Modal.svelte";
+  import TextInput from "../forms/TextInput.svelte";
 
-  export let color: string | null;
-  let currentColor: string;
-  let currentHSL: [number, number, number] = [0, 100, 50];
+  import { HSLtoRGB, isValidColor, parseRGB, recommendedColors, RGBtoHSL, serializeRGB } from "$lib/common/colors";
+  import { NoOp } from "$lib/client/placeholders";
 
-  let picker: HTMLElement;
-  let hue: HTMLElement;
+  interface Props {
+    color: string | null;
+    showModal?: () => any;
+    hideModal?: () => any;
+  }
+
+  let {
+    color = $bindable(),
+    showModal = $bindable(),
+    hideModal = $bindable(NoOp),
+  }: Props = $props();
+
+  let picker: HTMLElement = $state(new HTMLElement());
+  let hue: HTMLElement = $state(new HTMLElement());
+
+  let currentColor: string = $state("#000000");
+  let currentHSL: [number, number, number] = $state([0, 100, 50]);
 
   let pickerActive = false;
   let hueActive = false;
+
+  let showModalInternal: () => any = $state(NoOp);
+  let hideModalInternal: () => any = $state(NoOp);
+
+  function mouseUp(e: MouseEvent) {
+    if (pickerActive) pickerUp(e);
+    if (hueActive) hueUp(e);
+  }
+
+  function mouseMove(e: MouseEvent) {
+    pickerMove(e);
+    hueMove(e);
+  }
+
+  showModal = () => {
+    pickerActive = false;
+    hueActive = false;
+    currentColor = (color || "").toUpperCase();
+    setHSLFromColor();
+
+    if (browser) {
+      window.addEventListener("mouseup", mouseUp);
+      window.addEventListener("mousemove", mouseMove);
+    }
+
+    setTimeout(showModalInternal, 0);
+  };
+
+  hideModal = () => {
+    pickerActive = false;
+    hueActive = false;
+
+    if (browser) {
+      window.removeEventListener("mouseup", mouseUp);
+      window.removeEventListener("mousemove", mouseMove);
+    }
+
+    hideModalInternal();
+  }
 
   function setHSLFromColor() {
     let newRGB: [number, number, number];
@@ -30,23 +83,6 @@
   function setColorFromHSL() {
     currentColor = serializeRGB(HSLtoRGB(currentHSL));
   }
-
-  export const showModal = () => {
-    pickerActive = false;
-    hueActive = false;
-    currentColor = (color || "").toUpperCase();
-    setHSLFromColor();
-    setTimeout(showModalInternal, 0);
-  };
-
-  const hideModal = () => {
-    pickerActive = false;
-    hueActive = false;
-    hideModalInternal();
-  }
-
-  let showModalInternal: () => any;
-  let hideModalInternal: () => any;
 
   function confirm() {
     color = currentColor;
@@ -168,17 +204,6 @@
     e.stopPropagation();
     hueActive = false
   }
-
-  if (browser) {
-    window.addEventListener("mouseup", (e) => {
-      if (pickerActive) pickerUp(e);
-      if (hueActive) hueUp(e);
-    });
-    window.addEventListener("mousemove", (e) => {
-      pickerMove(e);
-      hueMove(e);
-    });
-  }
 </script>
 
 <style lang="scss">
@@ -221,23 +246,23 @@
 
 <Modal title="Pick Color" bind:showModal={showModalInternal} bind:hideModal={hideModalInternal} onModalSubmit={confirm}>
   <div class="grid">
-    <!-- svelte-ignore a11y-no-static-element-interactions -->
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div
       bind:this={picker}
       class="picker"
       style="background: linear-gradient(0deg, hsl({currentHSL[0]} 0 0), hsl({currentHSL[0]} 100% 50%))"
-      on:mousedown={pickerDown}
-      on:mousemove={pickerMove}
-      on:mouseup={pickerUp}
+      onmousedown={pickerDown}
+      onmousemove={pickerMove}
+      onmouseup={pickerUp}
     ></div>
-    <!-- svelte-ignore a11y-no-static-element-interactions -->
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div
       bind:this={hue}
       class="hue"
       style="background: linear-gradient(90deg in hsl longer hue, hsl(0 {currentHSL[1]}% {currentHSL[2]}%), hsl(360 {currentHSL[1]}% {currentHSL[2]}%))"
-      on:mousedown={hueDown}
-      on:mousemove={hueMove}
-      on:mouseup={hueUp}
+      onmousedown={hueDown}
+      onmousemove={hueMove}
+      onmouseup={hueUp}
     ></div>
     <ColorCircle color={currentColor} size="fill" shape="squircle"/>
     <TextInput
@@ -261,8 +286,8 @@
       </IconButton>
     {/each}
   </div>
-  <svelte:fragment slot="buttons">
-    <Button onClick={confirm} color="success">Confirm</Button>
-    <Button onClick={cancel} color="failure">Cancel</Button>
-  </svelte:fragment>
+  {#snippet buttons()}
+      <Button onClick={confirm} color="success">Confirm</Button>
+      <Button onClick={cancel} color="failure">Cancel</Button>
+  {/snippet}
 </Modal>

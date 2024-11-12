@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   import Calendar from "../components/calendar/Calendar.svelte";
   import IconButton from "../components/interactive/IconButton.svelte";
 
@@ -14,14 +16,14 @@
   import MonthSelection from "../components/interactive/MonthSelection.svelte";
   import { afterNavigate } from "$app/navigation";
 
-  let localSources: SourceModel[] = [];
+  let localSources: SourceModel[] = $state([]);
   let localCalendars: CalendarModel[] = [];
-  let sourceCalendars: Map<string, CalendarModel[]> = new Map();
-  let localEvents: EventModel[] = [];
+  let sourceCalendars: Map<string, CalendarModel[]> = $state(new Map());
+  let localEvents: EventModel[] = $state([]);
   let calendarEvents: Map<string, EventModel[]> = new Map();
 
-  let showNewSourceModal: () => any;
-  let newSource: SourceModel;
+  let showNewSourceModal: () => any = $state();
+  let newSource: SourceModel = $state();
 
   function createNewSource() {
     newSource = {
@@ -36,15 +38,15 @@
     setTimeout(showNewSourceModal, 0);
   }
 
-  let loaded: boolean = false;
+  let loaded: boolean = $state(false);
 
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth() 
 
-  let selectedMonth: number;
-  let selectedYear: number;
-  let rangeStart: Date;
-  let rangeEnd: Date;
+  let selectedMonth: number = $state();
+  let selectedYear: number = $state();
+  let rangeStart: Date = $state();
+  let rangeEnd: Date = $state();
 
   function getRangeFromStorage() {
     const storedYear = browser ? sessionStorage.getItem("selectedYear") : null;
@@ -114,27 +116,29 @@
     });
   })();
 
-  $: ((year: number, month: number, loaded: boolean) => {
-    if (!browser || !loaded) return;
+  run(() => {
+    ((year: number, month: number, loaded: boolean) => {
+      if (!browser || !loaded) return;
 
-    sessionStorage.setItem("selectedYear", year.toString());
-    sessionStorage.setItem("selectedMonth", month.toString());
-    
-    const firstDayNextMonth = new Date(year, month + 1, 1);
-    const lastDayPreviousMonth = new Date(year, month, 0);
+      sessionStorage.setItem("selectedYear", year.toString());
+      sessionStorage.setItem("selectedMonth", month.toString());
+      
+      const firstDayNextMonth = new Date(year, month + 1, 1);
+      const lastDayPreviousMonth = new Date(year, month, 0);
 
-    if (lastDayPreviousMonth < rangeStart) {
-      const lastStart = rangeStart;
-      rangeStart = new Date(year, month - 2, 1);
-      fetchAllEvents(rangeStart, lastStart);
-    }
+      if (lastDayPreviousMonth < rangeStart) {
+        const lastStart = rangeStart;
+        rangeStart = new Date(year, month - 2, 1);
+        fetchAllEvents(rangeStart, lastStart);
+      }
 
-    if (firstDayNextMonth > rangeEnd) {
-      const lastEnd = rangeEnd;
-      rangeEnd = new Date(year, month + 3, 0);
-      fetchAllEvents(lastEnd, rangeEnd);
-    }
-  })(selectedYear, selectedMonth, loaded);
+      if (firstDayNextMonth > rangeEnd) {
+        const lastEnd = rangeEnd;
+        rangeEnd = new Date(year, month + 3, 0);
+        fetchAllEvents(lastEnd, rangeEnd);
+      }
+    })(selectedYear, selectedMonth, loaded);
+  });
 </script>
 
 <style lang="scss">

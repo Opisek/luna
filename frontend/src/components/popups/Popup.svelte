@@ -1,10 +1,25 @@
 <script lang="ts">
+  import type { Snippet } from "svelte";
+
   import { browser } from "$app/environment";
-  import { calculateOptimalPopupPosition } from "../../lib/common/calculations";
 
-  export let visible: boolean = false;
+  import { calculateOptimalPopupPosition } from "$lib/common/calculations";
 
-  let dialog: HTMLDialogElement;
+  interface Props {
+    visible?: boolean;
+    children?: Snippet;
+    showPopup?: () => void;
+    hidePopup?: () => void;
+  }
+
+  let {
+    visible = $bindable(false),
+    children,
+    showPopup = $bindable(),
+    hidePopup = $bindable()
+  }: Props = $props();
+
+  let dialog: HTMLDialogElement = $state(new HTMLDialogElement());
 
   function clickOutside(event: MouseEvent) {
     if (!dialog || event.detail === 0) return;
@@ -25,29 +40,28 @@
     }
   }
 
-  export const show = () => {
+  showPopup = () => {
     visible = true;
     checkPosition();
-    if (browser) {
-      window.addEventListener("click", clickOutside);
-    }
     dialog.show();
+
+    if (browser) window.addEventListener("click", clickOutside);
+
     setTimeout(() => {
       dialog.focus();
     }, 0);
   }
 
-  export const close = () => {
+  hidePopup = () => {
     visible = false;
     dialog.close();
-    if (browser) {
-      window.removeEventListener("click", clickOutside);
-    }
+
+    if (browser) window.removeEventListener("click", clickOutside);
   }
 
-  let bottom: boolean = false;
-  let center: boolean = false;
-  let right: boolean = false;
+  let bottom: boolean = $state(false);
+  let center: boolean = $state(false);
+  let right: boolean = $state(false);
 
   function checkPosition() {
     if (!dialog || !dialog.parentElement || !browser) return;
@@ -117,6 +131,6 @@
   class:above={!bottom}
 >
   <div class="contents">
-    <slot/>
+    {@render children?.()}
   </div>
 </dialog>
