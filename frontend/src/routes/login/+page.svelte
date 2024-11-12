@@ -1,15 +1,16 @@
 <script lang="ts">
-  import { run } from 'svelte/legacy';
+  import type { ActionData } from './$types';
 
+  import CheckboxInput from '../../components/forms/CheckboxInput.svelte';
   import Form from '../../components/forms/Form.svelte';
   import Link from '../../components/forms/Link.svelte';
   import TextInput from '../../components/forms/TextInput.svelte';
-  import type { ActionData } from './$types';
-  import { queueNotification } from '../../lib/client/notifications';
-  import { page } from '$app/stores';
-  import CheckboxInput from '../../components/forms/CheckboxInput.svelte';
-  import { isValidPassword, isValidUsername } from '../../lib/client/validation';
+
   import { beforeNavigate } from '$app/navigation';
+  import { page } from '$app/stores';
+
+  import { isValidPassword, isValidUsername, valid } from '$lib/client/validation';
+  import { queueNotification } from '$lib/client/notifications';
 
   interface Props {
     form: ActionData;
@@ -19,7 +20,7 @@
 
   // TODO: easier way to prevent double notifications?
   let alreadyShownError = $state(false);
-  run(() => {
+  $effect(() => {
     ((form) => {
       if (form?.error && !alreadyShownError) {
         alreadyShownError = true;
@@ -34,16 +35,10 @@
 
   const redirect = $page.url.searchParams.get('redirect') || "/";
 
-  let usernameValidity: Validity = $state();
-  let passwordValidity: Validity = $state();
+  let usernameValidity: Validity = $state(valid);
+  let passwordValidity: Validity = $state(valid);
 
-  let canSubmit: boolean = $state();
-  run(() => {
-    canSubmit = usernameValidity?.valid && passwordValidity?.valid;
-  });
-  run(() => {
-    console.log(canSubmit);
-  });
+  let canSubmit: boolean = $derived(usernameValidity?.valid && passwordValidity?.valid);
 </script>
 
 <style lang="scss">

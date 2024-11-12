@@ -11,7 +11,7 @@
 
   let { children }: Props = $props();
 
-  let popup: HTMLElement = $state(new HTMLElement());
+  let popup: HTMLElement;
 
   let bottom: boolean = $state(false);
   let center: boolean = $state(false);

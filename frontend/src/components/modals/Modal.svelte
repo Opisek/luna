@@ -32,7 +32,7 @@
     buttons
   }: Props = $props();
 
-  let dialog: HTMLDialogElement = $state(new HTMLDialogElement());
+  let dialog: HTMLDialogElement;
 
   let visible = $state(false);
 

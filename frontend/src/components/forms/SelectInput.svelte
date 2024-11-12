@@ -32,8 +32,8 @@
     if (selectedOption) value = selectedOption.value;
   });
 
-  let selectWrapper: HTMLElement = $state(new HTMLElement());
-  let optionsWrapper: HTMLElement = $state(new HTMLElement());
+  let selectWrapper: HTMLElement;
+  let optionsWrapper: HTMLElement;
 
   function selectClick() {
     if (!active) {

@@ -2,7 +2,7 @@
   import Day from "./Day.svelte";
   import EventModal from "../modals/EventModal.svelte";
 
-  import { EmptyEvent } from "$lib/client/placeholders";
+  import { EmptyEvent, NoOp } from "$lib/client/placeholders";
   import { compareEventsByStartDate } from "$lib/common/comparators";
   import { getDayName } from "$lib/common/humanization";
 
@@ -10,10 +10,13 @@
     month: number;
     year: number;
     events: EventModel[];
-    showModal: () => boolean;
   }
 
-  let { month, year, events, showModal }: Props = $props();
+  let {
+    month,
+    year,
+    events,
+  }: Props = $props();
 
   let currentlyHoveredEvent: EventModel = $state(EmptyEvent);
   let currentlyClickedEvent: EventModel = $state(EmptyEvent);
@@ -21,6 +24,8 @@
   let days: Date[] = $state([]);
   let amountOfRows: number = $state(0);
   let processedEvents: (EventModel | null)[][] = $state([]);
+
+  let showModal = $state(NoOp);
 
   function updateCalendar(month: number, year: number, events: EventModel[]) {
       // Date calculation

@@ -18,7 +18,7 @@
     children
   }: Props = $props();
 
-  let button: HTMLButtonElement = $state(new HTMLButtonElement());
+  let button: HTMLButtonElement;
 </script>
 
 <style lang="scss">

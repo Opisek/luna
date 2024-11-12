@@ -24,8 +24,8 @@
     onChange = NoOp
   }: Props = $props();
 
-  let dateButton: HTMLButtonElement = $state(new HTMLButtonElement());
-  let timeButton: HTMLButtonElement = $state(new HTMLButtonElement());
+  let dateButton: HTMLButtonElement;
+  let timeButton: HTMLButtonElement;
 
   let showDateModal = $state(NoOp);
   let showTimeModal = $state(NoOp);

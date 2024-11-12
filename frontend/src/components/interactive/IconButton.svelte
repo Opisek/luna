@@ -23,7 +23,7 @@
     children
   }: Props = $props();
 
-  let button: HTMLElement = $state(new HTMLElement());
+  let button: HTMLElement;
 
   function clickInternal(e: MouseEvent) {
     e.stopPropagation();

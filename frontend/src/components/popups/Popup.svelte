@@ -19,7 +19,7 @@
     hidePopup = $bindable()
   }: Props = $props();
 
-  let dialog: HTMLDialogElement = $state(new HTMLDialogElement());
+  let dialog: HTMLDialogElement;
 
   function clickOutside(event: MouseEvent) {
     if (!dialog || event.detail === 0) return;

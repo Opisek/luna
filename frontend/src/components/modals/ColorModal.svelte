@@ -22,8 +22,8 @@
     hideModal = $bindable(NoOp),
   }: Props = $props();
 
-  let picker: HTMLElement = $state(new HTMLElement());
-  let hue: HTMLElement = $state(new HTMLElement());
+  let picker: HTMLElement;
+  let hue: HTMLElement;
 
   let currentColor: string = $state("#000000");
   let currentHSL: [number, number, number] = $state([0, 100, 50]);

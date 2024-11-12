@@ -1,6 +1,4 @@
 <script lang="ts">
-  import { run } from 'svelte/legacy';
-
   import Calendar from "../components/calendar/Calendar.svelte";
   import IconButton from "../components/interactive/IconButton.svelte";
 
@@ -15,6 +13,7 @@
   import SourceModal from "../components/modals/SourceModal.svelte";
   import MonthSelection from "../components/interactive/MonthSelection.svelte";
   import { afterNavigate } from "$app/navigation";
+  import { EmptySource, NoOp, PlaceholderDate } from "../lib/client/placeholders";
 
   let localSources: SourceModel[] = $state([]);
   let localCalendars: CalendarModel[] = [];
@@ -22,8 +21,8 @@
   let localEvents: EventModel[] = $state([]);
   let calendarEvents: Map<string, EventModel[]> = new Map();
 
-  let showNewSourceModal: () => any = $state();
-  let newSource: SourceModel = $state();
+  let showNewSourceModal: () => any = $state(NoOp);
+  let newSource: SourceModel = $state(EmptySource);
 
   function createNewSource() {
     newSource = {
@@ -43,10 +42,10 @@
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth() 
 
-  let selectedMonth: number = $state();
-  let selectedYear: number = $state();
-  let rangeStart: Date = $state();
-  let rangeEnd: Date = $state();
+  let selectedMonth: number = $state(0);
+  let selectedYear: number = $state(0);
+  let rangeStart: Date = $state(PlaceholderDate);
+  let rangeEnd: Date = $state(PlaceholderDate);
 
   function getRangeFromStorage() {
     const storedYear = browser ? sessionStorage.getItem("selectedYear") : null;
@@ -116,7 +115,7 @@
     });
   })();
 
-  run(() => {
+  $effect(() => {
     ((year: number, month: number, loaded: boolean) => {
       if (!browser || !loaded) return;
 
@@ -188,7 +187,7 @@
 
     <div class="sources">
       {#each localSources as source}
-        <SourceEntry bind:source={source}/>
+        <SourceEntry source={source}/>
         {#if (!source.collapsed)}
           {#each sourceCalendars.get(source.id) || [] as calendar}
             <CalendarEntry calendar={calendar}/>

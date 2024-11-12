@@ -7,7 +7,7 @@
 
   let { event, parent }: Props = $props();
 
-  let circle: HTMLDivElement = $state(new HTMLDivElement());
+  let circle: HTMLDivElement;
 
   $effect(() => {
     ((circle: HTMLDivElement) => {

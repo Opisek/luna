@@ -26,8 +26,8 @@
   let goBackToHour: boolean = $state(false);
   let amPm: string = $state("am");
 
-  let hourInput: HTMLInputElement = $state(new HTMLInputElement());
-  let minuteInput: HTMLInputElement = $state(new HTMLInputElement());
+  let hourInput: HTMLInputElement;
+  let minuteInput: HTMLInputElement;
 
   $effect(() => {
     if (amPm === "am") {

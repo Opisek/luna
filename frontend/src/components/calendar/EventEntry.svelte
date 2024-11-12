@@ -27,7 +27,7 @@
   }: Props = $props();
 
   let nextDate: Date = $derived(new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1))
-  let element: HTMLDivElement = $state(new HTMLDivElement()); // TODO: do we really need to make a new element when we just want to bind to something else?
+  let element: HTMLDivElement; // TODO: do we really need to make a new element when we just want to bind to something else?
 
   let isEventStart = $derived(event !== null && event.date.start.getTime() >= date.getTime());
   let isEventEnd = $derived(event !== null && nextDate.getTime() >= event.date.end.getTime());
