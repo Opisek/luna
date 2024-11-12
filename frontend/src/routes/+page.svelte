@@ -204,10 +204,12 @@
   </aside>
   <main>
     <MonthSelection bind:month={selectedMonth} bind:year={selectedYear}/>
+    <!--
     <Calendar
       year={selectedYear}
       month={selectedMonth}
       events={localEvents}
     />
+    -->
   </main>
 </div>

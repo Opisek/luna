@@ -1,23 +1,18 @@
 <script lang="ts">
-  import { run } from 'svelte/legacy';
-
-  import { focusIndicator } from "../../lib/client/decoration";
-  import { alwaysValid, valid } from "../../lib/client/validation";
-  import VisibilityToggle from "../interactive/VisibilityToggle.svelte";
   import Label from "./Label.svelte";
+  import VisibilityToggle from "../interactive/VisibilityToggle.svelte";
 
-
-
+  import { alwaysValid, valid } from "$lib/client/validation";
+  import { focusIndicator } from "$lib/client/decoration";
+  import { NoOp } from "../../lib/client/placeholders";
 
   let passwordVisible: boolean = $state(false);
 
-
   let wrapper: HTMLDivElement | null = $state(null);
-
 
   let lastValidationFunction = $state(alwaysValid); // TODO: check if still needed in svelte 5
   interface Props {
-    value?: string;
+    value?: string | undefined;
     placeholder: string;
     name: string;
     editable?: boolean;
@@ -32,26 +27,27 @@
   }
 
   let {
-    value = $bindable(""),
+    value = $bindable(),
     placeholder,
     name,
     editable = true,
     multiline = false,
     password = false,
     label = true,
-    onChange = () => {},
-    onInput = () => {},
-    onFocus = () => {},
+    onChange = NoOp,
+    onInput = NoOp,
+    onFocus = NoOp,
     validation = alwaysValid,
-    validity = $bindable(validation(value))
+    validity = $bindable(value ? validation(value) : valid)
   }: Props = $props();
+
 
   // If the value is set programmatically, update the validity.
   // For example when opening a new form
   let lastValue: string | null = $state(null); // TODO: check if still needed in svelte 5
-  run(() => {
+  $effect(() => {
     ((value) => {
-      if (value === lastValue) return; // prevents some infinite loop that i don't understand, might be a svelte bug
+      if (!value || value === lastValue) return; // prevents some infinite loop that i don't understand, might be a svelte bug
       lastValue = value;
       if (wrapper != null && (document.activeElement === wrapper || wrapper.contains(document.activeElement))) return;
       validity = value ? validation(value) : valid;
@@ -64,6 +60,7 @@
 
   // Once the user has finished typing, update the validity.
   function internalOnChange() {
+    if (!value) return;
     validity = validation(value);
     empty = value === "";
     onChange(value);
@@ -72,6 +69,7 @@
   // Immediately tell the user if the input becomes valid,
   // but not if it becomes invalid, as they are not done typing yet.
   function internalOnInput() {
+    if (!value) return;
     const res = validation(value);
     if (res.valid) validity = res;
     onInput(value);
@@ -79,7 +77,7 @@
 
   // If the validation function changes, like for the repeat password field,
   // rerun the validation function.
-  run(() => {
+  $effect(() => {
     ((_) => {
       if (validation === lastValidationFunction) return;
       lastValidationFunction = validation;

@@ -1,10 +1,16 @@
 export const EmptySource: SourceModel = {
   id: '',
   name: '',
-  type: '',
-  settings: {},
-  auth_type: '',
-  auth: {},
+  type: 'caldav',
+  settings: {
+    url: '',
+  },
+  auth_type: 'none',
+  auth: {
+    username: '',
+    password: '',
+    token: '',
+  },
   collapsed: false
 }
 
