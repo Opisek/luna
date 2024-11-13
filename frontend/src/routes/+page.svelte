@@ -1,19 +1,21 @@
 <script lang="ts">
-  import Calendar from "../components/calendar/Calendar.svelte";
-  import IconButton from "../components/interactive/IconButton.svelte";
+  import { PlusIcon } from "lucide-svelte";
 
-  import { browser } from "$app/environment";
+  import Calendar from "../components/calendar/Calendar.svelte";
+  import CalendarEntry from "../components/calendar/CalendarEntry.svelte";
+  import Horizontal from "../components/layout/Horizontal.svelte";
+  import IconButton from "../components/interactive/IconButton.svelte";
+  import MonthSelection from "../components/interactive/MonthSelection.svelte";
   import SourceEntry from "../components/calendar/SourceEntry.svelte";
+  import SourceModal from "../components/modals/SourceModal.svelte";
+  import Title from "../components/layout/Title.svelte";
+
+  import { afterNavigate } from "$app/navigation";
+  import { browser } from "$app/environment";
+
+  import { EmptySource, NoOp } from "$lib/client/placeholders";
   import { calendars, events, fetchAllEvents, fetchSources, sources } from "$lib/client/repository";
   import { queueNotification } from "$lib/client/notifications";
-  import CalendarEntry from "../components/calendar/CalendarEntry.svelte";
-  import Title from "../components/layout/Title.svelte";
-  import Horizontal from "../components/layout/Horizontal.svelte";
-  import { PlusIcon } from "lucide-svelte";
-  import SourceModal from "../components/modals/SourceModal.svelte";
-  import MonthSelection from "../components/interactive/MonthSelection.svelte";
-  import { afterNavigate } from "$app/navigation";
-  import { EmptySource, NoOp } from "../lib/client/placeholders";
 
   let localSources: SourceModel[] = $state([]);
   let localCalendars: CalendarModel[] = [];
