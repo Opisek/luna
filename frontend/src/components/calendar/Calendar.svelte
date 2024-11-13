@@ -93,16 +93,8 @@
   }
 
   let containerHeight: number = $state(0);
-  let maxEvents: number = $state(0);
-  function calculateMaxEvents(height: number) {
-    if (height == 0) {
-      maxEvents = 0;
-      return;
-    }
-  }
-  $effect(() => {
-    calculateMaxEvents(containerHeight);
-  });
+  // TODO: figure out how to do this without hard-coded values
+  let maxEvents: number = $derived(containerHeight === 0 ? 0 : Math.max(Math.floor((containerHeight - 35) / 27), 0));
 </script>
 
 <style lang="scss">
