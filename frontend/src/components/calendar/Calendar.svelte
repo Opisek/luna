@@ -5,7 +5,6 @@
   import { EmptyEvent, NoOp } from "$lib/client/placeholders";
   import { compareEventsByStartDate } from "$lib/common/comparators";
   import { getDayName } from "$lib/common/humanization";
-  import { untrack } from "svelte";
 
   interface Props {
     month: number;
