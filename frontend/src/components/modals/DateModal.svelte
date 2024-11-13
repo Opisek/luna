@@ -44,10 +44,6 @@
   }
 </script>
 
-<style lang="scss">
-
-</style>
-
 <Modal title="Pick Date" bind:showModal={showModalInternal} bind:hideModal={hideModal}>
   <MonthSelection bind:month={currentMonth} bind:year={currentYear} />
   <SmallCalendar year={currentYear} month={currentMonth} onDayClick={dateSelected} />

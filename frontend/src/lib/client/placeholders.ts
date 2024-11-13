@@ -14,6 +14,8 @@ export const EmptySource: SourceModel = {
   collapsed: false
 }
 
+export const PlaceholderDate = new Date(0);
+
 export const EmptyEvent: EventModel = {
   id: '',
   calendar: '',
@@ -21,15 +23,13 @@ export const EmptyEvent: EventModel = {
   desc: '',
   color: '',
   date: {
-    start: new Date(),
-    end: new Date(),
+    start: PlaceholderDate,
+    end: PlaceholderDate,
     allDay: false,
   }
 }
 
 export const NoOp = () => {};
-
-export const PlaceholderDate = new Date(0);
 
 export const EmptyOption: Option = {
   value: '',

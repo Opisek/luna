@@ -13,7 +13,7 @@
   import SourceModal from "../components/modals/SourceModal.svelte";
   import MonthSelection from "../components/interactive/MonthSelection.svelte";
   import { afterNavigate } from "$app/navigation";
-  import { EmptySource, NoOp, PlaceholderDate } from "../lib/client/placeholders";
+  import { EmptySource, NoOp } from "../lib/client/placeholders";
 
   let localSources: SourceModel[] = $state([]);
   let localCalendars: CalendarModel[] = [];
@@ -39,13 +39,14 @@
 
   let loaded: boolean = $state(false);
 
-  const currentYear = new Date().getFullYear();
-  const currentMonth = new Date().getMonth() 
+  const today = new Date();
+  const currentYear = today.getFullYear();
+  const currentMonth = today.getMonth() 
 
-  let selectedMonth: number = $state(0);
-  let selectedYear: number = $state(0);
-  let rangeStart: Date = $state(PlaceholderDate);
-  let rangeEnd: Date = $state(PlaceholderDate);
+  let selectedMonth: number = $state(currentMonth);
+  let selectedYear: number = $state(currentYear);
+  let rangeStart: Date = $state(new Date(currentYear, currentMonth - 1, 1));
+  let rangeEnd: Date = $state(new Date(currentYear, currentMonth + 2, 0));
 
   function getRangeFromStorage() {
     const storedYear = browser ? sessionStorage.getItem("selectedYear") : null;
@@ -59,11 +60,6 @@
   if (browser) {
     getRangeFromStorage();
     loaded = true;
-  } else {
-    selectedYear = currentYear;
-    selectedMonth = currentMonth;
-    rangeStart = new Date(selectedYear, selectedMonth - 1, 1);
-    rangeEnd = new Date(selectedYear, selectedMonth + 2, 0);
   }
 
   afterNavigate(() => {
@@ -186,8 +182,8 @@
     <!--<SmallCalendar year={selectedYear} month={selectedMonth}/>-->
 
     <div class="sources">
-      {#each localSources as source}
-        <SourceEntry source={source}/>
+      {#each localSources as source, i}
+        <SourceEntry bind:source={localSources[i]}/>
         {#if (!source.collapsed)}
           {#each sourceCalendars.get(source.id) || [] as calendar}
             <CalendarEntry calendar={calendar}/>
@@ -199,17 +195,17 @@
       <IconButton click={createNewSource}>
         <PlusIcon/>
       </IconButton>
-      <SourceModal bind:showCreateModal={showNewSourceModal} source={newSource}/>
     </Horizontal>
   </aside>
   <main>
     <MonthSelection bind:month={selectedMonth} bind:year={selectedYear}/>
-    <!--
     <Calendar
       year={selectedYear}
       month={selectedMonth}
       events={localEvents}
     />
-    -->
   </main>
 </div>
+
+<!-- TODO: only put SourceModal, CalendarModal, and EventModal here and dynamically determine the object we bind with context or store -->
+<SourceModal bind:showCreateModal={showNewSourceModal} source={newSource}/>

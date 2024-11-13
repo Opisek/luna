@@ -34,9 +34,12 @@
   }: Props = $props();
 
   let newEvent: EventModel = $state(EmptyEvent);
+  let createNewEvent: boolean = $state(false);
   let showCreateEventModal: () => any = $state(NoOp);
 
   let createEventButtonClick = () => {
+    createNewEvent = true;
+
     const start = new Date(date);
     start.setHours(12, 0, 0, 0);
 
@@ -138,7 +141,9 @@
         <IconButton click={createEventButtonClick} tabindex={-1}>
           <PlusIcon size={13}/>
         </IconButton>
-        <EventModal bind:showCreateModal={showCreateEventModal} event={newEvent}/>
+        {#if createNewEvent}
+          <EventModal bind:showCreateModal={showCreateEventModal} event={newEvent}/>
+        {/if}
       </span>
     </span>
   </div>

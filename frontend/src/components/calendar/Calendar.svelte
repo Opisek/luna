@@ -5,6 +5,7 @@
   import { EmptyEvent, NoOp } from "$lib/client/placeholders";
   import { compareEventsByStartDate } from "$lib/common/comparators";
   import { getDayName } from "$lib/common/humanization";
+  import { untrack } from "svelte";
 
   interface Props {
     month: number;
@@ -89,7 +90,10 @@
     }
 
   $effect(() => {
-    updateCalendar(month, year, events);
+    // TODO: https://github.com/sveltejs/svelte/issues/9248
+    // TODO: maybe use $derived instead (deriving processedEvents and days)
+    month; year; events;
+    untrack(() => updateCalendar(month, year, events));
   });
 
   let clickedEvent: EventModel = $state(EmptyEvent);
@@ -169,4 +173,6 @@
   </div>
 </div>
 
-<EventModal bind:showModal event={clickedEvent}/>
+{#if clickedEvent.id}
+  <EventModal bind:showModal event={clickedEvent}/>
+{/if}
