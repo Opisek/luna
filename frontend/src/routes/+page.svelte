@@ -185,6 +185,7 @@
       {#each localSources as source, i}
         <SourceEntry bind:source={localSources[i]}/>
         {#if (!source.collapsed)}
+          <!-- TODO: figure out how to make this bindable... -->
           {#each sourceCalendars.get(source.id) || [] as calendar}
             <CalendarEntry calendar={calendar}/>
           {/each}
