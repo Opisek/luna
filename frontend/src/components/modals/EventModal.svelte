@@ -16,7 +16,7 @@
   }
 
   let {
-    event,
+    event = $bindable(EmptyEvent),
     showCreateModal = $bindable(),
     showModal = $bindable(),
   }: Props = $props();

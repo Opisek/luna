@@ -22,19 +22,15 @@
   let currentlyHoveredEvent: EventModel = $state(EmptyEvent);
   let currentlyClickedEvent: EventModel = $state(EmptyEvent);
 
-  let days: Date[] = $state([]);
-  let amountOfRows: number = $state(0);
-  let processedEvents: (EventModel | null)[][] = $state([]);
-
   let showModal = $state(NoOp);
 
-  function updateCalendar(month: number, year: number, events: EventModel[]) {
+  let [days, amountOfRows, processedEvents] = $derived((() => {
       // Date calculation
       const firstMonthDay = new Date(year, month, 1);
       const lastMonthDay = new Date(year, month + 1, 0);
       const firstDayOfWeek = (firstMonthDay.getDay() + 6) % 7;
 
-      amountOfRows = Math.ceil((lastMonthDay.getDate() + firstDayOfWeek) / 7);
+      const amountOfRows = Math.ceil((lastMonthDay.getDate() + firstDayOfWeek) / 7);
 
       const firstViewDay = new Date(firstMonthDay);
       firstViewDay.setDate(firstMonthDay.getDate() - firstDayOfWeek);
@@ -42,13 +38,12 @@
       lastViewDay.setDate(firstMonthDay.getDate() + 7 * amountOfRows - 1);
 
       // Event pre-processing
-      const filteredEvents = events
-        .sort(compareEventsByStartDate)
-        .filter(e => e.date.start.getTime() >= firstViewDay.getTime() && e.date.end.getTime() < lastViewDay.getTime());
+      const filteredEvents = events.filter(e => e.date.start.getTime() >= firstViewDay.getTime() && e.date.end.getTime() < lastViewDay.getTime());
+      filteredEvents.sort(compareEventsByStartDate);
 
       // Fill
-      days = [];
-      processedEvents = [];
+      const days: Date[] = [];
+      const processedEvents: (EventModel | null)[][] = [];
 
       const dateIterator = new Date(firstViewDay);
       let eventIterator = 0;
@@ -87,14 +82,9 @@
         while(dayEvents.length > 0 && dayEvents[dayEvents.length - 1] == null) dayEvents.pop();
         processedEvents.push(dayEvents);
       }
-    }
 
-  $effect(() => {
-    // TODO: https://github.com/sveltejs/svelte/issues/9248
-    // TODO: maybe use $derived instead (deriving processedEvents and days)
-    month; year; events;
-    untrack(() => updateCalendar(month, year, events));
-  });
+      return [days, amountOfRows, processedEvents];
+  })());
 
   let clickedEvent: EventModel = $state(EmptyEvent);
   function eventClick(event: EventModel) {

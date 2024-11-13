@@ -208,4 +208,4 @@
 </div>
 
 <!-- TODO: only put SourceModal, CalendarModal, and EventModal here and dynamically determine the object we bind with context or store -->
-<SourceModal bind:showCreateModal={showNewSourceModal} source={newSource}/>
+<SourceModal bind:showCreateModal={showNewSourceModal} bind:source={newSource}/>

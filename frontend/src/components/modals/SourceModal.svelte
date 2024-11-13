@@ -15,7 +15,7 @@
   }
 
   let {
-    source,
+    source = $bindable(EmptySource),
     showCreateModal = $bindable(),
     showModal = $bindable(),
   }: Props = $props();

@@ -142,7 +142,7 @@
           <PlusIcon size={13}/>
         </IconButton>
         {#if createNewEvent}
-          <EventModal bind:showCreateModal={showCreateEventModal} event={newEvent}/>
+          <EventModal bind:showCreateModal={showCreateEventModal} bind:event={newEvent}/>
         {/if}
       </span>
     </span>

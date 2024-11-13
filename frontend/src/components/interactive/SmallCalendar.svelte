@@ -14,17 +14,14 @@
     onDayClick = NoOp
   }: Props = $props();
 
-  let days: Date[] = $state([]);
-  let amountOfRows: number = $state(0);
-
-  function updateCalendar(month: number, year: number) {
+  let [days, amountOfRows] = $derived((() => {
     // Date calculation
     const firstMonthDay = new Date(year, month, 1);
-    const lastMonthDay = new Date(year, month + 1, 0);
+    //const lastMonthDay = new Date(year, month + 2, 0);
     const firstDayOfWeek = (firstMonthDay.getDay() + 6) % 7;
 
     //amountOfRows = Math.ceil((lastMonthDay.getDate() + firstDayOfWeek) / 7);
-    amountOfRows = 6;
+    const amountOfRows = 6;
 
     const firstViewDay = new Date(firstMonthDay);
     firstViewDay.setDate(firstMonthDay.getDate() - firstDayOfWeek);
@@ -32,7 +29,7 @@
     lastViewDay.setDate(firstMonthDay.getDate() + 7 * amountOfRows - 1);
 
     // Fill
-    days = [];
+    const days = [];
 
     const dateIterator = new Date(firstViewDay);
 
@@ -40,11 +37,9 @@
       days.push(new Date(dateIterator));
       dateIterator.setDate(dateIterator.getDate() + 1);
     }
-  }
-  
-  $effect(() => {
-    updateCalendar(month, year);
-  });
+
+    return [days, amountOfRows];
+  })());
 </script>
 
 <style lang="scss">
