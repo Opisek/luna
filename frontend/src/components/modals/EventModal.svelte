@@ -109,6 +109,7 @@
   bind:showModal={showModalInternal}
   onDelete={onDelete}
   onEdit={onEdit}
+  submittable={eventCopy.calendar !== "" && eventCopy.name !== "" && eventCopy.date.start.getTime() < eventCopy.date.end.getTime()}
 >
   {#if eventCopy}
     <TextInput bind:value={eventCopy.name} name="name" placeholder="Name" editable={editMode} />

@@ -46,7 +46,18 @@
     const end = new Date(date);
     end.setHours(13, 0, 0, 0);
 
-    newEvent = EmptyEvent;
+    newEvent = {
+      id: "",
+      calendar: "",
+      name: "",
+      desc: "",
+      color: "",
+      date: {
+        start: start,
+        end: end,
+        allDay: false,
+      }
+    };
 
     setTimeout(() => {
       showCreateEventModal();

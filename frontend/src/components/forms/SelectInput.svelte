@@ -20,17 +20,14 @@
   }
 
   let {
-    value = $bindable(),
+    value = $bindable(""),
     placeholder,
     name,
     editable = true,
     options
   }: Props = $props();
 
-  let selectedOption: Option | null = $state(options.length > 0 ? options[1] : null);
-  $effect(() => {
-    if (selectedOption) value = selectedOption.value;
-  });
+  let selectedOption: Option | null = $derived(options.filter(x => x.value === value)[0] || null);
 
   let selectWrapper: HTMLElement;
   let optionsWrapper: HTMLElement;
@@ -42,17 +39,17 @@
       if (browser) {
         window.addEventListener("click", clickOutside);
       }
+      setTimeout(() => {
+        (optionsWrapper.getElementsByClassName("selected")[0] as HTMLElement).focus();
+      }, 0);
     } else {
       window.removeEventListener("click", clickOutside);
     }
     active = !active;
-    setTimeout(() => {
-      (optionsWrapper.getElementsByClassName("selected")[0] as HTMLElement).focus();
-    }, 0);
   }
 
   function optionClick(option: Option) {
-    selectedOption = option;
+    value = option.value;
     selectWrapper.focus();
   }
 
@@ -141,6 +138,10 @@
   button {
     width: 100% !important;
   }
+
+  .placeholder {
+    color: $foregroundFaded;
+  }
 </style>
 
 <Label name={name}>{placeholder}</Label>
@@ -161,13 +162,17 @@
   >
     {#if selectedOption !== null}
       {selectedOption.name}
+    {:else}
+      <span class="placeholder">
+        {"Select " + placeholder}
+      </span>
     {/if}
     {#if editable}
       <span
         class="arrow"
         class:active={active} 
       >
-      <ChevronDown size={16}/>
+        <ChevronDown size={16}/>
       </span>
     {/if}
   </button>
