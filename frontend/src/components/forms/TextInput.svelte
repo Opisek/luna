@@ -119,6 +119,9 @@
   div.editable > input, div.editable > textarea {
     background: $backgroundSecondary;
   }
+  div.noneditable {
+    --barFocusIndicatorColor: transparent;
+  }
 
   textarea {
     min-height: 0;
@@ -165,6 +168,7 @@
 <div
   class="wrapper"
   class:editable={editable} 
+  class:noneditable={!editable} 
   tabindex="-1"
   use:focusIndicator
   class:error={!validity.valid && !empty}
