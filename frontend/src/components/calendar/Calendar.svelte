@@ -5,6 +5,7 @@
   import { EmptyEvent, NoOp } from "$lib/client/placeholders";
   import { compareEventsByStartDate } from "$lib/common/comparators";
   import { getDayName } from "$lib/common/humanization";
+  import { setContext } from "svelte";
 
   interface Props {
     month: number;
@@ -18,8 +19,8 @@
     events,
   }: Props = $props();
 
-  let currentlyHoveredEvent: EventModel = $state(EmptyEvent);
-  let currentlyClickedEvent: EventModel = $state(EmptyEvent);
+  setContext("currentlyHoveredEvent", null);
+  setContext("currentlyClickedEvent", null);
 
   let showModal = $state(NoOp);
 
@@ -143,8 +144,6 @@
         events={processedEvents[i]}
         isFirstDay={i == 0}
         isLastDay={i == days.length - 1}
-        bind:currentlyHoveredEvent={currentlyHoveredEvent}
-        bind:currentlyClickedEvent={currentlyClickedEvent}
         clickCallback={eventClick}
         maxEvents={maxEvents}
         bind:containerHeight={containerHeight}

@@ -3,6 +3,7 @@
 
   import { GetEventColor, GetEventHoverColor, GetEventRGB, isDark } from "$lib/common/colors";
   import { passIfEnter } from "$lib/common/inputs";
+  import { getContext } from "svelte";
 
   interface Props {
     visible?: boolean;
@@ -10,8 +11,6 @@
     isFirstDay: boolean;
     isLastDay: boolean;
     date: Date;
-    currentlyHoveredEvent: EventModel | null;
-    currentlyClickedEvent: EventModel | null;
     clickCallback: (event: EventModel) => void;
   }
 
@@ -21,10 +20,11 @@
     isFirstDay,
     isLastDay,
     date,
-    currentlyHoveredEvent = $bindable(),
-    currentlyClickedEvent = $bindable(),
     clickCallback
   }: Props = $props();
+
+  let currentlyHoveredEvent = getContext("currentlyHoveredEvent");
+  let currentlyClickedEvent = getContext("currentlyClickedEvent");
 
   let nextDate: Date = $derived(new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1))
   let element: HTMLDivElement; // TODO: do we really need to make a new element when we just want to bind to something else?

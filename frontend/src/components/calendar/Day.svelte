@@ -14,8 +14,6 @@
     isLastDay: boolean;
     events: (EventModel | null)[];
     maxEvents?: number;
-    currentlyHoveredEvent: EventModel;
-    currentlyClickedEvent: EventModel;
     containerHeight: number;
     clickCallback: (event: EventModel) => void;
   }
@@ -27,8 +25,6 @@
     isLastDay,
     events,
     maxEvents = 1,
-    currentlyHoveredEvent = $bindable(),
-    currentlyClickedEvent = $bindable(),
     containerHeight = $bindable(),
     clickCallback
   }: Props = $props();
@@ -177,8 +173,6 @@
       isLastDay={isLastDay}
       date={date}
       visible={i < actualMaxEvents}
-      bind:currentlyHoveredEvent={currentlyHoveredEvent}
-      bind:currentlyClickedEvent={currentlyClickedEvent}
       clickCallback={clickCallback}
     />
   {/each}
