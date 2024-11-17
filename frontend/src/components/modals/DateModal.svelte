@@ -44,7 +44,7 @@
   }
 </script>
 
-<Modal title="Pick Date" bind:showModal={showModalInternal} bind:hideModal={hideModal}>
+<Modal title="Pick Date" bind:showModal={showModalInternal} bind:hideModal={hideModalInternal}>
   <MonthSelection bind:month={currentMonth} bind:year={currentYear} />
   <SmallCalendar year={currentYear} month={currentMonth} onDayClick={dateSelected} />
 </Modal>
