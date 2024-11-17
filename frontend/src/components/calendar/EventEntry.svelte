@@ -4,6 +4,7 @@
   import { GetEventColor, GetEventHoverColor, GetEventRGB, isDark } from "$lib/common/colors";
   import { passIfEnter } from "$lib/common/inputs";
   import { getContext } from "svelte";
+  import type { Writable } from "svelte/store";
 
   interface Props {
     visible?: boolean;
@@ -23,8 +24,8 @@
     clickCallback
   }: Props = $props();
 
-  let currentlyHoveredEvent = getContext("currentlyHoveredEvent");
-  let currentlyClickedEvent = getContext("currentlyClickedEvent");
+  let currentlyHoveredEvent = getContext("currentlyHoveredEvent") as Writable<EventModel | null>;
+  let currentlyClickedEvent = getContext("currentlyClickedEvent") as Writable<EventModel | null>;
 
   let nextDate: Date = $derived(new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1))
   let element: HTMLDivElement; // TODO: do we really need to make a new element when we just want to bind to something else?
@@ -39,26 +40,26 @@
   function mouseEnter() {
     if (event == null) return;
 
-    currentlyHoveredEvent = event;
+    $currentlyHoveredEvent = event;
   }
   function mouseLeave() {
     if (event == null) return;
 
-    if (currentlyHoveredEvent == event)
-      currentlyHoveredEvent = null;
-    if (currentlyClickedEvent == event)
-      currentlyClickedEvent = null;
+    if ($currentlyHoveredEvent == event)
+      $currentlyHoveredEvent = null;
+    if ($currentlyClickedEvent == event)
+      $currentlyClickedEvent = null;
   }
   function mouseDown() {
     if (event == null) return;
 
-    currentlyClickedEvent = event;
+    $currentlyClickedEvent = event;
   }
   function mouseUp() {
     if (event == null) return;
 
-    if (currentlyClickedEvent == event) {
-      currentlyClickedEvent = null;
+    if ($currentlyClickedEvent == event) {
+      $currentlyClickedEvent = null;
       clickCallback(event);
       element.blur();
     }
@@ -157,8 +158,8 @@
   class:placeholder={!event}
   class:start={isFirstDisplay}
   class:end={isLastDisplay}
-  class:hover={currentlyHoveredEvent == event}
-  class:active={currentlyClickedEvent == event}
+  class:hover={$currentlyHoveredEvent == event}
+  class:active={$currentlyClickedEvent == event}
   class:hidden={!visible}
   class:foregroundBright={isBackgroundDark}
   class:foregroundDark={!isBackgroundDark}
@@ -171,7 +172,7 @@
   onkeypress={keyPress}
   role="button"
   tabindex={isFirstDisplay ? 0 : -1}
-  style="background-color:{currentlyHoveredEvent == event ? GetEventHoverColor(event) : GetEventColor(event)}"
+  style="background-color:{$currentlyHoveredEvent == event ? GetEventHoverColor(event) : GetEventColor(event)}"
 >
   {#if event && isFirstDisplay}
     {#if !event.date.allDay}

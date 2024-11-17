@@ -6,6 +6,7 @@
   import { compareEventsByStartDate } from "$lib/common/comparators";
   import { getDayName } from "$lib/common/humanization";
   import { setContext } from "svelte";
+  import { writable } from "svelte/store";
 
   interface Props {
     month: number;
@@ -19,8 +20,10 @@
     events,
   }: Props = $props();
 
-  setContext("currentlyHoveredEvent", null);
-  setContext("currentlyClickedEvent", null);
+  let currentlyClickedEvent = writable(null);
+  let currentlyHoveredEvent = writable(null);
+  setContext("currentlyHoveredEvent", currentlyHoveredEvent);
+  setContext("currentlyClickedEvent", currentlyClickedEvent);
 
   let showModal = $state(NoOp);
 
