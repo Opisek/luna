@@ -184,15 +184,7 @@
     <!--<SmallCalendar year={selectedYear} month={selectedMonth}/>-->
 
     <div class="sources">
-      {#each localSources as source, i}
-        <SourceEntry bind:source={localSources[i]}/>
-        {#if (!source.collapsed)}
-          <!-- TODO: figure out how to make this bindable... -->
-          {#each sourceCalendars.get(source.id) || [] as calendar}
-            <CalendarEntry calendar={calendar}/>
-          {/each}
-        {/if}
-      {/each}
+      {@render sourceEntries(localSources)}
     </div>
     <Horizontal position="center">
       <IconButton click={createNewSource}>
@@ -209,6 +201,21 @@
     />
   </main>
 </div>
+
+{#snippet sourceEntries(sources: SourceModel[])}
+  {#each sources as source, i}
+    <SourceEntry bind:source={localSources[i]}/>
+    {#if (!source.collapsed)}
+      {@render calendarEntries(sourceCalendars.get(source.id) || [])} 
+    {/if}
+  {/each}
+{/snippet}
+
+{#snippet calendarEntries(calendars: CalendarModel[])}
+  {#each calendars as _, i}
+    <CalendarEntry bind:calendar={calendars[i]}/>
+  {/each}
+{/snippet}
 
 <!-- TODO: only put SourceModal, CalendarModal, and EventModal here and dynamically determine the object we bind with context or store -->
 <SourceModal bind:showCreateModal={showNewSourceModal} bind:source={newSource}/>

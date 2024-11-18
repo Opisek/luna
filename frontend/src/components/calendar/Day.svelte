@@ -156,16 +156,16 @@
   </div>
   {#if isFirstDay}
     <div class="events" bind:offsetHeight={containerHeight}>
-      {@render eventRows()}
+      {@render eventEntries()}
     </div>
   {:else}
     <div class="events">
-      {@render eventRows()}
+      {@render eventEntries()}
     </div>
   {/if}
 </div>
 
-{#snippet eventRows()}
+{#snippet eventEntries()}
   {#each events as event, i}
     <EventEntry
       event={event}
