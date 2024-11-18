@@ -1,6 +1,7 @@
 import { writable } from "svelte/store";
 import { queueNotification } from "./notifications";
 import { isCalendarVisible, isSourceCollapsed } from "./localStorage";
+import { hiddenCalendars } from "./localStorage";
 
 // TODO: local storage integration for PWA offline support (longterm goal)
 
@@ -29,7 +30,7 @@ function allEvents(): EventModel[] {
   const allEvents = Array.from(
     calendarEvents
       .entries()
-      .filter(x => calendarMap.get(x[0])?.visible)
+      .filter(x => isCalendarVisible(x[0]))
       .map(x => Array.from(x[1])
     )
   ).flat();
@@ -204,7 +205,7 @@ export const fetchCalendars = async (id: string): Promise<string> => {
       const fetchCalendars = json.calendars;
 
       for (const calendar of fetchCalendars) {
-        calendar.visible = isCalendarVisible(calendar.id);
+        //calendar.visible = isCalendarVisible(calendar.id);
 
         fetchEvents(calendar.id, lastStart, lastEnd).then(err => {
           if (err != "") {
@@ -385,3 +386,8 @@ export const deleteEvent = async (id: string): Promise<string> => {
 export const recalculateEventVisibility = () => {
   compileEvents();
 }
+
+hiddenCalendars.subscribe(() => {
+  if (calendarEvents.size === 0) return;
+  recalculateEventVisibility();
+});

@@ -6,7 +6,7 @@
   import { GetCalendarColor } from "$lib/common/colors";
   import { faultyCalendars } from "$lib/client/repository";
   import { focusIndicator } from "$lib/client/decoration";
-  import { hiddenCalendars, setCalendarVisibility } from "$lib/client/localStorage";
+  import { hiddenCalendars, isCalendarVisible, setCalendarVisibility } from "$lib/client/localStorage";
 
   interface Props {
     calendar: CalendarModel;
@@ -14,16 +14,15 @@
 
   let { calendar = $bindable() }: Props = $props();
 
+  let calendarVisible = $state(calendar ? isCalendarVisible(calendar.id) : false);
+
   let hasErrored = $state(false);
   faultyCalendars.subscribe((faulty) => {
     hasErrored = faulty.has(calendar.id);
   });
 
   $effect(() => {
-    if (calendar && calendar.id) setCalendarVisibility(calendar.id, calendar.visible);
-  });
-  hiddenCalendars.subscribe((hidden) => {
-    calendar.visible = !hidden.has(calendar.id);
+    if (calendar && calendar.id) setCalendarVisibility(calendar.id, calendarVisible);
   });
 </script>
 
@@ -78,7 +77,7 @@
     </button>
   </span>
   <span class="buttons">
-    <VisibilityToggle bind:visible={calendar.visible}/>
+    <VisibilityToggle bind:visible={calendarVisible}/>
     {#if hasErrored}
       <Tooltip msg="An error occurred trying to retrieve events from this calendar." error={true}/>
     {/if}

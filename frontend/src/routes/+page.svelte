@@ -18,10 +18,11 @@
   import { queueNotification } from "$lib/client/notifications";
 
   let localSources: SourceModel[] = $state([]);
-  let localCalendars: CalendarModel[] = [];
-  let sourceCalendars: Map<string, CalendarModel[]> = $state(new Map());
+  let localCalendars: CalendarModel[] = $state([]);
   let localEvents: EventModel[] = $state([]);
-  let calendarEvents: Map<string, EventModel[]> = new Map();
+
+  let sourceCalendars: Map<string, number[]> = $state(new Map());
+  let calendarEvents: Map<string, number[]> = new Map();
 
   let showNewSourceModal: () => any = $state(NoOp);
   let newSource: SourceModel = $state(EmptySource);
@@ -84,12 +85,12 @@
       localEvents = newEvents;
 
       calendarEvents = new Map();
-      localEvents.forEach((event) => {
+      localEvents.forEach((event, i) => {
         if (calendarEvents.has(event.calendar)) {
           // @ts-ignore typescript says that this might be undefined despite the check above
-          calendarEvents.get(event.calendar).push(event);
+          calendarEvents.get(event.calendar).push(i);
         } else {
-          calendarEvents.set(event.calendar, [ event ]);
+          calendarEvents.set(event.calendar, [ i ]);
         }
       });
     });
@@ -98,12 +99,12 @@
       localCalendars = newCalendars;
 
       sourceCalendars = new Map();
-      localCalendars.forEach((calendar) => {
+      localCalendars.forEach((calendar, i) => {
         if (sourceCalendars.has(calendar.source)) {
           // @ts-ignore typescript says that this might be undefined despite the check above
-          sourceCalendars.get(calendar.source).push(calendar);
+          sourceCalendars.get(calendar.source).push(i);
         } else {
-          sourceCalendars.set(calendar.source, [ calendar ]);
+          sourceCalendars.set(calendar.source, [ i ]);
         }
       });
     });
@@ -211,9 +212,9 @@
   {/each}
 {/snippet}
 
-{#snippet calendarEntries(calendars: CalendarModel[])}
-  {#each calendars as _, i}
-    <CalendarEntry bind:calendar={calendars[i]}/>
+{#snippet calendarEntries(calendarIndices: number[])}
+  {#each calendarIndices as i}
+    <CalendarEntry bind:calendar={localCalendars[i]}/>
   {/each}
 {/snippet}
 

@@ -1,6 +1,5 @@
 import { browser } from "$app/environment";
 import { writable } from "svelte/store";
-import { recalculateEventVisibility } from "./repository";
 
 let localCollapsedSources = new Set<string>(browser && JSON.parse(localStorage.getItem("collapsedSources") || "[]") || []);
 export const collapsedSources = writable(localCollapsedSources);
@@ -55,8 +54,6 @@ export const setCalendarVisibility = (calendarId: string, visible: boolean) => {
     set.delete(calendarId);
   }
   hiddenCalendars.set(set);
-
-  recalculateEventVisibility();
 }
 
 export const isSourceCollapsed = (sourceId: string) => localCollapsedSources.has(sourceId);
