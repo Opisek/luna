@@ -186,6 +186,7 @@ export const deleteSource = async (id: string): Promise<string> => {
         calendarEvents.delete(calendar.id);
       });
       sourceCalendars.delete(id);
+      compileEvents();
       return "";
     } else {
       const json = await response.json();
