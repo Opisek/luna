@@ -1,7 +1,8 @@
-import BarFocusIndicator from "../../components/decoration/focus/BarFocusIndicator.svelte";
-import UnderlineFocusIndicator from "../../components/decoration/focus/UnderlineFocusIndicator.svelte";
-import Ripple from "../../components/decoration/Ripple.svelte"
 import { mount } from "svelte";
+
+import BarFocusIndicator from "../../components/decoration/focus/BarFocusIndicator.svelte";
+import Ripple from "../../components/decoration/Ripple.svelte"
+import UnderlineFocusIndicator from "../../components/decoration/focus/UnderlineFocusIndicator.svelte";
 
 export const addRipple = (e: MouseEvent, addToParent: boolean = true) => {
   if (!e.target) return;

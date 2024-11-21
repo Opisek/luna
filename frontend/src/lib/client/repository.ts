@@ -1,7 +1,8 @@
 import { writable } from "svelte/store";
-import { queueNotification } from "./notifications";
-import { isCalendarVisible, isSourceCollapsed } from "./localStorage";
+
 import { hiddenCalendars } from "./localStorage";
+import { isCalendarVisible, isSourceCollapsed } from "./localStorage";
+import { queueNotification } from "./notifications";
 
 // TODO: local storage integration for PWA offline support (longterm goal)
 

@@ -1,7 +1,8 @@
 import { redirect, type Actions } from "@sveltejs/kit";
-import { callApi } from "../../lib/server/api.server";
-import { getRedirectPage } from "../../lib/common/parsing";
+
 import { COOKIE_MAX_AGE } from "$lib/server/constants";
+import { callApi } from "$lib/server/api.server";
+import { getRedirectPage } from "$lib/common/parsing";
 
 export const actions = {
   default: async ({cookies, request}) => {
