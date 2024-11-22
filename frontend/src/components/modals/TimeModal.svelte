@@ -28,6 +28,7 @@
   let goBackToHour: boolean = $state(false);
   let amPm: string = $state("am");
 
+  // svelte-ignore non_reactive_update (svelte mistakeneously warns about `hourInput` but not `minuteInput`)
   let hourInput: HTMLInputElement;
   let minuteInput: HTMLInputElement;
 
