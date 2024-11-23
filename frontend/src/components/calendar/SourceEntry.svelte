@@ -80,7 +80,7 @@
 </style>
 
 <div>
-  <button onclick={showModalInternal} use:focusIndicator={{ type: "underline", ignoreParent: true }}>
+  <button onclick={showModalInternal} use:focusIndicator={{ type: "underline" }}>
     {source.name}
   </button>
   <span>

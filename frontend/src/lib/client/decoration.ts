@@ -32,7 +32,12 @@ export const focusIndicator = (node: HTMLElement, settings: FocusIndicatorSettin
   }
 
   const focusOut = (e: FocusEvent) => {
+    console.log(e)
+    console.log(settings.ignoreParent, e.relatedTarget, node.parentElement?.contains(e.relatedTarget as HTMLElement));
     if (settings.ignoreParent && e.relatedTarget && node.parentElement?.contains(e.relatedTarget as HTMLElement)) return;
+    console.log("hi")
+    console.log((e.relatedTarget as HTMLElement).parentElement?.parentElement?.parentElement instanceof HTMLDialogElement);
+    if ((e.relatedTarget as HTMLElement).parentElement?.parentElement?.parentElement instanceof HTMLDialogElement) return;
     node.classList.remove("clicked");
   }
 
