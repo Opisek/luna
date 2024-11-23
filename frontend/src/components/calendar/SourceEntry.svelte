@@ -1,12 +1,12 @@
 <script lang="ts">
   import CollapseToggle from "../interactive/CollapseToggle.svelte";
-  import SourceModal from "../modals/SourceModal.svelte";
   import Tooltip from "../interactive/Tooltip.svelte";
 
-  import { NoOp } from "$lib/client/placeholders";
   import { calendars, faultySources, fetchSourceCalendars } from "$lib/client/repository";
   import { collapsedSources, setSourceCollapse } from "$lib/client/localStorage";
   import { focusIndicator } from "$lib/client/decoration";
+
+  import { getContext } from "svelte";
 
   interface Props {
     source: SourceModel;
@@ -26,7 +26,10 @@
     hasCals = (await fetchSourceCalendars(source.id)).length > 0;
   })
 
-  let showModal: () => any = $state(NoOp);
+  let showModal: ((source: SourceModel) => Promise<SourceModel>) = getContext("showSourceModal");
+  function showModalInternal() {
+    showModal(source).then(newSource => source = newSource);
+  }
 
   $effect(() => {
     if (source.id) setSourceCollapse(source.id, source.collapsed);
@@ -77,7 +80,7 @@
 </style>
 
 <div>
-  <button onclick={showModal} use:focusIndicator={{ type: "underline", ignoreParent: true }}>
+  <button onclick={showModalInternal} use:focusIndicator={{ type: "underline", ignoreParent: true }}>
     {source.name}
   </button>
   <span>
@@ -95,9 +98,4 @@
     <CogIcon size={16}/>
   </IconButton>
   -->
-
-  <SourceModal
-    bind:showModal={showModal}
-    source={source}
-  />
 </div>

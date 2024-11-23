@@ -3,6 +3,7 @@
 
   import Calendar from "../components/calendar/Calendar.svelte";
   import CalendarEntry from "../components/calendar/CalendarEntry.svelte";
+  import EventModal from "../components/modals/EventModal.svelte";
   import Horizontal from "../components/layout/Horizontal.svelte";
   import IconButton from "../components/interactive/IconButton.svelte";
   import MonthSelection from "../components/interactive/MonthSelection.svelte";
@@ -13,9 +14,11 @@
   import { afterNavigate } from "$app/navigation";
   import { browser } from "$app/environment";
 
-  import { EmptySource, NoOp } from "$lib/client/placeholders";
+  import { NoOp } from "$lib/client/placeholders";
   import { calendars, events, fetchAllEvents, fetchSources, sources } from "$lib/client/repository";
   import { queueNotification } from "$lib/client/notifications";
+
+  import { setContext } from "svelte";
 
   let localSources: SourceModel[] = $state([]);
   let localCalendars: CalendarModel[] = $state([]);
@@ -25,18 +28,18 @@
   let calendarEvents: Map<string, number[]> = new Map();
 
   let showNewSourceModal: () => any = $state(NoOp);
-  let newSource: SourceModel = $state(EmptySource);
+  let showSourceModal: () => any = $state(NoOp);
+  $effect(() => setContext("showSourceModal", showSourceModal));
+
+  //let showNewCalendarModal: () => any = $state(NoOp);
+  //let showCalendarModal: () => any = $state(NoOp);
+
+  let showNewEventModal: () => any = $state(NoOp);
+  let showEventModal: () => any = $state(NoOp);
+  $effect(() => setContext("showEventModal", showEventModal));
 
   function createNewSource() {
-    newSource = {
-      id: "",
-      name: "",
-      type: "caldav",
-      settings: {},
-      auth_type: "none",
-      auth: {},
-      collapsed: false
-    };
+
     setTimeout(showNewSourceModal, 0);
   }
 
@@ -219,4 +222,6 @@
 {/snippet}
 
 <!-- TODO: only put SourceModal, CalendarModal, and EventModal here and dynamically determine the object we bind with context or store -->
-<SourceModal bind:showCreateModal={showNewSourceModal} bind:source={newSource}/>
+<SourceModal bind:showCreateModal={showNewSourceModal} bind:showModal={showSourceModal}/>
+<!--<CalendarModal bind:showCreateModal={showNewCalendarModal} bind:showModal={showCalendarModal} bind:calendar={modalCalendar}/>-->
+<!--<EventModal bind:showCreateModal={showNewEventModal} bind:showModal={showEventModal} bind:event={$modalEvent}/>-->

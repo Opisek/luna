@@ -9,33 +9,46 @@
   import { queueNotification } from "$lib/client/notifications";
 
   interface Props {
-    source: SourceModel;
     showCreateModal?: () => any;
-    showModal?: () => any;
+    showModal?: (source: SourceModel) => Promise<SourceModel>;
   }
 
   let {
-    source = $bindable(EmptySource),
     showCreateModal = $bindable(),
     showModal = $bindable(),
   }: Props = $props();
 
+  let saveSource = (_: SourceModel | PromiseLike<SourceModel>) => {};
+  let cancelSource = (_?: any) => {};
   let sourceDetailed: SourceModel = $state(EmptySource);
 
   showCreateModal = () => {
-    sourceDetailed = source;
+    sourceDetailed = {
+      id: "",
+      name: "",
+      type: "caldav",
+      settings: {},
+      auth_type: "none",
+      auth: {},
+      collapsed: false
+    };
+
     showCreateModalInternal();
   }
-  showModal = async () => {
+  showModal = async (source: SourceModel): Promise<SourceModel> => {
     const res = await fetch(`/api/sources/${source.id}`);
     if (res.ok) {
       sourceDetailed = await res.json();
     } else {
       queueNotification("failure", `Failed to fetch source details: ${res.statusText}`);
-      return
+      return Promise.reject();
     }
 
     showModalInternal();
+    return new Promise((resolve, reject) => {
+      saveSource = resolve;
+      cancelSource = reject;
+    })
   };
 
   let showCreateModalInternal: () => any = $state(NoOp);
@@ -52,12 +65,22 @@
   const onEdit = async () => {
     if (sourceDetailed.id === "") {
       const res = await createSource(sourceDetailed);
-      if (res === "") return "";
-      else return `Could not create source: ${res}`;
+      if (res === "") {
+        saveSource(sourceDetailed);
+        return "";
+      } else {
+        cancelSource();
+        return `Could not create source: ${res}`;
+      }
     } else {
       const res = await editSource(sourceDetailed);
-      if (res === "") return "";
-      else return `Could not edit source: ${res}`;
+      if (res === "") {
+        saveSource(sourceDetailed);
+        return "";
+      } else {
+        cancelSource();
+        return `Could not edit source: ${res}`;
+      }
     }
   };
 

@@ -5,6 +5,7 @@
   import { EmptyEvent, NoOp } from "$lib/client/placeholders";
   import { compareEventsByStartDate } from "$lib/common/comparators";
   import { getDayName } from "$lib/common/humanization";
+
   import { setContext } from "svelte";
   import { writable } from "svelte/store";
 
