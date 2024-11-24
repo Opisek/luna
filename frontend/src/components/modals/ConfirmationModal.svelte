@@ -7,7 +7,7 @@
   import { NoOp } from "../../lib/client/placeholders";
 
   interface Props {
-    confirmCallback: () => Promise<string>;
+    confirmCallback: () => Promise<void>;
     cancelCallback?: () => void;
     showModal: () => any;
     hideModal?: () => any;
@@ -23,16 +23,17 @@
   }: Props = $props();
 
   let awaitingConfirm = $state(false);
-  async function confirm() {
+  function confirm() {
     // TOOD: error message if returned value is not empty string
     awaitingConfirm = true;
-    const res = await confirmCallback()
-    awaitingConfirm = false;
-    hideModal()
-
-    if (res !== "") {
-      queueNotification("failure", res)
-    }
+    confirmCallback()
+      .catch(err => {
+        queueNotification("failure", err)
+      })
+      .finally(() => {
+        awaitingConfirm = false;
+        hideModal()
+      });
   }
 
   function cancel() {

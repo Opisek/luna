@@ -2,10 +2,9 @@
   import { PlusIcon } from "lucide-svelte";
 
   import EventEntry from "./EventEntry.svelte";
-  import EventModal from "../modals/EventModal.svelte";
   import IconButton from "../interactive/IconButton.svelte";
 
-  import { EmptyEvent, NoOp } from '$lib/client/placeholders';
+  import { getContext } from "svelte";
 
   interface Props {
     date: Date;
@@ -15,7 +14,6 @@
     events: (EventModel | null)[];
     maxEvents?: number;
     containerHeight: number;
-    clickCallback: (event: EventModel) => void;
   }
 
   let {
@@ -26,38 +24,11 @@
     events,
     maxEvents = 1,
     containerHeight = $bindable(),
-    clickCallback
   }: Props = $props();
 
-  let newEvent: EventModel = $state(EmptyEvent);
-  let createNewEvent: boolean = $state(false);
-  let showCreateEventModal: () => any = $state(NoOp);
-
+  let showCreateEventModal: ((date: Date) => Promise<EventModel>) = getContext("showNewEventModal");
   let createEventButtonClick = () => {
-    createNewEvent = true;
-
-    const start = new Date(date);
-    start.setHours(12, 0, 0, 0);
-
-    const end = new Date(date);
-    end.setHours(13, 0, 0, 0);
-
-    newEvent = {
-      id: "",
-      calendar: "",
-      name: "",
-      desc: "",
-      color: "",
-      date: {
-        start: start,
-        end: end,
-        allDay: false,
-      }
-    };
-
-    setTimeout(() => {
-      showCreateEventModal();
-    }, 0);
+    showCreateEventModal(date);
   };
 
   let actualMaxEvents: number = $derived(maxEvents <= events.length - 1 ? maxEvents - 1 : maxEvents);
@@ -148,9 +119,6 @@
         <IconButton click={createEventButtonClick} tabindex={-1}>
           <PlusIcon size={13}/>
         </IconButton>
-        {#if createNewEvent}
-          <EventModal bind:showCreateModal={showCreateEventModal} bind:event={newEvent}/>
-        {/if}
       </span>
     </span>
   </div>
@@ -173,7 +141,6 @@
       isLastDay={isLastDay}
       date={date}
       visible={i < actualMaxEvents}
-      clickCallback={clickCallback}
     />
   {/each}
   {#if events.length > maxEvents && actualMaxEvents >= 0}

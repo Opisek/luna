@@ -10,91 +10,130 @@
   import { createEvent, deleteEvent, editEvent, getCalendars } from "$lib/client/repository";
 
   interface Props {
-    event: EventModel;
-    showCreateModal?: () => any;
-    showModal?: () => any;
+    showCreateModal?: (date: Date) => Promise<EventModel>;
+    showModal?: (event: EventModel) => Promise<EventModel>;
   }
 
   let {
-    event = $bindable(EmptyEvent),
     showCreateModal = $bindable(),
     showModal = $bindable(),
   }: Props = $props();
 
-  let eventCopy: EventModel = $state(EmptyEvent);
+  let event: EventModel = $state(EmptyEvent);
   let currentCalendars: CalendarModel[] = $state([]);
 
-  showCreateModal = () => {
+  let saveEvent = (_: EventModel | PromiseLike<EventModel>) => {};
+  let cancelEvent = (_?: any) => {};
+
+  showCreateModal = (date: Date) => {
+    cancelEvent();
+    
     editMode = false;
-    eventCopy = event;
+
+    const start = new Date(date);
+    start.setHours(12, 0, 0, 0);
+
+    const end = new Date(date);
+    end.setHours(13, 0, 0, 0);
+
+    event = {
+      id: "",
+      calendar: "",
+      name: "",
+      desc: "",
+      color: "",
+      date: {
+        start: start,
+        end: end,
+        allDay: false,
+      }
+    };
+
     currentCalendars = getCalendars();
     setTimeout(showCreateModalInternal, 0);
+
+    return new Promise((resolve, reject) => {
+      saveEvent = resolve;
+      cancelEvent = reject;
+    });
   }
 
-  showModal = () => {
+  showModal = (original: EventModel): Promise<EventModel> => {
+    cancelEvent();
+
     editMode = false;
-    eventCopy = {
-      id: event.id,
-      calendar: event.calendar,
-      name: event.name,
-      desc: event.desc,
-      color: event.color,
+    event = {
+      id: original.id,
+      calendar: original.calendar,
+      name: original.name,
+      desc: original.desc,
+      color: original.color,
       date: {
-        start: new Date(event.date.start),
-        end: new Date(event.date.end),
-        allDay: event.date.allDay,
+        start: new Date(original.date.start),
+        end: new Date(original.date.end),
+        allDay: original.date.allDay,
       }
     }
-    if (eventCopy.date.allDay) {
-      eventCopy.date.end.setDate(eventCopy.date.end.getDate() - 1);
+    if (event.date.allDay) {
+      event.date.end.setDate(event.date.end.getDate() - 1);
     }
     setTimeout(showModalInternal, 0);
+
+    return new Promise((resolve, reject) => {
+      saveEvent = resolve;
+      cancelEvent = reject;
+    });
   };
 
   let showCreateModalInternal: () => boolean = $state(() => false);
   let showModalInternal: () => boolean = $state(() => false);
 
   let editMode: boolean = $state(false);
-  let title: string = $derived((eventCopy && eventCopy.id) ? (editMode ? "Edit event" : "Event") : "Create event");
+  let title: string = $derived((event && event.id) ? (editMode ? "Edit event" : "Event") : "Create event");
 
   const onDelete = async () => {
-    const res = await deleteEvent(eventCopy.id);
-    if (res === "") return "";
-    else return `Could not delete event: ${res}`;
+    await deleteEvent(event.id).catch(err => {
+      throw new Error(`Could not delete event: ${err}`);
+    });
+    cancelEvent();
   };
   const onEdit = async () => {
-    if (eventCopy.date.allDay) {
-      eventCopy.date.end.setDate(eventCopy.date.end.getDate() + 1);
+    if (event.date.allDay) {
+      event.date.end.setDate(event.date.end.getDate() + 1);
     }
-    if (eventCopy.id === "") {
-      const res = await createEvent(eventCopy);
-      if (res === "") return "";
-      else return `Could not edit event: ${res}`;
+    if (event.id === "") {
+      await createEvent(event).catch(err => {
+        cancelEvent();
+        throw new Error(`Could not create event: ${err}`);
+      });
+      saveEvent(event);
     } else {
-      const res = await editEvent(eventCopy);
-      if (res === "") return "";
-      else return `Could not create event: ${res}`;
+      await editEvent(event).catch(err => {
+        cancelEvent();
+        throw new Error(`Could not edit event: ${err}`);
+      });
+      saveEvent(event);
     }
   };
 
   const changeEnd = (value: Date) => {
-    if (value.getTime() < eventCopy.date.start.getTime()) {
-      const previousStart = eventCopy.date.start;
-      eventCopy.date.start = new Date(value);
+    if (value.getTime() < event.date.start.getTime()) {
+      const previousStart = event.date.start;
+      event.date.start = new Date(value);
 
       if (Math.abs(previousStart.getTime() - value.getTime()) >= 24 * 60 * 60 * 1000) {
-        eventCopy.date.start.setHours(previousStart.getHours(), previousStart.getMinutes(), previousStart.getSeconds(), previousStart.getMilliseconds());
+        event.date.start.setHours(previousStart.getHours(), previousStart.getMinutes(), previousStart.getSeconds(), previousStart.getMilliseconds());
       }
     }
   }
 
   const changeStart = (value: Date) => {
-    if (value.getTime() > eventCopy.date.end.getTime()) {
-      const previousEnd = eventCopy.date.end;
-      eventCopy.date.end = new Date(value);
+    if (value.getTime() > event.date.end.getTime()) {
+      const previousEnd = event.date.end;
+      event.date.end = new Date(value);
 
       if (Math.abs(previousEnd.getTime() - value.getTime()) >= 24 * 60 * 60 * 1000) {
-        eventCopy.date.end.setHours(previousEnd.getHours(), previousEnd.getMinutes(), previousEnd.getSeconds(), previousEnd.getMilliseconds());
+        event.date.end.setHours(previousEnd.getHours(), previousEnd.getMinutes(), previousEnd.getSeconds(), previousEnd.getMilliseconds());
       }
     }
   }
@@ -103,27 +142,27 @@
 
 <EditableModal
   title={title}
-  deleteConfirmation={`Are you sure you want to delete event "${eventCopy ? eventCopy.name : ""}"?`}
+  deleteConfirmation={`Are you sure you want to delete event "${event ? event.name : ""}"?`}
   bind:editMode={editMode}
   bind:showCreateModal={showCreateModalInternal}
   bind:showModal={showModalInternal}
   onDelete={onDelete}
   onEdit={onEdit}
-  submittable={eventCopy.calendar !== "" && eventCopy.name !== "" && eventCopy.date.start.getTime() < eventCopy.date.end.getTime()}
+  submittable={event.calendar !== "" && event.name !== "" && event.date.start.getTime() < event.date.end.getTime()}
 >
-  {#if eventCopy}
-    <TextInput bind:value={eventCopy.name} name="name" placeholder="Name" editable={editMode} />
-    {#if (eventCopy.id === "")}
-      <SelectInput bind:value={eventCopy.calendar} name="calendar" placeholder="Calendar" options={currentCalendars.map(x => ({ value: x.id, name: x.name }))} editable={editMode} />
+  {#if event != EmptyEvent}
+    <TextInput bind:value={event.name} name="name" placeholder="Name" editable={editMode} />
+    {#if (event.id === "")}
+      <SelectInput bind:value={event.calendar} name="calendar" placeholder="Calendar" options={currentCalendars.map(x => ({ value: x.id, name: x.name }))} editable={editMode} />
     {/if}
     {#if editMode}
-      <ColorInput bind:color={eventCopy.color} name="color" editable={editMode} />
+      <ColorInput bind:color={event.color} name="color" editable={editMode} />
     {/if}
-    <TextInput bind:value={eventCopy.desc} name="desc" placeholder="Description" multiline={true} editable={editMode} />
+    <TextInput bind:value={event.desc} name="desc" placeholder="Description" multiline={true} editable={editMode} />
     {#if editMode}
-        <CheckboxInput bind:value={eventCopy.date.allDay} name="all_day" description="All Day"/>
+        <CheckboxInput bind:value={event.date.allDay} name="all_day" description="All Day"/>
     {/if}
-    <DateTimeInput bind:value={eventCopy.date.start} name="date_start" placeholder="Start" editable={editMode} allDay={eventCopy.date.allDay} onChange={changeStart}/>
-    <DateTimeInput bind:value={eventCopy.date.end} name="date_end" placeholder="End" editable={editMode} allDay={eventCopy.date.allDay} onChange={changeEnd}/>
+    <DateTimeInput bind:value={event.date.start} name="date_start" placeholder="Start" editable={editMode} allDay={event.date.allDay} onChange={changeStart}/>
+    <DateTimeInput bind:value={event.date.end} name="date_end" placeholder="End" editable={editMode} allDay={event.date.allDay} onChange={changeEnd}/>
   {/if}
 </EditableModal>

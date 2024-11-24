@@ -18,11 +18,14 @@
     showModal = $bindable(),
   }: Props = $props();
 
-  let saveSource = (_: SourceModel | PromiseLike<SourceModel>) => {};
-  let cancelSource = (_?: any) => {};
   let sourceDetailed: SourceModel = $state(EmptySource);
 
+  let saveSource = (_: SourceModel | PromiseLike<SourceModel>) => {};
+  let cancelSource = (_?: any) => {};
+
   showCreateModal = () => {
+    cancelSource();
+
     sourceDetailed = {
       id: "",
       name: "",
@@ -36,6 +39,8 @@
     showCreateModalInternal();
   }
   showModal = async (source: SourceModel): Promise<SourceModel> => {
+    cancelSource();
+
     const res = await fetch(`/api/sources/${source.id}`);
     if (res.ok) {
       sourceDetailed = await res.json();
@@ -58,29 +63,24 @@
   let title: string = $derived(sourceDetailed.id ? (editMode ? "Edit source" : "Source") : "Add source");
 
   const onDelete = async () => {
-    const res = await deleteSource(sourceDetailed.id);
-    if (res === "") return "";
-    else return `Could not delete source: ${res}`;
+    await deleteSource(sourceDetailed.id).catch(err => {
+      throw new Error(`Could not delete source: ${err}`);
+    });
+    cancelSource();
   };
   const onEdit = async () => {
     if (sourceDetailed.id === "") {
-      const res = await createSource(sourceDetailed);
-      if (res === "") {
-        saveSource(sourceDetailed);
-        return "";
-      } else {
+      await createSource(sourceDetailed).catch(err => {
         cancelSource();
-        return `Could not create source: ${res}`;
-      }
+        throw new Error(`Could not create source: ${err}`);
+      });
+      saveSource(sourceDetailed);
     } else {
-      const res = await editSource(sourceDetailed);
-      if (res === "") {
-        saveSource(sourceDetailed);
-        return "";
-      } else {
+      await editSource(sourceDetailed).catch(err => {
         cancelSource();
-        return `Could not edit source: ${res}`;
-      }
+        throw new Error(`Could not edit source: ${err}`);
+      });
+      saveSource(sourceDetailed);
     }
   };
 

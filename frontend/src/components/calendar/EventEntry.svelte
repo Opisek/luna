@@ -5,6 +5,7 @@
   import { passIfEnter } from "$lib/common/inputs";
   import { getContext } from "svelte";
   import type { Writable } from "svelte/store";
+  import { browser } from "$app/environment";
 
   interface Props {
     visible?: boolean;
@@ -12,7 +13,6 @@
     isFirstDay: boolean;
     isLastDay: boolean;
     date: Date;
-    clickCallback: (event: EventModel) => void;
   }
 
   let {
@@ -21,11 +21,12 @@
     isFirstDay,
     isLastDay,
     date,
-    clickCallback
   }: Props = $props();
 
   let currentlyHoveredEvent = getContext("currentlyHoveredEvent") as Writable<EventModel | null>;
   let currentlyClickedEvent = getContext("currentlyClickedEvent") as Writable<EventModel | null>;
+
+  let showModal: ((event: EventModel) => Promise<EventModel>) = getContext("showEventModal");
 
   let nextDate: Date = $derived(new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1))
   let element: HTMLDivElement; // TODO: do we really need to make a new element when we just want to bind to something else?
@@ -60,13 +61,13 @@
 
     if ($currentlyClickedEvent == event) {
       $currentlyClickedEvent = null;
-      clickCallback(event);
+      showModal(event).then(newEvent => event = newEvent);
       element.blur();
     }
   }
   function keyPress(e: KeyboardEvent) {
     passIfEnter(e, () => {
-      if (event) clickCallback(event);
+      if (event) showModal(event).then(newEvent => event = newEvent);
       element.blur();
     });
   }

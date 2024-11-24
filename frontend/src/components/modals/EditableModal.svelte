@@ -13,8 +13,8 @@
     deleteConfirmation: string;
     editMode?: boolean;
     submittable?: boolean;
-    onEdit: () => Promise<string>;
-    onDelete: () => Promise<string>;
+    onEdit: () => Promise<void>;
+    onDelete: () => Promise<void>;
     showCreateModal?: () => any;
     showModal?: () => any;
     hideModal?: () => any;
@@ -66,18 +66,19 @@
   }
 
   let awaitingEdit = $state(false);
-  async function saveEdit() {
+  function saveEdit() {
     // TOOD: error message if returned value is not empty string
     awaitingEdit = true;
-    const res = await onEdit();
-    awaitingEdit = false;
-
-    if (res === "") {
-      editMode = false;
-      hideModal();
-    } else {
-      queueNotification("failure", res)
-    }
+    onEdit()
+      .then(() => {
+        editMode = false;
+        hideModal();
+      })
+      .catch((err) => {
+        queueNotification("failure", err)
+      }).finally(() => {
+        awaitingEdit = false;
+      });
   }
 
   const confirmDelete = async () => {

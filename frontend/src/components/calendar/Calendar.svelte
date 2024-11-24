@@ -1,8 +1,7 @@
 <script lang="ts">
   import Day from "./Day.svelte";
-  import EventModal from "../modals/EventModal.svelte";
 
-  import { EmptyEvent, NoOp } from "$lib/client/placeholders";
+  import { NoOp } from "$lib/client/placeholders";
   import { compareEventsByStartDate } from "$lib/common/comparators";
   import { getDayName } from "$lib/common/humanization";
 
@@ -90,13 +89,6 @@
       return [days, amountOfRows, processedEvents];
   })());
 
-  let clickedEvent: EventModel = $state(EmptyEvent);
-  function eventClick(event: EventModel) {
-    if (!event) return
-    clickedEvent = event;
-    setTimeout(() => showModal(), 0);
-  }
-
   let containerHeight: number = $state(0);
   // TODO: figure out how to do this without hard-coded values
   let maxEvents: number = $derived(containerHeight === 0 ? 0 : Math.max(Math.floor((containerHeight - 35) / 27), 0));
@@ -148,7 +140,6 @@
         events={processedEvents[i]}
         isFirstDay={i == 0}
         isLastDay={i == days.length - 1}
-        clickCallback={eventClick}
         maxEvents={maxEvents}
         bind:containerHeight={containerHeight}
       >
@@ -156,7 +147,3 @@
     {/each}
   </div>
 </div>
-
-{#if clickedEvent.id}
-  <EventModal bind:showModal event={clickedEvent}/>
-{/if}

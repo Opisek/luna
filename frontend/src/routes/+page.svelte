@@ -20,6 +20,7 @@
 
   import { setContext } from "svelte";
 
+  /* Fetched data */
   let localSources: SourceModel[] = $state([]);
   let localCalendars: CalendarModel[] = $state([]);
   let localEvents: EventModel[] = $state([]);
@@ -27,22 +28,7 @@
   let sourceCalendars: Map<string, number[]> = $state(new Map());
   let calendarEvents: Map<string, number[]> = new Map();
 
-  let showNewSourceModal: () => any = $state(NoOp);
-  let showSourceModal: () => any = $state(NoOp);
-  $effect(() => setContext("showSourceModal", showSourceModal));
-
-  //let showNewCalendarModal: () => any = $state(NoOp);
-  //let showCalendarModal: () => any = $state(NoOp);
-
-  let showNewEventModal: () => any = $state(NoOp);
-  let showEventModal: () => any = $state(NoOp);
-  $effect(() => setContext("showEventModal", showEventModal));
-
-  function createNewSource() {
-
-    setTimeout(showNewSourceModal, 0);
-  }
-
+  /* Fetching logic */
   let loaded: boolean = $state(false);
 
   const today = new Date();
@@ -75,13 +61,11 @@
   (async () => {
     if (!browser) return;
 
-    fetchSources().then(err => {
-      if (err != "") {
-        queueNotification(
-          "failure",
-          `Failed to fetch sources: ${err}`
-        );
-      }
+    fetchSources().catch(err => {
+      queueNotification(
+        "failure",
+        `Failed to fetch sources: ${err}`
+      );
     });
 
     events.subscribe((newEvents) => {
@@ -117,6 +101,7 @@
     });
   })();
 
+  /* Month selection logic */
   $effect(() => {
     ((year: number, month: number, loaded: boolean) => {
       if (!browser || !loaded) return;
@@ -140,6 +125,24 @@
       }
     })(selectedYear, selectedMonth, loaded);
   });
+
+  /* Single instance modal logic */
+  let showNewSourceModal: () => any = $state(NoOp);
+
+  let showSourceModal: () => any = $state(NoOp);
+  const showSourceModalInternal = () => { return showSourceModal(); };
+  setContext("showSourceModal", showSourceModalInternal);
+
+  //let showNewCalendarModal: () => any = $state(NoOp);
+  //let showCalendarModal: () => any = $state(NoOp);
+
+  let showNewEventModal: (date: Date) => any = $state(NoOp);
+  const showNewEventModalInternal = (date: Date) => { return showNewEventModal(date); };
+  setContext("showNewEventModal", showNewEventModalInternal);
+
+  let showEventModal: (event: EventModel) => any = $state(NoOp);
+  const showEventModalInternal = (event: EventModel) => { return showEventModal(event); };
+  setContext("showEventModal", showEventModalInternal);
 </script>
 
 <style lang="scss">
@@ -180,6 +183,10 @@
   }
 </style>
 
+<SourceModal bind:showCreateModal={showNewSourceModal} bind:showModal={showSourceModal}/>
+<!--<CalendarModal bind:showCreateModal={showNewCalendarModal} bind:showModal={showCalendarModal}}/>-->
+<EventModal bind:showCreateModal={showNewEventModal} bind:showModal={showEventModal}/>
+
 <div class="wrapper">
   <aside>
     <Title>Luna</Title>
@@ -191,7 +198,7 @@
       {@render sourceEntries(localSources)}
     </div>
     <Horizontal position="center">
-      <IconButton click={createNewSource}>
+      <IconButton click={showNewSourceModal}>
         <PlusIcon/>
       </IconButton>
     </Horizontal>
@@ -220,8 +227,3 @@
     <CalendarEntry bind:calendar={localCalendars[i]}/>
   {/each}
 {/snippet}
-
-<!-- TODO: only put SourceModal, CalendarModal, and EventModal here and dynamically determine the object we bind with context or store -->
-<SourceModal bind:showCreateModal={showNewSourceModal} bind:showModal={showSourceModal}/>
-<!--<CalendarModal bind:showCreateModal={showNewCalendarModal} bind:showModal={showCalendarModal} bind:calendar={modalCalendar}/>-->
-<!--<EventModal bind:showCreateModal={showNewEventModal} bind:showModal={showEventModal} bind:event={$modalEvent}/>-->
