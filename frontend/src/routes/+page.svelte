@@ -129,8 +129,8 @@
   /* Single instance modal logic */
   let showNewSourceModal: () => any = $state(NoOp);
 
-  let showSourceModal: () => any = $state(NoOp);
-  const showSourceModalInternal = () => { return showSourceModal(); };
+  let showSourceModal: (source: SourceModel) => any = $state(NoOp);
+  const showSourceModalInternal = (source: SourceModel) => { return showSourceModal(source); };
   setContext("showSourceModal", showSourceModalInternal);
 
   //let showNewCalendarModal: () => any = $state(NoOp);

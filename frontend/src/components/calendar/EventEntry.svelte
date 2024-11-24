@@ -3,9 +3,9 @@
 
   import { GetEventColor, GetEventHoverColor, GetEventRGB, isDark } from "$lib/common/colors";
   import { passIfEnter } from "$lib/common/inputs";
+
   import { getContext } from "svelte";
   import type { Writable } from "svelte/store";
-  import { browser } from "$app/environment";
 
   interface Props {
     visible?: boolean;
