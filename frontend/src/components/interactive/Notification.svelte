@@ -1,13 +1,20 @@
 <script lang="ts">
   interface Props {
     notification: NotificationModel;
+    height: number;
     shift: number;
   }
 
   let {
     notification,
+    height = $bindable(),
     shift
   }: Props = $props();
+
+  let isNew = $state(true);
+  setTimeout(() => {
+    isNew = false;
+  }, 0);
 </script>
 
 <style lang="scss">
@@ -60,14 +67,15 @@
     content: "";
     width: 100%;
     height: 0.5em;
-    animation: notification-timer $notificationExpireTime linear forwards;
+    animation: notification-timer var(--notificationExpireTime) linear forwards;
   }
 </style>
 
 <div
   class="wrapper"
   class:disappear={notification.disappear}
-  style="transform: translateY({shift * -100}%);"
+  style="transform: translateY({isNew ? "100%" : `${shift}px`});"
+  bind:clientHeight={height}
 >
 <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div

@@ -3,7 +3,6 @@ import { writable } from "svelte/store";
 export const notificationExpireTime = 5000;
 
 export const notifications = writable([] as NotificationModel[]);
-export const notificationCount = writable(0);
 
 let queue = [] as { type: "info" | "success" | "failure", message: string }[];
 
@@ -29,16 +28,12 @@ function showNotification() {
       notification.disappear = true;
       notifications.update((notifications) => notifications.map((n) => n.created === notification.created ? notification : n));
       setTimeout(() => {
-        notificationCount.update((count) => count - 1);
         notifications.update((notifications) => notifications.filter((n) => n !== notification));
-      }, 250);
+      }, 250); // wait for the disappear animation to finish
     }
   }
 
   notifications.update((notifications) => [...notifications, notification]);
-  setTimeout(() => {
-    notificationCount.update((count) => count + 1);
-  }, 10)
 
   setTimeout(() => {
     notification.remove();
