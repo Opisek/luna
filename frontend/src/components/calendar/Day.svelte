@@ -134,7 +134,10 @@
 </div>
 
 {#snippet eventEntries()}
-  {#each events as event, i}
+  <!-- TODO: forcing EventEntry to be unique for each event and i like that
+  fixes a few issues but might be less performant. figure out the right
+  compromise -->
+  {#each events as event, i ((event?.id || 0) + i.toString())}
     <EventEntry
       event={event}
       isFirstDay={isFirstDay}
