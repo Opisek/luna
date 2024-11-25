@@ -22,8 +22,8 @@
   }
 
   :global(*:focus-within:not(.clicked)) > div {
-    padding: 0;
     transition-delay: 0s !important;
+    padding: 0;
     opacity: 1;
   }
 </style>
