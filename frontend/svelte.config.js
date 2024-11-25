@@ -9,7 +9,7 @@ const config = {
 			precompress: true
 		}),
 		csrf: {
-			checkOrigin: false // TODO: remove from production!!!!!!!!
+			checkOrigin: true
 		}
 	}
 };
