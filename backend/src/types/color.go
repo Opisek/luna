@@ -42,7 +42,7 @@ func (c *Color) Bytes() []byte {
 }
 
 func ParseColor(rawColor string) (*Color, error) {
-	if rawColor == "" {
+	if rawColor == "" || rawColor == "null" {
 		return ColorEmpty, nil
 	}
 
