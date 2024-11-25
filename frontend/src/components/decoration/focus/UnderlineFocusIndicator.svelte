@@ -9,8 +9,9 @@
     width: 100%;
     bottom: -$underlineWidth;
     bottom: 0;
-    transition: padding $animationSpeedFast linear;
+    transition: padding $animationSpeedFast linear, opacity 0s linear $animationSpeedFast;
     padding: 0 50%;
+    opacity: 0;
   }
   
   div.bar {
@@ -22,6 +23,8 @@
 
   :global(*:focus-within:not(.clicked)) > div {
     padding: 0;
+    transition-delay: 0s !important;
+    opacity: 1;
   }
 </style>
 
