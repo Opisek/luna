@@ -93,7 +93,7 @@
 
   const onDelete = async () => {
     await deleteEvent(event.id).catch(err => {
-      throw new Error(`Could not delete event: ${err}`);
+      throw new Error(`Could not delete event: ${err.message}`);
     });
     cancelEvent();
   };
@@ -104,13 +104,13 @@
     if (event.id === "") {
       await createEvent(event).catch(err => {
         cancelEvent();
-        throw new Error(`Could not create event: ${err}`);
+        throw new Error(`Could not create event: ${err.message}`);
       });
       saveEvent(event);
     } else {
       await editEvent(event).catch(err => {
         cancelEvent();
-        throw new Error(`Could not edit event: ${err}`);
+        throw new Error(`Could not edit event: ${err.message}`);
       });
       saveEvent(event);
     }

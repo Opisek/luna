@@ -64,7 +64,7 @@
 
   const onDelete = async () => {
     await deleteSource(sourceDetailed.id).catch(err => {
-      throw new Error(`Could not delete source: ${err}`);
+      throw new Error(`Could not delete source: ${err.message}`);
     });
     cancelSource();
   };
@@ -72,13 +72,13 @@
     if (sourceDetailed.id === "") {
       await createSource(sourceDetailed).catch(err => {
         cancelSource();
-        throw new Error(`Could not create source: ${err}`);
+        throw new Error(`Could not create source: ${err.message}`);
       });
       saveSource(sourceDetailed);
     } else {
       await editSource(sourceDetailed).catch(err => {
         cancelSource();
-        throw new Error(`Could not edit source: ${err}`);
+        throw new Error(`Could not edit source: ${err.message}`);
       });
       saveSource(sourceDetailed);
     }

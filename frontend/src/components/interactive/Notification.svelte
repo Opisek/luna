@@ -37,6 +37,7 @@
     cursor: pointer;
     position: relative;
     overflow: hidden;
+    white-space: pre-wrap;
   }
 
   .success {

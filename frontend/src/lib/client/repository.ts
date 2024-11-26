@@ -54,29 +54,25 @@ function compileCalendars() {
 }
 
 export const fetchSources = async (): Promise<void> => {
-  try {
-    const response = await fetch("/api/sources");
-    if (response.ok) {
-      const fetchedSources = await response.json() as SourceModel[];
+  const response = await fetch("/api/sources");
+  if (response.ok) {
+    const fetchedSources = await response.json() as SourceModel[];
 
-      for (const source of fetchedSources) {
-        source.collapsed = isSourceCollapsed(source.id);
+    for (const source of fetchedSources) {
+      source.collapsed = isSourceCollapsed(source.id);
 
-        fetchCalendars(source.id).catch(err => {
-          queueNotification(
-            "failure",
-            `Failed to fetch calendar: ${err}`
-          );
-        });
-      }
-
-      sources.set(fetchedSources);
-    } else {
-      const json = await response.json();
-      throw new Error(json ? json.error : "Could not contact the server");
+      fetchCalendars(source.id).catch(err => {
+        queueNotification(
+          "failure",
+          `Failed to fetch calendars from source "${source.name}":\n${err.message}`
+        );
+      });
     }
-  } catch (e) {
-    throw new Error("Unexpected error occured")
+
+    sources.set(fetchedSources);
+  } else {
+    const json = await response.json();
+    throw new Error(json ? json.error : "Could not contact the server");
   }
 };
 
@@ -109,113 +105,92 @@ function getSourceFormData(source: SourceModel): FormData {
 }
 
 export const createSource = async (newSource: SourceModel): Promise<void> => {
+  let formData: FormData;
   try {
-    let formData: FormData;
-    try {
-      formData = getSourceFormData(newSource);
-    } catch (e: any) {
-      throw e;
-    }
+    formData = getSourceFormData(newSource);
+  } catch (e: any) {
+    throw e;
+  }
 
-    const response = await fetch(`/api/sources`, { method: "PUT", body: formData });
-    if (response.ok) {
-      const json = await response.json();
-      newSource.id = json.id;
-      sources.update((sources) => sources.concat(newSource));
+  const response = await fetch(`/api/sources`, { method: "PUT", body: formData });
+  if (response.ok) {
+    const json = await response.json();
+    newSource.id = json.id;
+    sources.update((sources) => sources.concat(newSource));
 
-      fetchCalendars(newSource.id).catch(err => {
-        queueNotification(
-          "failure",
-          `Failed to fetch calendar: ${err}`
-        );
-      });
-    } else {
-      const json = await response.json();
-      throw new Error(json ? json.error : "Could not contact the server");
-    }
-  } catch (e) {
-    throw new Error("Unexpected error occured");
+    fetchCalendars(newSource.id).catch(err => {
+      queueNotification(
+        "failure",
+        `Failed to fetch calendar: ${err.message}`
+      );
+    });
+  } else {
+    const json = await response.json();
+    throw new Error(json ? json.error : "Could not contact the server");
   }
 }
 
 export const editSource = async (modifiedSource: SourceModel): Promise<void> => {
-  try {
-    let formData: FormData;
-    try {
-      formData = getSourceFormData(modifiedSource);
-    } catch (e: any) {
-      throw e;
-    }
+  let formData = getSourceFormData(modifiedSource);
 
-    const response = await fetch(`/api/sources/${modifiedSource.id}`, { method: "PATCH", body: formData });
-    if (response.ok) {
-      sources.update((sources) => sources.map((source => source.id === modifiedSource.id ? modifiedSource : source)))
+  const response = await fetch(`/api/sources/${modifiedSource.id}`, { method: "PATCH", body: formData });
+  if (response.ok) {
+    sources.update((sources) => sources.map((source => source.id === modifiedSource.id ? modifiedSource : source)))
 
-      fetchCalendars(modifiedSource.id).catch(err => {
-        queueNotification(
-          "failure",
-          `Failed to fetch calendar: ${err}`
-        );
-      });
-    } else {
-      const json = await response.json();
-      throw new Error(json ? json.error : "Could not contact the server");
-    }
-  } catch (e) {
-    throw new Error("Unexpected error occured");
+    fetchCalendars(modifiedSource.id).catch(err => {
+      queueNotification(
+        "failure",
+        `Failed to fetch calendar: ${err.message}`
+      );
+    });
+  } else {
+    const json = await response.json();
+    throw new Error(json ? json.error : "Could not contact the server");
   }
 }
 
 export const deleteSource = async (id: string): Promise<void> => {
-  try {
-    const response = await fetch(`/api/sources/${id}`, { method: "DELETE" });
-    if (response.ok) {
-      sources.update((sources) => sources.filter((source) => source.id !== id));
-      sourceCalendars.get(id)?.forEach((calendar) => {
-        calendarEvents.delete(calendar.id);
-      });
-      sourceCalendars.delete(id);
-      compileEvents();
-    } else {
-      const json = await response.json();
-      throw new Error(json ? json.error : "Could not contact the server");
-    }
-  } catch (e) {
-    throw new Error("Unexpected error occured");
+  const response = await fetch(`/api/sources/${id}`, { method: "DELETE" });
+  if (response.ok) {
+    sources.update((sources) => sources.filter((source) => source.id !== id));
+    sourceCalendars.get(id)?.forEach((calendar) => {
+      calendarEvents.delete(calendar.id);
+    });
+    sourceCalendars.delete(id);
+    compileEvents();
+  } else {
+    const json = await response.json();
+    throw new Error(json ? json.error : "Could not contact the server");
   }
 }
 
 export const fetchCalendars = async (id: string): Promise<void> => {
-  try {
-    const response = await fetch(`/api/sources/${id}/calendars`);
-    if (response.ok) {
-      faultySources.update((faultySources) => new Set([...faultySources].filter((faultySource) => faultySource !== id)));
-      const json = await response.json() as {calendars: CalendarModel[]};
-      const fetchCalendars = json.calendars;
+  const response = await fetch(`/api/sources/${id}/calendars`);
+  if (response.ok) {
+    faultySources.update((faultySources) => new Set([...faultySources].filter((faultySource) => faultySource !== id)));
+    const json = await response.json() as {calendars: CalendarModel[]};
+    const fetchCalendars = json.calendars;
 
-      for (const calendar of fetchCalendars) {
-        //calendar.visible = isCalendarVisible(calendar.id);
+    for (const calendar of fetchCalendars) {
+      //calendar.visible = isCalendarVisible(calendar.id);
 
-        fetchEvents(calendar.id, lastStart, lastEnd).catch(err => {
-          queueNotification(
-            "failure",
-            `Failed to fetch events: ${err}`
-          );
-        });
-      }
-
-      sourceCalendars.set(id, new Set(fetchCalendars));
-      compileCalendars();
-    } else {
-      faultySources.update((faultySources) => new Set(faultySources.add(id)));
-      sourceCalendars.delete(id);
-      compileCalendars();
-
-      const json = await response.json();
-      throw new Error(json ? json.error : "Could not contact the server");
+      fetchEvents(calendar.id, lastStart, lastEnd).catch(err => {
+        queueNotification(
+          "failure",
+          `Failed to fetch events: ${err.message}`
+        );
+      });
     }
-  } catch (e) {
-    throw new Error("Unexpected error occured")
+
+    sourceCalendars.set(id, new Set(fetchCalendars));
+    compileCalendars();
+  } else {
+    faultySources.update((faultySources) => new Set(faultySources.add(id)));
+    sourceCalendars.delete(id);
+    compileCalendars();
+
+    const json = await response.json();
+    throw new Error(json ? json.error : "Could not contact the server");
   }
 };
 
@@ -228,7 +203,7 @@ export const fetchAllEvents = async (start: Date, end: Date) => {
     fetchEvents(calendar.id, start, end).catch(err => {
       queueNotification(
         "failure",
-        `Failed to fetch events: ${err}`
+        `Failed to fetch events: ${err.message}`
       );
     });
   }
@@ -239,36 +214,32 @@ export const fetchSourceCalendars = async (id: string) => {
 }
 
 export const fetchEvents = async (id: string, start: Date, end: Date): Promise<void> => {
-  try {
-    const url = `/api/calendars/${id}/events?start=${encodeURIComponent(start.toISOString())}&end=${encodeURIComponent(end.toISOString())}`
-    const response = await fetch(url);
-    if (response.ok) {
-      faultyCalendars.update((faultyCalendars) => new Set([...faultyCalendars].filter((faultyCalendar) => faultyCalendar !== id)));
-      const json = await response.json() as {events: EventModel[]};
-      for (const event of json.events) {
-        event.date.start = new Date(event.date.start);
-        event.date.end = new Date(event.date.end);
+  const url = `/api/calendars/${id}/events?start=${encodeURIComponent(start.toISOString())}&end=${encodeURIComponent(end.toISOString())}`
+  const response = await fetch(url);
+  if (response.ok) {
+    faultyCalendars.update((faultyCalendars) => new Set([...faultyCalendars].filter((faultyCalendar) => faultyCalendar !== id)));
+    const json = await response.json() as {events: EventModel[]};
+    for (const event of json.events) {
+      event.date.start = new Date(event.date.start);
+      event.date.end = new Date(event.date.end);
 
-        if (event.date.allDay) {
-          event.date.start.setHours(0, 0, 0, 0);
-          event.date.end.setHours(0, 0, 0, 0);
-        }
+      if (event.date.allDay) {
+        event.date.start.setHours(0, 0, 0, 0);
+        event.date.end.setHours(0, 0, 0, 0);
       }
-
-      // Do not remove events outside the requested range
-      const oldEvents = Array.from(calendarEvents.get(id) || new Set<EventModel>()).filter((event) => event.date.end < start || event.date.start > end);
-      calendarEvents.set(id, new Set(json.events.concat(oldEvents)));
-      compileEvents();
-    } else {
-      faultyCalendars.update((faultyCalendars) => new Set(faultyCalendars.add(id)));
-      calendarEvents.delete(id);
-      compileEvents();
-
-      const json = await response.json();
-      throw new Error(json ? json.error : "Could not contact the server");
     }
-  } catch (e) {
-    throw new Error("Unexpected error occured");
+
+    // Do not remove events outside the requested range
+    const oldEvents = Array.from(calendarEvents.get(id) || new Set<EventModel>()).filter((event) => event.date.end < start || event.date.start > end);
+    calendarEvents.set(id, new Set(json.events.concat(oldEvents)));
+    compileEvents();
+  } else {
+    faultyCalendars.update((faultyCalendars) => new Set(faultyCalendars.add(id)));
+    calendarEvents.delete(id);
+    compileEvents();
+
+    const json = await response.json();
+    throw new Error(json ? json.error : "Could not contact the server");
   }
 };
 
@@ -295,68 +266,56 @@ function getEventFormData(event: EventModel): FormData {
 }
 
 export const createEvent = async (newEvent: EventModel): Promise<void> => {
-  try {
-    if (newEvent.date.allDay) {
-      newEvent.date.start.setHours(0, 0, 0, 0);
-      newEvent.date.end.setHours(0, 0, 0, 0);
-    }
+  if (newEvent.date.allDay) {
+    newEvent.date.start.setHours(0, 0, 0, 0);
+    newEvent.date.end.setHours(0, 0, 0, 0);
+  }
 
-    const formData = getEventFormData(newEvent);
+  const formData = getEventFormData(newEvent);
 
-    const response = await fetch(`/api/calendars/${newEvent.calendar}/events`, { method: "PUT", body: formData });
-    if (response.ok) {
-      const json = await response.json();
-      newEvent.id = json.id;
+  const response = await fetch(`/api/calendars/${newEvent.calendar}/events`, { method: "PUT", body: formData });
+  if (response.ok) {
+    const json = await response.json();
+    newEvent.id = json.id;
 
-      calendarEvents.set(newEvent.calendar, new Set([...calendarEvents.get(newEvent.calendar) || [], newEvent]));
-      compileEvents();
-    } else {
-      const json = await response.json();
-      throw new Error(json ? json.error : "Could not contact the server");
-    }
-  } catch (e) {
-    throw new Error("Unexpected error occured");
+    calendarEvents.set(newEvent.calendar, new Set([...calendarEvents.get(newEvent.calendar) || [], newEvent]));
+    compileEvents();
+  } else {
+    const json = await response.json();
+    throw new Error(json ? json.error : "Could not contact the server");
   }
 };
 
 export const editEvent = async (modifiedEvent: EventModel): Promise<void> => {
-  try {
-    if (modifiedEvent.date.allDay) {
-      modifiedEvent.date.start.setHours(0, 0, 0, 0);
-      modifiedEvent.date.end.setHours(0, 0, 0, 0);
-    }
+  if (modifiedEvent.date.allDay) {
+    modifiedEvent.date.start.setHours(0, 0, 0, 0);
+    modifiedEvent.date.end.setHours(0, 0, 0, 0);
+  }
 
-    const formData = getEventFormData(modifiedEvent);
+  const formData = getEventFormData(modifiedEvent);
 
-    const response = await fetch(`/api/events/${modifiedEvent.id}`, { method: "PATCH", body: formData });
-    if (response.ok) {
-      calendarEvents.set(modifiedEvent.calendar, new Set([...calendarEvents.get(modifiedEvent.calendar) || []].map((event) => event.id === modifiedEvent.id ? modifiedEvent : event)));
-      compileEvents();
-    } else {
-      const json = await response.json();
-      throw new Error(json ? json.error : "Could not contact the server");
-    }
-  } catch (e) {
-    throw new Error("Unexpected error occured");
+  const response = await fetch(`/api/events/${modifiedEvent.id}`, { method: "PATCH", body: formData });
+  if (response.ok) {
+    calendarEvents.set(modifiedEvent.calendar, new Set([...calendarEvents.get(modifiedEvent.calendar) || []].map((event) => event.id === modifiedEvent.id ? modifiedEvent : event)));
+    compileEvents();
+  } else {
+    const json = await response.json();
+    throw new Error(json ? json.error : "Could not contact the server");
   }
 }
 
 export const deleteEvent = async (id: string): Promise<void> => {
-  try {
-    const response = await fetch(`/api/events/${id}`, { method: "DELETE" });
-    if (response.ok) {
-      const event = eventsMap.get(id);
-      const calendarId = event?.calendar;
-      if (calendarId) {
-        calendarEvents.set(calendarId, new Set([...calendarEvents.get(calendarId) || []].filter((event) => event.id !== id)));
-        compileEvents();
-      }
-    } else {
-      const json = await response.json();
-      throw new Error(json ? json.error : "Could not contact the server");
+  const response = await fetch(`/api/events/${id}`, { method: "DELETE" });
+  if (response.ok) {
+    const event = eventsMap.get(id);
+    const calendarId = event?.calendar;
+    if (calendarId) {
+      calendarEvents.set(calendarId, new Set([...calendarEvents.get(calendarId) || []].filter((event) => event.id !== id)));
+      compileEvents();
     }
-  } catch (e) {
-    throw new Error("Unexpected error occured")
+  } else {
+    const json = await response.json();
+    throw new Error(json ? json.error : "Could not contact the server");
   }
 }
 

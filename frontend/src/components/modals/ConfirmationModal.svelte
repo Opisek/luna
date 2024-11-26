@@ -24,7 +24,6 @@
 
   let awaitingConfirm = $state(false);
   function confirm() {
-    // TOOD: error message if returned value is not empty string
     awaitingConfirm = true;
     confirmCallback()
       .catch(err => {

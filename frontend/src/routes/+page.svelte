@@ -64,7 +64,7 @@
     fetchSources().catch(err => {
       queueNotification(
         "failure",
-        `Failed to fetch sources: ${err}`
+        `Failed to fetch sources: ${err.message}`
       );
     });
 

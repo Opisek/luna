@@ -72,6 +72,7 @@
     onEdit()
       .then(() => {
         editMode = false;
+        queueNotification("success", "Saved successfully.")
         hideModal();
       })
       .catch((err) => {
@@ -83,6 +84,7 @@
 
   const confirmDelete = async () => {
     const returnValue = await onDelete();
+    queueNotification("success", "Deleted successfully.")
     hideModal();
     return returnValue;
   }
