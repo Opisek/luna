@@ -89,11 +89,13 @@
     opacity: 1;
   }
 
-  span.more {
+  button.more {
+    all: unset;
     text-align: center;
     color: $foregroundFaded;
     font-size: $fontSizeSmall;
     margin-right: 1em;
+    cursor: pointer;
   }
 
   div.events {
@@ -147,8 +149,12 @@
     />
   {/each}
   {#if events.length > maxEvents && actualMaxEvents >= 0}
-    <span class="more">
-      and {events.length - actualMaxEvents} more
-    </span>
+    <button class="more">
+      {#if actualMaxEvents == 0}
+       {events.length} events
+      {:else}
+        and {events.length - actualMaxEvents} more
+      {/if}
+    </button>
   {/if}
 {/snippet}
