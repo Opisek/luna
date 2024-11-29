@@ -181,6 +181,14 @@
     flex-direction: column;
     gap: $gap;
   }
+
+  div.toprow {
+    display: flex;
+    flex-direction: row;
+    gap: $gapSmall;
+    justify-content: space-between;
+    margin: 0 $gapSmaller;
+  }
 </style>
 
 <SourceModal bind:showCreateModal={showNewSourceModal} bind:showModal={showSourceModal}/>
@@ -204,7 +212,9 @@
     </Horizontal>
   </aside>
   <main>
-    <MonthSelection bind:month={selectedMonth} bind:year={selectedYear}/>
+    <div class="toprow">
+      <MonthSelection bind:month={selectedMonth} bind:year={selectedYear}/>
+    </div>
     <Calendar
       year={selectedYear}
       month={selectedMonth}
