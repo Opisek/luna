@@ -19,6 +19,10 @@
   import { queueNotification } from "$lib/client/notifications";
 
   import { setContext } from "svelte";
+  import SelectButtons from "../components/forms/SelectButtons.svelte";
+
+  /* View */
+  let view: "month" | "week" | "day" = $state("month");
 
   /* Fetched data */
   let localSources: SourceModel[] = $state([]);
@@ -188,6 +192,7 @@
     gap: $gapSmall;
     justify-content: space-between;
     margin: 0 $gapSmaller;
+    align-items: center;
   }
 </style>
 
@@ -214,6 +219,16 @@
   <main>
     <div class="toprow">
       <MonthSelection bind:month={selectedMonth} bind:year={selectedYear}/>
+        <SelectButtons
+          name="layout"
+          compact={true}
+          bind:value={view}
+          options={[
+            { value: "day", name: "Day"},
+            { value: "week", name: "Week"},
+            { value: "month", name: "Month"},
+          ]}
+        />
     </div>
     <Calendar
       year={selectedYear}
