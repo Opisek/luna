@@ -48,6 +48,7 @@
 
   div.compact {
     width: max-content;
+    gap: 0;
   }
   div.compact > button {
     min-width: max-content;
