@@ -73,7 +73,7 @@
     position: fixed;
     opacity: 0;
     border-radius: $borderRadius;
-    padding: $paddingSmaller;
+    padding: $gapSmall;
     background-color: $backgroundPrimary;
     color: $foregroundPrimary;
     transition: opacity $animationSpeed $cubic;

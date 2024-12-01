@@ -52,7 +52,7 @@
     flex-direction: column;
     gap: $gapSmall;
     margin: calc($gapSmall / 2);
-    padding: $paddingSmaller;
+    padding: $gapSmall;
     border-radius: $borderRadiusSmall;
     background-color: $backgroundSecondary;
     height: calc(100% - $gapSmall);
@@ -100,7 +100,7 @@
 
   div.events {
     position: absolute;
-    top: calc($gapSmall / 2 + $fontSize + $paddingSmaller + $gapSmall);
+    top: calc($fontSize + 2.5 * $gapSmall);
     display: flex;
     flex-direction: column;
     gap: $gapTiny;

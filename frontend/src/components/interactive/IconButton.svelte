@@ -50,7 +50,7 @@
     border-radius: 50%;
     display: flex;
     align-items: center;
-    padding: $paddingTiny;
+    padding: $gapSmaller;
     cursor: pointer;
     position: relative;
     transition: all $cubic $animationSpeed;

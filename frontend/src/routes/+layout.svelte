@@ -65,7 +65,7 @@
     position: fixed;
     right: 0;
     bottom: 0;
-    margin: $paddingTiny;
+    margin: $gapSmaller;
     width: 15em;
   }
 </style>
