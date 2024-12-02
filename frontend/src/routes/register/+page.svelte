@@ -9,8 +9,8 @@
   import { beforeNavigate } from '$app/navigation';
   import { page } from '$app/stores';
 
-  import { isValidEmail, isValidPassword, isValidRepeatPassword, isValidUsername, valid } from '../../lib/client/validation';
-  import { queueNotification } from '../../lib/client/notifications';
+  import { isValidEmail, isValidPassword, isValidRepeatPassword, isValidUsername, valid } from '$lib/client/validation';
+  import { queueNotification } from '$lib/client/notifications';
 
   interface Props {
     form: ActionData;

@@ -1,6 +1,8 @@
 <script lang="ts">
-  import { notificationExpireTime, notifications } from "$lib/client/notifications";
   import Notification from "../components/interactive/Notification.svelte";
+
+  import { notificationExpireTime, notifications } from "$lib/client/notifications";
+
   interface Props {
     children?: import('svelte').Snippet;
   }
