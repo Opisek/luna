@@ -52,7 +52,7 @@
     flex-direction: column;
     gap: $gapSmall;
     margin: calc($gapSmall / 2);
-    padding: $paddingSmaller;
+    padding: $gapSmall;
     border-radius: $borderRadiusSmall;
     background-color: $backgroundSecondary;
     height: calc(100% - $gapSmall);
@@ -89,16 +89,18 @@
     opacity: 1;
   }
 
-  span.more {
+  button.more {
+    all: unset;
     text-align: center;
     color: $foregroundFaded;
     font-size: $fontSizeSmall;
     margin-right: 1em;
+    cursor: pointer;
   }
 
   div.events {
     position: absolute;
-    top: calc($gapSmall / 2 + $fontSize + $paddingSmaller + $gapSmall);
+    top: calc($fontSize + 2.5 * $gapSmall);
     display: flex;
     flex-direction: column;
     gap: $gapTiny;
@@ -147,8 +149,12 @@
     />
   {/each}
   {#if events.length > maxEvents && actualMaxEvents >= 0}
-    <span class="more">
-      and {events.length - actualMaxEvents} more
-    </span>
+    <button class="more">
+      {#if actualMaxEvents == 0}
+       {events.length} events
+      {:else}
+        and {events.length - actualMaxEvents} more
+      {/if}
+    </button>
   {/if}
 {/snippet}

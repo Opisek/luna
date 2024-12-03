@@ -7,18 +7,20 @@
   interface Props {
     value: string;
     name: string;
-    placeholder: string;
+    placeholder?: string;
     label?: boolean;
     editable?: boolean;
+    compact?: boolean;
     options: Option[];
   }
 
   let {
     value = $bindable(),
     name,
-    placeholder,
+    placeholder = "",
     label = true,
     editable = true,
+    compact = false,
     options
   }: Props = $props();
 
@@ -42,6 +44,15 @@
     width: 100%; 
     gap: $gapSmaller;
     user-select: none;
+  }
+
+  div.compact {
+    width: max-content;
+    gap: 0;
+  }
+  div.compact > button {
+    min-width: max-content;
+    padding: $gapSmaller;
   }
 
   button {
@@ -77,7 +88,10 @@
   <Label name={name}>{placeholder}</Label>
 {/if}
 {#if editable}
-  <div class="buttons">
+  <div
+    class="buttons"
+    class:compact={compact} 
+  >
     {#each options as option, i}
       <button
         type="button"

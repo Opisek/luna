@@ -27,12 +27,12 @@
     right: 0;
     width: 100%;
     position: absolute;
-    padding-top: $paddingTiny;
+    padding-top: $gapSmaller;
     transition: all $cubic $animationSpeedSlow; 
   }
 
   div.box {
-    padding: $paddingSmall;
+    padding: $gap;
     border-radius: $borderRadius;
     cursor: pointer;
     position: relative;

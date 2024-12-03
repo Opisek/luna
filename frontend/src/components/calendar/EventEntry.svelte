@@ -80,7 +80,7 @@
   @import "../../styles/text.scss";
 
   div {
-    padding: $paddingTiny;
+    padding: $gapSmaller;
     font-size: $fontSizeSmall;
     margin: 0;
 

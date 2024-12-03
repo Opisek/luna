@@ -24,7 +24,7 @@
     cursor: help;
     display: flex;
     justify-content: center;
-    padding: $paddingTiny;
+    padding: $gapSmaller;
     outline: 0;
   }
 

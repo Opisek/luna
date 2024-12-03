@@ -61,7 +61,7 @@
     border-radius: $borderRadiusSmall;
     color: $foregroundSecondary;
     background-color: $backgroundSecondary;
-    padding: $paddingTiny;
+    padding: $gapSmaller;
     cursor: pointer;
     user-select: none;
     position: relative;

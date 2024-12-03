@@ -125,7 +125,7 @@
     align-items: center;
     width: 100%;
     margin-top: 5em;
-    margin-bottom: 7em + $paddingSmaller;
+    margin-bottom: 7em + $gapSmall;
     font-family: $fontFamilyTime;
   }
 
@@ -135,7 +135,7 @@
     color: $foregroundSecondary;
     //border-radius: $borderRadiusSmall;
     border-radius: 50%;
-    padding: $paddingSmaller;
+    padding: $gapSmall;
     cursor: pointer;
   }
 
