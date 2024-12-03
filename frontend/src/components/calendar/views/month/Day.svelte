@@ -1,8 +1,8 @@
 <script lang="ts">
   import { PlusIcon } from "lucide-svelte";
 
-  import EventEntry from "./EventEntry.svelte";
-  import IconButton from "../interactive/IconButton.svelte";
+  import Event from "./Event.svelte";
+  import IconButton from "../../../interactive/IconButton.svelte";
 
   import { getContext } from "svelte";
 
@@ -35,10 +35,10 @@
 </script>
 
 <style lang="scss">
-  @import "../../styles/animations.scss";
-  @import "../../styles/colors.scss";
-  @import "../../styles/dimensions.scss";
-  @import "../../styles/text.scss";
+  @import "../../../../styles/animations.scss";
+  @import "../../../../styles/colors.scss";
+  @import "../../../../styles/dimensions.scss";
+  @import "../../../../styles/text.scss";
 
   div.day {
     min-width: 0;
@@ -140,7 +140,7 @@
   fixes a few issues but might be less performant. figure out the right
   compromise -->
   {#each events as event, i ((event?.id || 0) + i.toString())}
-    <EventEntry
+    <Event
       event={event}
       isFirstDay={isFirstDay}
       isLastDay={isLastDay}

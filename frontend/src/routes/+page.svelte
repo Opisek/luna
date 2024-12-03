@@ -1,7 +1,7 @@
 <script lang="ts">
   import { PlusIcon } from "lucide-svelte";
 
-  import Calendar from "../components/calendar/Calendar.svelte";
+  import ViewMonth from "../components/calendar/views/month/ViewMonth.svelte";
   import CalendarEntry from "../components/calendar/CalendarEntry.svelte";
   import EventModal from "../components/modals/EventModal.svelte";
   import Horizontal from "../components/layout/Horizontal.svelte";
@@ -230,11 +230,17 @@
           ]}
         />
     </div>
-    <Calendar
-      year={selectedYear}
-      month={selectedMonth}
-      events={localEvents}
-    />
+    {#if view === "month"}
+      <ViewMonth
+        year={selectedYear}
+        month={selectedMonth}
+        events={localEvents}
+      />
+    {:else if view === "week"}
+      <p>Week view</p>
+    {:else}
+      <p>Day view</p>
+    {/if}
   </main>
 </div>
 

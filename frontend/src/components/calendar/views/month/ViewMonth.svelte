@@ -95,7 +95,7 @@
 </script>
 
 <style lang="scss">
-  @import "../../styles/dimensions.scss";
+  @import "../../../../styles/dimensions.scss";
 
   div.calendar {
     display: flex;
