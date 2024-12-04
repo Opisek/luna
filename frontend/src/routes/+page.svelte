@@ -44,7 +44,7 @@
   let rangeStart: Date = $state(new Date(currentYear, currentMonth - 1, 1));
   let rangeEnd: Date = $state(new Date(currentYear, currentMonth + 2, 0));
 
-  let date = $derived(new Date(selectedYear, selectedMonth, 1));
+  let date = $derived(new Date(selectedYear, selectedMonth, 1)); // TODO: selection of day instead of month+year
 
   function getRangeFromStorage() {
     const storedYear = browser ? sessionStorage.getItem("selectedYear") : null;

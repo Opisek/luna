@@ -45,7 +45,7 @@
         case "week":
           return new Date(date.getFullYear(), date.getMonth(), date.getDate() + 6 - date.getDay());
         case "day":
-          return new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1);
+          return new Date(date.getFullYear(), date.getMonth(), date.getDate());
       }
     })()
   );
@@ -56,12 +56,13 @@
       // Date calculation
       const firstDayOfWeek = (startDate.getDay() + 6) % 7;
 
-      const amountOfRows = Math.ceil((endDate.getDate() + firstDayOfWeek) / 7);
+      const amountOfColumns = view === "day" ? 1 : 7;
+      const amountOfRows = view === "month" ? Math.ceil((endDate.getDate() + firstDayOfWeek) / amountOfColumns) : 1;
 
       const firstViewDay = new Date(startDate);
       firstViewDay.setDate(startDate.getDate() - firstDayOfWeek);
       const lastViewDay = new Date(startDate);
-      lastViewDay.setDate(startDate.getDate() + 7 * amountOfRows - 1);
+      lastViewDay.setDate(startDate.getDate() + amountOfColumns * amountOfRows - 1);
 
       // Event pre-processing
       const filteredEvents = events.filter(e => e.date.start.getTime() >= firstViewDay.getTime() && e.date.end.getTime() < lastViewDay.getTime());
@@ -74,7 +75,7 @@
       const dateIterator = new Date(firstViewDay);
       let eventIterator = 0;
 
-      for (let i = 0; i < 7 * amountOfRows; i++) {
+      for (let i = 0; i < amountOfColumns * amountOfRows; i++) {
         // Copy events from previous day and remove whichever are over
         const dayEvents =
           i == 0
