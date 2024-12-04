@@ -9,14 +9,14 @@
   import { writable } from "svelte/store";
 
   interface Props {
-    month: number;
-    year: number;
+    date: Date;
+    view: "month" | "week" | "day";
     events: EventModel[];
   }
 
   let {
-    month,
-    year,
+    date,
+    view,
     events,
   }: Props = $props();
 
@@ -25,20 +25,43 @@
   setContext("currentlyHoveredEvent", currentlyHoveredEvent);
   setContext("currentlyClickedEvent", currentlyClickedEvent);
 
+  let startDate = $derived(
+    (() => {
+      switch (view) {
+        case "month":
+          return new Date(date.getFullYear(), date.getMonth(), 1);
+        case "week":
+          return new Date(date.getFullYear(), date.getMonth(), date.getDate() - date.getDay());
+        case "day":
+          return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      }
+    })()
+  );
+  let endDate = $derived(
+    (() => {
+      switch (view) {
+        case "month":
+          return new Date(date.getFullYear(), date.getMonth() + 1, 0);
+        case "week":
+          return new Date(date.getFullYear(), date.getMonth(), date.getDate() + 6 - date.getDay());
+        case "day":
+          return new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1);
+      }
+    })()
+  );
+
   let showModal = $state(NoOp);
 
   let [days, amountOfRows, processedEvents] = $derived((() => {
       // Date calculation
-      const firstMonthDay = new Date(year, month, 1);
-      const lastMonthDay = new Date(year, month + 1, 0);
-      const firstDayOfWeek = (firstMonthDay.getDay() + 6) % 7;
+      const firstDayOfWeek = (startDate.getDay() + 6) % 7;
 
-      const amountOfRows = Math.ceil((lastMonthDay.getDate() + firstDayOfWeek) / 7);
+      const amountOfRows = Math.ceil((endDate.getDate() + firstDayOfWeek) / 7);
 
-      const firstViewDay = new Date(firstMonthDay);
-      firstViewDay.setDate(firstMonthDay.getDate() - firstDayOfWeek);
-      const lastViewDay = new Date(firstMonthDay);
-      lastViewDay.setDate(firstMonthDay.getDate() + 7 * amountOfRows - 1);
+      const firstViewDay = new Date(startDate);
+      firstViewDay.setDate(startDate.getDate() - firstDayOfWeek);
+      const lastViewDay = new Date(startDate);
+      lastViewDay.setDate(startDate.getDate() + 7 * amountOfRows - 1);
 
       // Event pre-processing
       const filteredEvents = events.filter(e => e.date.start.getTime() >= firstViewDay.getTime() && e.date.end.getTime() < lastViewDay.getTime());
@@ -95,7 +118,7 @@
 </script>
 
 <style lang="scss">
-  @import "../../../../styles/dimensions.scss";
+  @import "../../styles/dimensions.scss";
 
   div.calendar {
     display: flex;
@@ -107,8 +130,10 @@
 
   div.weekdays {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
     gap: $gapSmall;
+  }
+  div.weekdays-day {
+    grid-template-columns: repeat(1, 1fr);
   }
   div.weekday {
     text-align: center;
@@ -116,27 +141,57 @@
 
   div.days {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
     gap: 0;
     flex-grow: 1;
     // TODO: figure out proper height
     height: 90%;
   }
+  
+  div.columns-month,
+  div.columns-week {
+    grid-template-columns: repeat(7, 1fr);
+  }
+  div.columns-day {
+    grid-template-columns: repeat(1, 1fr);
+  }
 </style>
 
 <div class="calendar">
-  <div class="weekdays">
-    {#each Array(7) as _, weekDay}
+  <div
+    class="weekdays"
+    class:columns-month={view === "month"}
+    class:columns-week={view === "week"}
+    class:columns-day={view === "day"}
+  >
+    {#if view === "month"}
+      {#each Array(7) as _, weekDay}
+        <div class="weekday">
+          {getDayName(weekDay)}
+        </div>
+      {/each}
+    {:else if view === "week"}
+      {#each Array(7) as _, i}
+        <div class="weekday">
+          {getDayName((date.getDay() + i) % 7)}
+        </div>
+      {/each}
+    {:else}
       <div class="weekday">
-        {getDayName(weekDay)}
+        {getDayName(date.getDay())}
       </div>
-    {/each}
+    {/if}
   </div>
-  <div class="days" style="grid-template-rows: repeat({amountOfRows}, 1fr)">
+  <div
+    class="days"
+    style="grid-template-rows: repeat({amountOfRows}, 1fr)"
+    class:columns-month={view === "month"}
+    class:columns-week={view === "week"}
+    class:columns-day={view === "day"}
+  >
     {#each days as day, i}
       <Day
         date={day}
-        isCurrentMonth={day.getMonth() === month} 
+        isCurrentMonth={day.getMonth() === startDate.getMonth()} 
         events={processedEvents[i]}
         isFirstDay={i == 0}
         isLastDay={i == days.length - 1}

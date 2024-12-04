@@ -2,7 +2,7 @@
   import { PlusIcon } from "lucide-svelte";
 
   import Event from "./Event.svelte";
-  import IconButton from "../../../interactive/IconButton.svelte";
+  import IconButton from "../interactive/IconButton.svelte";
 
   import { getContext } from "svelte";
 
@@ -35,10 +35,10 @@
 </script>
 
 <style lang="scss">
-  @import "../../../../styles/animations.scss";
-  @import "../../../../styles/colors.scss";
-  @import "../../../../styles/dimensions.scss";
-  @import "../../../../styles/text.scss";
+  @import "../../styles/animations.scss";
+  @import "../../styles/colors.scss";
+  @import "../../styles/dimensions.scss";
+  @import "../../styles/text.scss";
 
   div.day {
     min-width: 0;

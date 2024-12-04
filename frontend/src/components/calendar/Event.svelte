@@ -74,10 +74,10 @@
 </script>
 
 <style lang="scss">
-  @import "../../../../styles/animations.scss";
-  @import "../../../../styles/colors.scss";
-  @import "../../../../styles/dimensions.scss";
-  @import "../../../../styles/text.scss";
+  @import "../../styles/animations.scss";
+  @import "../../styles/colors.scss";
+  @import "../../styles/dimensions.scss";
+  @import "../../styles/text.scss";
 
   div {
     padding: $gapSmaller;

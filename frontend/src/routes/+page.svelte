@@ -1,12 +1,13 @@
 <script lang="ts">
   import { PlusIcon } from "lucide-svelte";
 
-  import ViewMonth from "../components/calendar/views/month/ViewMonth.svelte";
+  import Calendar from "../components/calendar/Calendar.svelte";
   import CalendarEntry from "../components/calendar/CalendarEntry.svelte";
   import EventModal from "../components/modals/EventModal.svelte";
   import Horizontal from "../components/layout/Horizontal.svelte";
   import IconButton from "../components/interactive/IconButton.svelte";
   import MonthSelection from "../components/interactive/MonthSelection.svelte";
+  import SelectButtons from "../components/forms/SelectButtons.svelte";
   import SourceEntry from "../components/calendar/SourceEntry.svelte";
   import SourceModal from "../components/modals/SourceModal.svelte";
   import Title from "../components/layout/Title.svelte";
@@ -19,7 +20,6 @@
   import { queueNotification } from "$lib/client/notifications";
 
   import { setContext } from "svelte";
-  import SelectButtons from "../components/forms/SelectButtons.svelte";
 
   /* View */
   let view: "month" | "week" | "day" = $state("month");
@@ -43,6 +43,8 @@
   let selectedYear: number = $state(currentYear);
   let rangeStart: Date = $state(new Date(currentYear, currentMonth - 1, 1));
   let rangeEnd: Date = $state(new Date(currentYear, currentMonth + 2, 0));
+
+  let date = $derived(new Date(selectedYear, selectedMonth, 1));
 
   function getRangeFromStorage() {
     const storedYear = browser ? sessionStorage.getItem("selectedYear") : null;
@@ -230,17 +232,11 @@
           ]}
         />
     </div>
-    {#if view === "month"}
-      <ViewMonth
-        year={selectedYear}
-        month={selectedMonth}
+      <Calendar
+        date={date}
+        view={view}
         events={localEvents}
       />
-    {:else if view === "week"}
-      <p>Week view</p>
-    {:else}
-      <p>Day view</p>
-    {/if}
   </main>
 </div>
 
