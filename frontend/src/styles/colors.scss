@@ -1,7 +1,10 @@
+/* Main colors */
 $foregroundDark: #000000;
 $foregroundBright: #ffffff;
 
 $foregroundFaded: #6b6b6b;
+
+$foregroundLink: hsl(213, 69%, 42%);
 
 $backgroundPrimary: #ffffff;
 $foregroundPrimary: $foregroundDark;
@@ -22,10 +25,10 @@ $backgroundAccent: hsl(213, 69%, 62%);
 $backgroundAccentActive: hsl(213, 69%, 72%);
 $foregroundAccent: $foregroundBright;
 
+/* Calendar colors */
 $foregroundSunday: hsl(0, 71%, 58%);
 
-$foregroundLink: hsl(213, 69%, 42%);
-
+/* Notification colors */
 $specialColors: (
   success: (
     background: $backgroundSuccess,
@@ -44,6 +47,7 @@ $specialColors: (
   ),
 );
 
+/* Focus indicator colors */
 $barFocusIndicatorColor: $backgroundAccent;
 $barFocusIndicatorColorAlt: $backgroundSecondary;
 

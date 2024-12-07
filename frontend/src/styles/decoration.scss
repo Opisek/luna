@@ -1,8 +1,10 @@
 @import "./colors.scss";
 
-$stripesSize: 10px;
-
+/* Shadow */
 $boxShadow: rgba(0, 0, 0, 0.24) 0px 0.1em 0.3em;
+
+/* "Default color" gradient */
+$stripesSize: 10px;
 $stripes: repeating-linear-gradient(
   135deg,
   transparent calc(0.2 * $stripesSize),
