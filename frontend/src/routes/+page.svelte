@@ -19,7 +19,7 @@
   import { calendars, events, fetchAllEvents, fetchSources, sources } from "$lib/client/repository";
   import { queueNotification } from "$lib/client/notifications";
 
-  import { setContext } from "svelte";
+  import { setContext, untrack } from "svelte";
 
   /* View */
   let view: "month" | "week" | "day" = $state("month");
@@ -36,23 +36,13 @@
   let loaded: boolean = $state(false);
 
   const today = new Date();
-  const currentYear = today.getFullYear();
-  const currentMonth = today.getMonth() 
-
-  let selectedMonth: number = $state(currentMonth);
-  let selectedYear: number = $state(currentYear);
-  let rangeStart: Date = $state(new Date(currentYear, currentMonth - 1, 1));
-  let rangeEnd: Date = $state(new Date(currentYear, currentMonth + 2, 0));
-
-  let date = $derived(new Date(selectedYear, selectedMonth, 1)); // TODO: selection of day instead of month+year
+  let date = $state(today);
+  let rangeStart: Date = $derived(new Date(date.getFullYear(), date.getMonth() - 1, 1));
+  let rangeEnd: Date = $derived(new Date(date.getFullYear(), date.getMonth() + 1, 0));
 
   function getRangeFromStorage() {
-    const storedYear = browser ? sessionStorage.getItem("selectedYear") : null;
-    selectedYear = storedYear === null ? currentYear : parseInt(storedYear);
-    const storedMonth = browser ? sessionStorage.getItem("selectedMonth") : null;
-    selectedMonth = storedMonth === null ? currentMonth : parseInt(storedMonth);
-    rangeStart = new Date(selectedYear, selectedMonth - 1, 1);
-    rangeEnd = new Date(selectedYear, selectedMonth + 2, 0);
+    const storedDate = browser ? sessionStorage.getItem("selectedDate") : null;
+    date = storedDate === null ? today : new Date(storedDate);
   }
 
   if (browser) {
@@ -109,28 +99,32 @@
 
   /* Month selection logic */
   $effect(() => {
-    ((year: number, month: number, loaded: boolean) => {
-      if (!browser || !loaded) return;
+    ((date: Date, loaded: boolean) => {
+      untrack(() => {
+        if (!browser || !loaded) return;
 
-      sessionStorage.setItem("selectedYear", year.toString());
-      sessionStorage.setItem("selectedMonth", month.toString());
-      
-      const firstDayNextMonth = new Date(year, month + 1, 1);
-      const lastDayPreviousMonth = new Date(year, month, 0);
+        sessionStorage.setItem("selectedDate", date.toString());
 
-      if (lastDayPreviousMonth < rangeStart) {
-        const lastStart = rangeStart;
-        rangeStart = new Date(year, month - 2, 1);
-        fetchAllEvents(rangeStart, lastStart);
-      }
+        fetchAllEvents(rangeStart, rangeEnd); // TODO: what actually has to be refetched will be moved to an event manager singleton
+        
+        //if (lastDayPreviousMonth < rangeStart) {
+        //  const lastStart = rangeStart;
+        //  rangeStart = new Date(year, month - 2, 1);
+        //  fetchAllEvents(rangeStart, lastStart);
+        //}
 
-      if (firstDayNextMonth > rangeEnd) {
-        const lastEnd = rangeEnd;
-        rangeEnd = new Date(year, month + 3, 0);
-        fetchAllEvents(lastEnd, rangeEnd);
-      }
-    })(selectedYear, selectedMonth, loaded);
+        //if (firstDayNextMonth > rangeEnd) {
+        //  const lastEnd = rangeEnd;
+        //  rangeEnd = new Date(year, month + 3, 0);
+        //  fetchAllEvents(lastEnd, rangeEnd);
+        //}
+      });
+    })(date, loaded);
   });
+
+  function updateMonth(month: number, year: number) {
+    date = new Date(year, month, date.getDate());
+  }
 
   /* Single instance modal logic */
   let showNewSourceModal: () => any = $state(NoOp);
@@ -220,7 +214,7 @@
   </aside>
   <main>
     <div class="toprow">
-      <MonthSelection bind:month={selectedMonth} bind:year={selectedYear}/>
+      <MonthSelection month={date.getMonth()} year={date.getFullYear()} onSelect={updateMonth}/>
         <SelectButtons
           name="layout"
           compact={true}

@@ -13,13 +13,15 @@
     year: number;
     showPopup?: () => any;
     hidePopup?: () => any;
+    onSelect?: (month: number, year: number) => void;
   }
 
   let {
     month = $bindable(),
     year = $bindable(),
-    showPopup = $bindable(),
-    hidePopup = $bindable()
+    showPopup = $bindable(NoOp),
+    hidePopup = $bindable(NoOp),
+    onSelect = NoOp,
   }: Props = $props();
 
   let popupVisible: boolean = $state(false);
@@ -37,6 +39,7 @@
 
   hidePopup = () => {
     internalClose();
+    onSelect(month, year);
   }
 
   let selectedYear: number = $state(0);
@@ -46,7 +49,7 @@
     //addRipple(e);
     month = i;
     year = selectedYear;
-    internalClose();
+    hidePopup();
   }
 
   function clickYear(e: MouseEvent, i: number) {

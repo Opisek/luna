@@ -12,9 +12,14 @@
   interface Props {
     month: number;
     year: number;
+    onSelect?: (month: number, year: number) => void;
   }
 
-  let { month = $bindable(), year = $bindable() }: Props = $props();
+  let {
+    month = $bindable(),
+    year = $bindable(),
+    onSelect = NoOp,
+  }: Props = $props();
 
   let showPopup: () => any = $state(NoOp);
 
@@ -24,11 +29,13 @@
       month = 11;
       year--;
     }
+    onSelect(month, year);
   }
 
   function nextMonth() {
     if (month === 11) year++;
     month = (month + 1) % 12;
+    onSelect(month, year);
   }
 </script>
 
@@ -62,5 +69,5 @@
   <button onclick={showPopup} type="button" use:focusIndicator={{ type: "underline", ignoreParent: true }}>
     {`${getMonthName(month)} ${year}`}
   </button>
-  <MonthPopup bind:showPopup bind:year={year} bind:month={month}/>
+  <MonthPopup bind:showPopup bind:year={year} bind:month={month} onSelect={onSelect}/>
 </div>
