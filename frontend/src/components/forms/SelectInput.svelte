@@ -124,6 +124,7 @@
     width: 100%;
     transition: linear $animationSpeedFast;
     padding: $gapSmall;
+    cursor: pointer;
   }
 
   button.option:hover, button.option:focus {
