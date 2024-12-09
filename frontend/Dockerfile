@@ -1,18 +1,18 @@
 # Base
-FROM node:20-alpine as base
+FROM node:20-alpine AS base
 WORKDIR /app
 
 # Install node production dependencies
-FROM base as dependencies
+FROM base AS dependencies
 COPY package.json package-lock.json ./
 RUN npm install --production
 
 # Install node development dependencies
-FROM dependencies as devDependencies
+FROM dependencies AS devDependencies
 RUN npm install
 
 # Build the frontend
-FROM base as build
+FROM base AS build
 WORKDIR /app
 RUN apk add make
 COPY Makefile .env .npmrc svelte.config.js tsconfig.json VERSION vite.config.ts package.json ./
@@ -23,7 +23,7 @@ COPY --from=devDependencies /app/node_modules ./node_modules
 RUN make build
 
 # Run the frontend
-FROM base as run
+FROM base AS run
 WORKDIR /app
 COPY package.json .
 COPY --from=dependencies /app/node_modules ./node_modules
