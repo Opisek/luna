@@ -17,8 +17,6 @@
     enabled = true,
     children
   }: Props = $props();
-
-  let button: HTMLButtonElement;
 </script>
 
 <style lang="scss">
@@ -60,9 +58,8 @@
 </style>
 
 <button
-  bind:this={button}
   onclick={onClick}
-  onmouseleave={button.blur}
+  onmouseleave={(e) => {(e.target as HTMLButtonElement).blur()}}
   class:success={color == "success"}
   class:failure={color == "failure"}
   class:accent={color == "accent"}
