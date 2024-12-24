@@ -31,7 +31,7 @@
         case "month":
           return new Date(date.getFullYear(), date.getMonth(), 1);
         case "week":
-          return new Date(date.getFullYear(), date.getMonth(), date.getDate() - date.getDay());
+          return new Date(date.getFullYear(), date.getMonth(), date.getDate() - date.getDay() + 1);
         case "day":
           return new Date(date.getFullYear(), date.getMonth(), date.getDate());
       }
@@ -43,7 +43,7 @@
         case "month":
           return new Date(date.getFullYear(), date.getMonth() + 1, 0);
         case "week":
-          return new Date(date.getFullYear(), date.getMonth(), date.getDate() + 6 - date.getDay());
+          return new Date(date.getFullYear(), date.getMonth(), date.getDate() - date.getDay() + 7);
         case "day":
           return new Date(date.getFullYear(), date.getMonth(), date.getDate());
       }
@@ -164,16 +164,10 @@
     class:columns-week={view === "week"}
     class:columns-day={view === "day"}
   >
-    {#if view === "month"}
+    {#if view === "month" || view === "week"}
       {#each Array(7) as _, weekDay}
         <div class="weekday">
           {getDayName(weekDay)}
-        </div>
-      {/each}
-    {:else if view === "week"}
-      {#each Array(7) as _, i}
-        <div class="weekday">
-          {getDayName((date.getDay() + i) % 7)}
         </div>
       {/each}
     {:else}
