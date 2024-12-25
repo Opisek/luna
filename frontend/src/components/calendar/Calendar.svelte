@@ -60,9 +60,10 @@
       const amountOfRows = view === "month" ? Math.ceil((endDate.getDate() + firstDayOfWeek) / amountOfColumns) : 1;
 
       const firstViewDay = new Date(startDate);
-      firstViewDay.setDate(startDate.getDate() - firstDayOfWeek);
+      if (view === "month" || view === "week") firstViewDay.setDate(startDate.getDate() - firstDayOfWeek);
       const lastViewDay = new Date(startDate);
-      lastViewDay.setDate(startDate.getDate() + amountOfColumns * amountOfRows - 1);
+      if (view === "month" || view === "week") lastViewDay.setDate(startDate.getDate() + amountOfColumns * amountOfRows - 1);
+      else lastViewDay.setDate(startDate.getDate() + 1);
 
       // Event pre-processing
       const filteredEvents = events.filter(e => e.date.start.getTime() >= firstViewDay.getTime() && e.date.end.getTime() < lastViewDay.getTime());
@@ -172,7 +173,7 @@
       {/each}
     {:else}
       <div class="weekday">
-        {getDayName(date.getDay())}
+        {getDayName((date.getDay() + 6) % 7)}
       </div>
     {/if}
   </div>
