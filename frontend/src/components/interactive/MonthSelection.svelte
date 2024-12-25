@@ -11,11 +11,13 @@
 
   interface Props {
     date: Date;
+    granularity?: "month" | "week" | "day";
     onSelect?: (date: Date) => void;
   }
 
   let {
     date = $bindable(new Date()),
+    granularity = "month",
     onSelect = NoOp,
   }: Props = $props();
 
@@ -28,6 +30,26 @@
 
   function nextMonth() {
     date = new Date(date.getFullYear(), date.getMonth() + 1, date.getDate());
+    onSelect(date);
+  }
+
+  function previousWeek() {
+    date = new Date(date.getFullYear(), date.getMonth(), date.getDate() - 7);
+    onSelect(date);
+  }
+
+  function nextWeek() {
+    date = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 7);
+    onSelect(date);
+  }
+
+  function previousDay() {
+    date = new Date(date.getFullYear(), date.getMonth(), date.getDate() - 1);
+    onSelect(date);
+  }
+
+  function nextDay() {
+    date = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1);
     onSelect(date);
   }
 </script>
@@ -53,14 +75,24 @@
 </style>
 
 <div>
-  <IconButton click={previousMonth}>
-    <LeftIcon/>
-  </IconButton>
-  <IconButton click={nextMonth}>
-    <RightIcon/>
-  </IconButton>
+  {#if granularity === "month"}
+    {@render buttons(previousMonth, nextMonth)}
+  {:else if granularity === "week"}
+    {@render buttons(previousWeek, nextWeek)}
+  {:else if granularity === "day"}
+    {@render buttons(previousDay, nextDay)}
+  {/if}
   <button onclick={showPopup} type="button" use:focusIndicator={{ type: "underline", ignoreParent: true }}>
     {`${getMonthName(date.getMonth())} ${date.getFullYear()}`}
   </button>
   <MonthPopup bind:showPopup bind:date={date} onSelect={onSelect}/>
 </div>
+
+{#snippet buttons(prev: () => void, next: () => void)}
+  <IconButton click={prev}>
+    <LeftIcon/>
+  </IconButton>
+  <IconButton click={next}>
+    <RightIcon/>
+  </IconButton>
+{/snippet}

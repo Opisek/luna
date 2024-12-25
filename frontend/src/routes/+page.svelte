@@ -210,7 +210,7 @@
   </aside>
   <main>
     <div class="toprow">
-      <MonthSelection bind:date />
+      <MonthSelection bind:date granularity={view} />
         <SelectButtons
           name="layout"
           compact={true}
