@@ -122,10 +122,6 @@
     })(date, loaded);
   });
 
-  function updateMonth(month: number, year: number) {
-    date = new Date(year, month, date.getDate());
-  }
-
   /* Single instance modal logic */
   let showNewSourceModal: () => any = $state(NoOp);
 
@@ -214,7 +210,7 @@
   </aside>
   <main>
     <div class="toprow">
-      <MonthSelection month={date.getMonth()} year={date.getFullYear()} onSelect={updateMonth}/>
+      <MonthSelection bind:date />
         <SelectButtons
           name="layout"
           compact={true}

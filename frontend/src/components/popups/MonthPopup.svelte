@@ -9,16 +9,14 @@
   import { getMonthName } from "$lib/common/humanization";
 
   interface Props {
-    month: number;
-    year: number;
+    date: Date;
     showPopup?: () => any;
     hidePopup?: () => any;
-    onSelect?: (month: number, year: number) => void;
+    onSelect?: (date: Date) => void;
   }
 
   let {
-    month = $bindable(),
-    year = $bindable(),
+    date = $bindable(new Date()),
     showPopup = $bindable(NoOp),
     hidePopup = $bindable(NoOp),
     onSelect = NoOp,
@@ -32,23 +30,24 @@
 
   showPopup = () => {
     if (popupVisible) return;
-    selectedYear = year;
+    selectedYear = date.getFullYear();
     selectingMonth = true;
     setTimeout(internalShow, 0);
   }
 
   hidePopup = () => {
     internalClose();
-    onSelect(month, year);
+    onSelect(date);
   }
 
-  let selectedYear: number = $state(0);
+  let selectedMonth: number = $state(date.getMonth());
+  let selectedYear: number = $state(date.getFullYear());
   let decadeStart: number = $derived(Math.floor(selectedYear / 10) * 10);
 
   function clickMonth(e: MouseEvent, i: number) {
     //addRipple(e);
-    month = i;
-    year = selectedYear;
+    selectedMonth = i;
+    date = new Date(selectedYear, selectedMonth, date.getDate());
     hidePopup();
   }
 

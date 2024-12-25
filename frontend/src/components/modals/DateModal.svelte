@@ -13,21 +13,16 @@
   }
 
   let {
-    date = $bindable(),
+    date = $bindable(new Date()),
     onChange = NoOp,
     showModal = $bindable(),
     hideModal = $bindable()
   }: Props = $props();
 
-  let currentYear: number = $state(0);
-  let currentMonth: number = $state(0);
-
   let showModalInternal: () => any = $state(NoOp);
   let hideModalInternal: () => any = $state(NoOp);
 
   showModal = () => {
-    currentYear = date.getFullYear();
-    currentMonth = date.getMonth();
     showModalInternal();
   };
 
@@ -45,6 +40,6 @@
 </script>
 
 <Modal title="Pick Date" bind:showModal={showModalInternal} bind:hideModal={hideModalInternal}>
-  <MonthSelection bind:month={currentMonth} bind:year={currentYear} />
-  <SmallCalendar year={currentYear} month={currentMonth} onDayClick={dateSelected} />
+  <MonthSelection bind:date />
+  <SmallCalendar bind:date onDayClick={dateSelected} />
 </Modal>

@@ -3,20 +3,18 @@
   import { focusIndicator } from "$lib/client/decoration";
 
   interface Props {
-    month: number;
-    year: number;
+    date: Date;
     onDayClick?: (date: Date) => any;
   }
 
   let {
-    month,
-    year,
+    date = $bindable(new Date()),
     onDayClick = NoOp
   }: Props = $props();
 
   let [days, amountOfRows] = $derived((() => {
     // Date calculation
-    const firstMonthDay = new Date(year, month, 1);
+    const firstMonthDay = new Date(date.getFullYear(), date.getMonth(), 1);
     //const lastMonthDay = new Date(year, month + 2, 0);
     const firstDayOfWeek = (firstMonthDay.getDay() + 6) % 7;
 
@@ -82,7 +80,7 @@
     <button
       class="day"
       class:sunday={day.getDay() == 0}
-      class:otherMonth={day.getMonth() != month}
+      class:otherMonth={day.getMonth() != date.getMonth()}
       type="button"
       onclick={() => (onDayClick(day))}
       use:focusIndicator

@@ -10,32 +10,25 @@
   import { getMonthName } from "$lib/common/humanization";
 
   interface Props {
-    month: number;
-    year: number;
-    onSelect?: (month: number, year: number) => void;
+    date: Date;
+    onSelect?: (date: Date) => void;
   }
 
   let {
-    month = $bindable(),
-    year = $bindable(),
+    date = $bindable(new Date()),
     onSelect = NoOp,
   }: Props = $props();
 
   let showPopup: () => any = $state(NoOp);
 
   function previousMonth() {
-    month--;
-    if (month === -1) {
-      month = 11;
-      year--;
-    }
-    onSelect(month, year);
+    date = new Date(date.getFullYear(), date.getMonth() - 1, date.getDate());
+    onSelect(date);
   }
 
   function nextMonth() {
-    if (month === 11) year++;
-    month = (month + 1) % 12;
-    onSelect(month, year);
+    date = new Date(date.getFullYear(), date.getMonth() + 1, date.getDate());
+    onSelect(date);
   }
 </script>
 
@@ -67,7 +60,7 @@
     <RightIcon/>
   </IconButton>
   <button onclick={showPopup} type="button" use:focusIndicator={{ type: "underline", ignoreParent: true }}>
-    {`${getMonthName(month)} ${year}`}
+    {`${getMonthName(date.getMonth())} ${date.getFullYear()}`}
   </button>
-  <MonthPopup bind:showPopup bind:year={year} bind:month={month} onSelect={onSelect}/>
+  <MonthPopup bind:showPopup bind:date={date} onSelect={onSelect}/>
 </div>
