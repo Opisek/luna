@@ -43,9 +43,9 @@
         case "month":
           return new Date(date.getFullYear(), date.getMonth() + 1, 0);
         case "week":
-          return new Date(date.getFullYear(), date.getMonth(), date.getDate() - date.getDay() + 7);
+          return new Date(date.getFullYear(), date.getMonth(), date.getDate() - date.getDay() + 8);
         case "day":
-          return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+          return new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1);
       }
     })()
   );
@@ -60,10 +60,9 @@
       const amountOfRows = view === "month" ? Math.ceil((endDate.getDate() + firstDayOfWeek) / amountOfColumns) : 1;
 
       const firstViewDay = new Date(startDate);
-      if (view === "month" || view === "week") firstViewDay.setDate(startDate.getDate() - firstDayOfWeek);
-      const lastViewDay = new Date(startDate);
-      if (view === "month" || view === "week") lastViewDay.setDate(startDate.getDate() + amountOfColumns * amountOfRows - 1);
-      else lastViewDay.setDate(startDate.getDate() + 1);
+      if (view === "month") firstViewDay.setDate(startDate.getDate() - firstDayOfWeek);
+      const lastViewDay = new Date(endDate);
+      if (view === "month") lastViewDay.setDate(firstViewDay.getDate() + amountOfColumns * amountOfRows - 1);
 
       // Event pre-processing
       const filteredEvents = events.filter(e => e.date.start.getTime() >= firstViewDay.getTime() && e.date.end.getTime() < lastViewDay.getTime());
