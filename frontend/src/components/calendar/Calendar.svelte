@@ -31,7 +31,7 @@
         case "month":
           return new Date(date.getFullYear(), date.getMonth(), 1);
         case "week":
-          return new Date(date.getFullYear(), date.getMonth(), date.getDate() - date.getDay() + 1);
+          return new Date(date.getFullYear(), date.getMonth(), date.getDate() - ((date.getDay() + 6) % 7));
         case "day":
           return new Date(date.getFullYear(), date.getMonth(), date.getDate());
       }
@@ -43,12 +43,16 @@
         case "month":
           return new Date(date.getFullYear(), date.getMonth() + 1, 0);
         case "week":
-          return new Date(date.getFullYear(), date.getMonth(), date.getDate() - date.getDay() + 8);
+          return new Date(date.getFullYear(), date.getMonth(), date.getDate() - ((date.getDay() + 6) % 7) + 7);
         case "day":
           return new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1);
       }
     })()
   );
+
+  $effect(() => {
+    console.log(date);
+  })
 
   let showModal = $state(NoOp);
 
