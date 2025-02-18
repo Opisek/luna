@@ -199,7 +199,7 @@
     {#each days as day, i}
       <Day
         date={day}
-        isCurrentMonth={day.getMonth() === startDate.getMonth()} 
+        isCurrentMonth={day.getMonth() === date.getMonth()} 
         events={processedEvents[i]}
         isFirstDay={i == 0}
         isLastDay={i == days.length - 1}
