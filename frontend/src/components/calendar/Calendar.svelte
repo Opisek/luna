@@ -67,9 +67,11 @@
       if (view === "month") firstViewDay.setDate(startDate.getDate() - firstDayOfWeek);
       const lastViewDay = new Date(endDate);
       if (view === "month") lastViewDay.setDate(firstViewDay.getDate() + amountOfColumns * amountOfRows - 1);
+      const nextViewDay = new Date(lastViewDay);
+      nextViewDay.setDate(nextViewDay.getDate() + 1);
 
       // Event pre-processing
-      const filteredEvents = events.filter(e => e.date.start.getTime() >= firstViewDay.getTime() && e.date.end.getTime() < lastViewDay.getTime());
+      const filteredEvents = events.filter(e => e.date.end.getTime() >= firstViewDay.getTime() && e.date.start.getTime() < nextViewDay.getTime());
       filteredEvents.sort(compareEventsByStartDate);
 
       // Fill
@@ -79,11 +81,18 @@
       const dateIterator = new Date(firstViewDay);
       let eventIterator = 0;
 
+      // Long events from previous view should be added to the current view
+      const pastViewEvents = [];
+      while (eventIterator < filteredEvents.length && filteredEvents[eventIterator].date.start.getTime() < dateIterator.getTime()) {
+        pastViewEvents.push(filteredEvents[eventIterator]);
+        eventIterator++;
+      }
+
       for (let i = 0; i < amountOfColumns * amountOfRows; i++) {
         // Copy events from previous day and remove whichever are over
         const dayEvents =
           i == 0
-            ? []
+            ? pastViewEvents
             : processedEvents[i - 1]
               .map(
                 e => e === null || e.date.end.getTime() <= dateIterator.getTime()
