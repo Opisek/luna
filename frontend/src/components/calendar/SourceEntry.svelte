@@ -24,6 +24,7 @@
   let hasCals = $state(false);
   calendars.subscribe(async (cals) => {
     hasCals = false;
+    if (!source) return;
     for (const cal of cals) {
       if (cal.source === source.id) {
         hasCals = true;
@@ -41,6 +42,7 @@
     if (source.id) setSourceCollapse(source.id, source.collapsed);
   })
   collapsedSources.subscribe((collapsed) => {
+    if (!source) return;
     source.collapsed = collapsed.has(source.id);
   });
 </script>

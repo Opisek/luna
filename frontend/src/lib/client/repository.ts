@@ -5,6 +5,7 @@ import { writable } from "svelte/store";
 
 import { hiddenCalendars, isCalendarVisible } from "./localStorage";
 import { queueNotification } from "./notifications";
+import { NoOp } from "./placeholders";
 
 //
 // Constants
@@ -63,7 +64,7 @@ async function fetchResponse(url: string, options: RequestInit = {}) {
 }
 
 async function fetchJson(url: string, options: RequestInit = {}) {
-  return (await fetchResponse(url, options)).json();
+  return (await fetchResponse(url, options).catch(err => { throw err; })).json();
 }
 
 //
@@ -292,9 +293,9 @@ export const createSource = async (newSource: SourceModel): Promise<void> => {
 
   getCalendars(newSource.id).then((cals) => {
     cals.forEach((cal) => {
-      getEventsFromCalendar(cal.id, eventsRangeStart, eventsRangeEnd);
+      getEventsFromCalendar(cal.id, eventsRangeStart, eventsRangeEnd).catch(NoOp);
     });
-  });
+  }).catch(NoOp);
 
   saveCache();
 }

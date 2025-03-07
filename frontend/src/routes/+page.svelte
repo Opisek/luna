@@ -39,7 +39,6 @@
   let date = $state(today);
 
   function getRangeFromStorage() {
-    console.log("HI");
     const storedDate = browser ? sessionStorage.getItem("selectedDate") : null;
     date = storedDate === null ? today : new Date(storedDate);
     loaded = true;
