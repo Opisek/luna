@@ -583,6 +583,7 @@ export const createEvent = async (newEvent: EventModel): Promise<void> => {
   newEvent.id = json.id;
 
   // add to cache
+  eventsMap.set(newEvent.id, newEvent);
   for (const month of determineEventMonths(newEvent)) addEventToCache(newEvent, month);
 
   // add to display
@@ -650,6 +651,7 @@ export const deleteEvent = async (id: string): Promise<void> => {
 
   const event = eventsMap.get(id);
   if (!event) return;
+  eventsMap.delete(id);
 
   // remove from cache
   const months = determineEventMonths(event);
