@@ -16,7 +16,7 @@
   import { browser } from "$app/environment";
 
   import { NoOp } from "$lib/client/placeholders";
-  import { calendars, events, fetchAllEvents, fetchSources, sources } from "$lib/client/repository";
+  import { calendars, events, getAllEvents, getSources, sources } from "$lib/client/repository";
   import { queueNotification } from "$lib/client/notifications";
 
   import { setContext, untrack } from "svelte";
@@ -37,8 +37,6 @@
 
   const today = new Date();
   let date = $state(today);
-  let rangeStart: Date = $derived(new Date(date.getFullYear(), date.getMonth() - 1, 1));
-  let rangeEnd: Date = $derived(new Date(date.getFullYear(), date.getMonth() + 1, 0));
 
   function getRangeFromStorage() {
     const storedDate = browser ? sessionStorage.getItem("selectedDate") : null;
@@ -57,7 +55,7 @@
   (async () => {
     if (!browser) return;
 
-    fetchSources().catch(err => {
+    getSources().catch(err => {
       queueNotification(
         "failure",
         `Failed to fetch sources: ${err.message}`
@@ -97,7 +95,7 @@
     });
   })();
 
-  /* Month selection logic */
+  /* View range selection logic */
   $effect(() => {
     ((date: Date, loaded: boolean) => {
       untrack(() => {
@@ -105,19 +103,26 @@
 
         sessionStorage.setItem("selectedDate", date.toString());
 
-        fetchAllEvents(rangeStart, rangeEnd); // TODO: what actually has to be refetched will be moved to an event manager singleton
-        
-        //if (lastDayPreviousMonth < rangeStart) {
-        //  const lastStart = rangeStart;
-        //  rangeStart = new Date(year, month - 2, 1);
-        //  fetchAllEvents(rangeStart, lastStart);
-        //}
+        const rangeStart = new Date(date);
+        rangeStart.setHours(0, 0, 0, 0);
+        const rangeEnd = new Date(date);
+        rangeEnd.setHours(23, 59, 59, 999);
 
-        //if (firstDayNextMonth > rangeEnd) {
-        //  const lastEnd = rangeEnd;
-        //  rangeEnd = new Date(year, month + 3, 0);
-        //  fetchAllEvents(lastEnd, rangeEnd);
-        //}
+        switch (view) {
+          case "month":
+            rangeStart.setDate(1);
+            rangeEnd.setMonth(rangeEnd.getMonth() + 1);
+            rangeEnd.setDate(0);
+            break;
+          case "week":
+            rangeStart.setDate(date.getDate() - ((date.getDay() + 6) % 7));
+            rangeEnd.setDate(rangeStart.getDate() + 7);
+            break;
+          case "day":
+          default:
+        }
+
+        getAllEvents(rangeStart, rangeEnd);
       });
     })(date, loaded);
   });

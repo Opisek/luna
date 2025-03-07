@@ -7,7 +7,7 @@
   import TextInput from "../forms/TextInput.svelte";
 
   import { EmptyEvent } from "$lib/client/placeholders";
-  import { createEvent, deleteEvent, editEvent, getCalendars } from "$lib/client/repository";
+  import { createEvent, deleteEvent, editEvent, getAllCalendars } from "$lib/client/repository";
 
   interface Props {
     showCreateModal?: (date: Date) => Promise<EventModel>;
@@ -25,7 +25,7 @@
   let saveEvent = (_: EventModel | PromiseLike<EventModel>) => {};
   let cancelEvent = (_?: any) => {};
 
-  showCreateModal = (date: Date) => {
+  showCreateModal = async (date: Date) => {
     cancelEvent();
     
     editMode = false;
@@ -49,7 +49,7 @@
       }
     };
 
-    currentCalendars = getCalendars();
+    currentCalendars = await getAllCalendars();
     setTimeout(showCreateModalInternal, 0);
 
     return new Promise((resolve, reject) => {

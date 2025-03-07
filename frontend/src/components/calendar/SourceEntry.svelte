@@ -2,7 +2,7 @@
   import CollapseToggle from "../interactive/CollapseToggle.svelte";
   import Tooltip from "../interactive/Tooltip.svelte";
 
-  import { calendars, faultySources, fetchSourceCalendars } from "$lib/client/repository";
+  import { calendars, faultySources } from "$lib/client/repository";
   import { collapsedSources, setSourceCollapse } from "$lib/client/localStorage";
   import { focusIndicator } from "$lib/client/decoration";
 
@@ -22,8 +22,14 @@
   });
 
   let hasCals = $state(false);
-  calendars.subscribe(async () => {
-    hasCals = (await fetchSourceCalendars(source.id)).length > 0;
+  calendars.subscribe(async (cals) => {
+    hasCals = false;
+    for (const cal of cals) {
+      if (cal.source === source.id) {
+        hasCals = true;
+        break;
+      }
+    }
   })
 
   let showModal: ((source: SourceModel) => Promise<SourceModel>) = getContext("showSourceModal");

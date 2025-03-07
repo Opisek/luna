@@ -14,3 +14,8 @@ type Validity = {
 }
 
 type InputValidation = (value: string) => Validity;
+
+type CacheEntry<T> = {
+  date: Date;
+  value: T | null;
+}
