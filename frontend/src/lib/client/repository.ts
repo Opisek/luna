@@ -31,17 +31,18 @@ export const faultyCalendars = writable(new Set<string>());
 let eventsRangeStart: Date = new Date();
 let eventsRangeEnd: Date = new Date();
 
-const emptyCache = { date: new Date(0), value: null };
+const emptyCache = { date: 0, value: null };
 
-const sourcesCache: CacheEntry<SourceModel[]> = emptyCache; // sources
-const sourceDetailsCache: Map<string, CacheEntry<SourceModel>> = new Map(); // source -> details
-const calendarsCache: Map<string, CacheEntry<CalendarModel[]>> = new Map(); // source -> calendars
-const eventsCache: Map<string, Map<number, CacheEntry<string[]>>> = new Map(); // calendar -> month -> event id
-const eventsMap: Map<string, EventModel> = new Map(); // event id -> event
+let lastCacheSave = Date.now();
+
+let sourcesCache: CacheEntry<SourceModel[]> = emptyCache; // sources
+let sourceDetailsCache: Map<string, CacheEntry<SourceModel>> = new Map(); // source -> details
+let calendarsCache: Map<string, CacheEntry<CalendarModel[]>> = new Map(); // source -> calendars
+let eventsCache: Map<string, Map<number, CacheEntry<string[]>>> = new Map(); // calendar -> month -> event id
+let eventsMap: Map<string, EventModel> = new Map(); // event id -> event
 
 function cacheOk<T>(cache: CacheEntry<T> | undefined): (T | null) {
-  const cacheResult = (cache && Date.now() - cache.date.getTime() < maxCacheAge) ? cache.value : null;
-  return (cache && Date.now() - cache.date.getTime() < maxCacheAge) ? cache.value : null;
+  return (cache && Date.now() - cache.date < maxCacheAge) ? cache.value : null;
 }
 
 // 
@@ -123,6 +124,10 @@ function getEventFormData(event: EventModel): FormData {
 // Visibility
 //
 
+function compileSources() {
+  sources.set(sourcesCache.value || []);
+}
+
 let compileCalendarsTimeout: ReturnType<typeof setTimeout>;
 function compileCalendars() {
   clearTimeout(compileCalendarsTimeout);
@@ -157,6 +162,66 @@ function compileEvents(start: Date, end: Date) {
   }, spoolerDelay)
 }
 
+//
+// Local Storage
+//
+
+function loadCache() {
+  const cacheTimestamp = localStorage.getItem("cache.timestamp");
+  if (cacheTimestamp != null && Number.parseInt(cacheTimestamp) == lastCacheSave) return;
+
+  const newSourcesCache = localStorage.getItem("cache.sources");
+  if (newSourcesCache) sourcesCache = JSON.parse(newSourcesCache);
+
+  const newSourceDetailsCache = localStorage.getItem("cache.sourceDetails");
+  if (newSourceDetailsCache) sourceDetailsCache = new Map(JSON.parse(newSourceDetailsCache));
+
+  const newCalendarsCache = localStorage.getItem("cache.calendars");
+  if (newCalendarsCache) calendarsCache = new Map(JSON.parse(newCalendarsCache));
+
+  const newEventsCache = localStorage.getItem("cache.events");
+  if (newEventsCache) eventsCache = new Map(JSON.parse(newEventsCache).map((x: [string, [number, CacheEntry<string>][]]) => [x[0], new Map(x[1])]));
+
+  const newEventsMap = localStorage.getItem("cache.eventsMap");
+  if (newEventsMap) {
+    eventsMap = new Map(JSON.parse(newEventsMap));
+    eventsMap.forEach((event) => {
+      event.date.start = new Date(event.date.start);
+      event.date.end = new Date(event.date.end);
+      if (event.date.allDay) {
+        event.date.start.setHours(0, 0, 0, 0);
+        event.date.end.setHours(0, 0, 0, 0);
+      }
+    });
+  }
+
+  compileSources();
+  compileCalendars();
+  compileEvents(eventsRangeStart, eventsRangeEnd);
+}
+
+if (browser) {
+  window.addEventListener("storage", () => loadCache());
+  loadCache();
+}
+
+let saveCacheTimeout: ReturnType<typeof setTimeout>;
+function saveCache() {
+  if (browser) {
+    // @ts-ignore if only typescript were consistent...
+    clearTimeout(saveCacheTimeout);
+    setTimeout(() => {
+      lastCacheSave = Date.now();
+      localStorage.setItem("cache.timestamp", lastCacheSave.toString());
+      localStorage.setItem("cache.sources", JSON.stringify(sourcesCache));
+      localStorage.setItem("cache.sourceDetails", JSON.stringify(Array.from(sourceDetailsCache.entries())));
+      localStorage.setItem("cache.calendars", JSON.stringify(Array.from(calendarsCache.entries())));
+      localStorage.setItem("cache.events", JSON.stringify(Array.from(eventsCache.entries().map(x => [x[0], Array.from(x[1].entries())]))));
+      localStorage.setItem("cache.eventsMap", JSON.stringify(Array.from(eventsMap.entries())));
+    }, spoolerDelay)
+  }
+}
+
 // 
 // Sources
 // 
@@ -177,9 +242,10 @@ export async function getSources(forceRefresh = false): Promise<SourceModel[]> {
     throw err;
   });
 
-  sourcesCache.date = new Date();
+  sourcesCache.date = Date.now(),
   sourcesCache.value = fetchedSources;
-  sources.set(fetchedSources);
+  compileSources();
+  saveCache();
   return fetchedSources;
 }
 
@@ -200,9 +266,10 @@ export async function getSourceDetails(id: string, forceRefresh = false): Promis
   });
 
   sourceDetailsCache.set(id, {
-    date: new Date(),
+    date: Date.now(),
     value: fetched
   });
+  saveCache();
   return fetched;
 }
 
@@ -227,6 +294,8 @@ export const createSource = async (newSource: SourceModel): Promise<void> => {
       getEventsFromCalendar(cal.id, eventsRangeStart, eventsRangeEnd);
     });
   });
+
+  saveCache();
 }
 
 export const editSource = async (modifiedSource: SourceModel): Promise<void> => {
@@ -243,13 +312,15 @@ export const editSource = async (modifiedSource: SourceModel): Promise<void> => 
   });
   
   sourcesCache.value = sourcesCache.value?.map((source => source.id === modifiedSource.id ? modifiedSource : source)) || [];
-  sources.set(sourcesCache.value);
+  compileSources();
 
   getCalendars(modifiedSource.id).then((cals) => {
     cals.forEach((cal) => {
       getEventsFromCalendar(cal.id, eventsRangeStart, eventsRangeEnd);
     });
   });
+
+  saveCache();
 }
 
 export const deleteSource = async (id: string): Promise<void> => {
@@ -264,12 +335,14 @@ export const deleteSource = async (id: string): Promise<void> => {
   });
 
   sourcesCache.value = sourcesCache.value?.filter((source) => source.id !== id) || [];
-  sources.set(sourcesCache.value);
+  compileSources();
 
   for (const calendar of calendarsCache.get(id)?.value || []) eventsCache.delete(calendar.id);
 
   compileCalendars();
   compileEvents(eventsRangeStart, eventsRangeEnd);
+
+  saveCache();
 }
 
 //
@@ -325,12 +398,13 @@ async function getCalendars(id: string, forceRefresh = false): Promise<CalendarM
   }
   
   calendarsCache.set(id, {
-    date: new Date(),
+    date: Date.now(),
     value: fetched
   });
 
   compileCalendars();
   if (anyOrphaned) compileEvents(eventsRangeStart, eventsRangeEnd);
+  saveCache();
   return fetched;
 }
 
@@ -366,7 +440,7 @@ function addEventToCache(event: EventModel, date: Date) {
 
   let cacheEntry = calendarEventsCache.get(date.getTime());
   if (!cacheEntry) {
-    cacheEntry = { date: new Date(), value: [] };
+    cacheEntry = { date: Date.now(), value: [] };
     calendarEventsCache.set(date.getTime(), cacheEntry);
   }
 
@@ -398,7 +472,6 @@ export async function getAllEvents(start: Date, end: Date, forceRefresh = false)
   if (!forceRefresh) compileEvents(start, end);
   const allSources = await getSources();
   const events = await atLeastOnePromise(allSources.map((source) => getEventsFromSource(source.id, start, end)));
-  compileEvents(start, end);
   return events.flat();
 }
 
@@ -448,6 +521,8 @@ async function getEventsFromCalendar(calendar: string, start: Date, end: Date, f
     throw err;
   });
 
+  compileEvents(start, end);
+  saveCache();
   return result.concat(fetchedEvents);
 }
 
@@ -461,7 +536,7 @@ async function fetchEvents(calendar: string, start: Date, end: Date): Promise<Ev
   }
   for (let i = new Date(start); i.getTime() < end.getTime(); i.setMonth(i.getMonth() + 1)) {
     calendarEventsCache.set(i.getTime(), {
-      date: new Date(),
+      date: Date.now(),
       value: []
     });
   }
@@ -523,39 +598,40 @@ export const editEvent = async (modifiedEvent: EventModel): Promise<void> => {
 
   const formData = getEventFormData(modifiedEvent);
 
-  return fetchResponse(`/api/events/${modifiedEvent.id}`, { method: "PATCH", body: formData })
-    .then(() => {
-        // update in cache
-        const previousMonths = determineEventMonths(eventsMap.get(modifiedEvent.id)!);
-        const currentMonths = determineEventMonths(modifiedEvent);
-        eventsMap.set(modifiedEvent.id, modifiedEvent);
+  await fetchResponse(`/api/events/${modifiedEvent.id}`, { method: "PATCH", body: formData }).catch((err) => {
+    queueNotification(
+      "failure",
+      `Failed to edit event: ${err.message}`
+    );
+    throw err;
+  });
 
-        for (const month of previousMonths) {
-          if (!currentMonths.includes(month)) {
-            removeEventFromCache(modifiedEvent, month);
-          }
-        }
 
-        for (const month of currentMonths) {
-          if (!previousMonths.includes(month)) {
-            addEventToCache(modifiedEvent, month);
-          }
-        }
+  // update in cache
+  const previousMonths = determineEventMonths(eventsMap.get(modifiedEvent.id)!);
+  const currentMonths = determineEventMonths(modifiedEvent);
+  eventsMap.set(modifiedEvent.id, modifiedEvent);
 
-        // update on display
-        if (modifiedEvent.date.start <= eventsRangeEnd && modifiedEvent.date.end >= eventsRangeStart) {
-          events.update((events) => events.map((event) => event.id === modifiedEvent.id ? modifiedEvent : event));
-        } else {
-          events.update((events) => events.filter((event) => event.id !== modifiedEvent.id));
-        }
-    })
-    .catch((err) => {
-      queueNotification(
-        "failure",
-        `Failed to edit event: ${err.message}`
-      );
-      throw err;
-    });
+  for (const month of previousMonths) {
+    if (!currentMonths.includes(month)) {
+      removeEventFromCache(modifiedEvent, month);
+    }
+  }
+
+  for (const month of currentMonths) {
+    if (!previousMonths.includes(month)) {
+      addEventToCache(modifiedEvent, month);
+    }
+  }
+
+  // update on display
+  if (modifiedEvent.date.start <= eventsRangeEnd && modifiedEvent.date.end >= eventsRangeStart) {
+    events.update((events) => events.map((event) => event.id === modifiedEvent.id ? modifiedEvent : event));
+  } else {
+    events.update((events) => events.filter((event) => event.id !== modifiedEvent.id));
+  }
+
+  saveCache();
 }
 
 export const deleteEvent = async (id: string): Promise<void> => {
@@ -579,4 +655,6 @@ export const deleteEvent = async (id: string): Promise<void> => {
 
   // remove from display
   events.update((events) => events.filter((event) => event.id !== id));
+
+  saveCache();
 }

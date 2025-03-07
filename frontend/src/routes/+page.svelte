@@ -12,7 +12,7 @@
   import SourceModal from "../components/modals/SourceModal.svelte";
   import Title from "../components/layout/Title.svelte";
 
-  import { afterNavigate } from "$app/navigation";
+  import { afterNavigate, beforeNavigate } from "$app/navigation";
   import { browser } from "$app/environment";
 
   import { NoOp } from "$lib/client/placeholders";
@@ -39,17 +39,18 @@
   let date = $state(today);
 
   function getRangeFromStorage() {
+    console.log("HI");
     const storedDate = browser ? sessionStorage.getItem("selectedDate") : null;
     date = storedDate === null ? today : new Date(storedDate);
-  }
-
-  if (browser) {
-    getRangeFromStorage();
     loaded = true;
   }
 
   afterNavigate(() => {
     getRangeFromStorage();
+  });
+
+  beforeNavigate(() => {
+    loaded = false;
   });
 
   (async () => {
