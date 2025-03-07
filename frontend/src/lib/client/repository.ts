@@ -287,6 +287,7 @@ export const createSource = async (newSource: SourceModel): Promise<void> => {
   });
 
   newSource.id = json.id;
+  sourcesCache.value = sourcesCache.value?.concat(newSource) || [ newSource ];
   sources.update((sources) => sources.concat(newSource));
 
   getCalendars(newSource.id).then((cals) => {
@@ -311,7 +312,7 @@ export const editSource = async (modifiedSource: SourceModel): Promise<void> => 
     throw err;
   });
   
-  sourcesCache.value = sourcesCache.value?.map((source => source.id === modifiedSource.id ? modifiedSource : source)) || [];
+  sourcesCache.value = sourcesCache.value?.map((source => source.id === modifiedSource.id ? modifiedSource : source)) || [ modifiedSource ];
   compileSources();
 
   getCalendars(modifiedSource.id).then((cals) => {
