@@ -20,6 +20,7 @@
   import { queueNotification } from "$lib/client/notifications";
 
   import { setContext, untrack } from "svelte";
+  import Spinner from "../components/decoration/Spinner.svelte";
 
   /* View */
   let view: "month" | "week" | "day" = $state("month");
@@ -216,16 +217,16 @@
   <main>
     <div class="toprow">
       <MonthSelection bind:date granularity={view} />
-        <SelectButtons
-          name="layout"
-          compact={true}
-          bind:value={view}
-          options={[
-            { value: "day", name: "Day"},
-            { value: "week", name: "Week"},
-            { value: "month", name: "Month"},
-          ]}
-        />
+      <SelectButtons
+        name="layout"
+        compact={true}
+        bind:value={view}
+        options={[
+          { value: "day", name: "Day"},
+          { value: "week", name: "Week"},
+          { value: "month", name: "Month"},
+        ]}
+      />
     </div>
       <Calendar
         date={date}

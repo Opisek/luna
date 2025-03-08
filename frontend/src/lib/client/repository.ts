@@ -25,6 +25,16 @@ export const events = writable([] as EventModel[]);
 export const faultySources = writable(new Set<string>());
 export const faultyCalendars = writable(new Set<string>());
 
+export const loadingSources = writable(new Set<string>());
+export const loadingCalendars = writable(new Set<string>());
+
+loadingSources.subscribe((x) => {
+  console.log("Loading sources", Array.from(x.entries()));
+});
+loadingCalendars.subscribe((x) => {
+  console.log("Loading calendars", Array.from(x.entries()));
+});
+
 //
 // Caching
 //
@@ -369,6 +379,11 @@ async function getCalendars(id: string, forceRefresh = false): Promise<CalendarM
     if (cached) return Promise.resolve(cached);
   }
 
+  loadingSources.update((loading) => {
+    loading.add(id);
+    return loading;
+  });
+
   const response = await fetchJson(`/api/sources/${id}/calendars`).catch((err) => {
     faultySources.update((faulty) => {
       faulty.add(id);
@@ -380,6 +395,11 @@ async function getCalendars(id: string, forceRefresh = false): Promise<CalendarM
       `Failed to fetch calendars: ${err.message}`
     );
     throw err;
+  }).finally(() => {
+    loadingSources.update((loading) => {
+      loading.delete(id);
+      return loading;
+    });
   });
 
   faultySources.update((faulty) => {
@@ -510,6 +530,11 @@ async function getEventsFromCalendar(calendar: string, start: Date, end: Date, f
     return result;
   }
 
+  loadingCalendars.update((loading) => {
+    loading.add(calendar);
+    return loading;
+  });
+
   const fetchedEvents = await fetchEvents(calendar, start, end).catch((err) => {
     faultyCalendars.update((faulty) => {
       faulty.add(calendar);
@@ -521,6 +546,11 @@ async function getEventsFromCalendar(calendar: string, start: Date, end: Date, f
       `Failed to fetch events: ${err.message}`
     );
     throw err;
+  }).finally(() => {
+    loadingCalendars.update((loading) => {
+      loading.delete(calendar);
+      return loading;
+    });
   });
 
   compileEvents(start, end);

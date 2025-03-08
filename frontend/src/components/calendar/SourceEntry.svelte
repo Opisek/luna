@@ -2,11 +2,12 @@
   import CollapseToggle from "../interactive/CollapseToggle.svelte";
   import Tooltip from "../interactive/Tooltip.svelte";
 
-  import { calendars, faultySources } from "$lib/client/repository";
+  import { calendars, faultySources, loadingSources } from "$lib/client/repository";
   import { collapsedSources, setSourceCollapse } from "$lib/client/localStorage";
   import { focusIndicator } from "$lib/client/decoration";
 
   import { getContext } from "svelte";
+  import Spinner from "../decoration/Spinner.svelte";
 
   interface Props {
     source: SourceModel;
@@ -19,6 +20,11 @@
   let hasErrored = $state(false);
   faultySources.subscribe((faulty) => {
     hasErrored = faulty.has(source.id);
+  });
+
+  let isLoading = $state(false);
+  loadingSources.subscribe((loading) => {
+    isLoading = loading.has(source.id);
   });
 
   let hasCals = $state(false);
@@ -92,6 +98,9 @@
     {source.name}
   </button>
   <span>
+    {#if isLoading}
+      <Spinner/>
+    {/if}
     {#if hasCals}
       <CollapseToggle bind:collapsed={source.collapsed}/>
     {/if}
