@@ -515,8 +515,6 @@ export async function getAllEvents(start: Date, end: Date, forceRefresh = false)
   start.setMonth(start.getMonth() - 1);
   end.setMonth(end.getMonth() + 1);
 
-  console.log(start.toISOString(), end.toISOString());
-
   compileEvents(start, end);
   const allSources = await getSources(forceRefresh);
   const events = await atLeastOnePromise(allSources.map((source) => getEventsFromSource(source.id, start, end, forceRefresh)));
@@ -540,7 +538,6 @@ async function getEventsFromCalendar(calendar: string, start: Date, end: Date, f
 
   while (fetchStart.getTime() <= fetchEnd.getTime()) {
     const cached = cacheOk(cache.get(fetchStart.getTime()));
-    console.log(cache.get(fetchStart.getTime()))
     if (!cached) break;
     result = result.concat(cached.map((id) => eventsMap.get(id)).filter((event) => event != null));
     fetchStart.setMonth(fetchStart.getMonth() + 1);
@@ -548,14 +545,12 @@ async function getEventsFromCalendar(calendar: string, start: Date, end: Date, f
 
   while (fetchEnd.getTime() >= fetchStart.getTime()) {
     const cached = cacheOk(cache.get(fetchEnd.getTime()));
-    console.log(cache.get(fetchEnd.getTime()))
     if (!cached) break;
     result = result.concat(cached.map((id) => eventsMap.get(id)).filter((event) => event != null));
     fetchEnd.setMonth(fetchEnd.getMonth() - 1);
   }
 
   if (fetchStart.getTime() > fetchEnd.getTime()) {
-    console.log("nothing to load")
     return result;
   }
 
