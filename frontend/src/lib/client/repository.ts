@@ -165,8 +165,6 @@ function compileCalendars() {
 
 let compileEventsTimeout: ReturnType<typeof setTimeout>;
 function compileEvents(start: Date, end: Date) {
-  eventsRangeStart = start;
-  eventsRangeEnd = end;
   clearTimeout(compileEventsTimeout);
 
   compileEventsTimeout = setTimeout(() => {
@@ -502,6 +500,8 @@ function removeEventFromCache(event: EventModel, date: Date) {
 
 export async function getAllEvents(start: Date, end: Date, forceRefresh = false): Promise<EventModel[]> {
   if (!browser) return [];
+  eventsRangeStart = start;
+  eventsRangeEnd = end;
 
   start.setUTCHours(0, 0, 0, 0);
   end.setUTCHours(23, 59, 59, 999);

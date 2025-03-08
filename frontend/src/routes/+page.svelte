@@ -150,6 +150,7 @@
           getRangeFromStorage();
           return;
         }
+        refresh(date);
       });
     })(date, pageLoaded);
   });
