@@ -40,7 +40,8 @@
         window.addEventListener("click", clickOutside);
       }
       setTimeout(() => {
-        (optionsWrapper.getElementsByClassName("selected")[0] as HTMLElement).focus();
+        const els = optionsWrapper.getElementsByClassName("selected");
+        if (els.length > 0 && els[0]) (els[0] as HTMLElement).focus();
       }, 0);
     } else {
       window.removeEventListener("click", clickOutside);
