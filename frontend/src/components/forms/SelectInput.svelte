@@ -33,21 +33,27 @@
   let optionsWrapper: HTMLElement;
 
   function selectClick() {
-    if (!active) {
-      const res = calculateOptimalPopupPosition(selectWrapper)
-      optionsAbove = res.bottom;
-      if (browser) {
-        window.addEventListener("click", clickOutside);
-      }
-      setTimeout(() => {
-        const els = optionsWrapper.getElementsByClassName("selected");
-        if (els.length > 0 && els[0]) (els[0] as HTMLElement).focus();
-      }, 0);
-    } else {
-      window.removeEventListener("click", clickOutside);
-    }
     active = !active;
+    if (!active) return;
+
+    const res = calculateOptimalPopupPosition(selectWrapper)
+    optionsAbove = res.bottom;
+    if (browser) {
+      window.addEventListener("click", clickOutside);
+      window.addEventListener("keydown", keyboardClick);
+    }
+    setTimeout(() => {
+      const els = optionsWrapper.getElementsByClassName("selected");
+      if (els.length > 0 && els[0]) (els[0] as HTMLElement).focus();
+    }, 10);
   }
+
+  $effect(() => {
+    if (!active) {
+      window.removeEventListener("click", clickOutside);
+      window.removeEventListener("keydown", keyboardClick);
+    }
+  })
 
   function optionClick(option: Option) {
     value = option.value;
@@ -59,6 +65,59 @@
 
     active = false;
     event.stopPropagation();
+  }
+
+  function keyboardClick(event: KeyboardEvent) {
+    if (!optionsWrapper) return;
+
+    switch(event.key) {
+      case "ArrowDown":
+        event.preventDefault();
+        focusNext(event);
+        break;
+      case "ArrowUp":
+        event.preventDefault();
+        focusPrevious(event);
+        break;
+      case "Escape":
+        event.preventDefault();
+        active = false;
+        break;
+    }
+  }
+
+  function focusNext(event: KeyboardEvent) {
+    const currentFocus = document.activeElement;
+
+    let currentIndex = -1;
+    for (const [i, option] of Array.from(optionsWrapper.children).entries()) {
+      if (option === currentFocus) {
+        currentIndex = i;
+        break;
+      }
+    }
+    currentIndex++;
+
+    if (currentIndex >= options.length) return;
+
+    (optionsWrapper.children[currentIndex] as HTMLElement).focus();
+  }
+
+  function focusPrevious(event: KeyboardEvent) {
+    const currentFocus = document.activeElement;
+
+    let currentIndex = options.length;
+    for (const [i, option] of Array.from(optionsWrapper.children).entries()) {
+      if (option === currentFocus) {
+        currentIndex = i;
+        break;
+      }
+    }
+    currentIndex--;
+
+    if (currentIndex < 0) return;
+
+    (optionsWrapper.children[currentIndex] as HTMLElement).focus();
   }
 </script>
 
