@@ -287,9 +287,10 @@ export async function getSourceDetails(id: string, forceRefresh = false): Promis
   }
 
   const fetched = await fetchJson(`/api/sources/${id}`).catch((err) => {
+    const sourceName = sourcesCache.value?.find((source) => source.id === id)?.name;
     queueNotification(
       "failure",
-      `Failed to fetch source details: ${err.message}`
+      `Failed to fetch source details${sourceName ? " for " + sourceName : ""}: ${err.message}`
     );
     throw err;
   });
@@ -310,7 +311,7 @@ export const createSource = async (newSource: SourceModel): Promise<void> => {
   const json = await fetchJson(`/api/sources`, { method: "PUT", body: formData }).catch((err) => {
     queueNotification(
       "failure",
-      `Failed to create source: ${err.message}`
+      `Failed to create source ${newSource.name}: ${err.message}`
     );
     throw err;
   });
@@ -319,11 +320,24 @@ export const createSource = async (newSource: SourceModel): Promise<void> => {
   sourcesCache.value = sourcesCache.value?.concat(newSource) || [ newSource ];
   sources.update((sources) => sources.concat(newSource));
 
-  getCalendars(newSource.id).then((cals) => {
-    cals.forEach((cal) => {
-      getEventsFromCalendar(cal.id, eventsRangeStart, eventsRangeEnd).catch(NoOp);
+  getCalendars(newSource.id).then(async (cals) => {
+    compileCalendars();
+    const [_, errors] = await atLeastOnePromise(cals.map((cal) => getEventsFromCalendar(cal.id, eventsRangeStart, eventsRangeEnd))).catch(() => {
+      throw new Error("Failed to fetch events");
     });
-  }).catch(NoOp);
+    errors.forEach((err) => {
+      queueNotification(
+        "failure",
+        `Failed to fetch events from ${cals[err[0]].name}: ${err[1].message}`
+      );
+    });
+    compileEvents(eventsRangeStart, eventsRangeEnd);
+  }).catch((err) => {
+    queueNotification(
+      "failure",
+      `Failed to fetch calendars from ${newSource.name}: ${err.message}`
+    );
+  });
 
   saveCache();
 }
@@ -336,7 +350,7 @@ export const editSource = async (modifiedSource: SourceModel): Promise<void> => 
   await fetchResponse(`/api/sources/${modifiedSource.id}`, { method: "PATCH", body: formData }).catch((err) => {
     queueNotification(
       "failure",
-      `Failed to edit source: ${err.message}`
+      `Failed to edit source ${modifiedSource.name}: ${err.message}`
     );
     throw err;
   });
@@ -344,10 +358,23 @@ export const editSource = async (modifiedSource: SourceModel): Promise<void> => 
   sourcesCache.value = sourcesCache.value?.map((source => source.id === modifiedSource.id ? modifiedSource : source)) || [ modifiedSource ];
   compileSources();
 
-  getCalendars(modifiedSource.id).then((cals) => {
-    cals.forEach((cal) => {
-      getEventsFromCalendar(cal.id, eventsRangeStart, eventsRangeEnd);
+  getCalendars(modifiedSource.id).then(async (cals) => {
+    compileCalendars();
+    const [_, errors] = await atLeastOnePromise(cals.map((cal) => getEventsFromCalendar(cal.id, eventsRangeStart, eventsRangeEnd))).catch(() => {
+      throw new Error("Failed to fetch events");
     });
+    errors.forEach((err) => {
+      queueNotification(
+        "failure",
+        `Failed to fetch events from ${cals[err[0]].name}: ${err[1].message}`
+      );
+    });
+    compileEvents(eventsRangeStart, eventsRangeEnd);
+  }).catch((err) => {
+    queueNotification(
+      "failure",
+      `Failed to fetch calendars from ${modifiedSource.name}: ${err.message}`
+    );
   });
 
   saveCache();
@@ -357,9 +384,10 @@ export const deleteSource = async (id: string): Promise<void> => {
   if (!browser) return;
 
   await fetchResponse(`/api/sources/${id}`, { method: "DELETE" }).catch((err) => {
+    const sourceName = sourcesCache.value?.find((source) => source.id === id)?.name;
     queueNotification(
       "failure",
-      `Failed to delete source: ${err.message}`
+      `Failed to delete source${sourceName ? " " + sourceName : ""}: ${err.message}`
     );
     throw err;
   });
@@ -384,7 +412,16 @@ export async function getAllCalendars(forceRefresh = false): Promise<CalendarMod
 
   const allSources = await getSources(forceRefresh);
 
-  const calendars = await atLeastOnePromise(allSources.map((source) => getCalendars(source.id, forceRefresh)))
+  const [calendars, errors] = await atLeastOnePromise(allSources.map((source) => getCalendars(source.id, forceRefresh))).catch(() => {
+    throw new Error("Failed to fetch calendars");
+  });
+
+  errors.forEach((err) => {
+    queueNotification(
+      "failure",
+      `Failed to fetch calendars from ${allSources[err[0]].name}: ${err[1].message}`
+    );
+  });
 
   return calendars.flat();
 }
@@ -514,13 +551,29 @@ export async function getAllEvents(start: Date, end: Date, forceRefresh = false)
 
   compileEvents(start, end);
   const allSources = await getSources(forceRefresh);
-  const events = await atLeastOnePromise(allSources.map((source) => getEventsFromSource(source.id, start, end, forceRefresh)));
+  const [events, errors] = await atLeastOnePromise(allSources.map((source) => getEventsFromSource(source.id, start, end, forceRefresh))).catch(() => {
+    throw new Error("Failed to fetch events");
+  });
+  errors.forEach((err) => {
+    queueNotification(
+      "failure",
+      `Failed to fetch events from ${allSources[err[0]].name}: ${err[1].message}`
+    );
+  });
   return events.flat();
 }
 
 async function getEventsFromSource(source: string, start: Date, end: Date, forceRefresh = false): Promise<EventModel[]> {
-  const calendars = await getCalendars(source, forceRefresh);
-  const events = await atLeastOnePromise(calendars.map((calendar) => getEventsFromCalendar(calendar.id, start, end, forceRefresh)));
+  const cals = await getCalendars(source, forceRefresh);
+  const [events, errors] = await atLeastOnePromise(cals.map((calendar) => getEventsFromCalendar(calendar.id, start, end, forceRefresh))).catch(() => {
+    throw new Error("Failed to fetch events");
+  })
+  errors.forEach((err) => {
+    queueNotification(
+      "failure",
+      `Failed to fetch events from ${cals[err[0]].name}: ${err[1].message}`
+    );
+  });
   return events.flat();
 }
 
@@ -629,7 +682,7 @@ export const createEvent = async (newEvent: EventModel): Promise<void> => {
   const json = await fetchJson(`/api/calendars/${newEvent.calendar}/events`, { method: "PUT", body: formData }).catch((err) => {
     queueNotification(
       "failure",
-      `Failed to create event: ${err.message}`
+      `Failed to create event ${newEvent.name}: ${err.message}`
     );
     throw err;
   });
@@ -658,7 +711,7 @@ export const editEvent = async (modifiedEvent: EventModel): Promise<void> => {
   await fetchResponse(`/api/events/${modifiedEvent.id}`, { method: "PATCH", body: formData }).catch((err) => {
     queueNotification(
       "failure",
-      `Failed to edit event: ${err.message}`
+      `Failed to edit event ${modifiedEvent.name}: ${err.message}`
     );
     throw err;
   });
@@ -696,9 +749,10 @@ export const deleteEvent = async (id: string): Promise<void> => {
 
   // remove from database
   await fetchResponse(`/api/events/${id}`, { method: "DELETE" }).catch((err) => {
+    const eventName = eventsMap.get(id)?.name;
     queueNotification(
       "failure",
-      `Failed to delete event: ${err.message}`
+      `Failed to delete event${eventName ? " " + eventName : ""}: ${err.message}`
     );
     throw err;
   });
