@@ -27,7 +27,7 @@
 
   .ownPositioning {
     margin-bottom: -2 * $gapSmall;
-    margin-left: calc($gapSmall * ($fontSize / $fontSizeSmall));
+    padding-left: calc($gapSmall * ($fontSize / $fontSizeSmall));
   }
 </style>
 

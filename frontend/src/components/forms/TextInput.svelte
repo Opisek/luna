@@ -141,10 +141,9 @@
   }
 
   span.label {
+    font-size: $fontSizeSmall;
     margin-bottom: -2 * $gapSmall;
-    padding: 0 calc($gapSmall * ($fontSize / $fontSizeSmall));
-    display: flex;
-    justify-content: space-between;
+    padding-left: calc($gapSmall * ($fontSize / $fontSizeSmall));
   }
 
   span.errorMessage {
