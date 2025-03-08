@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { PlusIcon } from "lucide-svelte";
+  import { PlusIcon, RefreshCw } from "lucide-svelte";
 
   import Calendar from "../components/calendar/Calendar.svelte";
   import CalendarEntry from "../components/calendar/CalendarEntry.svelte";
@@ -16,11 +16,10 @@
   import { browser } from "$app/environment";
 
   import { NoOp } from "$lib/client/placeholders";
-  import { calendars, events, getAllEvents, getSources, sources } from "$lib/client/repository";
+  import { calendars, events, getAllEvents, getSources, invalidateCache, loadingData, sources } from "$lib/client/repository";
   import { queueNotification } from "$lib/client/notifications";
 
   import { setContext, untrack } from "svelte";
-  import Spinner from "../components/decoration/Spinner.svelte";
 
   /* View */
   let view: "month" | "week" | "day" = $state("month");
@@ -34,7 +33,14 @@
   let calendarEvents: Map<string, number[]> = new Map();
 
   /* Fetching logic */
-  let loaded: boolean = $state(false);
+  let pageLoaded: boolean = $state(false);
+
+  let isLoading: boolean = $state(false);
+  let loaderAnimation = $state(false);
+  loadingData.subscribe((loadingData) => {
+    isLoading = loadingData;
+    if (isLoading) loaderAnimation = true;
+  });
 
   const today = new Date();
   let date = $state(today);
@@ -42,15 +48,16 @@
   function getRangeFromStorage() {
     const storedDate = browser ? sessionStorage.getItem("selectedDate") : null;
     date = storedDate === null ? today : new Date(storedDate);
-    loaded = true;
+    pageLoaded = true;
   }
 
   afterNavigate(() => {
     getRangeFromStorage();
+    pageLoaded = true;
   });
 
   beforeNavigate(() => {
-    loaded = false;
+    pageLoaded = false;
   });
 
   (async () => {
@@ -96,36 +103,51 @@
     });
   })();
 
-  /* View range selection logic */
+  function refresh(date: Date, force = false) {
+    console.log("REFRESH");
+    sessionStorage.setItem("selectedDate", date.toString());
+
+    const rangeStart = new Date(date);
+    rangeStart.setHours(0, 0, 0, 0);
+    const rangeEnd = new Date(date);
+    rangeEnd.setHours(23, 59, 59, 999);
+
+    switch (view) {
+      case "month":
+        rangeStart.setDate(1);
+        rangeEnd.setMonth(rangeEnd.getMonth() + 1);
+        rangeEnd.setDate(0);
+        break;
+      case "week":
+        rangeStart.setDate(date.getDate() - ((date.getDay() + 6) % 7));
+        rangeEnd.setDate(rangeStart.getDate() + 7);
+        break;
+      case "day":
+      default:
+    }
+
+    getAllEvents(rangeStart, rangeEnd, force);
+  }
+
+  function forceRefresh() {
+    invalidateCache();
+    refresh(date, true);
+  }
+
   $effect(() => {
     ((date: Date, loaded: boolean) => {
       untrack(() => {
-        if (!browser || !loaded) return;
-
-        sessionStorage.setItem("selectedDate", date.toString());
-
-        const rangeStart = new Date(date);
-        rangeStart.setHours(0, 0, 0, 0);
-        const rangeEnd = new Date(date);
-        rangeEnd.setHours(23, 59, 59, 999);
-
-        switch (view) {
-          case "month":
-            rangeStart.setDate(1);
-            rangeEnd.setMonth(rangeEnd.getMonth() + 1);
-            rangeEnd.setDate(0);
-            break;
-          case "week":
-            rangeStart.setDate(date.getDate() - ((date.getDay() + 6) % 7));
-            rangeEnd.setDate(rangeStart.getDate() + 7);
-            break;
-          case "day":
-          default:
+        if (!browser) return;
+        console.log("A")
+        if (!loaded) {
+          getRangeFromStorage();
+          console.log("B")
+          return;
         }
-
-        getAllEvents(rangeStart, rangeEnd);
+        console.log("C")
+        refresh(date);
       });
-    })(date, loaded);
+    })(date, pageLoaded);
   });
 
   /* Single instance modal logic */
@@ -148,6 +170,7 @@
 </script>
 
 <style lang="scss">
+  @import "../styles/animations.scss";
   @import "../styles/dimensions.scss";
 
   main {
@@ -192,6 +215,16 @@
     margin: 0 $gapSmaller;
     align-items: center;
   }
+
+  span.refreshButtonWrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  span.spin {
+    animation: spin $animationSpeedSlow $cubic infinite forwards;
+  }
 </style>
 
 <SourceModal bind:showCreateModal={showNewSourceModal} bind:showModal={showSourceModal}/>
@@ -217,16 +250,23 @@
   <main>
     <div class="toprow">
       <MonthSelection bind:date granularity={view} />
-      <SelectButtons
-        name="layout"
-        compact={true}
-        bind:value={view}
-        options={[
-          { value: "day", name: "Day"},
-          { value: "week", name: "Week"},
-          { value: "month", name: "Month"},
-        ]}
-      />
+      <Horizontal position="right" width="auto">
+        <IconButton click={forceRefresh}>
+          <span class="refreshButtonWrapper" class:spin={loaderAnimation} onanimationiteration={() => { if (!isLoading) loaderAnimation = false; }}>
+            <RefreshCw size={20}/>
+          </span>
+        </IconButton>
+        <SelectButtons
+          name="layout"
+          compact={true}
+          bind:value={view}
+          options={[
+            { value: "day", name: "Day"},
+            { value: "week", name: "Week"},
+            { value: "month", name: "Month"},
+          ]}
+        />
+      </Horizontal>
     </div>
       <Calendar
         date={date}

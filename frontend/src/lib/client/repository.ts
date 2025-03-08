@@ -27,6 +27,20 @@ export const faultyCalendars = writable(new Set<string>());
 
 export const loadingSources = writable(new Set<string>());
 export const loadingCalendars = writable(new Set<string>());
+export const loadingData = writable(false);
+
+//
+// Misc
+//
+
+let loadingCounter = 0;
+function indicateStartLoading() {
+  loadingCounter++;
+  loadingData.set(true);
+}
+function indicateStopLoading() {
+  if (--loadingCounter == 0) loadingData.set(false);
+}
 
 //
 // Caching
@@ -47,6 +61,14 @@ let eventsMap: Map<string, EventModel> = new Map(); // event id -> event
 
 function cacheOk<T>(cache: CacheEntry<T> | undefined): (T | null) {
   return (cache && Date.now() - cache.date < maxCacheAge) ? cache.value : null;
+}
+
+export function invalidateCache() {
+  sourcesCache.date = 0;
+  sourceDetailsCache.forEach((cache) => cache.date = 0);
+  calendarsCache.forEach((cache) => cache.date = 0);
+  eventsCache.forEach((cache) => cache.forEach((entry) => entry.date = 0));
+  saveCache();
 }
 
 // 
@@ -238,12 +260,16 @@ export async function getSources(forceRefresh = false): Promise<SourceModel[]> {
     if (cached) return Promise.resolve(cached);
   }
 
+  indicateStartLoading();
+
   const fetchedSources = await fetchJson("/api/sources").catch((err) => {
     queueNotification(
       "failure",
       `Failed to fetch sources: ${err.message}`
     );
     throw err;
+  }).finally(() => {
+    indicateStopLoading();
   });
 
   sourcesCache.date = Date.now(),
@@ -372,6 +398,7 @@ async function getCalendars(id: string, forceRefresh = false): Promise<CalendarM
     if (cached) return Promise.resolve(cached);
   }
 
+  indicateStartLoading();
   loadingSources.update((loading) => {
     loading.add(id);
     return loading;
@@ -389,6 +416,7 @@ async function getCalendars(id: string, forceRefresh = false): Promise<CalendarM
     );
     throw err;
   }).finally(() => {
+    indicateStopLoading();
     loadingSources.update((loading) => {
       loading.delete(id);
       return loading;
@@ -475,6 +503,9 @@ function removeEventFromCache(event: EventModel, date: Date) {
 export async function getAllEvents(start: Date, end: Date, forceRefresh = false): Promise<EventModel[]> {
   if (!browser) return [];
 
+  start.setUTCHours(0, 0, 0, 0);
+  end.setUTCHours(23, 59, 59, 999);
+
   // Set start and end to the start and end of each month
   start.setDate(1);
   end.setMonth(end.getMonth() + 1);
@@ -484,9 +515,11 @@ export async function getAllEvents(start: Date, end: Date, forceRefresh = false)
   start.setMonth(start.getMonth() - 1);
   end.setMonth(end.getMonth() + 1);
 
-  if (!forceRefresh) compileEvents(start, end);
-  const allSources = await getSources();
-  const events = await atLeastOnePromise(allSources.map((source) => getEventsFromSource(source.id, start, end)));
+  console.log(start.toISOString(), end.toISOString());
+
+  compileEvents(start, end);
+  const allSources = await getSources(forceRefresh);
+  const events = await atLeastOnePromise(allSources.map((source) => getEventsFromSource(source.id, start, end, forceRefresh)));
   return events.flat();
 }
 
@@ -507,6 +540,7 @@ async function getEventsFromCalendar(calendar: string, start: Date, end: Date, f
 
   while (fetchStart.getTime() <= fetchEnd.getTime()) {
     const cached = cacheOk(cache.get(fetchStart.getTime()));
+    console.log(cache.get(fetchStart.getTime()))
     if (!cached) break;
     result = result.concat(cached.map((id) => eventsMap.get(id)).filter((event) => event != null));
     fetchStart.setMonth(fetchStart.getMonth() + 1);
@@ -514,15 +548,18 @@ async function getEventsFromCalendar(calendar: string, start: Date, end: Date, f
 
   while (fetchEnd.getTime() >= fetchStart.getTime()) {
     const cached = cacheOk(cache.get(fetchEnd.getTime()));
+    console.log(cache.get(fetchEnd.getTime()))
     if (!cached) break;
     result = result.concat(cached.map((id) => eventsMap.get(id)).filter((event) => event != null));
     fetchEnd.setMonth(fetchEnd.getMonth() - 1);
   }
 
   if (fetchStart.getTime() > fetchEnd.getTime()) {
+    console.log("nothing to load")
     return result;
   }
 
+  indicateStartLoading();
   loadingCalendars.update((loading) => {
     loading.add(calendar);
     return loading;
@@ -540,6 +577,7 @@ async function getEventsFromCalendar(calendar: string, start: Date, end: Date, f
     );
     throw err;
   }).finally(() => {
+    indicateStopLoading();
     loadingCalendars.update((loading) => {
       loading.delete(calendar);
       return loading;
