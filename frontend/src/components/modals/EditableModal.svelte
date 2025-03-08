@@ -96,7 +96,7 @@
   {#snippet buttons()}
   
       {#if editMode}
-        <Button onClick={saveEdit} color="success" enabled={submittable}>
+        <Button onClick={saveEdit} color="success" enabled={submittable} type="submit">
           {#if awaitingEdit}
             <Loader/>
           {:else}

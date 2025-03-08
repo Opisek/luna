@@ -44,7 +44,7 @@
 <Modal title="Confirmation" bind:showModal={showModal} bind:hideModal={hideModal}>
   {@render children?.()}
   {#snippet buttons()}
-      <Button onClick={confirm} color="success">
+      <Button onClick={confirm} color="success" type="submit">
         {#if awaitingConfirm}
           <Loader/>
         {:else}
