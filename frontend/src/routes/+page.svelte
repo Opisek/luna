@@ -21,6 +21,9 @@
 
   import { setContext, untrack } from "svelte";
 
+  /* Constants */
+  let autoRefreshInterval = 1000 * 60; // 1 minute
+
   /* View */
   let view: "month" | "week" | "day" = $state("month");
 
@@ -103,8 +106,8 @@
     });
   })();
 
+  let spooledRefresh: ReturnType<typeof setTimeout>;
   function refresh(date: Date, force = false) {
-    console.log("REFRESH");
     sessionStorage.setItem("selectedDate", date.toString());
 
     const rangeStart = new Date(date);
@@ -127,6 +130,11 @@
     }
 
     getAllEvents(rangeStart, rangeEnd, force);
+
+    clearTimeout(spooledRefresh);
+    spooledRefresh = setTimeout(() => {
+      getAllEvents(rangeStart, rangeEnd);
+    }, autoRefreshInterval);
   }
 
   function forceRefresh() {
@@ -138,14 +146,10 @@
     ((date: Date, loaded: boolean) => {
       untrack(() => {
         if (!browser) return;
-        console.log("A")
         if (!loaded) {
           getRangeFromStorage();
-          console.log("B")
           return;
         }
-        console.log("C")
-        refresh(date);
       });
     })(date, pageLoaded);
   });
