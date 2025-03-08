@@ -13,8 +13,11 @@
 
   let isNew = $state(true);
   setTimeout(() => {
+    popover.showPopover();
     isNew = false;
   }, 0);
+
+  let popover: HTMLElement;
 </script>
 
 <style lang="scss">
@@ -23,9 +26,13 @@
   @import "../../styles/dimensions.scss";
 
   div.wrapper {
-    bottom: 100%;
-    right: 0;
-    width: 100%;
+    background-color: transparent;
+    outline: none;
+    border: none;
+    top: calc(100% - $gapSmaller);
+    left: calc(100% - $notificationWidth - $gapSmaller);
+    width: $notificationWidth;
+    // previously (before popover) instead of the above: bottom: 0, right: 0, no -50% subtraction in the style attribute down below
     position: absolute;
     padding-top: $gapSmaller;
     transition: all $cubic $animationSpeedSlow; 
@@ -75,8 +82,10 @@
 <div
   class="wrapper"
   class:disappear={notification.disappear}
-  style="transform: translateY({isNew ? "100%" : `${shift}px`});"
+  style="transform: translateY({isNew ? "100%" : `calc(${shift}px - 50%)`});"
+  popover="manual"
   bind:clientHeight={height}
+  bind:this={popover}
 >
 <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div

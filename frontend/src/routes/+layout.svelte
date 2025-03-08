@@ -68,7 +68,7 @@
     right: 0;
     bottom: 0;
     margin: $gapSmaller;
-    width: 15em;
+    width: $notificationWidth;
   }
 </style>
 
