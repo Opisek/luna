@@ -1,13 +1,14 @@
 <script lang="ts">
   import CollapseToggle from "../interactive/CollapseToggle.svelte";
+  import Spinner from "../decoration/Spinner.svelte";
   import Tooltip from "../interactive/Tooltip.svelte";
 
+  import { NoOp } from "$lib/client/placeholders";
   import { calendars, faultySources, loadingSources } from "$lib/client/repository";
   import { collapsedSources, setSourceCollapse } from "$lib/client/localStorage";
   import { focusIndicator } from "$lib/client/decoration";
 
   import { getContext } from "svelte";
-  import Spinner from "../decoration/Spinner.svelte";
 
   interface Props {
     source: SourceModel;
@@ -19,12 +20,14 @@
 
   let hasErrored = $state(false);
   faultySources.subscribe((faulty) => {
+    if (!source || !source.id) return;
     hasErrored = faulty.has(source.id);
   });
 
   let isLoading = $state(false);
   loadingSources.subscribe((loading) => {
-    isLoading = loading.has(source.id);
+    if (!source || !source.id) return;
+    isLoading = loading.has(source.id) as boolean;
   });
 
   let hasCals = $state(false);
@@ -41,7 +44,7 @@
 
   let showModal: ((source: SourceModel) => Promise<SourceModel>) = getContext("showSourceModal");
   function showModalInternal() {
-    showModal(source).then(newSource => source = newSource);
+    showModal(source).then(newSource => source = newSource).catch(NoOp);
   }
 
   $effect(() => {

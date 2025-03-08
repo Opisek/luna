@@ -5,7 +5,6 @@ import { writable } from "svelte/store";
 
 import { hiddenCalendars, isCalendarVisible } from "./localStorage";
 import { queueNotification } from "./notifications";
-import { NoOp } from "./placeholders";
 
 //
 // Constants
@@ -75,16 +74,15 @@ export function invalidateCache() {
 // Web
 // 
 
-async function fetchResponse(url: string, options: RequestInit = {}) {
-  const response = await fetch(url, options)
-    .catch((err) => {
-      if (!err) err = new Error("Could not contact server");
-      throw err;
-    });
+async function fetchResponse(url: string, options: RequestInit = {}): Promise<Response> {
+  const response = await fetch(url, options).catch((err) => {
+    if (!err) err = new Error("Could not contact server");
+    throw err;
+  });
   if (response.ok) {
     return response;
   } else {
-    const json = await response.json();
+    const json = await response.json().catch(() => null);
     let err = null;
     if (!err) err = json.error;
     if (!err) err = json.message;
@@ -303,7 +301,7 @@ export async function getSourceDetails(id: string, forceRefresh = false): Promis
   return fetched;
 }
 
-export const createSource = async (newSource: SourceModel): Promise<void> => {
+export async function createSource(newSource: SourceModel): Promise<void> {
   if (!browser) return;
 
   const formData = getSourceFormData(newSource);
@@ -342,7 +340,7 @@ export const createSource = async (newSource: SourceModel): Promise<void> => {
   saveCache();
 }
 
-export const editSource = async (modifiedSource: SourceModel): Promise<void> => {
+export async function editSource(modifiedSource: SourceModel): Promise<void> {
   if (!browser) return;
 
   let formData = getSourceFormData(modifiedSource);
@@ -380,7 +378,7 @@ export const editSource = async (modifiedSource: SourceModel): Promise<void> => 
   saveCache();
 }
 
-export const deleteSource = async (id: string): Promise<void> => {
+export async function deleteSource(id: string): Promise<void> {
   if (!browser) return;
 
   await fetchResponse(`/api/sources/${id}`, { method: "DELETE" }).catch((err) => {
@@ -445,7 +443,6 @@ async function getCalendars(id: string, forceRefresh = false): Promise<CalendarM
       faulty.add(id);
       return faulty;
     });
-
     throw err;
   }).finally(() => {
     indicateStopLoading();
@@ -668,7 +665,7 @@ async function fetchEvents(calendar: string, start: Date, end: Date): Promise<Ev
   return fetched;
 }
 
-export const createEvent = async (newEvent: EventModel): Promise<void> => {
+export async function createEvent (newEvent: EventModel): Promise<void> {
   if (!browser) return;
 
   // add to database
@@ -697,7 +694,7 @@ export const createEvent = async (newEvent: EventModel): Promise<void> => {
   if (isCalendarVisible(newEvent.calendar) && newEvent.date.start <= eventsRangeEnd && newEvent.date.end >= eventsRangeStart) events.update((events) => events.concat(newEvent));
 };
 
-export const editEvent = async (modifiedEvent: EventModel): Promise<void> => {
+export async function editEvent(modifiedEvent: EventModel): Promise<void> {
   if (!browser) return;
 
   // update in database
@@ -744,7 +741,7 @@ export const editEvent = async (modifiedEvent: EventModel): Promise<void> => {
   saveCache();
 }
 
-export const deleteEvent = async (id: string): Promise<void> => {
+export async function deleteEvent(id: string): Promise<void> {
   if (!browser) return;
 
   // remove from database

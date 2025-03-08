@@ -6,6 +6,7 @@
 
   import { getContext } from "svelte";
   import type { Writable } from "svelte/store";
+  import { NoOp } from "$lib/client/placeholders";
 
   interface Props {
     visible?: boolean;
@@ -61,13 +62,13 @@
 
     if ($currentlyClickedEvent == event) {
       $currentlyClickedEvent = null;
-      showModal(event).then(newEvent => event = newEvent);
+      showModal(event).then(newEvent => event = newEvent).catch(NoOp);
       element.blur();
     }
   }
   function keyPress(e: KeyboardEvent) {
     passIfEnter(e, () => {
-      if (event) showModal(event).then(newEvent => event = newEvent);
+      if (event) showModal(event).then(newEvent => event = newEvent).catch(NoOp);
       element.blur();
     });
   }
