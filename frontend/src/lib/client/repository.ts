@@ -585,7 +585,12 @@ async function getEventsFromCalendar(calendar: string, start: Date, end: Date, f
 }
 
 async function fetchEvents(calendar: string, start: Date, end: Date): Promise<EventModel[]> {
-  const fetched: EventModel[] = (await fetchJson(`/api/calendars/${calendar}/events?start=${encodeURIComponent(start.toISOString())}&end=${encodeURIComponent(end.toISOString())}`)).events;
+  const localStart = new Date(start);
+  localStart.setHours(0, 0, 0, 0);
+  const localEnd = new Date(end);
+  localEnd.setHours(23, 59, 59, 999);
+
+  const fetched: EventModel[] = (await fetchJson(`/api/calendars/${calendar}/events?start=${encodeURIComponent(localStart.toISOString())}&end=${encodeURIComponent(localEnd.toISOString())}`)).events;
 
   let calendarEventsCache = eventsCache.get(calendar);
   if (!calendarEventsCache) {
