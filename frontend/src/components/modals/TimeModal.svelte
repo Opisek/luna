@@ -63,7 +63,7 @@
     }
     pickingHour = true;
     goBackToHour = false;
-    setTimeout(() => hourInput.focus(), 1)
+    setTimeout(() => hourInput.focus(), 10)
     setTimeout(showModalInternal, 0);
   };
 
