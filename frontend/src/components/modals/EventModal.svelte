@@ -49,7 +49,9 @@
       }
     };
 
-    currentCalendars = await getAllCalendars();
+    currentCalendars = await getAllCalendars().catch(err => {
+      throw new Error(`Could not get calendars: ${err.message}`);
+    });
     setTimeout(showCreateModalInternal, 0);
 
     return new Promise((resolve, reject) => {
