@@ -3,11 +3,13 @@
 
   interface Props {
     position?: "left" | "center" | "right" | "justify";
+    width?: "full" | "auto";
     children?: Snippet;
   }
 
   let {
     position = "justify",
+    width = "full",
     children
   }: Props = $props();
 </script>
@@ -17,10 +19,13 @@
 
   div {
     display: flex;
-    width: 100%;
     flex-direction: row;
     flex-wrap: nowrap;
     gap: $gapSmall;
+  }
+
+  div.full {
+    width: 100%;
   }
 
   div.justify {
@@ -51,6 +56,7 @@
   class:left={position == "left"}
   class:right={position == "right"}
   class:center={position == "center"}
+  class:full={width == "full"}
 >
   {@render children?.()}
 </div>

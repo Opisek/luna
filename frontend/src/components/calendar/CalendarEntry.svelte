@@ -4,9 +4,10 @@
   import VisibilityToggle from "../interactive/VisibilityToggle.svelte";
 
   import { GetCalendarColor } from "$lib/common/colors";
-  import { faultyCalendars } from "$lib/client/repository";
+  import { faultyCalendars, loadingCalendars } from "$lib/client/repository";
   import { focusIndicator } from "$lib/client/decoration";
-  import { hiddenCalendars, isCalendarVisible, setCalendarVisibility } from "$lib/client/localStorage";
+  import { isCalendarVisible, setCalendarVisibility } from "$lib/client/localStorage";
+  import Spinner from "../decoration/Spinner.svelte";
 
   interface Props {
     calendar: CalendarModel;
@@ -20,6 +21,12 @@
   faultyCalendars.subscribe((faulty) => {
     hasErrored = faulty.has(calendar.id);
   });
+
+  let isLoading = $state(false);
+  loadingCalendars.subscribe((loading) => {
+    isLoading = loading.has(calendar.id);
+  });
+
 
   $effect(() => {
     if (calendar && calendar.id) setCalendarVisibility(calendar.id, calendarVisible);
@@ -77,6 +84,9 @@
     </button>
   </span>
   <span class="buttons">
+    {#if isLoading}
+      <Spinner/>
+    {/if}
     <VisibilityToggle bind:visible={calendarVisible}/>
     {#if hasErrored}
       <Tooltip msg="An error occurred trying to retrieve events from this calendar." error={true}/>

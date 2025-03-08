@@ -2,11 +2,12 @@
   import CollapseToggle from "../interactive/CollapseToggle.svelte";
   import Tooltip from "../interactive/Tooltip.svelte";
 
-  import { calendars, faultySources, fetchSourceCalendars } from "$lib/client/repository";
+  import { calendars, faultySources, loadingSources } from "$lib/client/repository";
   import { collapsedSources, setSourceCollapse } from "$lib/client/localStorage";
   import { focusIndicator } from "$lib/client/decoration";
 
   import { getContext } from "svelte";
+  import Spinner from "../decoration/Spinner.svelte";
 
   interface Props {
     source: SourceModel;
@@ -21,9 +22,21 @@
     hasErrored = faulty.has(source.id);
   });
 
+  let isLoading = $state(false);
+  loadingSources.subscribe((loading) => {
+    isLoading = loading.has(source.id);
+  });
+
   let hasCals = $state(false);
-  calendars.subscribe(async () => {
-    hasCals = (await fetchSourceCalendars(source.id)).length > 0;
+  calendars.subscribe(async (cals) => {
+    hasCals = false;
+    if (!source) return;
+    for (const cal of cals) {
+      if (cal.source === source.id) {
+        hasCals = true;
+        break;
+      }
+    }
   })
 
   let showModal: ((source: SourceModel) => Promise<SourceModel>) = getContext("showSourceModal");
@@ -35,6 +48,7 @@
     if (source.id) setSourceCollapse(source.id, source.collapsed);
   })
   collapsedSources.subscribe((collapsed) => {
+    if (!source) return;
     source.collapsed = collapsed.has(source.id);
   });
 </script>
@@ -84,6 +98,9 @@
     {source.name}
   </button>
   <span>
+    {#if isLoading}
+      <Spinner/>
+    {/if}
     {#if hasCals}
       <CollapseToggle bind:collapsed={source.collapsed}/>
     {/if}

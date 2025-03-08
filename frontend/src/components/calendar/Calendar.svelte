@@ -50,10 +50,6 @@
     })()
   );
 
-  $effect(() => {
-    console.log(date);
-  })
-
   let showModal = $state(NoOp);
 
   let [days, amountOfRows, processedEvents] = $derived((() => {
