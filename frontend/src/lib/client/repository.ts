@@ -28,13 +28,6 @@ export const faultyCalendars = writable(new Set<string>());
 export const loadingSources = writable(new Set<string>());
 export const loadingCalendars = writable(new Set<string>());
 
-loadingSources.subscribe((x) => {
-  console.log("Loading sources", Array.from(x.entries()));
-});
-loadingCalendars.subscribe((x) => {
-  console.log("Loading calendars", Array.from(x.entries()));
-});
-
 //
 // Caching
 //
