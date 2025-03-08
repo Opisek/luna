@@ -78,13 +78,18 @@ export function invalidateCache() {
 async function fetchResponse(url: string, options: RequestInit = {}) {
   const response = await fetch(url, options)
     .catch((err) => {
-      throw new Error("Could not contact the server");
+      if (!err) err = new Error("Could not contact server");
+      throw err;
     });
   if (response.ok) {
     return response;
   } else {
     const json = await response.json();
-    throw new Error(json ? json.error : "Could not contact the server");
+    let err = null;
+    if (!err) err = json.error;
+    if (!err) err = json.message;
+    if (!err) err = `${response.statusText ? response.statusText : "Could not contact server"} (${response.status})`;
+    throw new Error(err);
   }
 }
 
@@ -261,10 +266,6 @@ export async function getSources(forceRefresh = false): Promise<SourceModel[]> {
   indicateStartLoading();
 
   const fetchedSources = await fetchJson("/api/sources").catch((err) => {
-    queueNotification(
-      "failure",
-      `Failed to fetch sources: ${err.message}`
-    );
     throw err;
   }).finally(() => {
     indicateStopLoading();
@@ -408,10 +409,6 @@ async function getCalendars(id: string, forceRefresh = false): Promise<CalendarM
       return faulty;
     });
 
-    queueNotification(
-      "failure",
-      `Failed to fetch calendars: ${err.message}`
-    );
     throw err;
   }).finally(() => {
     indicateStopLoading();
@@ -566,10 +563,6 @@ async function getEventsFromCalendar(calendar: string, start: Date, end: Date, f
       return faulty;
     });
 
-    queueNotification(
-      "failure",
-      `Failed to fetch events: ${err.message}`
-    );
     throw err;
   }).finally(() => {
     indicateStopLoading();

@@ -49,6 +49,7 @@
   let date = $state(today);
 
   function getRangeFromStorage() {
+    if (pageLoaded) return;
     const storedDate = browser ? sessionStorage.getItem("selectedDate") : null;
     date = storedDate === null ? today : new Date(storedDate);
     pageLoaded = true;
@@ -56,7 +57,6 @@
 
   afterNavigate(() => {
     getRangeFromStorage();
-    pageLoaded = true;
   });
 
   beforeNavigate(() => {
@@ -129,11 +129,21 @@
       default:
     }
 
-    getAllEvents(rangeStart, rangeEnd, force);
+    getAllEvents(rangeStart, rangeEnd, force).catch(err => {
+      queueNotification(
+        "failure",
+        `Failed to fetch events: ${err.message}`
+      );
+    });
 
     clearTimeout(spooledRefresh);
     spooledRefresh = setTimeout(() => {
-      getAllEvents(rangeStart, rangeEnd);
+      getAllEvents(rangeStart, rangeEnd).catch(err => {
+        queueNotification(
+          "failure",
+          `Failed to fetch events: ${err.message}`
+        );
+      });
     }, autoRefreshInterval);
   }
 
