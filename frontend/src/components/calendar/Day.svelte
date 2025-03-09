@@ -6,6 +6,7 @@
 
   import { getContext } from "svelte";
   import { NoOp } from "$lib/client/placeholders";
+  import { queueNotification } from "$lib/client/notifications";
 
   interface Props {
     date: Date;
@@ -29,7 +30,9 @@
 
   let showCreateEventModal: ((date: Date) => Promise<EventModel>) = getContext("showNewEventModal");
   let createEventButtonClick = () => {
-    showCreateEventModal(date).catch(NoOp);
+    showCreateEventModal(date).catch((err) => {
+      queueNotification("failure", `Could not create event: ${err.message}`);
+    });
   };
 
   let actualMaxEvents: number = $derived(maxEvents <= events.length - 1 ? maxEvents - 1 : maxEvents);
