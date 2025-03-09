@@ -66,12 +66,7 @@
   (async () => {
     if (!browser) return;
 
-    getSources().catch(err => {
-      queueNotification(
-        "failure",
-        `Failed to fetch sources: ${err.message}`
-      );
-    });
+    getSources().catch(NoOp);
 
     events.subscribe((newEvents) => {
       localEvents = newEvents;
@@ -129,21 +124,13 @@
       default:
     }
 
-    getAllEvents(rangeStart, rangeEnd, force).catch(err => {
-      queueNotification(
-        "failure",
-        `Failed to fetch events: ${err.message}`
-      );
+    getAllEvents(rangeStart, rangeEnd, force).catch((err) => {
+      queueNotification("failure", `Failed to fetch events: ${err.message}`);
     });
 
     clearTimeout(spooledRefresh);
     spooledRefresh = setTimeout(() => {
-      getAllEvents(rangeStart, rangeEnd).catch(err => {
-        queueNotification(
-          "failure",
-          `Failed to fetch events: ${err.message}`
-        );
-      });
+      refresh(date);
     }, autoRefreshInterval);
   }
 

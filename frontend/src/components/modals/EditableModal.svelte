@@ -67,28 +67,26 @@
 
   let awaitingEdit = $state(false);
   function saveEdit() {
-    // TOOD: error message if returned value is not empty string
     awaitingEdit = true;
-    onEdit()
-      .then(() => {
-        editMode = false;
-        queueNotification("success", "Saved successfully")
-        hideModal();
-      })
-      .catch((err) => {
-        queueNotification("failure", err)
-      }).finally(() => {
-        awaitingEdit = false;
-      });
+    onEdit().then(() => {
+      editMode = false;
+      queueNotification("success", "Saved successfully")
+      hideModal()
+    }).catch((err) => {
+      queueNotification("failure", err)
+    }).finally(() => {
+      awaitingEdit = false;
+    });
   }
 
   const confirmDelete = async () => {
-    const returnValue = await onDelete();
-    queueNotification("success", "Deleted successfully")
-    hideModal();
-    return returnValue;
+    await onDelete().then(() => {
+      queueNotification("success", "Deleted successfully")
+      hideModal();
+    }).catch((err) => {
+      queueNotification("failure", err)
+    });
   }
-
 </script>
 
 <Modal title={title} bind:showModal={showModalInternal} bind:hideModal={hideModal} onModalHide={() => {editMode = false}} bind:resetFocus>

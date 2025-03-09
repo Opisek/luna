@@ -285,14 +285,7 @@ export async function getSourceDetails(id: string, forceRefresh = false): Promis
     if (cached) return Promise.resolve(cached);
   }
 
-  const fetched = await fetchJson(`/api/sources/${id}`).catch((err) => {
-    const sourceName = sourcesCache.value?.find((source) => source.id === id)?.name;
-    queueNotification(
-      "failure",
-      `Failed to fetch source details${sourceName ? " for " + sourceName : ""}: ${err.message}`
-    );
-    throw err;
-  });
+  const fetched = await fetchJson(`/api/sources/${id}`).catch((err) => { throw err; });
 
   sourceDetailsCache.set(id, {
     date: Date.now(),
@@ -307,13 +300,7 @@ export async function createSource(newSource: SourceModel): Promise<void> {
 
   const formData = getSourceFormData(newSource);
 
-  const json = await fetchJson(`/api/sources`, { method: "PUT", body: formData }).catch((err) => {
-    queueNotification(
-      "failure",
-      `Failed to create source ${newSource.name}: ${err.message}`
-    );
-    throw err;
-  });
+  const json = await fetchJson(`/api/sources`, { method: "PUT", body: formData }).catch((err) => { throw err; });
 
   newSource.id = json.id;
   sourcesCache.value = sourcesCache.value?.concat(newSource) || [ newSource ];
@@ -346,13 +333,7 @@ export async function editSource(modifiedSource: SourceModel): Promise<void> {
 
   let formData = getSourceFormData(modifiedSource);
 
-  await fetchResponse(`/api/sources/${modifiedSource.id}`, { method: "PATCH", body: formData }).catch((err) => {
-    queueNotification(
-      "failure",
-      `Failed to edit source ${modifiedSource.name}: ${err.message}`
-    );
-    throw err;
-  });
+  await fetchResponse(`/api/sources/${modifiedSource.id}`, { method: "PATCH", body: formData }).catch((err) => { throw err; });
   
   sourcesCache.value = sourcesCache.value?.map((source => source.id === modifiedSource.id ? modifiedSource : source)) || [ modifiedSource ];
   compileSources();
@@ -382,14 +363,7 @@ export async function editSource(modifiedSource: SourceModel): Promise<void> {
 export async function deleteSource(id: string): Promise<void> {
   if (!browser) return;
 
-  await fetchResponse(`/api/sources/${id}`, { method: "DELETE" }).catch((err) => {
-    const sourceName = sourcesCache.value?.find((source) => source.id === id)?.name;
-    queueNotification(
-      "failure",
-      `Failed to delete source${sourceName ? " " + sourceName : ""}: ${err.message}`
-    );
-    throw err;
-  });
+  await fetchResponse(`/api/sources/${id}`, { method: "DELETE" }).catch((err) => { throw err; });
 
   sourcesCache.value = sourcesCache.value?.filter((source) => source.id !== id) || [];
   compileSources();
@@ -548,7 +522,7 @@ export async function getAllEvents(start: Date, end: Date, forceRefresh = false)
   end.setMonth(end.getMonth() + 1);
 
   compileEvents(start, end);
-  const allSources = await getSources(forceRefresh);
+  const allSources = await getSources(forceRefresh).catch((err) => { throw err; });
   const [events, errors] = await atLeastOnePromise(allSources.map((source) => getEventsFromSource(source.id, start, end, forceRefresh))).catch(() => {
     throw new Error("Failed to fetch events");
   });
@@ -690,13 +664,7 @@ export async function createEvent(newEvent: EventModel): Promise<void> {
 
   const formData = getEventFormData(newEvent);
 
-  const json = await fetchJson(`/api/calendars/${newEvent.calendar}/events`, { method: "PUT", body: formData }).catch((err) => {
-    queueNotification(
-      "failure",
-      `Failed to create event ${newEvent.name}: ${err.message}`
-    );
-    throw err;
-  });
+  const json = await fetchJson(`/api/calendars/${newEvent.calendar}/events`, { method: "PUT", body: formData }).catch((err) => { throw err; });
 
   newEvent.id = json.id;
 
@@ -719,14 +687,7 @@ export async function editEvent(modifiedEvent: EventModel): Promise<void> {
 
   const formData = getEventFormData(modifiedEvent);
 
-  await fetchResponse(`/api/events/${modifiedEvent.id}`, { method: "PATCH", body: formData }).catch((err) => {
-    queueNotification(
-      "failure",
-      `Failed to edit event ${modifiedEvent.name}: ${err.message}`
-    );
-    throw err;
-  });
-
+  await fetchResponse(`/api/events/${modifiedEvent.id}`, { method: "PATCH", body: formData }).catch((err) => { throw err; });
 
   // update in cache
   const previousMonths = determineEventMonths(eventsMap.get(modifiedEvent.id)!);
@@ -759,14 +720,7 @@ export async function deleteEvent(id: string): Promise<void> {
   if (!browser) return;
 
   // remove from database
-  await fetchResponse(`/api/events/${id}`, { method: "DELETE" }).catch((err) => {
-    const eventName = eventsMap.get(id)?.name;
-    queueNotification(
-      "failure",
-      `Failed to delete event${eventName ? " " + eventName : ""}: ${err.message}`
-    );
-    throw err;
-  });
+  await fetchResponse(`/api/events/${id}`, { method: "DELETE" }).catch((err) => { throw err; });
 
   const event = eventsMap.get(id);
   if (!event) return;
@@ -782,26 +736,16 @@ export async function deleteEvent(id: string): Promise<void> {
   saveCache();
 }
 
-export async function moveEvent(event: EventModel, oldCalendar: string): Promise<void> {
+export async function moveEvent(event: EventModel): Promise<void> {
   if (!browser) return;
 
   const oldId = event.id;
 
   // add to the new calendar
-  await createEvent(event).catch((err) => {
-    queueNotification(
-      "failure",
-      `Failed to move event ${event.name}: ${err.message}`
-    );
-    throw err;
-  });
+  await createEvent(event).catch((err) => { throw err; });
 
   // remove from the old calendar
   await deleteEvent(oldId).catch((err) => {
-    queueNotification(
-      "failure",
-      `Failed to move event ${event.name}: ${err.message}`
-    );
     // undo changes
     deleteEvent(event.id).catch(NoOp);
     event.id = oldId;

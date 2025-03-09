@@ -101,7 +101,7 @@
 
   const onDelete = async () => {
     await deleteEvent(event.id).catch(err => {
-      throw new Error(`Could not delete event: ${err.message}`);
+      throw new Error(`Could not delete event ${event.name}: ${err.message}`);
     });
     cancelEvent();
   };
@@ -112,19 +112,19 @@
     if (event.id === "") {
       await createEvent(event).catch(err => {
         cancelEvent();
-        throw new Error(`Could not create event: ${err.message}`);
+        throw new Error(`Could not create event ${event.name}: ${err.message}`);
       });
       saveEvent(event);
     } else if (event.calendar == originalCalendar) {
       await editEvent(event).catch(err => {
         cancelEvent();
-        throw new Error(`Could not edit event: ${err.message}`);
+        throw new Error(`Could not edit event ${event.name}: ${err.message}`);
       });
       saveEvent(event);
     } else {
-      await moveEvent(event, originalCalendar).catch(err => {
+      await moveEvent(event).catch(err => {
         cancelEvent();
-        throw new Error(`Could not move event: ${err.message}`);
+        throw new Error(`Could not move event ${event.name}: ${err.message}`);
       });
       saveEvent(event);
     }

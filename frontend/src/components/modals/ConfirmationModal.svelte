@@ -25,14 +25,12 @@
   let awaitingConfirm = $state(false);
   function confirm() {
     awaitingConfirm = true;
-    confirmCallback()
-      .catch(err => {
-        queueNotification("failure", err)
-      })
-      .finally(() => {
-        awaitingConfirm = false;
-        hideModal()
-      });
+    confirmCallback().catch(err => {
+      queueNotification("failure", err)
+    }).finally(() => {
+      awaitingConfirm = false;
+      hideModal()
+    });
   }
 
   function cancel() {
