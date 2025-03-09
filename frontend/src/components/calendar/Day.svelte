@@ -6,6 +6,7 @@
   import IconButton from "../interactive/IconButton.svelte";
 
   import { queueNotification } from "$lib/client/notifications";
+  import { NoOp } from "$lib/client/placeholders";
 
   interface Props {
     date: Date;
@@ -15,6 +16,7 @@
     events: (EventModel | null)[];
     maxEvents?: number;
     containerHeight: number;
+    showMore?: (date: Date, events: (EventModel | null)[]) => any;
   }
 
   let {
@@ -25,6 +27,7 @@
     events,
     maxEvents = 1,
     containerHeight = $bindable(),
+    showMore = NoOp,
   }: Props = $props();
 
   let showCreateEventModal: ((date: Date) => Promise<EventModel>) = getContext("showNewEventModal");
@@ -152,7 +155,7 @@
     />
   {/each}
   {#if events.length > maxEvents && actualMaxEvents >= 0}
-    <button class="more">
+    <button class="more" onclick={() => showMore(date, events)}>
       {#if actualMaxEvents == 0}
        {events.length} events
       {:else}

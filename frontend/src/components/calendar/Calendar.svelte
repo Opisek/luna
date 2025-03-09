@@ -7,6 +7,7 @@
 
   import { setContext } from "svelte";
   import { writable } from "svelte/store";
+  import DayViewModal from "../modals/DayViewModal.svelte";
 
   interface Props {
     date: Date;
@@ -49,8 +50,6 @@
       }
     })()
   );
-
-  let showModal = $state(NoOp);
 
   let [days, amountOfRows, processedEvents] = $derived((() => {
       // Date calculation
@@ -125,6 +124,16 @@
   let containerHeight: number = $state(0);
   // TODO: figure out how to do this without hard-coded values
   let maxEvents: number = $derived(containerHeight === 0 ? 0 : Math.max(Math.floor((containerHeight - 35) / 27), 0));
+
+  /* Show more */
+  let showDayViewModal = $state(NoOp);
+  let showMoreDate: Date = $state(new Date(0));
+  let showMoreEvents: (EventModel | null)[] = $state([]);
+  function showMore(date: Date, events: (EventModel | null)[]) {
+    showMoreDate = date;
+    showMoreEvents = events;
+    showDayViewModal();
+  }
 </script>
 
 <style lang="scss">
@@ -200,9 +209,12 @@
         isFirstDay={i == 0}
         isLastDay={i == days.length - 1}
         maxEvents={maxEvents}
+        showMore={showMore}
         bind:containerHeight={containerHeight}
       >
       </Day>
     {/each}
   </div>
 </div>
+
+<DayViewModal date={showMoreDate} events={showMoreEvents} bind:showModal={showDayViewModal}/>
