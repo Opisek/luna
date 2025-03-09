@@ -20,7 +20,7 @@
   @import "../../styles/text.scss";
 
   label {
-    color: $foregroundFaded;
+    color: $foregroundDim;
     font-size: $fontSizeSmall;
     cursor: text;
   }

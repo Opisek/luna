@@ -20,7 +20,7 @@
 
   div {
     position: relative;
-    color: $foregroundFaded;
+    color: $foregroundDim;
     cursor: help;
     display: flex;
     justify-content: center;

@@ -15,12 +15,33 @@
   setTimeout(() => {
     isNew = false;
   }, 0);
+
+  let wrapper: HTMLElement;
+
+  function remove() {
+    if (wrapper.matches(":hover")) {
+      wrapper.addEventListener("mouseleave", () => {
+        notification.remove();
+      }, { once: true });
+    } else {
+      notification.remove();
+    }
+  }
+
+  let viewDetails = $state(false);
+  function showDetails() {
+    viewDetails = true;
+  }
+  function hideDetails() {
+    viewDetails = false;
+  }
 </script>
 
 <style lang="scss">
   @import "../../styles/animations.scss";
   @import "../../styles/colors.scss";
   @import "../../styles/dimensions.scss";
+  @import "../../styles/text.scss";
 
   div.wrapper {
     bottom: 100%;
@@ -70,6 +91,25 @@
     height: 0.5em;
     animation: notification-timer var(--notificationExpireTime) linear forwards;
   }
+
+  .details {
+    width: 100%;
+    font-size: $fontSizeSmall;
+    cursor: pointer;
+    display: inline-block;
+  }
+
+  .success .details {
+    color: $foregroundSuccessFaded;
+  }
+  
+  .failure .details {
+    color: $foregroundFailureFaded;
+  }
+
+  .info .details {
+    color: $foregroundAccentFaded;
+  }
 </style>
 
 <div
@@ -77,6 +117,7 @@
   class:disappear={notification.disappear}
   style="transform: translateY({isNew ? "100%" : `${shift}px`});"
   bind:clientHeight={height}
+  bind:this={wrapper}
 >
 <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div
@@ -84,10 +125,20 @@
     class:success={notification.type === "success"}
     class:failure={notification.type === "failure"}
     class:info={notification.type === "info"}
-    onclick={notification.remove}
-    onkeypress={notification.remove}
+    onclick={remove}
+    onkeypress={remove}
   >
     {notification.message}
-    <div class="timer"></div>
+
+    {#if notification.details}
+      <span class="details" onmouseenter="{showDetails}" onmouseleave="{hideDetails}">
+        {#if viewDetails}
+          {notification.details}
+        {:else}
+          Hover to view details
+        {/if}
+      </span>
+    {/if}
+    <div class="timer" onanimationend={remove}></div>
   </div>
 </div>

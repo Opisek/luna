@@ -1,8 +1,8 @@
 /* Main colors */
 $foregroundDark: #000000;
 $foregroundBright: #ffffff;
-
-$foregroundFaded: #6b6b6b;
+$foregroundFaded: #e6e6e6;
+$foregroundDim: #6b6b6b;
 
 $foregroundLink: hsl(213, 69%, 42%);
 
@@ -16,14 +16,17 @@ $foregroundSecondary: $foregroundDark;
 $backgroundSuccess: hsl(107, 53%, 57%);
 $backgroundSuccessActive: hsl(107, 53%, 67%);
 $foregroundSuccess: $foregroundBright;
+$foregroundSuccessFaded: $foregroundFaded;
 
 $backgroundFailure: hsl(0, 69%, 62%);
 $backgroundFailureActive: hsl(0, 69%, 72%);
 $foregroundFailure: $foregroundBright;
+$foregroundFailureFaded: $foregroundFaded;
 
 $backgroundAccent: hsl(213, 69%, 62%);
 $backgroundAccentActive: hsl(213, 69%, 72%);
 $foregroundAccent: $foregroundBright;
+$foregroundAccentFaded: $foregroundFaded;
 
 /* Calendar colors */
 $foregroundSunday: hsl(0, 71%, 58%);

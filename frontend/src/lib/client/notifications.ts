@@ -4,10 +4,10 @@ export const notificationExpireTime = 5000;
 
 export const notifications = writable([] as NotificationModel[]);
 
-let queue = [] as { type: "info" | "success" | "failure", message: string }[];
+let queue = [] as { type: "info" | "success" | "failure", message: string, details: string }[];
 
-export const queueNotification = (type: "info" | "success" | "failure", message: string) => {
-  queue.push({ type, message });
+export const queueNotification = (type: "info" | "success" | "failure", message: string, details = "") => {
+  queue.push({ type, message, details });
   if (queue.length === 1) {
     setTimeout(showNotification, 10);
   }
@@ -20,6 +20,7 @@ function showNotification() {
   const notification = {
     created: new Date(),
     message: nextNotification.message,
+    details: nextNotification.details,
     type: nextNotification.type,
     disappear: false,
     remove: () => {
@@ -34,10 +35,6 @@ function showNotification() {
   }
 
   notifications.update((notifications) => [...notifications, notification]);
-
-  setTimeout(() => {
-    notification.remove();
-  }, notificationExpireTime);
 
   if (queue.length != 0) {
     setTimeout(() => {

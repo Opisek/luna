@@ -62,7 +62,7 @@
   @import "../../styles/colors.scss";
 
   div {
-    color: $foregroundFaded;
+    color: $foregroundDim;
     height: 1.25em;
     display: flex;
     justify-content: space-between;

@@ -201,7 +201,7 @@
   }
 
   .placeholder {
-    color: $foregroundFaded;
+    color: $foregroundDim;
   }
 </style>
 

@@ -13,7 +13,7 @@
   span {
     margin: 0;
     padding: $gapSmall;
-    color: $foregroundFaded;
+    color: $foregroundDim;
   }
 </style>
 

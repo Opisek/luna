@@ -137,7 +137,7 @@
     top: 50%;
     transform: translateY(-50%);
     right: $gapSmaller;
-    color: $foregroundFaded;
+    color: $foregroundDim;
   }
 
   span.label {

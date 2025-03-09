@@ -93,7 +93,7 @@
   button.more {
     all: unset;
     text-align: center;
-    color: $foregroundFaded;
+    color: $foregroundDim;
     font-size: $fontSizeSmall;
     margin-right: 1em;
     cursor: pointer;
