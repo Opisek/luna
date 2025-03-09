@@ -5,6 +5,7 @@
   import IconButton from "../interactive/IconButton.svelte";
 
   import { getContext } from "svelte";
+  import { NoOp } from "$lib/client/placeholders";
 
   interface Props {
     date: Date;
@@ -28,7 +29,7 @@
 
   let showCreateEventModal: ((date: Date) => Promise<EventModel>) = getContext("showNewEventModal");
   let createEventButtonClick = () => {
-    showCreateEventModal(date);
+    showCreateEventModal(date).catch(NoOp);
   };
 
   let actualMaxEvents: number = $derived(maxEvents <= events.length - 1 ? maxEvents - 1 : maxEvents);
