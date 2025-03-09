@@ -142,9 +142,9 @@
     display: grid;
     gap: dimensions.$gapSmall;
   }
-  div.weekdays-day {
-    grid-template-columns: repeat(1, 1fr);
-  }
+  //div.weekdays-day {
+  //  grid-template-columns: repeat(1, 1fr);
+  //}
   div.weekday {
     text-align: center;
   }

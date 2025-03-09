@@ -25,7 +25,7 @@
   }: Props = $props();
 
   let dateButton: HTMLButtonElement;
-  let timeButton: HTMLButtonElement;
+  let timeButton: HTMLButtonElement | null = $state(null);
 
   let showDateModal = $state(NoOp);
   let showTimeModal = $state(NoOp);
@@ -42,7 +42,7 @@
   function timeClick(e: MouseEvent | KeyboardEvent) {
     if (editable) {
       showTimeModal();
-      if (e.detail !== 0) {
+      if (e.detail !== 0 && timeButton) {
         timeButton.blur();
       }
     }
