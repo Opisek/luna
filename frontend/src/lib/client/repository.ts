@@ -561,7 +561,8 @@ export async function getAllEvents(start: Date, end: Date, forceRefresh = false)
 }
 
 async function getEventsFromSource(source: string, start: Date, end: Date, forceRefresh = false): Promise<EventModel[]> {
-  const cals = await getCalendars(source, forceRefresh);
+  let cals = await getCalendars(source, forceRefresh);
+  cals = cals.filter(x => isCalendarVisible(x.id)); // only fetch events from visible calendars
   const [events, errors] = await atLeastOnePromise(cals.map((calendar) => getEventsFromCalendar(calendar.id, start, end, forceRefresh))).catch(() => {
     throw new Error("Failed to fetch events");
   })
@@ -665,7 +666,19 @@ async function fetchEvents(calendar: string, start: Date, end: Date): Promise<Ev
   return fetched;
 }
 
-export async function createEvent (newEvent: EventModel): Promise<void> {
+export async function getEventsFromPreviouslyHiddenCalendar(calendar: string) {
+  if (!browser) return;
+
+  getEventsFromCalendar(calendar, eventsRangeStart, eventsRangeEnd).catch((err) => {
+    const calendarName = calendarsCache.get(calendar)?.value?.find((cal) => cal.id === calendar)?.name;
+    queueNotification(
+      "failure",
+      `Failed to fetch events from calendar${calendarName ? " " + calendarName : ""}: ${err.message}`
+    );
+  });
+}
+
+export async function createEvent(newEvent: EventModel): Promise<void> {
   if (!browser) return;
 
   // add to database
