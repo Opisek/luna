@@ -7,7 +7,7 @@
   import TextInput from "../forms/TextInput.svelte";
 
   import { EmptyEvent } from "$lib/client/placeholders";
-  import { createEvent, deleteEvent, editEvent, getAllCalendars } from "$lib/client/repository";
+  import { createEvent, deleteEvent, editEvent, getAllCalendars, moveEvent } from "$lib/client/repository";
 
   interface Props {
     showCreateModal?: (date: Date) => Promise<EventModel>;
@@ -20,6 +20,7 @@
   }: Props = $props();
 
   let event: EventModel = $state(EmptyEvent);
+  let originalCalendar = "";
   let currentCalendars: CalendarModel[] = $state([]);
 
   let saveEvent = (_: EventModel | PromiseLike<EventModel>) => {};
@@ -60,7 +61,7 @@
     });
   }
 
-  showModal = (original: EventModel): Promise<EventModel> => {
+  showModal = async (original: EventModel): Promise<EventModel> => {
     cancelEvent();
 
     editMode = false;
@@ -79,6 +80,11 @@
     if (event.date.allDay) {
       event.date.end.setDate(event.date.end.getDate() - 1);
     }
+    originalCalendar = original.calendar;
+
+    currentCalendars = await getAllCalendars().catch(err => {
+      throw new Error(`Could not get calendars: ${err.message}`);
+    });
     setTimeout(showModalInternal, 0);
 
     return new Promise((resolve, reject) => {
@@ -109,10 +115,16 @@
         throw new Error(`Could not create event: ${err.message}`);
       });
       saveEvent(event);
-    } else {
+    } else if (event.calendar == originalCalendar) {
       await editEvent(event).catch(err => {
         cancelEvent();
         throw new Error(`Could not edit event: ${err.message}`);
+      });
+      saveEvent(event);
+    } else {
+      await moveEvent(event, originalCalendar).catch(err => {
+        cancelEvent();
+        throw new Error(`Could not move event: ${err.message}`);
       });
       saveEvent(event);
     }
@@ -154,9 +166,7 @@
 >
   {#if event != EmptyEvent}
     <TextInput bind:value={event.name} name="name" placeholder="Name" editable={editMode} />
-    {#if (event.id === "")}
-      <SelectInput bind:value={event.calendar} name="calendar" placeholder="Calendar" options={currentCalendars.map(x => ({ value: x.id, name: x.name }))} editable={editMode} />
-    {/if}
+    <SelectInput bind:value={event.calendar} name="calendar" placeholder="Calendar" options={currentCalendars.map(x => ({ value: x.id, name: x.name }))} editable={editMode} />
     {#if editMode}
       <ColorInput bind:color={event.color} name="color" editable={editMode} />
     {/if}

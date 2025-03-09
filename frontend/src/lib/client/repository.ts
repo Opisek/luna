@@ -5,6 +5,7 @@ import { writable } from "svelte/store";
 
 import { hiddenCalendars, isCalendarVisible } from "./localStorage";
 import { queueNotification } from "./notifications";
+import { NoOp } from "./placeholders";
 
 //
 // Constants
@@ -779,4 +780,30 @@ export async function deleteEvent(id: string): Promise<void> {
   events.update((events) => events.filter((event) => event.id !== id));
 
   saveCache();
+}
+
+export async function moveEvent(event: EventModel, oldCalendar: string): Promise<void> {
+  if (!browser) return;
+
+  const oldId = event.id;
+
+  // add to the new calendar
+  await createEvent(event).catch((err) => {
+    queueNotification(
+      "failure",
+      `Failed to move event ${event.name}: ${err.message}`
+    );
+    throw err;
+  });
+
+  // remove from the old calendar
+  await deleteEvent(oldId).catch((err) => {
+    queueNotification(
+      "failure",
+      `Failed to move event ${event.name}: ${err.message}`
+    );
+    // undo changes
+    deleteEvent(event.id).catch(NoOp);
+    throw err;
+  });
 }
