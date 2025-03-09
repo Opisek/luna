@@ -804,6 +804,7 @@ export async function moveEvent(event: EventModel, oldCalendar: string): Promise
     );
     // undo changes
     deleteEvent(event.id).catch(NoOp);
+    event.id = oldId;
     throw err;
   });
 }
