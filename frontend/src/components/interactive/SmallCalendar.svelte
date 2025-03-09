@@ -41,14 +41,14 @@
 </script>
 
 <style lang="scss">
-  @import "../../styles/animations.scss";
-  @import "../../styles/colors.scss";
-  @import "../../styles/dimensions.scss";
+  @use "../../styles/animations.scss";
+  @use "../../styles/colors.scss";
+  @use "../../styles/dimensions.scss";
 
   div.calendar {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: $gapSmall; 
+    gap: dimensions.$gapSmall; 
   }
 
   button.day {
@@ -56,10 +56,10 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    border-radius: $borderRadiusSmall;
-    color: $foregroundSecondary;
-    background-color: $backgroundSecondary;
-    padding: $gapSmaller;
+    border-radius: dimensions.$borderRadiusSmall;
+    color: colors.$foregroundSecondary;
+    background-color: colors.$backgroundSecondary;
+    padding: dimensions.$gapSmaller;
     cursor: pointer;
     user-select: none;
     position: relative;
@@ -67,7 +67,7 @@
   }
 
   button.day.sunday {
-    color: $foregroundSunday;
+    color: colors.$foregroundSunday;
   }
 
   button.day.otherMonth {

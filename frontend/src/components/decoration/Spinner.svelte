@@ -3,14 +3,14 @@
 </script>
 
 <style lang="scss">
-    @import "../../styles/animations.scss";
+    @use "../../styles/animations.scss";
 
     .wrapper {
         display: flex;
         justify-content: center;
         align-items: center;
         height: 100%;
-        animation: spin $animationSpeedSlow linear infinite;
+        animation: spin animations.$animationSpeedSlow linear infinite;
     }
 </style>
 

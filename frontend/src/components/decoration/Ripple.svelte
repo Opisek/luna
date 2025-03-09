@@ -27,8 +27,8 @@
 </script>
 
 <style lang="scss">
-  @import "../../styles/animations.scss";
-  @import "../../styles/colors.scss";
+  @use "../../styles/animations.scss";
+  @use "../../styles/colors.scss";
 
   div.ripple {
     border-radius: 50%;
@@ -36,9 +36,9 @@
     position: absolute;
     pointer-events: none;
 
-    animation: ripple $animationSpeedVerySlow $cubic;
+    animation: ripple animations.$animationSpeedVerySlow animations.$cubic;
 
-    background-color: $backgroundPrimary;
+    background-color: colors.$backgroundPrimary;
     opacity: 0.5;
     transform: scale(0);
   }

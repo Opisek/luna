@@ -55,12 +55,12 @@
 </script>
 
 <style lang="scss">
-  @import "../../styles/dimensions.scss";
+  @use "../../styles/dimensions.scss";
 
   div {
     display: flex;
     flex-direction: row;
-    gap: $gapSmall;
+    gap: dimensions.$gapSmall;
     align-items: center;
     position: relative;
     width: max-content;

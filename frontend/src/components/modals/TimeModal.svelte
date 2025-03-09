@@ -82,16 +82,16 @@
 <style lang="scss">
   @use "sass:math";
 
-  @import "../../styles/colors.scss";
-  @import "../../styles/dimensions.scss";
-  @import "../../styles/text.scss";
+  @use "../../styles/colors.scss";
+  @use "../../styles/dimensions.scss";
+  @use "../../styles/text.scss";
 
   div.time {
-    font-size: $fontSizeLarge;
-    font-family: $fontFamilyTime;
+    font-size: text.$fontSizeLarge;
+    font-family: text.$fontFamilyTime;
     display: flex;
     justify-content: center;
-    gap: $gapSmaller;
+    gap: dimensions.$gapSmaller;
   }
 
   span.time {
@@ -111,10 +111,10 @@
     display: inline-block;
     bottom: 0;
     left: 0;
-    background-color: $foregroundPrimary;
+    background-color: colors.$foregroundPrimary;
     width: 100%;
-    height: $borderWidth;
-    border-radius: calc($borderWidth / 2);
+    height: dimensions.$borderWidth;
+    border-radius: calc(dimensions.$borderWidth / 2);
     content: "";
   }
 
@@ -125,17 +125,16 @@
     align-items: center;
     width: 100%;
     margin-top: 5em;
-    margin-bottom: 7em + $gapSmall;
-    font-family: $fontFamilyTime;
+    margin-bottom: 7em + dimensions.$gapSmall;
+    font-family: text.$fontFamilyTime;
   }
 
   button {
     all: unset;
-    background-color: $backgroundSecondary;
-    color: $foregroundSecondary;
-    //border-radius: $borderRadiusSmall;
+    background-color: colors.$backgroundSecondary;
+    color: colors.$foregroundSecondary;
     border-radius: 50%;
-    padding: $gapSmall;
+    padding: dimensions.$gapSmall;
     cursor: pointer;
   }
 

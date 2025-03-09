@@ -20,9 +20,11 @@
 </script>
 
 <style lang="scss">
-  @import "../../styles/animations.scss";
-  @import "../../styles/colors.scss";
-  @import "../../styles/dimensions.scss";
+  @use "sass:map";
+
+  @use "../../styles/animations.scss";
+  @use "../../styles/colors.scss";
+  @use "../../styles/dimensions.scss";
 
   button {
     // unset props
@@ -31,28 +33,28 @@
     margin: 0;
 
     cursor: pointer;
-    padding: $gapSmall;
-    border-radius: $borderRadius;
+    padding: dimensions.$gapSmall;
+    border-radius: dimensions.$borderRadius;
 
     min-width: 5em;
     
     position: relative;
     overflow: hidden; 
 
-    transition: background-color $cubic $animationSpeed;
+    transition: background-color animations.$cubic animations.$animationSpeed;
   }
 
   .disabled {
     cursor: not-allowed;
   }
 
-  @each $key, $val in $specialColors {
+  @each $key, $val in colors.$specialColors {
     button.#{$key} {
-      background-color: map-get($val, "background");
-      color: map-get($val, "foreground");
+      background-color: map.get($val, "background");
+      color: map.get($val, "foreground");
     }
     button.#{$key}:hover:not(.disabled), button.#{$key}:focus:not(.disabled) {
-      background-color: map-get($val, "backgroundActive");
+      background-color: map.get($val, "backgroundActive");
     }
   }
 </style>

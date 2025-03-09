@@ -75,18 +75,18 @@
 </script>
 
 <style lang="scss">
-  @import "../../styles/animations.scss";
-  @import "../../styles/colors.scss";
-  @import "../../styles/dimensions.scss";
-  @import "../../styles/text.scss";
+  @use "../../styles/animations.scss";
+  @use "../../styles/colors.scss";
+  @use "../../styles/dimensions.scss";
+  @use "../../styles/text.scss";
 
   div {
-    padding: $gapSmaller;
-    font-size: $fontSizeSmall;
+    padding: dimensions.$gapSmaller;
+    font-size: text.$fontSizeSmall;
     margin: 0;
 
     display: flex;
-    gap: $gapTiny;
+    gap: dimensions.$gapTiny;
     flex-direction: row;
     flex-wrap: nowrap;
     align-items: center;
@@ -99,7 +99,7 @@
 
     flex-shrink: 0;
 
-    transition: background-color linear $animationSpeedFast;
+    transition: background-color linear animations.$animationSpeedFast;
   }
 
   div:focus {
@@ -114,14 +114,14 @@
     visibility: hidden;
   }
   div.start {
-    border-top-left-radius: $borderRadius;
-    border-bottom-left-radius: $borderRadius;
-    margin-left: calc($gapSmall / 2);
+    border-top-left-radius: dimensions.$borderRadius;
+    border-bottom-left-radius: dimensions.$borderRadius;
+    margin-left: calc(dimensions.$gapSmall / 2);
   }
   div.end {
-    border-top-right-radius: $borderRadius;
-    border-bottom-right-radius: $borderRadius;
-    margin-right: calc($gapSmall / 2 + (1em * $fontSize / $fontSizeSmall));
+    border-top-right-radius: dimensions.$borderRadius;
+    border-bottom-right-radius: dimensions.$borderRadius;
+    margin-right: calc(dimensions.$gapSmall / 2 + (1em * text.$fontSize / text.$fontSizeSmall));
   }
 
   div.hidden {
@@ -129,10 +129,10 @@
   }
 
   div.foregroundBright {
-    color: $foregroundBright;
+    color: colors.$foregroundBright;
   }
   div.foregroundDark {
-    color: $foregroundDark;
+    color: colors.$foregroundDark;
   }
 
   span.name {
@@ -144,9 +144,9 @@
   span.time {
     flex-shrink: 0;
     text-align: center;
-    font-weight: $fontWeightLight;
-    font-family: $fontFamilyTime;
-    font-size: $fontSizeSmaller;
+    font-weight: text.$fontWeightLight;
+    font-family: text.$fontFamilyTime;
+    font-size: text.$fontSizeSmaller;
   }
   span.icons {
     flex-shrink: 0;

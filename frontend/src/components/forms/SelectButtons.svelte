@@ -29,12 +29,12 @@
 </script>
 
 <style lang="scss">
-  @import "../../styles/animations.scss";
-  @import "../../styles/colors.scss";
-  @import "../../styles/dimensions.scss";
+  @use "../../styles/animations.scss";
+  @use "../../styles/colors.scss";
+  @use "../../styles/dimensions.scss";
 
   div.display {
-    margin: $gapSmall;
+    margin: dimensions.$gapSmall;
   }
 
   div.buttons {
@@ -42,7 +42,7 @@
     flex-direction: row;
     flex-wrap: nowrap;
     width: 100%; 
-    gap: $gapSmaller;
+    gap: dimensions.$gapSmaller;
     user-select: none;
   }
 
@@ -52,14 +52,14 @@
   }
   div.compact > button {
     min-width: max-content;
-    padding: $gapSmaller;
+    padding: dimensions.$gapSmaller;
   }
 
   button {
     all: unset;
-    background-color: $backgroundSecondary;
-    color: $foregroundSecondary;
-    padding: $gapSmall;
+    background-color: colors.$backgroundSecondary;
+    color: colors.$foregroundSecondary;
+    padding: dimensions.$gapSmall;
     cursor: pointer;
     flex: 1;
     text-align: center;
@@ -68,19 +68,19 @@
   }
 
   button.first {
-    border-top-left-radius: $borderRadius;
-    border-bottom-left-radius: $borderRadius;
+    border-top-left-radius: dimensions.$borderRadius;
+    border-bottom-left-radius: dimensions.$borderRadius;
   }
 
   button.last {
-    border-top-right-radius: $borderRadius;
-    border-bottom-right-radius: $borderRadius;
+    border-top-right-radius: dimensions.$borderRadius;
+    border-bottom-right-radius: dimensions.$borderRadius;
   }
 
   button.selected {
-    background-color: $backgroundAccent;
-    color: $foregroundAccent;
-    --barFocusIndicatorColor: #{$barFocusIndicatorColorAlt};
+    background-color: colors.$backgroundAccent;
+    color: colors.$foregroundAccent;
+    --barFocusIndicatorColor: #{colors.$barFocusIndicatorColorAlt};
   }
 </style>
 

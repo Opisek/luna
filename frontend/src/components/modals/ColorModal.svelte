@@ -207,20 +207,20 @@
 </script>
 
 <style lang="scss">
-  @import "../../styles/dimensions.scss";
+  @use "../../styles/dimensions.scss";
 
   div.grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 1fr auto;
     grid-template-areas: "current hSL" "code Hsl";
-    gap: $gapSmall;
+    gap: dimensions.$gapSmall;
   }
 
   div.suggestions {
     display: flex;
     flex-wrap: wrap;
-    gap: $gapSmall;
+    gap: dimensions.$gapSmall;
     justify-content: center;
   }
 
@@ -230,7 +230,7 @@
     height: 0;
     mask: linear-gradient(270deg, white, transparent);
     padding-bottom: 100%;
-    border-radius: $borderRadius;
+    border-radius: dimensions.$borderRadius;
     cursor: pointer;
   }
 
@@ -238,8 +238,8 @@
     grid-area: Hsl;
     width: 100%;
     flex-grow: 1;
-    padding: $gapSmall;
-    border-radius: $borderRadius;
+    padding: dimensions.$gapSmall;
+    border-radius: dimensions.$borderRadius;
     cursor: pointer;
   }
 </style>

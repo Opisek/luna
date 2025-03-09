@@ -96,28 +96,28 @@
 </script>
 
 <style lang="scss">
-  @import "../../styles/animations.scss";
-  @import "../../styles/colors.scss";
-  @import "../../styles/dimensions.scss";
-  @import "../../styles/text.scss";
+  @use "../../styles/animations.scss";
+  @use "../../styles/colors.scss";
+  @use "../../styles/dimensions.scss";
+  @use "../../styles/text.scss";
 
   div.wrapper {
     display: flex;
     flex-direction: column;
-    gap: $gap;
+    gap: dimensions.$gap;
     position: relative;
-    border-radius: calc($borderRadius + 0.1em);
+    border-radius: calc(dimensions.$borderRadius + 0.1em);
     overflow: hidden;
   }
 
   input, textarea {
     all: unset;
-    padding: $gapSmall;
-    border-radius: $borderRadius;
+    padding: dimensions.$gapSmall;
+    border-radius: dimensions.$borderRadius;
   }
 
   div.editable > input, div.editable > textarea {
-    background: $backgroundSecondary;
+    background: colors.$backgroundSecondary;
   }
   div.noneditable {
     --barFocusIndicatorColor: transparent;
@@ -136,19 +136,19 @@
     //height: 100%;
     top: 50%;
     transform: translateY(-50%);
-    right: $gapSmaller;
-    color: $foregroundDim;
+    right: dimensions.$gapSmaller;
+    color: colors.$foregroundDim;
   }
 
   span.label {
-    font-size: $fontSizeSmall;
-    margin-bottom: -2 * $gapSmall;
-    padding-left: calc($gapSmall * ($fontSize / $fontSizeSmall));
+    font-size: text.$fontSizeSmall;
+    margin-bottom: -2 * dimensions.$gapSmall;
+    padding-left: calc(dimensions.$gapSmall * (text.$fontSize / text.$fontSizeSmall));
   }
 
   span.errorMessage {
-    color: $backgroundFailure;
-    font-size: $fontSizeSmall;
+    color: colors.$backgroundFailure;
+    font-size: text.$fontSizeSmall;
   }
 </style>
 

@@ -28,16 +28,16 @@
 </script>
 
 <style lang="scss">
-  @import "../../styles/animations.scss";
-  @import "../../styles/colors.scss";
-  @import "../../styles/dimensions.scss";
-  @import "../../styles/text.scss";
+  @use "../../styles/animations.scss";
+  @use "../../styles/colors.scss";
+  @use "../../styles/dimensions.scss";
+  @use "../../styles/text.scss";
 
   button {
     all: unset;
 
-    width: $lineHeightParagraph;
-    height: $lineHeightParagraph;
+    width: text.$lineHeightParagraph;
+    height: text.$lineHeightParagraph;
 
     position: relative;
 
@@ -47,15 +47,15 @@
 
     cursor: pointer;
 
-    border-radius: $borderRadius;
-    background-color: $backgroundSecondary;
+    border-radius: dimensions.$borderRadius;
+    background-color: colors.$backgroundSecondary;
     overflow: hidden;
   }
 
   button.check {
-    color: $foregroundAccent;
-    background-color: $backgroundAccent;
-    --barFocusIndicatorColor: #{$barFocusIndicatorColorAlt};
+    color: colors.$foregroundAccent;
+    background-color: colors.$backgroundAccent;
+    --barFocusIndicatorColor: #{colors.$barFocusIndicatorColorAlt};
   }
 
   button.disabled {

@@ -17,11 +17,11 @@
 </script>
 
 <style lang="scss">
-  @import "../../styles/colors.scss";
+  @use "../../styles/colors.scss";
 
   a {
     text-decoration: none;
-    color: $foregroundLink;
+    color: colors.$foregroundLink;
     width: max-content;
   }
 </style>

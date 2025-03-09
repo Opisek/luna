@@ -48,8 +48,8 @@
 </script>
 
 <style lang="scss">
-  @import "../styles/dimensions.scss";
-  @import "../styles/text.scss";
+  @use "../styles/dimensions.scss";
+  @use "../styles/text.scss";
 
   :global(*) {
     box-sizing: border-box;
@@ -59,15 +59,15 @@
     margin: 0;
     padding: 0;
     height: 100vh;
-    font-family: $fontFamilyText;
-    font-size: $fontSize;
+    font-family: text.$fontFamilyText;
+    font-size: text.$fontSize;
   }
 
   div.notifications {
     position: fixed;
     right: 0;
     bottom: 0;
-    margin: $gapSmaller;
+    margin: dimensions.$gapSmaller;
     width: 15em;
   }
 </style>

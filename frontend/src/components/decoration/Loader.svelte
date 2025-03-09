@@ -1,7 +1,7 @@
 <style lang="scss">
-  @import "../../styles/animations.scss";
-  @import "../../styles/colors.scss";
-  @import "../../styles/dimensions.scss";
+  @use "../../styles/animations.scss";
+  @use "../../styles/colors.scss";
+  @use "../../styles/dimensions.scss";
 
   $dotSize: 0.3em;
 
@@ -17,13 +17,13 @@
     height: $dotSize;
     border-radius: 50%;
     background: currentColor;
-    animation: loader calc(2 * $animationSpeedSlow) $cubic infinite;
+    animation: loader calc(2 * animations.$animationSpeedSlow) animations.$cubic infinite;
   }
 
   
   @for $i from 1 through 3 {
     .dot:nth-child(#{$i}) {
-      animation-delay: $animationSpeedFast * ($i - 1);
+      animation-delay: animations.$animationSpeedFast * ($i - 1);
     }
   }
 

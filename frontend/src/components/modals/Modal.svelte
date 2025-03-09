@@ -71,23 +71,23 @@
 </script>
 
 <style lang="scss">
-  @import "../../styles/animations.scss";
-  @import "../../styles/colors.scss";
-  @import "../../styles/dimensions.scss";
+  @use "../../styles/animations.scss";
+  @use "../../styles/colors.scss";
+  @use "../../styles/dimensions.scss";
 
   dialog {
     border: 0;
     max-width: 50vw;
     min-width: 30em;
-    border-radius: $borderRadius;
+    border-radius: dimensions.$borderRadius;
     padding: 0;
   }
   dialog::backdrop {
-    backdrop-filter: blur($blur);
+    backdrop-filter: blur(dimensions.$blur);
   }
 
   dialog[open] {
-		animation: zoom $animationSpeed $cubic forwards;
+		animation: zoom animations.$animationSpeed animations.$cubic forwards;
 	}
 
   dialog:focus {
@@ -95,13 +95,13 @@
   }
   
   form {
-    padding: $gap $gapLarge $gapLarge $gapLarge;
-    border-radius: $borderRadius;
+    padding: dimensions.$gap dimensions.$gapLarge dimensions.$gapLarge dimensions.$gapLarge;
+    border-radius: dimensions.$borderRadius;
     display: flex;
     width: 100%;
     flex-direction: column;
     flex-wrap: nowrap;
-    gap: $gap;
+    gap: dimensions.$gap;
   }
 </style>
 

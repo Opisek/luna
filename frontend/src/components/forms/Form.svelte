@@ -24,22 +24,22 @@
 </script>
 
 <style lang="scss">
-  @import "../../styles/animations.scss";
-  @import "../../styles/colors.scss";
-  @import "../../styles/dimensions.scss";
-  @import "../../styles/decoration.scss";
+  @use "../../styles/animations.scss";
+  @use "../../styles/colors.scss";
+  @use "../../styles/dimensions.scss";
+  @use "../../styles/decorations.scss";
 
   form {
-    border-radius: $borderRadius;
+    border-radius: dimensions.$borderRadius;
     max-width: 50vw;
     min-width: 30em;
-    padding: $gap $gapLarge $gapLarge $gapLarge;
-    border-radius: $borderRadius;
+    padding: dimensions.$gap dimensions.$gapLarge dimensions.$gapLarge dimensions.$gapLarge;
+    border-radius: dimensions.$borderRadius;
     display: flex;
     flex-direction: column;
     flex-wrap: nowrap;
-    gap: $gap;
-    box-shadow: $boxShadow;
+    gap: dimensions.$gap;
+    box-shadow: decorations.$boxShadow;
   }
 </style>
 

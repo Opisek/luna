@@ -50,16 +50,16 @@
 </script>
 
 <style lang="scss">
-  @import "../../styles/animations.scss";
-  @import "../../styles/colors.scss";
-  @import "../../styles/dimensions.scss";
-  @import "../../styles/text.scss";
+  @use "../../styles/animations.scss";
+  @use "../../styles/colors.scss";
+  @use "../../styles/dimensions.scss";
+  @use "../../styles/text.scss";
 
   div.row {
     display: flex;
     flex-direction: row;
-    gap: $gapSmall;
-    margin: $gapSmall;
+    gap: dimensions.$gapSmall;
+    margin: dimensions.$gapSmall;
   }
 
   div.editable {
@@ -68,17 +68,17 @@
 
   button {
     all: unset;
-    border-radius: $borderRadius;
+    border-radius: dimensions.$borderRadius;
     cursor: text;
-    transition: padding $animationSpeedFast linear, border-radius $animationSpeedFast linear;
-    padding: $gapSmall;
-    margin: -$gapSmall;
+    transition: padding animations.$animationSpeedFast linear, border-radius animations.$animationSpeedFast linear;
+    padding: dimensions.$gapSmall;
+    margin: -(dimensions.$gapSmall);
     position: relative;
     overflow: hidden;
   }
 
   div.editable button {
-    background: $backgroundSecondary;
+    background: colors.$backgroundSecondary;
     cursor: pointer;
     margin: 0;
   }

@@ -1,22 +1,22 @@
 <style lang="scss">
-  @import "../../../styles/animations.scss";
-  @import "../../../styles/colors.scss";
-  @import "../../../styles/dimensions.scss";
+  @use "../../../styles/animations.scss";
+  @use "../../../styles/colors.scss";
+  @use "../../../styles/dimensions.scss";
 
   div.wrapper {
     position: absolute;
-    height: $underlineWidth;
+    height: dimensions.$underlineWidth;
     width: 100%;
-    bottom: -$underlineWidth;
+    bottom: -(dimensions.$underlineWidth);
     bottom: 0;
-    transition: padding $animationSpeedFast linear, opacity 0s linear $animationSpeedFast;
+    transition: padding animations.$animationSpeedFast linear, opacity 0s linear animations.$animationSpeedFast;
     padding: 0 50%;
     opacity: 0;
   }
   
   div.bar {
-    background-color: var(--underlineFocusIndicatorColor, $underlineFocusIndicatorColor);
-    border-radius: calc($underlineWidth / 2);
+    background-color: var(--underlineFocusIndicatorColor, colors.$underlineFocusIndicatorColor);
+    border-radius: calc(dimensions.$underlineWidth / 2);
     width: 100%;
     height: 100%;
   }

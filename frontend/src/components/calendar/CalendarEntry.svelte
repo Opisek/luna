@@ -34,12 +34,12 @@
 </script>
 
 <style lang="scss">
-  @import "../../styles/dimensions.scss";
+  @use "../../styles/dimensions.scss";
 
   div.entry {
     display: flex;
     flex-direction: row;
-    gap: $gapTiny;
+    gap: dimensions.$gapTiny;
     width: 100%;
     align-items: center;
     justify-content: space-between;
@@ -52,12 +52,12 @@
   }
 
   span.name {
-    gap: $gapSmall;
+    gap: dimensions.$gapSmall;
     min-width: 0;
   }
 
   span.buttons {
-    gap: $gapTiny;
+    gap: dimensions.$gapTiny;
   }
 
   button {

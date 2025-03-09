@@ -70,13 +70,13 @@
 </script>
 
 <style lang="scss">
-  @import "../../styles/animations.scss";
-  @import "../../styles/colors.scss";
-  @import "../../styles/dimensions.scss";
+  @use "../../styles/animations.scss";
+  @use "../../styles/colors.scss";
+  @use "../../styles/dimensions.scss";
 
   div.grid {
     display: grid;
-    gap: $gapSmall;
+    gap: dimensions.$gapSmall;
   }
 
   div.grid.month {
@@ -110,10 +110,10 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    border-radius: $borderRadiusSmall;
-    color: $foregroundSecondary;
-    background-color: $backgroundSecondary;
-    padding: $gapSmall;
+    border-radius: dimensions.$borderRadiusSmall;
+    color: colors.$foregroundSecondary;
+    background-color: colors.$backgroundSecondary;
+    padding: dimensions.$gapSmall;
     cursor: pointer;
     user-select: none;
     position: relative;

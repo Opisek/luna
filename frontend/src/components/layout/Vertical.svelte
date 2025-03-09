@@ -9,14 +9,14 @@
 </script>
 
 <style lang="scss">
-  @import "../../styles/dimensions.scss";
+  @use "../../styles/dimensions.scss";
 
   div {
     display: flex;
     width: 100%;
     flex-direction: column;
     flex-wrap: nowrap;
-    gap: $gap;
+    gap: dimensions.$gap;
   }
 </style>
 

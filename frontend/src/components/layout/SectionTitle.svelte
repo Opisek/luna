@@ -7,13 +7,13 @@
 </script>
 
 <style lang="scss">
-  @import "../../styles/colors.scss";
-  @import "../../styles/dimensions.scss";
+  @use "../../styles/colors.scss";
+  @use "../../styles/dimensions.scss";
 
   span {
     margin: 0;
-    padding: $gapSmall;
-    color: $foregroundDim;
+    padding: dimensions.$gapSmall;
+    color: colors.$foregroundDim;
   }
 </style>
 

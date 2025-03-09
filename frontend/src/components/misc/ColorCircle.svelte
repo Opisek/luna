@@ -11,8 +11,8 @@
 </script>
 
 <style lang="scss">
-  @import "../../styles/decoration.scss";
-  @import "../../styles/dimensions.scss";
+  @use "../../styles/decorations.scss";
+  @use "../../styles/dimensions.scss";
 
   div {
     flex-shrink: 0;
@@ -23,7 +23,7 @@
   }
 
   div.squircle {
-    border-radius: $borderRadius;
+    border-radius: dimensions.$borderRadius;
   }
 
   div.small {
@@ -43,7 +43,7 @@
   }
 
   div.none {
-    background: $stripes;
+    background: decorations.$stripes;
   }
 </style>
 

@@ -57,12 +57,12 @@
 </script>
 
 <style lang="scss">
-  @import "../../styles/animations.scss";
-  @import "../../styles/dimensions.scss";
-  @import "../../styles/colors.scss";
+  @use "../../styles/animations.scss";
+  @use "../../styles/dimensions.scss";
+  @use "../../styles/colors.scss";
 
   div {
-    color: $foregroundDim;
+    color: colors.$foregroundDim;
     height: 1.25em;
     display: flex;
     justify-content: space-between;
@@ -74,7 +74,7 @@
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
-    gap: $gapTiny;
+    gap: dimensions.$gapTiny;
     align-items: center;
   }
 

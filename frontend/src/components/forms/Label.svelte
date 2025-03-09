@@ -15,19 +15,19 @@
 </script>
 
 <style lang="scss">
-  @import "../../styles/colors.scss";
-  @import "../../styles/dimensions.scss";
-  @import "../../styles/text.scss";
+  @use "../../styles/colors.scss";
+  @use "../../styles/dimensions.scss";
+  @use "../../styles/text.scss";
 
   label {
-    color: $foregroundDim;
-    font-size: $fontSizeSmall;
+    color: colors.$foregroundDim;
+    font-size: text.$fontSizeSmall;
     cursor: text;
   }
 
   .ownPositioning {
-    margin-bottom: -2 * $gapSmall;
-    padding-left: calc($gapSmall * ($fontSize / $fontSizeSmall));
+    margin-bottom: -2 * dimensions.$gapSmall;
+    padding-left: calc(dimensions.$gapSmall * (text.$fontSize / text.$fontSizeSmall));
   }
 </style>
 

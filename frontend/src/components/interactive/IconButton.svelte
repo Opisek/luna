@@ -41,19 +41,19 @@
 </script>
 
 <style lang="scss">
-  @import "../../styles/animations.scss";
-  @import "../../styles/colors.scss";
-  @import "../../styles/dimensions.scss";
+  @use "../../styles/animations.scss";
+  @use "../../styles/colors.scss";
+  @use "../../styles/dimensions.scss";
 
   button {
     all: unset;
     border-radius: 50%;
     display: flex;
     align-items: center;
-    padding: $gapSmaller;
+    padding: dimensions.$gapSmaller;
     cursor: pointer;
     position: relative;
-    transition: all $cubic $animationSpeed;
+    transition: all animations.$cubic animations.$animationSpeed;
   }
 
   button.hidden {
@@ -62,14 +62,14 @@
 
   div.circle {
     position: absolute;
-    background-color: $backgroundSecondary;
+    background-color: colors.$backgroundSecondary;
     z-index: -1;
     border-radius: 50%;
     left: 50%;
     top: 50%;
     width: 0%;
     height: 0%;
-    transition: all $cubic $animationSpeed;
+    transition: all animations.$cubic animations.$animationSpeed;
   }
 
   button:hover div.circle, button:focus div.circle {

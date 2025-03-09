@@ -128,19 +128,19 @@
 </script>
 
 <style lang="scss">
-  @import "../../styles/dimensions.scss";
+  @use "../../styles/dimensions.scss";
 
   div.calendar {
     display: flex;
     flex-direction: column;
-    gap: $gapSmall;
+    gap: dimensions.$gapSmall;
     width: 100%;
     height: 100%;
   }
 
   div.weekdays {
     display: grid;
-    gap: $gapSmall;
+    gap: dimensions.$gapSmall;
   }
   div.weekdays-day {
     grid-template-columns: repeat(1, 1fr);

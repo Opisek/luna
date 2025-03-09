@@ -38,23 +38,23 @@
 </script>
 
 <style lang="scss">
-  @import "../../styles/animations.scss";
-  @import "../../styles/colors.scss";
-  @import "../../styles/dimensions.scss";
-  @import "../../styles/text.scss";
+  @use "../../styles/animations.scss";
+  @use "../../styles/colors.scss";
+  @use "../../styles/dimensions.scss";
+  @use "../../styles/text.scss";
 
   div.wrapper {
     bottom: 100%;
     right: 0;
     width: 100%;
     position: absolute;
-    padding-top: $gapSmaller;
-    transition: all $cubic $animationSpeedSlow; 
+    padding-top: dimensions.$gapSmaller;
+    transition: all animations.$cubic animations.$animationSpeedSlow; 
   }
 
   div.box {
-    padding: $gap;
-    border-radius: $borderRadius;
+    padding: dimensions.$gap;
+    border-radius: dimensions.$borderRadius;
     cursor: pointer;
     position: relative;
     overflow: hidden;
@@ -62,18 +62,18 @@
   }
 
   .success {
-    background-color: $backgroundSuccess;
-    color: $foregroundSuccess;
+    background-color: colors.$backgroundSuccess;
+    color: colors.$foregroundSuccess;
   }
 
   .failure {
-    background-color: $backgroundFailure;
-    color: $foregroundFailure;
+    background-color: colors.$backgroundFailure;
+    color: colors.$foregroundFailure;
   }
 
   .info {
-    background-color: $backgroundAccent;
-    color: $foregroundAccent;
+    background-color: colors.$backgroundAccent;
+    color: colors.$foregroundAccent;
   }
 
   .disappear {
@@ -94,21 +94,21 @@
 
   .details {
     width: 100%;
-    font-size: $fontSizeSmall;
+    font-size: text.$fontSizeSmall;
     cursor: pointer;
     display: inline-block;
   }
 
   .success .details {
-    color: $foregroundSuccessFaded;
+    color: colors.$foregroundSuccessFaded;
   }
   
   .failure .details {
-    color: $foregroundFailureFaded;
+    color: colors.$foregroundFailureFaded;
   }
 
   .info .details {
-    color: $foregroundAccentFaded;
+    color: colors.$foregroundAccentFaded;
   }
 </style>
 

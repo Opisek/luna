@@ -18,13 +18,13 @@
 </script>
 
 <style lang="scss">
-  @import "../../styles/dimensions.scss";
+  @use "../../styles/dimensions.scss";
 
   div {
-    padding: $gapSmall;
+    padding: dimensions.$gapSmall;
   }
   div.editable {
-    padding: $gapSmaller;
+    padding: dimensions.$gapSmaller;
   }
 </style>
 

@@ -15,13 +15,13 @@
 </script>
 
 <style lang="scss">
-  @import "../../styles/dimensions.scss";
+  @use "../../styles/dimensions.scss";
 
   div {
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
-    gap: $gapSmall;
+    gap: dimensions.$gapSmall;
   }
 
   div.full {

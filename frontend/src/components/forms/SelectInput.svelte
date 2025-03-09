@@ -122,27 +122,27 @@
 </script>
 
 <style lang="scss">
-  @import "../../styles/animations.scss";
-  @import "../../styles/colors.scss";
-  @import "../../styles/decoration.scss";
-  @import "../../styles/dimensions.scss";
+  @use "../../styles/animations.scss";
+  @use "../../styles/colors.scss";
+  @use "../../styles/decorations.scss";
+  @use "../../styles/dimensions.scss";
 
   button.select {
     all: unset;
-    padding: $gapSmall;
-    border-radius: $borderRadius;
+    padding: dimensions.$gapSmall;
+    border-radius: dimensions.$borderRadius;
     background: transparent;
     display: flex;
     align-items: center;
-    gap: $gapSmall;
+    gap: dimensions.$gapSmall;
     justify-content: space-between;
     position: relative;
-    transition: padding $animationSpeedFast linear, border-radius $animationSpeedFast linear, width $animationSpeedFast linear;
+    transition: padding animations.$animationSpeedFast linear, border-radius animations.$animationSpeedFast linear, width animations.$animationSpeedFast linear;
     overflow: hidden;
   }
 
   button.editable {
-    background: $backgroundSecondary;
+    background: colors.$backgroundSecondary;
     cursor: pointer;
     user-select: none;
   }
@@ -155,7 +155,7 @@
     height: 100%;
     display: flex;
     align-items: center;
-    transition: $cubic $animationSpeed;
+    transition: animations.$cubic animations.$animationSpeed;
   }
 
   span.arrow.active {
@@ -164,12 +164,12 @@
 
   div.options {
     position: absolute;
-    background-color: $backgroundPrimary;
+    background-color: colors.$backgroundPrimary;
     width: 100%;
     left: 0;
-    box-shadow: $boxShadow;
+    box-shadow: decorations.$boxShadow;
     z-index: 10;
-    border-radius: $borderRadius;
+    border-radius: dimensions.$borderRadius;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -182,18 +182,18 @@
   button.option {
     all: unset;
     width: 100%;
-    transition: linear $animationSpeedFast;
-    padding: $gapSmall;
+    transition: linear animations.$animationSpeedFast;
+    padding: dimensions.$gapSmall;
     cursor: pointer;
   }
 
   button.option:hover, button.option:focus {
-    background-color: $backgroundSecondary;
+    background-color: colors.$backgroundSecondary;
   }
 
   div.wrapper {
     width: 100%;
-    padding-right: 2 * $gapSmall;
+    padding-right: 2 * dimensions.$gapSmall;
     position: relative;
   }
   button {
@@ -201,7 +201,7 @@
   }
 
   .placeholder {
-    color: $foregroundDim;
+    color: colors.$foregroundDim;
   }
 </style>
 

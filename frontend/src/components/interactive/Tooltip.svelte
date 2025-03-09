@@ -15,21 +15,21 @@
 </script>
 
 <style lang="scss">
-  @import "../../styles/colors.scss";
-  @import "../../styles/dimensions.scss";
+  @use "../../styles/colors.scss";
+  @use "../../styles/dimensions.scss";
 
   div {
     position: relative;
-    color: $foregroundDim;
+    color: colors.$foregroundDim;
     cursor: help;
     display: flex;
     justify-content: center;
-    padding: $gapSmaller;
+    padding: dimensions.$gapSmaller;
     outline: 0;
   }
 
   div.error {
-    color: $backgroundFailure;
+    color: colors.$backgroundFailure;
   }
 </style>
 

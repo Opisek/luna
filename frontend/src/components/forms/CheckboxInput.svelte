@@ -23,14 +23,14 @@
 </script>
 
 <style lang="scss">
-  @import "../../styles/dimensions.scss";
+  @use "../../styles/dimensions.scss";
 
   div {
     display: flex;
     align-items: start;
     flex-direction: row;
     flex-wrap: nowrap;
-    gap: $gapSmall;
+    gap: dimensions.$gapSmall;
     align-items: center;
     justify-content: start;
     cursor: pointer;

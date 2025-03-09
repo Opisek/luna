@@ -1,11 +1,10 @@
 <script lang="ts">
   import { PlusIcon } from "lucide-svelte";
+  import { getContext } from "svelte";
 
   import Event from "./Event.svelte";
   import IconButton from "../interactive/IconButton.svelte";
 
-  import { getContext } from "svelte";
-  import { NoOp } from "$lib/client/placeholders";
   import { queueNotification } from "$lib/client/notifications";
 
   interface Props {
@@ -39,10 +38,10 @@
 </script>
 
 <style lang="scss">
-  @import "../../styles/animations.scss";
-  @import "../../styles/colors.scss";
-  @import "../../styles/dimensions.scss";
-  @import "../../styles/text.scss";
+  @use "../../styles/animations.scss";
+  @use "../../styles/colors.scss";
+  @use "../../styles/dimensions.scss";
+  @use "../../styles/text.scss";
 
   div.day {
     min-width: 0;
@@ -54,12 +53,12 @@
   div.background {
     display: flex;
     flex-direction: column;
-    gap: $gapSmall;
-    margin: calc($gapSmall / 2);
-    padding: $gapSmall;
-    border-radius: $borderRadiusSmall;
-    background-color: $backgroundSecondary;
-    height: calc(100% - $gapSmall);
+    gap: dimensions.$gapSmall;
+    margin: calc(dimensions.$gapSmall / 2);
+    padding: dimensions.$gapSmall;
+    border-radius: dimensions.$borderRadiusSmall;
+    background-color: colors.$backgroundSecondary;
+    height: calc(100% - dimensions.$gapSmall);
   }
 
   div.otherMonth {
@@ -79,7 +78,7 @@
     user-select: none;
   }
   span.sunday {
-    color: $foregroundSunday;
+    color: colors.$foregroundSunday;
   }
   span.add {
     grid-area: add;
@@ -87,7 +86,7 @@
     align-items: center;
     justify-content: right;
     opacity: 0;
-    transition: opacity $animationSpeed;
+    transition: opacity animations.$animationSpeed;
   }
   div.day:hover span.add {
     opacity: 1;
@@ -96,18 +95,18 @@
   button.more {
     all: unset;
     text-align: center;
-    color: $foregroundDim;
-    font-size: $fontSizeSmall;
+    color: colors.$foregroundDim;
+    font-size: text.$fontSizeSmall;
     margin-right: 1em;
     cursor: pointer;
   }
 
   div.events {
     position: absolute;
-    top: calc($fontSize + 2.5 * $gapSmall);
+    top: calc(text.$fontSize + 2.5 * dimensions.$gapSmall);
     display: flex;
     flex-direction: column;
-    gap: $gapTiny;
+    gap: dimensions.$gapTiny;
     height: 100%;
     // TODO: z-index so long event names are not truncated
     width: calc(100% + 1em); // +1em needed for long events, otherwise the boundary is visible

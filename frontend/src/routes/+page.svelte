@@ -172,22 +172,22 @@
 </script>
 
 <style lang="scss">
-  @import "../styles/animations.scss";
-  @import "../styles/dimensions.scss";
+  @use "../styles/animations.scss";
+  @use "../styles/dimensions.scss";
 
   main {
     width: 100%;
     height: 100%;
     display: flex;
     flex-direction: column;
-    gap: $gap;
+    gap: dimensions.$gap;
   }
 
   div.wrapper {
     display: flex;
     flex-direction: row;
-    gap: $gap;
-    padding: $gap;
+    gap: dimensions.$gap;
+    padding: dimensions.$gap;
     height: 100%;
     width: 100%;
   }
@@ -195,7 +195,7 @@
   aside {
     display: flex;
     flex-direction: column;
-    gap: $gap;
+    gap: dimensions.$gap;
     min-width: 10em;
     width: 20vw;
     max-width: 20em;
@@ -206,15 +206,15 @@
     flex-grow: 1;
     display: flex;
     flex-direction: column;
-    gap: $gap;
+    gap: dimensions.$gap;
   }
 
   div.toprow {
     display: flex;
     flex-direction: row;
-    gap: $gapSmall;
+    gap: dimensions.$gapSmall;
     justify-content: space-between;
-    margin: 0 $gapSmaller;
+    margin: 0 dimensions.$gapSmaller;
     align-items: center;
   }
 
@@ -225,7 +225,7 @@
   }
 
   span.spin {
-    animation: spin $animationSpeedSlow $cubic infinite forwards;
+    animation: spin animations.$animationSpeedSlow animations.$cubic infinite forwards;
   }
 </style>
 

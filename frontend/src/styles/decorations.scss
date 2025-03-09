@@ -1,4 +1,4 @@
-@import "./colors.scss";
+@use "./colors.scss";
 
 /* Shadow */
 $boxShadow: rgba(0, 0, 0, 0.24) 0px 0.1em 0.3em;
@@ -8,9 +8,9 @@ $stripesSize: 10px;
 $stripes: repeating-linear-gradient(
   135deg,
   transparent calc(0.2 * $stripesSize),
-  $foregroundSecondary calc(0.2 * $stripesSize),
-  $foregroundSecondary calc(0.4 * $stripesSize),
+  colors.$foregroundSecondary calc(0.2 * $stripesSize),
+  colors.$foregroundSecondary calc(0.4 * $stripesSize),
   transparent calc(0.4 * $stripesSize),
   transparent calc(0.8 * $stripesSize),
-  $foregroundSecondary calc(0.8 * $stripesSize)
+  colors.$foregroundSecondary calc(0.8 * $stripesSize)
 );

@@ -76,24 +76,24 @@
 </script>
 
 <style lang="scss">
-  @import "../../styles/animations.scss";
-  @import "../../styles/colors.scss";
-  @import "../../styles/decoration.scss";
-  @import "../../styles/dimensions.scss";
+  @use "../../styles/animations.scss";
+  @use "../../styles/colors.scss";
+  @use "../../styles/decorations.scss";
+  @use "../../styles/dimensions.scss";
 
   dialog {
     border: 0;
-    padding: $gapSmall $gap $gap $gap;
-    border-radius: $borderRadius;
+    padding: dimensions.$gapSmall dimensions.$gap dimensions.$gap dimensions.$gap;
+    border-radius: dimensions.$borderRadius;
     max-width: 50vw;
     min-width: fit-content;
-    box-shadow: $boxShadow;
+    box-shadow: decorations.$boxShadow;
     position: absolute !important;
     z-index: 10;
   }
 
   dialog[open] {
-		animation: zoom $animationSpeed $cubic forwards;
+		animation: zoom animations.$animationSpeed animations.$cubic forwards;
 	}
 
   dialog:focus {
@@ -103,7 +103,7 @@
   div.contents {
     display: flex;
     flex-direction: column;
-    gap: $gapSmall;
+    gap: dimensions.$gapSmall;
   }
 
   dialog.center {
