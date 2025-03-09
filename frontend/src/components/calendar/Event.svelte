@@ -177,10 +177,10 @@
   style="background-color:{$currentlyHoveredEvent == event ? GetEventHoverColor(event) : GetEventColor(event)}"
 >
   {#if event && isFirstDisplay}
-    {#if !event.date.allDay}
-    <span class="time">
-      {event.date.start.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
-    </span>
+    {#if !event.date.allDay && event.date.start >= date}
+      <span class="time">
+        {event.date.start.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
+      </span>
     {/if}
     <span class="name">
       {event.name}
