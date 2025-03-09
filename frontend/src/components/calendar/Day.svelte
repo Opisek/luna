@@ -15,6 +15,7 @@
     events: (EventModel | null)[];
     maxEvents?: number;
     containerHeight: number;
+    view: "month" | "week" | "day";
   }
 
   let {
@@ -22,9 +23,10 @@
     isCurrentMonth,
     isFirstDay,
     isLastDay,
-    events,
+    events: allEvents,
     maxEvents = 1,
     containerHeight = $bindable(),
+    view,
   }: Props = $props();
 
   let showCreateEventModal: ((date: Date) => Promise<EventModel>) = getContext("showNewEventModal");
@@ -34,7 +36,7 @@
     });
   };
 
-  let actualMaxEvents: number = $derived(maxEvents <= events.length - 1 ? maxEvents - 1 : maxEvents);
+  let actualMaxEvents: number = $derived(allEvents && maxEvents <= allEvents.length - 1 ? maxEvents - 1 : maxEvents);
 </script>
 
 <style lang="scss">
@@ -129,16 +131,28 @@
   </div>
   {#if isFirstDay}
     <div class="events" bind:offsetHeight={containerHeight}>
-      {@render eventEntries()}
+      {@render dayContent()}
     </div>
   {:else}
     <div class="events">
-      {@render eventEntries()}
+      {@render dayContent()}
     </div>
   {/if}
 </div>
 
-{#snippet eventEntries()}
+{#snippet dayContent()}
+  {#if view === "day"}
+    {@render dayOnlyEventEntries(allEvents.filter(x => x != null).filter(event =>
+      !event.date.allDay &&
+      event.date.start.getTime() >= date.getTime() &&
+      event.date.start.getTime() < date.getTime() + 24 * 60 * 60 * 1000
+    ))}
+  {:else}
+    {@render eventEntries(allEvents)}
+  {/if}
+{/snippet}
+
+{#snippet eventEntries(events: (EventModel | null)[])}
   <!-- TODO: forcing EventEntry to be unique for each event and i like that
   fixes a few issues but might be less performant. figure out the right
   compromise -->
@@ -160,4 +174,31 @@
       {/if}
     </button>
   {/if}
+{/snippet}
+
+{#snippet dayOnlyEventEntries(events: EventModel[])}
+    <div style="position: relative; width: 100%; height: 100%; overflow: auto;">
+    {#each events as event, i ((event.id || 0) + i.toString())}
+      <!--
+      <Event
+        event={event}
+        isFirstDay={isFirstDay}
+        isLastDay={isLastDay}
+        date={date}
+        visible={true}
+      />
+      -->
+      <div style="
+        position: absolute;
+        top: {(event.date.start.getHours() * 60 + event.date.start.getMinutes()) / (24 * 60) * 200}%;
+        left: 0;
+        width: 100%;
+        height: {((event.date.end.getHours() * 60 + event.date.end.getMinutes() * 60 - event.date.start.getHours() * 60 - event.date.start.getMinutes()) / (24 * 60) * 200)}%;
+        background-color: red;
+      ">
+        {(event.date.start.getHours() * 60 + event.date.start.getMinutes()) / (24 * 60)}
+        {event.name}
+      </div>
+    {/each}
+    </div>
 {/snippet}

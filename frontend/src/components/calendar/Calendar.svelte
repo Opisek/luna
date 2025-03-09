@@ -200,6 +200,7 @@
         isFirstDay={i == 0}
         isLastDay={i == days.length - 1}
         maxEvents={maxEvents}
+        view={view}
         bind:containerHeight={containerHeight}
       >
       </Day>
