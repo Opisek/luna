@@ -18,7 +18,7 @@
 
   let wrapper: HTMLElement;
 
-  function remove() {
+  function removeGracefully() {
     if (wrapper.matches(":hover")) {
       wrapper.addEventListener("mouseleave", () => {
         notification.remove();
@@ -125,8 +125,8 @@
     class:success={notification.type === "success"}
     class:failure={notification.type === "failure"}
     class:info={notification.type === "info"}
-    onclick={remove}
-    onkeypress={remove}
+    onclick={notification.remove}
+    onkeypress={notification.remove}
   >
     {notification.message}
 
@@ -139,6 +139,6 @@
         {/if}
       </span>
     {/if}
-    <div class="timer" onanimationend={remove}></div>
+    <div class="timer" onanimationend={removeGracefully}></div>
   </div>
 </div>
