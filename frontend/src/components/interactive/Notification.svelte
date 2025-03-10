@@ -50,6 +50,7 @@
     position: absolute;
     padding-top: dimensions.$gapSmaller;
     transition: all animations.$cubic animations.$animationSpeedSlow; 
+    z-index: 50; // remove if we switch to popover
   }
 
   div.box {
