@@ -109,13 +109,14 @@
 
   div.events {
     position: absolute;
-    top: calc(text.$fontSize + 2.5 * dimensions.$gapSmall);
     display: flex;
     flex-direction: column;
     gap: dimensions.$gapTiny;
-    height: 100%;
+
+    --topMargin: calc(#{text.$fontSize} + 2.5 * #{dimensions.$gapSmall});
+    top: var(--topMargin);
+    height: calc(100% - var(--topMargin) - var(--gapBetweenDays));
     width: 100%;
-    overflow: visible;
   }
 </style>
 
