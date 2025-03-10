@@ -103,8 +103,11 @@
     all: unset;
     text-align: center;
     color: colors.$foregroundDim;
-    margin-right: 1em;
     cursor: pointer;
+    z-index: 20;
+    background-color: colors.$backgroundSecondary;
+    margin: 0 var(--gapBetweenDays);
+    padding: dimensions.$gapSmaller 0;
   }
 
   div.events {
