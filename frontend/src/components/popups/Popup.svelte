@@ -89,7 +89,7 @@
     min-width: fit-content;
     box-shadow: decorations.$boxShadow;
     position: absolute !important;
-    z-index: 10;
+    z-index: 50;
   }
 
   dialog[open] {
