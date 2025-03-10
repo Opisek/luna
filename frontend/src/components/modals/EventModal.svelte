@@ -83,6 +83,8 @@
     }
 
     originalEvent = await deepCopy(original);
+    originalEvent.date.start = new Date(originalEvent.date.start);
+    originalEvent.date.end = new Date(originalEvent.date.start);
 
     currentCalendars = await getAllCalendars().catch(err => {
       throw new Error(`Could not get calendars: ${err.message}`);

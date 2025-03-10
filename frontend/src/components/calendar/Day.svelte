@@ -16,6 +16,7 @@
     events: (EventModel | null)[];
     maxEvents?: number;
     containerHeight: number;
+    view: "month" | "week" | "day";
     showMore?: (date: Date, events: (EventModel | null)[]) => any;
   }
 
@@ -27,6 +28,7 @@
     events,
     maxEvents = 1,
     containerHeight = $bindable(),
+    view,
     showMore = NoOp,
   }: Props = $props();
 
@@ -48,16 +50,18 @@
 
   div.day {
     min-width: 0;
-    overflow: hidden;
+    overflow: visible;
     height: 100%;
     position: relative;
+    font-size: text.$fontSizeSmall; // due to em units in the below variable being relative, we set the font size here already
+    --gapBetweenDays: calc(#{dimensions.$gapSmall} / 2);
   }
 
   div.background {
     display: flex;
     flex-direction: column;
     gap: dimensions.$gapSmall;
-    margin: calc(dimensions.$gapSmall / 2);
+    margin: var(--gapBetweenDays);
     padding: dimensions.$gapSmall;
     border-radius: dimensions.$borderRadiusSmall;
     background-color: colors.$backgroundSecondary;
@@ -72,6 +76,7 @@
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     grid-template-areas: "none date add";
+    font-size: text.$fontSize;
   }
   span.date {
     text-align: center;
@@ -99,7 +104,6 @@
     all: unset;
     text-align: center;
     color: colors.$foregroundDim;
-    font-size: text.$fontSizeSmall;
     margin-right: 1em;
     cursor: pointer;
   }
@@ -111,9 +115,8 @@
     flex-direction: column;
     gap: dimensions.$gapTiny;
     height: 100%;
-    // TODO: z-index so long event names are not truncated
-    width: calc(100% + 1em); // +1em needed for long events, otherwise the boundary is visible
-    overflow: hidden;
+    width: 100%;
+    overflow: visible;
   }
 </style>
 
@@ -152,6 +155,7 @@
       isLastDay={isLastDay}
       date={date}
       visible={i < actualMaxEvents}
+      view={view}
     />
   {/each}
   {#if events.length > maxEvents && actualMaxEvents >= 0}

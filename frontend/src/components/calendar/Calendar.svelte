@@ -209,8 +209,9 @@
         isFirstDay={i == 0}
         isLastDay={i == days.length - 1}
         maxEvents={maxEvents}
-        showMore={showMore}
         bind:containerHeight={containerHeight}
+        view={view}
+        showMore={showMore}
       >
       </Day>
     {/each}
