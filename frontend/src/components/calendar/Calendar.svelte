@@ -122,8 +122,10 @@
   })());
 
   let containerHeight: number = $state(0);
-  // TODO: figure out how to do this without hard-coded values
-  let maxEvents: number = $derived(containerHeight === 0 ? 0 : Math.max(Math.floor((containerHeight - 35) / 27), 0));
+  // TODO: figure out how to do this without hard-codeds
+  // 9: gap between events
+  // 27: height of an event
+  let maxEvents: number = $derived(containerHeight === 0 ? 0 : Math.max(Math.floor((containerHeight + 9) / 27), 0));
 
   /* Show more */
   let showDayViewModal = $state(NoOp);
@@ -209,8 +211,9 @@
         isFirstDay={i == 0}
         isLastDay={i == days.length - 1}
         maxEvents={maxEvents}
-        showMore={showMore}
         bind:containerHeight={containerHeight}
+        view={view}
+        showMore={showMore}
       >
       </Day>
     {/each}

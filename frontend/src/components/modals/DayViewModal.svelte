@@ -39,6 +39,7 @@
         isLastDay={true}
         date={date}
         visible={true}
+        view="day"
       />
     {/each}
   </div>

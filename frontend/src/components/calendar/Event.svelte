@@ -12,30 +12,49 @@
     visible?: boolean;
     event: EventModel | null;
     isFirstDay: boolean;
-    isLastDay: boolean;
     date: Date;
+    view: "month" | "week" | "day";
   }
 
   let {
     visible = true,
     event,
     isFirstDay,
-    isLastDay,
     date,
+    view
   }: Props = $props();
+
+  let remainingDays = $derived.by(() => {
+    // keep in mind start of the week is monday for now
+    // Monday: 1, Tuesday: 2, ..., Sunday: 0
+
+    if (!date || !event) return 0;
+    if (view === "day") return 1;
+
+    const remainingTime = event.date.end.getTime() - date.getTime();
+    const remainingDays = Math.ceil(remainingTime / (1000 * 60 * 60 * 24));
+
+    return remainingDays;
+  })
+
+  let remainingDaysThisWeek = $derived.by(() => {
+    const myDayIndex = (date.getDay() + 6) % 7;
+    const remainingDaysThisWeek = Math.min(remainingDays, 7 - myDayIndex);
+
+    return remainingDaysThisWeek;
+  })
+
+  let eventEndsThisWeek = $derived(remainingDays == remainingDaysThisWeek);
 
   let currentlyHoveredEvent = getContext("currentlyHoveredEvent") as Writable<EventModel | null>;
   let currentlyClickedEvent = getContext("currentlyClickedEvent") as Writable<EventModel | null>;
 
   let showModal: ((event: EventModel) => Promise<EventModel>) = getContext("showEventModal");
 
-  let nextDate: Date = $derived(new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1))
-  let element: HTMLDivElement; // TODO: do we really need to make a new element when we just want to bind to something else?
+  let element: HTMLDivElement | null = $state(null);
 
   let isEventStart = $derived(event !== null && event.date.start.getTime() >= date.getTime());
-  let isEventEnd = $derived(event !== null && nextDate.getTime() >= event.date.end.getTime());
   let isFirstDisplay = $derived(isFirstDay || isEventStart);
-  let isLastDisplay: boolean = $derived(isLastDay || isEventEnd);
 
   let isBackgroundDark: boolean = $derived(event ? isDark(GetEventRGB(event)) : false);
 
@@ -63,13 +82,13 @@
     if ($currentlyClickedEvent == event) {
       $currentlyClickedEvent = null;
       showModal(event).then(newEvent => event = newEvent).catch(NoOp);
-      element.blur();
+      element?.blur();
     }
   }
   function keyPress(e: KeyboardEvent) {
     passIfEnter(e, () => {
       if (event) showModal(event).then(newEvent => event = newEvent).catch(NoOp);
-      element.blur();
+      element?.blur();
     });
   }
 </script>
@@ -82,6 +101,7 @@
 
   div {
     padding: dimensions.$gapSmaller;
+    padding-left: calc(var(--gapBetweenDays) + dimensions.$gapSmaller);
     font-size: text.$fontSizeSmall;
     margin: 0;
 
@@ -95,11 +115,13 @@
     cursor: pointer;
 
     white-space: nowrap;
-    overflow: hidden;
+    overflow: visible;
 
     flex-shrink: 0;
 
     transition: background-color linear animations.$animationSpeedFast;
+
+    z-index: 10;
   }
 
   div:focus {
@@ -116,12 +138,13 @@
   div.start {
     border-top-left-radius: dimensions.$borderRadius;
     border-bottom-left-radius: dimensions.$borderRadius;
-    margin-left: calc(dimensions.$gapSmall / 2);
+    margin-left: var(--gapBetweenDays);
+    padding-left: dimensions.$gapSmaller;
   }
   div.end {
     border-top-right-radius: dimensions.$borderRadius;
     border-bottom-right-radius: dimensions.$borderRadius;
-    margin-right: calc(dimensions.$gapSmall / 2 + (1em * text.$fontSize / text.$fontSizeSmall));
+    margin-right: var(--gapBetweenDays);
   }
 
   div.hidden {
@@ -155,28 +178,30 @@
   }
 </style>
 
-<div
-  bind:this={element}
-  class:placeholder={!event}
-  class:start={isFirstDisplay}
-  class:end={isLastDisplay}
-  class:hover={$currentlyHoveredEvent == event}
-  class:active={$currentlyClickedEvent == event}
-  class:hidden={!visible}
-  class:foregroundBright={isBackgroundDark}
-  class:foregroundDark={!isBackgroundDark}
-  onmouseenter={mouseEnter}
-  onmouseleave={mouseLeave}
-  onmousedown={mouseDown}
-  onmouseup={mouseUp}
-  onfocusin={mouseEnter}
-  onfocusout={mouseLeave}
-  onkeypress={keyPress}
-  role="button"
-  tabindex={isFirstDisplay ? 0 : -1}
-  style="background-color:{$currentlyHoveredEvent == event ? GetEventHoverColor(event) : GetEventColor(event)}"
->
-  {#if event && isFirstDisplay}
+{#if event && (isFirstDisplay || date.getDay() == 1)}
+  <div
+    bind:this={element}
+    class:start={isEventStart}
+    class:end={eventEndsThisWeek}
+    class:hover={$currentlyHoveredEvent == event}
+    class:active={$currentlyClickedEvent == event}
+    class:hidden={!visible}
+    class:foregroundBright={isBackgroundDark}
+    class:foregroundDark={!isBackgroundDark}
+    onmouseenter={mouseEnter}
+    onmouseleave={mouseLeave}
+    onmousedown={mouseDown}
+    onmouseup={mouseUp}
+    onfocusin={mouseEnter}
+    onfocusout={mouseLeave}
+    onkeypress={keyPress}
+    role="button"
+    tabindex={isFirstDisplay ? 0 : -1}
+    style="
+      background-color:{$currentlyHoveredEvent == event ? GetEventHoverColor(event) : GetEventColor(event)};
+      width: calc({remainingDaysThisWeek * 100}% - {(isEventStart ? 1 : 0) + (eventEndsThisWeek ? 1 : 0)} * var(--gapBetweenDays));
+    "
+  >
     {#if !event.date.allDay && event.date.start >= date}
       <span class="time">
         {event.date.start.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
@@ -190,5 +215,7 @@
         <TextIcon size={12}/>
       </span>
     {/if}
-  {/if}
-</div>
+  </div>
+{:else}
+  <div class="placeholder" class:hidden={!visible}></div>
+{/if}
