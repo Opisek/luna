@@ -170,7 +170,7 @@
   bind:showModal={showModalInternal}
   onDelete={onDelete}
   onEdit={onEdit}
-  submittable={event.calendar !== "" && event.name !== "" && event.date.start.getTime() < event.date.end.getTime()}
+  submittable={event.calendar !== "" && event.name !== "" && (event.date.start.getTime() < event.date.end.getTime() || (event.date.start.getTime() <= event.date.end.getTime() && event.date.allDay))}
 >
   {#if event != EmptyEvent}
     <TextInput bind:value={event.name} name="name" placeholder="Name" editable={editMode} />
