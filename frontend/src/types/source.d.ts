@@ -7,3 +7,10 @@ type SourceModel = {
   auth: {[key: string]: any}
   collapsed: boolean;
 }
+
+type SourceModelChanges = {
+  name: boolean;
+  type: boolean;
+  settings: boolean;
+  auth: boolean;
+}

@@ -1,36 +1,66 @@
 <script lang="ts">
-  import { getMonthName } from "../../lib/common/humanization";
-  import MonthPopup from "../popups/MonthPopup.svelte";
-  import IconButton from "./IconButton.svelte";
   import LeftIcon from "lucide-svelte/icons/chevron-left";
   import RightIcon from "lucide-svelte/icons/chevron-right";
 
-  export let month: number;
-  export let year: number;
+  import IconButton from "./IconButton.svelte";
+  import MonthPopup from "../popups/MonthPopup.svelte";
 
-  let showPopup: () => any;
+  import { NoOp } from "$lib/client/placeholders";
+  import { focusIndicator } from "$lib/client/decoration";
+  import { getMonthName } from "$lib/common/humanization";
+
+  interface Props {
+    date: Date;
+    granularity?: "month" | "week" | "day";
+    onSelect?: (date: Date) => void;
+  }
+
+  let {
+    date = $bindable(new Date()),
+    granularity = "month",
+    onSelect = NoOp,
+  }: Props = $props();
+
+  let showPopup: () => any = $state(NoOp);
 
   function previousMonth() {
-    month--;
-    if (month === -1) {
-      month = 11;
-      year--;
-    }
+    date = new Date(date.getFullYear(), date.getMonth() - 1, date.getDate());
+    onSelect(date);
   }
 
   function nextMonth() {
-    if (month === 11) year++;
-    month = (month + 1) % 12;
+    date = new Date(date.getFullYear(), date.getMonth() + 1, date.getDate());
+    onSelect(date);
+  }
+
+  function previousWeek() {
+    date = new Date(date.getFullYear(), date.getMonth(), date.getDate() - 7);
+    onSelect(date);
+  }
+
+  function nextWeek() {
+    date = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 7);
+    onSelect(date);
+  }
+
+  function previousDay() {
+    date = new Date(date.getFullYear(), date.getMonth(), date.getDate() - 1);
+    onSelect(date);
+  }
+
+  function nextDay() {
+    date = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1);
+    onSelect(date);
   }
 </script>
 
 <style lang="scss">
-  @import "../../styles/dimensions.scss";
+  @use "../../styles/dimensions.scss";
 
   div {
     display: flex;
     flex-direction: row;
-    gap: $gapSmall;
+    gap: dimensions.$gapSmall;
     align-items: center;
     position: relative;
     width: max-content;
@@ -40,18 +70,29 @@
   button {
     all: unset;
     cursor: pointer;
+    position: relative;
   }
 </style>
 
 <div>
-  <IconButton click={previousMonth}>
+  {#if granularity === "month"}
+    {@render buttons(previousMonth, nextMonth)}
+  {:else if granularity === "week"}
+    {@render buttons(previousWeek, nextWeek)}
+  {:else if granularity === "day"}
+    {@render buttons(previousDay, nextDay)}
+  {/if}
+  <button onclick={showPopup} type="button" use:focusIndicator={{ type: "underline", ignoreParent: true }}>
+    {`${getMonthName(date.getMonth())} ${date.getFullYear()}`}
+  </button>
+  <MonthPopup bind:showPopup bind:date={date} onSelect={onSelect}/>
+</div>
+
+{#snippet buttons(prev: () => void, next: () => void)}
+  <IconButton click={prev}>
     <LeftIcon/>
   </IconButton>
-  <IconButton click={nextMonth}>
+  <IconButton click={next}>
     <RightIcon/>
   </IconButton>
-  <button on:click={showPopup}>
-    {`${getMonthName(month)} ${year}`}
-  </button>
-  <MonthPopup bind:show={showPopup} bind:year={year} bind:month={month}/>
-</div>
+{/snippet}

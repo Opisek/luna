@@ -146,6 +146,9 @@ func parseSource(c *gin.Context, sourceName string, sourceAuth auth.AuthMethod) 
 		if rawUrl == "" {
 			return nil, errors.New("missing caldav url")
 		}
+		if util.IsValidUrl(rawUrl) != nil {
+			return nil, errors.New("invalid caldav url")
+		}
 		sourceUrl, err := types.NewUrl(rawUrl)
 		if err != nil {
 			return nil, errors.New("invalid caldav url")

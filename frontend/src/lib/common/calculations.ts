@@ -1,7 +1,7 @@
 export const calculateOptimalPopupPosition = (el: HTMLElement, horizontalParts: number = 3): { bottom: boolean, right: boolean, center: boolean } => {
-  if (!el || !el.parentElement) return { bottom: false, right: false, center: false };
+  if (!el) return { bottom: false, right: false, center: false };
 
-  const rect = el.parentElement.getBoundingClientRect();
+  const rect = el.getBoundingClientRect();
 
   const x = rect.left + (rect.right - rect.left) / 2;
   const y = rect.top + (rect.bottom - rect.top) / 2;

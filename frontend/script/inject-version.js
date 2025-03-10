@@ -1,6 +1,19 @@
 import {readFileSync, writeFileSync} from "fs";
 
 const version = process.argv[2]
-const pack = JSON.parse(readFileSync("../package.json", "utf-8"))
-pack.version = version
-writeFileSync("../package.json", JSON.stringify(pack, null, 2))
+
+function replaceInFile(path, replaceFunc) {
+    let contents = readFileSync(path, "utf-8");
+    contents = replaceFunc(contents);
+    writeFileSync(path, contents);
+}
+
+replaceInFile("../package.json", (contents) => {
+    const pack = JSON.parse(contents);
+    pack.version = version;
+    return JSON.stringify(pack, null, 2);
+})
+
+replaceInFile("../src/lib/common/version.ts", (contents) => {
+    return contents.replace(/\"[^\"]+\"/, `"${version}"`);
+})

@@ -1,16 +1,31 @@
 <script lang="ts">
-  export let position: string = "justify";
+  import type { Snippet } from "svelte";
+
+  interface Props {
+    position?: "left" | "center" | "right" | "justify";
+    width?: "full" | "auto";
+    children?: Snippet;
+  }
+
+  let {
+    position = "justify",
+    width = "full",
+    children
+  }: Props = $props();
 </script>
 
 <style lang="scss">
-  @import "../../styles/dimensions.scss";
+  @use "../../styles/dimensions.scss";
 
   div {
     display: flex;
-    width: 100%;
     flex-direction: row;
     flex-wrap: nowrap;
-    gap: $gapSmall;
+    gap: dimensions.$gapSmall;
+  }
+
+  div.full {
+    width: 100%;
   }
 
   div.justify {
@@ -41,6 +56,7 @@
   class:left={position == "left"}
   class:right={position == "right"}
   class:center={position == "center"}
+  class:full={width == "full"}
 >
-  <slot/>
+  {@render children?.()}
 </div>

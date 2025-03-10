@@ -1,15 +1,25 @@
+<script lang="ts">
+  import type { Snippet } from "svelte";
+
+  interface Props {
+    children?: Snippet;
+  }
+
+  let { children }: Props = $props();
+</script>
+
 <style lang="scss">
-  @import "../../styles/dimensions.scss";
+  @use "../../styles/dimensions.scss";
 
   div {
     display: flex;
     width: 100%;
     flex-direction: column;
     flex-wrap: nowrap;
-    gap: $gap;
+    gap: dimensions.$gap;
   }
 </style>
 
 <div>
-  <slot/>
+  {@render children?.()}
 </div>

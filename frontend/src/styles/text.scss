@@ -1,11 +1,14 @@
+/* Font family */
 $fontFamilyText: 'Karla', serif;
 $fontFamilyTime: 'Chivo Mono', monospace;
 
+/* Font size */
 $fontSizeSmaller: 0.6rem;
 $fontSizeSmall: 0.8rem;
 $fontSize: 1rem;
 $fontSizeLarge: 2rem;
 
+/* Font weight */
 $fontWeightLight: 300;
 $fontWeight: 400;
 $fontWeightSemiBold: 600;
@@ -13,5 +16,6 @@ $fontWeightBold: 800;
 $fontWeightEmphasis: 350;
 $fontWeightTitle: 700;
 
+/* Line height */
 $lineHeightParagraph: $fontSize * 1.4;
 

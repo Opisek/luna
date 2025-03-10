@@ -1,74 +1,83 @@
 <script lang="ts">
-  import { browser } from "$app/environment";
-  import { afterNavigate, beforeNavigate, onNavigate } from "$app/navigation";
+  interface Props {
+    notification: NotificationModel;
+    height: number;
+    shift: number;
+  }
 
-  export let notification: NotificationModel;
-  export let shift: number;
+  let {
+    notification,
+    height = $bindable(),
+    shift
+  }: Props = $props();
 
-  let surpressAnimation: boolean;
+  let isNew = $state(true);
+  setTimeout(() => {
+    isNew = false;
+  }, 0);
 
-  let actualShift = 0;
-  $: ((requestedShift: number) => {
-    actualShift = requestedShift;
-  })(shift);
+  let wrapper: HTMLElement;
 
-  let lastNotification: NotificationModel | null = null;
-  $: ((newNotification: NotificationModel) => {
-    if (lastNotification != null && lastNotification.created.getTime() < newNotification.created.getTime()) {
-      // TODO: i hate this surpress animation solution, because in certain edge cases, it will still look off.
-      // TODO: find a better way to do the exit animation giving svelte's constraints.
-      surpressAnimation = true;
-      setTimeout(() => {
-        surpressAnimation = false;
-      }, 10);
+  function removeGracefully() {
+    if (wrapper.matches(":hover")) {
+      wrapper.addEventListener("mouseleave", () => {
+        notification.remove();
+      }, { once: true });
+    } else {
+      notification.remove();
     }
-    lastNotification = newNotification;
-  })(notification);
+  }
+
+  let viewDetails = $state(false);
+  function showDetails() {
+    viewDetails = true;
+  }
+  function hideDetails() {
+    viewDetails = false;
+  }
 </script>
 
 <style lang="scss">
-  @import "../../styles/animations.scss";
-  @import "../../styles/colors.scss";
-  @import "../../styles/dimensions.scss";
+  @use "../../styles/animations.scss";
+  @use "../../styles/colors.scss";
+  @use "../../styles/dimensions.scss";
+  @use "../../styles/text.scss";
 
   div.wrapper {
     bottom: 100%;
     right: 0;
     width: 100%;
     position: absolute;
-    padding-top: $paddingTiny;
-    transition: all $cubic $animationSpeedSlow; 
+    padding-top: dimensions.$gapSmaller;
+    transition: all animations.$cubic animations.$animationSpeedSlow; 
   }
 
   div.box {
-    padding: $paddingSmall;
-    border-radius: $borderRadius;
+    padding: dimensions.$gap;
+    border-radius: dimensions.$borderRadius;
     cursor: pointer;
     position: relative;
     overflow: hidden;
+    white-space: pre-wrap;
   }
 
   .success {
-    background-color: $backgroundSuccess;
-    color: $foregroundSuccess;
+    background-color: colors.$backgroundSuccess;
+    color: colors.$foregroundSuccess;
   }
 
   .failure {
-    background-color: $backgroundFailure;
-    color: $foregroundFailure;
+    background-color: colors.$backgroundFailure;
+    color: colors.$foregroundFailure;
   }
 
   .info {
-    background-color: $backgroundAccent;
-    color: $foregroundAccent;
+    background-color: colors.$backgroundAccent;
+    color: colors.$foregroundAccent;
   }
 
   .disappear {
     opacity: 0;
-  }
-
-  .surpress {
-    transition: none !important;
   }
 
   div.timer {
@@ -80,26 +89,56 @@
     content: "";
     width: 100%;
     height: 0.5em;
-    animation: notification-timer $notificationExpireTime linear forwards;
+    animation: notification-timer var(--notificationExpireTime) linear forwards;
+  }
+
+  .details {
+    width: 100%;
+    font-size: text.$fontSizeSmall;
+    cursor: pointer;
+    display: inline-block;
+  }
+
+  .success .details {
+    color: colors.$foregroundSuccessFaded;
+  }
+  
+  .failure .details {
+    color: colors.$foregroundFailureFaded;
+  }
+
+  .info .details {
+    color: colors.$foregroundAccentFaded;
   }
 </style>
 
 <div
   class="wrapper"
   class:disappear={notification.disappear}
-  style="transform: translateY({actualShift * -100}%);"
-  class:surpress={surpressAnimation}
+  style="transform: translateY({isNew ? "100%" : `${shift}px`});"
+  bind:clientHeight={height}
+  bind:this={wrapper}
 >
-<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
   <div
     class="box"
     class:success={notification.type === "success"}
     class:failure={notification.type === "failure"}
     class:info={notification.type === "info"}
-    on:click={notification.remove}
-    on:keypress={notification.remove}
+    onclick={notification.remove}
+    onkeypress={notification.remove}
   >
     {notification.message}
-    <div class="timer"/>
+
+    {#if notification.details}
+      <span class="details" onmouseenter="{showDetails}" onmouseleave="{hideDetails}">
+        {#if viewDetails}
+          {notification.details}
+        {:else}
+          Hover to view details
+        {/if}
+      </span>
+    {/if}
+    <div class="timer" onanimationend={removeGracefully}></div>
   </div>
 </div>

@@ -1,21 +1,36 @@
 <script lang="ts">
-  export let name: string;
+  import type { Snippet } from "svelte";
+
+  interface Props {
+    name: string;
+    ownPositioning?: boolean;
+    children?: Snippet;
+  }
+
+  let {
+    name,
+    ownPositioning = true,
+    children
+  }: Props = $props();
 </script>
 
 <style lang="scss">
-  @import "../../styles/colors.scss";
-  @import "../../styles/dimensions.scss";
-  @import "../../styles/text.scss";
+  @use "../../styles/colors.scss";
+  @use "../../styles/dimensions.scss";
+  @use "../../styles/text.scss";
 
   label {
-    margin-bottom: -2 * $gapSmall;
-    margin-left: calc($gapSmall * ($fontSize / $fontSizeSmall));
-    color: $foregroundFaded;
-    font-size: $fontSizeSmall;
+    color: colors.$foregroundDim;
+    font-size: text.$fontSizeSmall;
     cursor: text;
+  }
+
+  .ownPositioning {
+    margin-bottom: -2 * dimensions.$gapSmall;
+    padding-left: calc(dimensions.$gapSmall * (text.$fontSize / text.$fontSizeSmall));
   }
 </style>
 
-<label for={name}>
-  <slot/>
+<label for={name} tabindex="-1" class:ownPositioning={ownPositioning}>
+  {@render children?.()}
 </label>

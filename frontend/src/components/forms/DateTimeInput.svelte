@@ -1,66 +1,110 @@
 <script lang="ts">
   import DateModal from "../modals/DateModal.svelte";
-  import TimeModal from "../modals/TimeModal.svelte";
   import Label from "./Label.svelte";
+  import TimeModal from "../modals/TimeModal.svelte";
 
-  export let value: Date;
-  export let allDay: boolean;
-  export let placeholder: string;
-  export let name: string;
-  export let editable: boolean;
+  import { NoOp } from "$lib/client/placeholders";
+  import { focusIndicator } from "$lib/client/decoration";
 
-  export let onChange: (value: Date) => void = () => {};
+  interface Props {
+    value: Date;
+    allDay: boolean;
+    placeholder: string;
+    name: string;
+    editable: boolean;
+    onChange?: (value: Date) => void;
+  }
 
-  let showDateModal = () => {};
-  let showTimeModal = () => {};
+  let {
+    value = $bindable(),
+    allDay,
+    placeholder,
+    name,
+    editable,
+    onChange = NoOp
+  }: Props = $props();
 
-  function dateClick() {
+  let dateButton: HTMLButtonElement;
+  let timeButton: HTMLButtonElement | null = $state(null);
+
+  let showDateModal = $state(NoOp);
+  let showTimeModal = $state(NoOp);
+
+  function dateClick(e: MouseEvent | KeyboardEvent) {
     if (editable) {
       showDateModal();
+      if (e.detail !== 0) {
+        dateButton.blur();
+      }
     }
   }
 
-  function timeClick() {
+  function timeClick(e: MouseEvent | KeyboardEvent) {
     if (editable) {
       showTimeModal();
+      if (e.detail !== 0 && timeButton) {
+        timeButton.blur();
+      }
     }
   }
 </script>
 
 <style lang="scss">
-  @import "../../styles/colors.scss";
-  @import "../../styles/dimensions.scss";
-  @import "../../styles/text.scss";
+  @use "../../styles/animations.scss";
+  @use "../../styles/colors.scss";
+  @use "../../styles/dimensions.scss";
+  @use "../../styles/text.scss";
 
-  div {
+  div.row {
     display: flex;
     flex-direction: row;
-    gap: $gapSmall;
-    margin: $gapSmall;
+    gap: dimensions.$gapSmall;
+    margin: dimensions.$gapSmall;
   }
 
   div.editable {
     margin: 0;
   }
 
-  div > button {
+  button {
     all: unset;
-    border-radius: $borderRadius;
+    border-radius: dimensions.$borderRadius;
     cursor: text;
+    transition: padding animations.$animationSpeedFast linear, border-radius animations.$animationSpeedFast linear;
+    padding: dimensions.$gapSmall;
+    margin: -(dimensions.$gapSmall);
+    position: relative;
+    overflow: hidden;
   }
 
-  div.editable > button {
-    padding: $gapSmall;
-    background: $backgroundSecondary;
+  div.editable button {
+    background: colors.$backgroundSecondary;
     cursor: pointer;
+    margin: 0;
   }
 </style>
 
 <Label name={name}>{placeholder}</Label>
-<div class:editable={editable}>
-  <button on:click={dateClick}>{value.toLocaleDateString()}</button>
+<div class="row" class:editable={editable}>
+  <button
+    bind:this={dateButton}
+    onclick={dateClick}
+    type="button"
+    tabindex={editable ? 0 : -1}
+    use:focusIndicator
+  >
+    {value.toLocaleDateString()}
+  </button>
   {#if !allDay}
-    <button on:click={timeClick}>{value.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"})}</button>
+    <button
+      bind:this={timeButton}
+      onclick={timeClick}
+      type="button"
+      tabindex={editable ? 0 : -1}
+      use:focusIndicator
+    >
+      {value.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"})}
+    </button>
   {/if}
 </div>
 

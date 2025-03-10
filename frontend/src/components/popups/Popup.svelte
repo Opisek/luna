@@ -1,13 +1,29 @@
 <script lang="ts">
-  import { browser } from "$app/environment";
-  import { calculateOptimalPopupPosition } from "../../lib/common/calculations";
+  import type { Snippet } from "svelte";
 
-  export let visible: boolean = false;
+  import { browser } from "$app/environment";
+
+  import { calculateOptimalPopupPosition } from "$lib/common/calculations";
+  import { NoOp } from "../../lib/client/placeholders";
+
+  interface Props {
+    visible?: boolean;
+    children?: Snippet;
+    showPopup?: () => void;
+    hidePopup?: () => void;
+  }
+
+  let {
+    visible = $bindable(false),
+    children,
+    showPopup = $bindable(),
+    hidePopup = $bindable(NoOp)
+  }: Props = $props();
 
   let dialog: HTMLDialogElement;
 
   function clickOutside(event: MouseEvent) {
-    if (!dialog) return;
+    if (!dialog || event.detail === 0) return;
 
     const clickX = event.clientX;
     const clickY = event.clientY;
@@ -20,36 +36,38 @@
     const maxY = rect.bottom;
 
     if (clickX < minX || clickX > maxX || clickY < minY || clickY > maxY) {
-      close();
+      hidePopup();
       event.stopPropagation();
     }
   }
 
-  export const show = () => {
+  showPopup = () => {
     visible = true;
     checkPosition();
-    if (browser) {
-      window.addEventListener("click", clickOutside);
-    }
-    setTimeout(() => dialog.show(), 0);
+    dialog.show();
+
+    if (browser) window.addEventListener("click", clickOutside);
+
+    setTimeout(() => {
+      dialog.focus();
+    }, 0);
   }
 
-  export const close = () => {
+  hidePopup = () => {
     visible = false;
     dialog.close();
-    if (browser) {
-      window.removeEventListener("click", clickOutside);
-    }
+
+    if (browser) window.removeEventListener("click", clickOutside);
   }
 
-  let bottom: boolean = false;
-  let center: boolean = false;
-  let right: boolean = false;
+  let bottom: boolean = $state(false);
+  let center: boolean = $state(false);
+  let right: boolean = $state(false);
 
   function checkPosition() {
     if (!dialog || !dialog.parentElement || !browser) return;
 
-    const res = calculateOptimalPopupPosition(dialog, 5);
+    const res = calculateOptimalPopupPosition(dialog.parentElement, 5);
 
     bottom = res.bottom;
     right = res.right;
@@ -58,30 +76,34 @@
 </script>
 
 <style lang="scss">
-  @import "../../styles/animations.scss";
-  @import "../../styles/colors.scss";
-  @import "../../styles/decoration.scss";
-  @import "../../styles/dimensions.scss";
+  @use "../../styles/animations.scss";
+  @use "../../styles/colors.scss";
+  @use "../../styles/decorations.scss";
+  @use "../../styles/dimensions.scss";
 
   dialog {
     border: 0;
-    padding: $gapSmall $gap $gap $gap;
-    border-radius: $borderRadius;
+    padding: dimensions.$gapSmall dimensions.$gap dimensions.$gap dimensions.$gap;
+    border-radius: dimensions.$borderRadius;
     max-width: 50vw;
     min-width: fit-content;
-    box-shadow: $boxShadow;
+    box-shadow: decorations.$boxShadow;
     position: absolute !important;
     z-index: 10;
   }
 
   dialog[open] {
-		animation: zoom $animationSpeed $cubic forwards;
+		animation: zoom animations.$animationSpeed animations.$cubic forwards;
 	}
+
+  dialog:focus {
+    outline: none;
+  }
 
   div.contents {
     display: flex;
     flex-direction: column;
-    gap: $gapSmall;
+    gap: dimensions.$gapSmall;
   }
 
   dialog.center {
@@ -110,6 +132,6 @@
   class:above={!bottom}
 >
   <div class="contents">
-    <slot/>
+    {@render children?.()}
   </div>
 </dialog>

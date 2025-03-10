@@ -1,31 +1,43 @@
 <script lang="ts">
-  import { addRipple } from "$lib/client/decoration";
   import { CheckIcon } from "lucide-svelte";
 
-  export let value: boolean;
-  export let name: string;
+  import { addRipple, focusIndicator } from "$lib/client/decoration";
 
-  export let onChange: (value: boolean) => any = () => {};
+  interface Props {
+    value: boolean;
+    name: string;
+    enabled?: boolean;
+    onChange?: (value: boolean) => any;
+    toggle: (e: MouseEvent | KeyboardEvent) => void;
+  }
 
-  export let enabled: boolean = true;
+  let {
+    value = $bindable(),
+    name,
+    enabled = true,
+    onChange = () => {},
+    toggle = $bindable()
+  }: Props = $props();
 
-  function click(e: MouseEvent) {
+  toggle = (e: MouseEvent | KeyboardEvent) => {
     value = !value;
     onChange(value);
-    addRipple(e, false);
+    if (e instanceof MouseEvent) addRipple(e, false);
+    e.stopPropagation();
   }
 </script>
 
 <style lang="scss">
-  @import "../../styles/colors.scss";
-  @import "../../styles/dimensions.scss";
-  @import "../../styles/text.scss";
+  @use "../../styles/animations.scss";
+  @use "../../styles/colors.scss";
+  @use "../../styles/dimensions.scss";
+  @use "../../styles/text.scss";
 
   button {
     all: unset;
 
-    width: $lineHeightParagraph;
-    height: $lineHeightParagraph;
+    width: text.$lineHeightParagraph;
+    height: text.$lineHeightParagraph;
 
     position: relative;
 
@@ -35,21 +47,22 @@
 
     cursor: pointer;
 
-    border-radius: $borderRadius;
-    background-color: $backgroundSecondary;
+    border-radius: dimensions.$borderRadius;
+    background-color: colors.$backgroundSecondary;
     overflow: hidden;
   }
 
   button.check {
-    color: $foregroundAccent;
-    background-color: $backgroundAccent;
+    color: colors.$foregroundAccent;
+    background-color: colors.$backgroundAccent;
+    --barFocusIndicatorColor: #{colors.$barFocusIndicatorColorAlt};
   }
 
   button.disabled {
     cursor: unset;
   }
 
-  div :global(*) {
+  button :global(*) {
     pointer-events: none;
   }
 
@@ -62,18 +75,15 @@
   }
 </style>
 
-<button class:check={value} class:disabled={!enabled} on:click={click}>
-  {#if value}
-    <CheckIcon size={20}/>
-  {/if}
-</button>
-
-<!--
-<input
-  bind:checked={value}
-  on:change={() => onChange(value)}
-  type="checkbox"
-  disabled={!enabled}
-  name={name}
+<button
+  type="button"
+  class:check={value}
+  class:disabled={!enabled}
+  onclick={toggle}
+  use:focusIndicator
 >
--->
+  {#if value}
+    <CheckIcon size={16}/>
+  {/if}
+  <input type="hidden" name={name} value={value}>
+</button>

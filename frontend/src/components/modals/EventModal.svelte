@@ -1,108 +1,191 @@
 <script lang="ts">
-  import { createEvent, deleteEvent, editEvent, getCalendars } from "$lib/client/repository";
   import CheckboxInput from "../forms/CheckboxInput.svelte";
   import ColorInput from "../forms/ColorInput.svelte";
   import DateTimeInput from "../forms/DateTimeInput.svelte";
+  import EditableModal from "./EditableModal.svelte";
   import SelectInput from "../forms/SelectInput.svelte";
   import TextInput from "../forms/TextInput.svelte";
-  import EditableModal from "./EditableModal.svelte";
 
-  export let event: EventModel;
-  let eventCopy: EventModel;
-  let lastStartDate: Date;
+  import { EmptyEvent } from "$lib/client/placeholders";
+  import { createEvent, deleteEvent, editEvent, getAllCalendars, moveEvent } from "$lib/client/repository";
+  import { deepCopy } from "$lib/common/misc";
 
-  let currentCalendars: CalendarModel[] = [];
-
-  export const showCreateModal = () => {
-    editMode = false;
-    eventCopy = event;
-    lastStartDate = eventCopy.date.start;
-    currentCalendars = getCalendars();
-    setTimeout(showCreateModalInternal, 0);
+  interface Props {
+    showCreateModal?: (date: Date) => Promise<EventModel>;
+    showModal?: (event: EventModel) => Promise<EventModel>;
   }
-  export const showModal = () => {
+
+  let {
+    showCreateModal = $bindable(),
+    showModal = $bindable(),
+  }: Props = $props();
+
+  let event: EventModel = $state(EmptyEvent);
+  let originalEvent: EventModel;
+  let currentCalendars: CalendarModel[] = $state([]);
+
+  let saveEvent = (_: EventModel | PromiseLike<EventModel>) => {};
+  let cancelEvent = (_?: any) => {};
+
+  showCreateModal = async (date: Date) => {
+    cancelEvent();
+    
     editMode = false;
-    eventCopy = {
-      id: event.id,
-      calendar: event.calendar,
-      name: event.name,
-      desc: event.desc,
-      color: event.color,
+
+    const start = new Date(date);
+    start.setHours(12, 0, 0, 0);
+
+    const end = new Date(date);
+    end.setHours(13, 0, 0, 0);
+
+    event = {
+      id: "",
+      calendar: "",
+      name: "",
+      desc: "",
+      color: "",
       date: {
-        start: new Date(event.date.start),
-        end: new Date(event.date.end),
-        allDay: event.date.allDay,
+        start: start,
+        end: end,
+        allDay: false,
+      }
+    };
+
+    currentCalendars = await getAllCalendars().catch(err => {
+      throw new Error(`Could not get calendars: ${err.message}`);
+    });
+    setTimeout(showCreateModalInternal, 0);
+
+    return new Promise((resolve, reject) => {
+      saveEvent = resolve;
+      cancelEvent = reject;
+    });
+  }
+
+  showModal = async (original: EventModel): Promise<EventModel> => {
+    cancelEvent();
+
+    editMode = false;
+    event = {
+      id: original.id,
+      calendar: original.calendar,
+      name: original.name,
+      desc: original.desc,
+      color: original.color,
+      date: {
+        start: new Date(original.date.start),
+        end: new Date(original.date.end),
+        allDay: original.date.allDay,
       }
     }
-    if (eventCopy.date.allDay) {
-      eventCopy.date.end.setDate(eventCopy.date.end.getDate() - 1);
+    if (event.date.allDay) {
+      event.date.end.setDate(event.date.end.getDate() - 1);
     }
+
+    originalEvent = await deepCopy(original);
+
+    currentCalendars = await getAllCalendars().catch(err => {
+      throw new Error(`Could not get calendars: ${err.message}`);
+    });
     setTimeout(showModalInternal, 0);
+
+    return new Promise((resolve, reject) => {
+      saveEvent = resolve;
+      cancelEvent = reject;
+    });
   };
 
-  let showCreateModalInternal: () => boolean;
-  let showModalInternal: () => boolean;
+  let showCreateModalInternal: () => boolean = $state(() => false);
+  let showModalInternal: () => boolean = $state(() => false);
 
-  let title: string;
-  $: title = (eventCopy && eventCopy.id) ? (editMode ? "Edit event" : "Event") : "Create event";
-
-  let editMode: boolean;
+  let editMode: boolean = $state(false);
+  let title: string = $derived((event && event.id) ? (editMode ? "Edit event" : "Event") : "Create event");
 
   const onDelete = async () => {
-    const res = await deleteEvent(eventCopy.id);
-    if (res === "") return "";
-    else return `Could not delete event: ${res}`;
+    await deleteEvent(event.id).catch(err => {
+      throw new Error(`Could not delete event ${event.name}: ${err.message}`);
+    });
+    cancelEvent();
   };
   const onEdit = async () => {
-    if (eventCopy.date.allDay) {
-      eventCopy.date.end.setDate(eventCopy.date.end.getDate() + 1);
+    if (event.date.allDay) {
+      event.date.end.setDate(event.date.end.getDate() + 1);
     }
-    if (eventCopy.id === "") {
-      const res = await createEvent(eventCopy);
-      if (res === "") return "";
-      else return `Could not edit event: ${res}`;
+    if (event.id === "") {
+      await createEvent(event).catch(err => {
+        cancelEvent();
+        throw new Error(`Could not create event ${event.name}: ${err.message}`);
+      });
+      saveEvent(event);
+    } else if (event.calendar == originalEvent.calendar) {
+      const changes = {
+        name: event.name != originalEvent.name,
+        desc: event.desc != originalEvent.desc,
+        color: event.color != originalEvent.color,
+        date: 
+          event.date.start.getTime() != originalEvent.date.start.getTime() &&
+          event.date.end.getTime() != originalEvent.date.end.getTime() &&
+          event.date.allDay != originalEvent.date.allDay,
+      };
+      await editEvent(event, changes).catch(err => {
+        cancelEvent();
+        throw new Error(`Could not edit event ${event.name}: ${err.message}`);
+      });
+      saveEvent(event);
     } else {
-      const res = await editEvent(eventCopy);
-      if (res === "") return "";
-      else return `Could not create event: ${res}`;
+      await moveEvent(event).catch(err => {
+        cancelEvent();
+        throw new Error(`Could not move event ${event.name}: ${err.message}`);
+      });
+      saveEvent(event);
     }
   };
 
   const changeEnd = (value: Date) => {
-    if (value.getTime() < eventCopy.date.start.getTime()) {
-      eventCopy.date.start = new Date(value);
+    if (value.getTime() < event.date.start.getTime()) {
+      const previousStart = event.date.start;
+      event.date.start = new Date(value);
+
+      if (Math.abs(previousStart.getTime() - value.getTime()) >= 24 * 60 * 60 * 1000) {
+        event.date.start.setHours(previousStart.getHours(), previousStart.getMinutes(), previousStart.getSeconds(), previousStart.getMilliseconds());
+      }
     }
   }
 
   const changeStart = (value: Date) => {
-    if (value.getTime() > eventCopy.date.end.getTime()) {
-      eventCopy.date.end = new Date(value);
+    if (value.getTime() > event.date.end.getTime()) {
+      const previousEnd = event.date.end;
+      event.date.end = new Date(value);
+
+      if (Math.abs(previousEnd.getTime() - value.getTime()) >= 24 * 60 * 60 * 1000) {
+        event.date.end.setHours(previousEnd.getHours(), previousEnd.getMinutes(), previousEnd.getSeconds(), previousEnd.getMilliseconds());
+      }
     }
   }
+  
 </script>
 
 <EditableModal
   title={title}
-  deleteConfirmation={`Are you sure you want to delete event "${eventCopy ? eventCopy.name : ""}"?`}
+  deleteConfirmation={`Are you sure you want to delete event "${event ? event.name : ""}"?`}
   bind:editMode={editMode}
   bind:showCreateModal={showCreateModalInternal}
   bind:showModal={showModalInternal}
   onDelete={onDelete}
   onEdit={onEdit}
+  submittable={event.calendar !== "" && event.name !== "" && event.date.start.getTime() < event.date.end.getTime()}
 >
-  {#if eventCopy}
-    <TextInput bind:value={eventCopy.name} name="name" placeholder="Name" editable={editMode} />
-    {#if (eventCopy.id === "")}
-      <SelectInput bind:value={eventCopy.calendar} name="calendar" placeholder="Calendar" options={currentCalendars.map(x => ({ value: x.id, name: x.name }))} editable={editMode} />
-    {/if}
+  {#if event != EmptyEvent}
+    <TextInput bind:value={event.name} name="name" placeholder="Name" editable={editMode} />
+    <SelectInput bind:value={event.calendar} name="calendar" placeholder="Calendar" options={currentCalendars.map(x => ({ value: x.id, name: x.name }))} editable={editMode} />
     {#if editMode}
-      <ColorInput bind:color={eventCopy.color} name="color" editable={editMode} />
+      <ColorInput bind:color={event.color} name="color" editable={editMode} />
     {/if}
-    <TextInput bind:value={eventCopy.desc} name="desc" placeholder="Description" multiline={true} editable={editMode} />
+    <TextInput bind:value={event.desc} name="desc" placeholder="Description" multiline={true} editable={editMode} />
     {#if editMode}
-        <CheckboxInput bind:value={eventCopy.date.allDay} name="all_day" description="All Day"/>
+        <CheckboxInput bind:value={event.date.allDay} name="all_day" description="All Day"/>
     {/if}
-    <DateTimeInput bind:value={eventCopy.date.start} name="date_start" placeholder="Start" editable={editMode} allDay={eventCopy.date.allDay} onChange={changeStart}/>
-    <DateTimeInput bind:value={eventCopy.date.end} name="date_end" placeholder="End" editable={editMode} allDay={eventCopy.date.allDay} onChange={changeEnd}/>
+    <DateTimeInput bind:value={event.date.start} name="date_start" placeholder="Start" editable={editMode} allDay={event.date.allDay} onChange={changeStart}/>
+    <DateTimeInput bind:value={event.date.end} name="date_end" placeholder="End" editable={editMode} allDay={event.date.allDay} onChange={changeEnd}/>
   {/if}
 </EditableModal>

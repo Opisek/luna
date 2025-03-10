@@ -1,26 +1,40 @@
 <script lang="ts">
-  import { addRipple } from "$lib/client/decoration";
   import Label from "./Label.svelte";
 
-  export let value: string;
-  export let name: string;
-  export let placeholder: string;
-  export let label: boolean = true;
+  import { addRipple, focusIndicator } from "$lib/client/decoration";
+  import { EmptyOption } from "../../lib/client/placeholders";
 
-  export let editable: boolean = true;
+  interface Props {
+    value: string;
+    name: string;
+    placeholder?: string;
+    label?: boolean;
+    editable?: boolean;
+    compact?: boolean;
+    options: Option[];
+  }
 
-  export let options: Option[];
+  let {
+    value = $bindable(),
+    name,
+    placeholder = "",
+    label = true,
+    editable = true,
+    compact = false,
+    options
+  }: Props = $props();
+
   // TODO: redo this
-  let selected: Option = options[0];
-  $: selected = options.filter(option => option.value === value)[0];
+  let selected: Option = $derived(options.filter(option => option.value === value)[0] || options[0] || EmptyOption);
 </script>
 
 <style lang="scss">
-  @import "../../styles/colors.scss";
-  @import "../../styles/dimensions.scss";
+  @use "../../styles/animations.scss";
+  @use "../../styles/colors.scss";
+  @use "../../styles/dimensions.scss";
 
   div.display {
-    margin: $gapSmall;
+    margin: dimensions.$gapSmall;
   }
 
   div.buttons {
@@ -28,15 +42,24 @@
     flex-direction: row;
     flex-wrap: nowrap;
     width: 100%; 
-    gap: $gapSmaller;
+    gap: dimensions.$gapSmaller;
     user-select: none;
+  }
+
+  div.compact {
+    width: max-content;
+    gap: 0;
+  }
+  div.compact > button {
+    min-width: max-content;
+    padding: dimensions.$gapSmaller;
   }
 
   button {
     all: unset;
-    background-color: $backgroundSecondary;
-    color: $foregroundSecondary;
-    padding: $gapSmall;
+    background-color: colors.$backgroundSecondary;
+    color: colors.$foregroundSecondary;
+    padding: dimensions.$gapSmall;
     cursor: pointer;
     flex: 1;
     text-align: center;
@@ -45,34 +68,39 @@
   }
 
   button.first {
-    border-top-left-radius: $borderRadius;
-    border-bottom-left-radius: $borderRadius;
+    border-top-left-radius: dimensions.$borderRadius;
+    border-bottom-left-radius: dimensions.$borderRadius;
   }
 
   button.last {
-    border-top-right-radius: $borderRadius;
-    border-bottom-right-radius: $borderRadius;
+    border-top-right-radius: dimensions.$borderRadius;
+    border-bottom-right-radius: dimensions.$borderRadius;
   }
 
-  .selected {
-    background-color: $backgroundAccent;
-    color: $foregroundAccent;
+  button.selected {
+    background-color: colors.$backgroundAccent;
+    color: colors.$foregroundAccent;
+    --barFocusIndicatorColor: #{colors.$barFocusIndicatorColorAlt};
   }
 </style>
 
 {#if label}
-<Label name={name}>{placeholder}</Label>
+  <Label name={name}>{placeholder}</Label>
 {/if}
 {#if editable}
-  <div class="buttons">
+  <div
+    class="buttons"
+    class:compact={compact} 
+  >
     {#each options as option, i}
       <button
         type="button"
         class:selected={option.value === value}
         class:first={i === 0}
         class:last={i === options.length - 1}
-        on:click={() => {value = option.value;}}
-        on:mousedown={addRipple}
+        onclick={() => {value = option.value}}
+        onmousedown={addRipple}
+        use:focusIndicator
       >
         {option.name}
       </button>

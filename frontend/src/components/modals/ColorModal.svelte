@@ -1,21 +1,74 @@
 <script lang="ts">
   import { browser } from "$app/environment";
-  import { HSLtoRGB, isValidColor, parseRGB, recommendedColors, RGBtoHSL, serializeRGB } from "../../lib/common/colors";
-  import TextInput from "../forms/TextInput.svelte";
-  import Button from "../interactive/Button.svelte";
-  import IconButton from "../interactive/IconButton.svelte";
-  import ColorCircle from "../misc/ColorCircle.svelte";
-  import Modal from "./Modal.svelte";
 
-  export let color: string | null;
-  let currentColor: string;
-  let currentHSL: [number, number, number] = [0, 100, 50];
+  import Button from "../interactive/Button.svelte";
+  import ColorCircle from "../misc/ColorCircle.svelte";
+  import IconButton from "../interactive/IconButton.svelte";
+  import Modal from "./Modal.svelte";
+  import TextInput from "../forms/TextInput.svelte";
+
+  import { HSLtoRGB, isValidColor, parseRGB, recommendedColors, RGBtoHSL, serializeRGB } from "$lib/common/colors";
+  import { NoOp } from "$lib/client/placeholders";
+
+  interface Props {
+    color: string | null;
+    showModal?: () => any;
+    hideModal?: () => any;
+  }
+
+  let {
+    color = $bindable(),
+    showModal = $bindable(),
+    hideModal = $bindable(NoOp),
+  }: Props = $props();
 
   let picker: HTMLElement;
   let hue: HTMLElement;
 
+  let currentColor: string = $state("#000000");
+  let currentHSL: [number, number, number] = $state([0, 100, 50]);
+
   let pickerActive = false;
   let hueActive = false;
+
+  let showModalInternal: () => any = $state(NoOp);
+  let hideModalInternal: () => any = $state(NoOp);
+
+  function mouseUp(e: MouseEvent) {
+    if (pickerActive) pickerUp(e);
+    if (hueActive) hueUp(e);
+  }
+
+  function mouseMove(e: MouseEvent) {
+    pickerMove(e);
+    hueMove(e);
+  }
+
+  showModal = () => {
+    pickerActive = false;
+    hueActive = false;
+    currentColor = (color || "").toUpperCase();
+    setHSLFromColor();
+
+    if (browser) {
+      window.addEventListener("mouseup", mouseUp);
+      window.addEventListener("mousemove", mouseMove);
+    }
+
+    setTimeout(showModalInternal, 0);
+  };
+
+  hideModal = () => {
+    pickerActive = false;
+    hueActive = false;
+
+    if (browser) {
+      window.removeEventListener("mouseup", mouseUp);
+      window.removeEventListener("mousemove", mouseMove);
+    }
+
+    hideModalInternal();
+  }
 
   function setHSLFromColor() {
     let newRGB: [number, number, number];
@@ -31,23 +84,6 @@
     currentColor = serializeRGB(HSLtoRGB(currentHSL));
   }
 
-  export const showModal = () => {
-    pickerActive = false;
-    hueActive = false;
-    currentColor = (color || "").toUpperCase();
-    setHSLFromColor();
-    setTimeout(showModalInternal, 0);
-  };
-
-  const hideModal = () => {
-    pickerActive = false;
-    hueActive = false;
-    hideModalInternal();
-  }
-
-  let showModalInternal: () => any;
-  let hideModalInternal: () => any;
-
   function confirm() {
     color = currentColor;
     hideModal();
@@ -58,12 +94,19 @@
   }
 
   function validateColor() {
+    if (!currentColor.startsWith("#")) {
+      currentColor = "#" + currentColor;
+    }
     if (!isValidColor(currentColor)) {
-      currentColor = color || "";
-      return;
+      if (currentColor == "#") {
+        currentColor = "";
+      } else {
+        currentColor = color || "";
+      }
     } else {
       // @ts-ignore currentColor cant't be null due to isValidColor check
       currentColor = currentColor.toUpperCase();
+      currentHSL = RGBtoHSL(parseRGB(currentColor));
     }
   }
 
@@ -81,6 +124,23 @@
   function codeFocus() {
     if (!currentColor || currentColor.length == 0) {
       currentColor = "#";
+    }
+  }
+  function codeInput() {
+    if (!currentColor || currentColor.length == 0) {
+      currentColor = "#";
+    } else if (!currentColor.startsWith("#")) {
+      currentColor = "#" + currentColor;
+    }
+
+    let replacementColor = currentColor; 
+    do {
+      currentColor = replacementColor;
+      replacementColor = replacementColor.replaceAll(/(.+)[^0-9A-Fa-f]/g, "$1");
+    } while (replacementColor != currentColor);
+
+    if (currentColor.length > 7) {
+      currentColor = currentColor.slice(0, 7);
     }
   }
 
@@ -144,34 +204,23 @@
     e.stopPropagation();
     hueActive = false
   }
-
-  if (browser) {
-    window.addEventListener("mouseup", (e) => {
-      if (pickerActive) pickerUp(e);
-      if (hueActive) hueUp(e);
-    });
-    window.addEventListener("mousemove", (e) => {
-      pickerMove(e);
-      hueMove(e);
-    });
-  }
 </script>
 
 <style lang="scss">
-  @import "../../styles/dimensions.scss";
+  @use "../../styles/dimensions.scss";
 
   div.grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 1fr auto;
     grid-template-areas: "current hSL" "code Hsl";
-    gap: $gapSmall;
+    gap: dimensions.$gapSmall;
   }
 
   div.suggestions {
     display: flex;
     flex-wrap: wrap;
-    gap: $gapSmall;
+    gap: dimensions.$gapSmall;
     justify-content: center;
   }
 
@@ -181,7 +230,7 @@
     height: 0;
     mask: linear-gradient(270deg, white, transparent);
     padding-bottom: 100%;
-    border-radius: $borderRadius;
+    border-radius: dimensions.$borderRadius;
     cursor: pointer;
   }
 
@@ -189,31 +238,31 @@
     grid-area: Hsl;
     width: 100%;
     flex-grow: 1;
-    padding: $gapSmall;
-    border-radius: $borderRadius;
+    padding: dimensions.$gapSmall;
+    border-radius: dimensions.$borderRadius;
     cursor: pointer;
   }
 </style>
 
-<Modal title="Pick Color" bind:showModal={showModalInternal} bind:hideModal={hideModalInternal}>
+<Modal title="Pick Color" bind:showModal={showModalInternal} bind:hideModal={hideModalInternal} onModalSubmit={confirm}>
   <div class="grid">
-    <!-- svelte-ignore a11y-no-static-element-interactions -->
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div
       bind:this={picker}
       class="picker"
       style="background: linear-gradient(0deg, hsl({currentHSL[0]} 0 0), hsl({currentHSL[0]} 100% 50%))"
-      on:mousedown={pickerDown}
-      on:mousemove={pickerMove}
-      on:mouseup={pickerUp}
+      onmousedown={pickerDown}
+      onmousemove={pickerMove}
+      onmouseup={pickerUp}
     ></div>
-    <!-- svelte-ignore a11y-no-static-element-interactions -->
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div
       bind:this={hue}
       class="hue"
       style="background: linear-gradient(90deg in hsl longer hue, hsl(0 {currentHSL[1]}% {currentHSL[2]}%), hsl(360 {currentHSL[1]}% {currentHSL[2]}%))"
-      on:mousedown={hueDown}
-      on:mousemove={hueMove}
-      on:mouseup={hueUp}
+      onmousedown={hueDown}
+      onmousemove={hueMove}
+      onmouseup={hueUp}
     ></div>
     <ColorCircle color={currentColor} size="fill" shape="squircle"/>
     <TextInput
@@ -222,6 +271,7 @@
       name="color"
       editable={true}
       label={false}
+      onInput={codeInput}
       onChange={validateColor}
       onFocus={codeFocus}
     />
@@ -236,8 +286,8 @@
       </IconButton>
     {/each}
   </div>
-  <svelte:fragment slot="buttons">
-    <Button onClick={confirm} color="success">Confirm</Button>
-    <Button onClick={cancel} color="failure">Cancel</Button>
-  </svelte:fragment>
+  {#snippet buttons()}
+      <Button onClick={confirm} color="success">Confirm</Button>
+      <Button onClick={cancel} color="failure">Cancel</Button>
+  {/snippet}
 </Modal>

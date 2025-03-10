@@ -1,14 +1,18 @@
 <script lang="ts">
-  import { isValidColor } from "../../lib/common/colors";
+  import { isValidColor } from "$lib/common/colors";
 
-  export let color: string | null;
-  export let size: "small" | "medium" | "fill" = "medium";
-  export let shape: "circle" | "squircle" = "circle";
+  interface Props {
+    color: string | null;
+    size?: "small" | "medium" | "fill";
+    shape?: "circle" | "squircle";
+  }
+
+  let { color, size = "medium", shape = "circle" }: Props = $props();
 </script>
 
 <style lang="scss">
-  @import "../../styles/decoration.scss";
-  @import "../../styles/dimensions.scss";
+  @use "../../styles/decorations.scss";
+  @use "../../styles/dimensions.scss";
 
   div {
     flex-shrink: 0;
@@ -19,7 +23,7 @@
   }
 
   div.squircle {
-    border-radius: $borderRadius;
+    border-radius: dimensions.$borderRadius;
   }
 
   div.small {
@@ -39,7 +43,7 @@
   }
 
   div.none {
-    background: $stripes;
+    background: decorations.$stripes;
   }
 </style>
 

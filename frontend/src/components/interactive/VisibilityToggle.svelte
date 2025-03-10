@@ -1,9 +1,17 @@
 <script lang="ts">
   import { Eye, EyeOff } from "lucide-svelte";
+
   import IconButton from "./IconButton.svelte";
 
-  export let visible: boolean;
-  export let momentary: boolean = false;
+  interface Props {
+    visible: boolean;
+    momentary?: boolean;
+  }
+
+  let {
+    visible = $bindable(),
+    momentary = false
+  }: Props = $props();
 
   function toggleVisibility() {
     visible = !visible;
@@ -19,21 +27,19 @@
 </script>
 
 {#if momentary}
-  <IconButton down={show} up={hide}>
-    {#if visible}
-      <Eye size={16}/>
-    {:else}
-      <EyeOff size={16}/>
-    {/if}
+  <IconButton down={show} up={hide} tabindex={-1}>
+    {@render icon()}
   </IconButton>
 {:else}
   <IconButton click={toggleVisibility}>
-    {#if visible}
-      <Eye size={16}/>
-    {:else}
-      <EyeOff size={16}/>
-    {/if}
+    {@render icon()}
   </IconButton>
 {/if}
 
-<!-- TODO: svelte snippets once supported -->
+{#snippet icon()}
+  {#if visible}
+    <Eye size={16}/>
+  {:else}
+    <EyeOff size={16}/>
+  {/if}
+{/snippet}

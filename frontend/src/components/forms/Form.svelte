@@ -1,43 +1,53 @@
 <script lang="ts">
-  import Loader from "../decoration/Loader.svelte";
   import Button from "../interactive/Button.svelte";
   import Horizontal from "../layout/Horizontal.svelte";
+  import Loader from "../decoration/Loader.svelte";
   import Title from "../layout/Title.svelte";
 
-  export let title: string;
+  interface Props {
+    title: string;
+    submittable?: boolean;
+    children?: import('svelte').Snippet;
+  }
 
-  let loading = false;
+  let { title, submittable = true, children }: Props = $props();
 
-  function onSubmit() {
+  let loading = $state(false);
+
+  function onSubmit(e: SubmitEvent) {
+    if (!submittable) {
+      e.preventDefault();
+      return; // TODO: add some user feedback when a form fails to submit
+    }
     loading = true;
   }
 </script>
 
 <style lang="scss">
-  @import "../../styles/animations.scss";
-  @import "../../styles/colors.scss";
-  @import "../../styles/dimensions.scss";
-  @import "../../styles/decoration.scss";
+  @use "../../styles/animations.scss";
+  @use "../../styles/colors.scss";
+  @use "../../styles/dimensions.scss";
+  @use "../../styles/decorations.scss";
 
   form {
-    border-radius: $borderRadius;
+    border-radius: dimensions.$borderRadius;
     max-width: 50vw;
     min-width: 30em;
-    padding: $gap $gapLarge $gapLarge $gapLarge;
-    border-radius: $borderRadius;
+    padding: dimensions.$gap dimensions.$gapLarge dimensions.$gapLarge dimensions.$gapLarge;
+    border-radius: dimensions.$borderRadius;
     display: flex;
     flex-direction: column;
     flex-wrap: nowrap;
-    gap: $gap;
-    box-shadow: $boxShadow;
+    gap: dimensions.$gap;
+    box-shadow: decorations.$boxShadow;
   }
 </style>
 
-<form method="POST" on:submit={onSubmit}>
+<form method="POST" onsubmit={onSubmit}>
   <Title>{title}</Title>
-  <slot/>
+  {@render children?.()}
   <Horizontal position="right">
-    <Button type="submit" color="success">
+    <Button type="submit" color="success" enabled={submittable}>
       {#if loading}
         <Loader/>
       {:else}

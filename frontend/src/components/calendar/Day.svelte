@@ -1,61 +1,50 @@
 <script lang="ts">
-  import EventEntry from "./EventEntry.svelte";
-  import IconButton from "../interactive/IconButton.svelte";
   import { PlusIcon } from "lucide-svelte";
-  import EventModal from "../modals/EventModal.svelte";
+  import { getContext } from "svelte";
 
-  export let date: Date;
+  import Event from "./Event.svelte";
+  import IconButton from "../interactive/IconButton.svelte";
 
-  export let isCurrentMonth: boolean;
+  import { queueNotification } from "$lib/client/notifications";
+  import { NoOp } from "$lib/client/placeholders";
 
-  export let isFirstDay: boolean;
-  export let isLastDay: boolean;
+  interface Props {
+    date: Date;
+    isCurrentMonth: boolean;
+    isFirstDay: boolean;
+    isLastDay: boolean;
+    events: (EventModel | null)[];
+    maxEvents?: number;
+    containerHeight: number;
+    showMore?: (date: Date, events: (EventModel | null)[]) => any;
+  }
 
-  export let events: (EventModel | null)[];
-  
-  export let currentlyHoveredEvent: EventModel | null;
-  export let currentlyClickedEvent: EventModel | null;
-  export let clickCallback: (event: EventModel) => void;
+  let {
+    date,
+    isCurrentMonth,
+    isFirstDay,
+    isLastDay,
+    events,
+    maxEvents = 1,
+    containerHeight = $bindable(),
+    showMore = NoOp,
+  }: Props = $props();
 
-  let newEvent: EventModel;
-  let dummy: () => any;
-  let showCreateEventModal: () => any;
+  let showCreateEventModal: ((date: Date) => Promise<EventModel>) = getContext("showNewEventModal");
   let createEventButtonClick = () => {
-    const start = new Date(date);
-    start.setHours(12, 0, 0, 0);
-
-    const end = new Date(date);
-    end.setHours(13, 0, 0, 0);
-
-    newEvent = {
-      id: "",
-      calendar: "",
-      name: "",
-      desc: "",
-      color: "",
-      date: {
-        start: start,
-        end: end,
-        allDay: false,
-      }
-    };
-
-    setTimeout(() => {
-      showCreateEventModal();
-    }, 0);
+    showCreateEventModal(date).catch((err) => {
+      queueNotification("failure", `Could not create event: ${err.message}`);
+    });
   };
 
-  export let containerHeight: number;
-  export let maxEvents: number = 1;
-  let actualMaxEvents: number = 1;
-  $: actualMaxEvents = maxEvents <= events.length - 1 ? maxEvents - 1 : maxEvents;
+  let actualMaxEvents: number = $derived(maxEvents <= events.length - 1 ? maxEvents - 1 : maxEvents);
 </script>
 
 <style lang="scss">
-  @import "../../styles/animations.scss";
-  @import "../../styles/colors.scss";
-  @import "../../styles/dimensions.scss";
-  @import "../../styles/text.scss";
+  @use "../../styles/animations.scss";
+  @use "../../styles/colors.scss";
+  @use "../../styles/dimensions.scss";
+  @use "../../styles/text.scss";
 
   div.day {
     min-width: 0;
@@ -67,12 +56,12 @@
   div.background {
     display: flex;
     flex-direction: column;
-    gap: $gapSmall;
-    margin: calc($gapSmall / 2);
-    padding: $paddingSmaller;
-    border-radius: $borderRadiusSmall;
-    background-color: $backgroundSecondary;
-    height: calc(100% - $gapSmall);
+    gap: dimensions.$gapSmall;
+    margin: calc(dimensions.$gapSmall / 2);
+    padding: dimensions.$gapSmall;
+    border-radius: dimensions.$borderRadiusSmall;
+    background-color: colors.$backgroundSecondary;
+    height: calc(100% - dimensions.$gapSmall);
   }
 
   div.otherMonth {
@@ -92,7 +81,7 @@
     user-select: none;
   }
   span.sunday {
-    color: $foregroundSunday;
+    color: colors.$foregroundSunday;
   }
   span.add {
     grid-area: add;
@@ -100,25 +89,27 @@
     align-items: center;
     justify-content: right;
     opacity: 0;
-    transition: opacity $animationSpeed;
+    transition: opacity animations.$animationSpeed;
   }
   div.day:hover span.add {
     opacity: 1;
   }
 
-  span.more {
+  button.more {
+    all: unset;
     text-align: center;
-    color: $foregroundFaded;
-    font-size: $fontSizeSmall;
+    color: colors.$foregroundDim;
+    font-size: text.$fontSizeSmall;
     margin-right: 1em;
+    cursor: pointer;
   }
 
   div.events {
     position: absolute;
-    top: calc($gapSmall / 2 + $fontSize + $paddingSmaller + $gapSmall);
+    top: calc(text.$fontSize + 2.5 * dimensions.$gapSmall);
     display: flex;
     flex-direction: column;
-    gap: $gapTiny;
+    gap: dimensions.$gapTiny;
     height: 100%;
     // TODO: z-index so long event names are not truncated
     width: calc(100% + 1em); // +1em needed for long events, otherwise the boundary is visible
@@ -133,78 +124,43 @@
         {date.getDate()}
       </span>
       <span class="add">
-        <IconButton click={createEventButtonClick}>
+        <IconButton click={createEventButtonClick} tabindex={-1}>
           <PlusIcon size={13}/>
         </IconButton>
-        <EventModal bind:showCreateModal={showCreateEventModal} bind:showModal={dummy} event={newEvent}/>
       </span>
     </span>
   </div>
   {#if isFirstDay}
     <div class="events" bind:offsetHeight={containerHeight}>
-      {#each events as event, i}
-        <EventEntry
-          event={event}
-          isFirstDay={isFirstDay}
-          isLastDay={isLastDay}
-          date={date}
-          visible={i < actualMaxEvents}
-          bind:currentlyHoveredEvent={currentlyHoveredEvent}
-          bind:currentlyClickedEvent={currentlyClickedEvent}
-          clickCallback={clickCallback}
-        />
-      {/each}
-      {#if events.length > maxEvents && actualMaxEvents >= 0}
-        <span class="more">
-          and {events.length - actualMaxEvents} more
-        </span>
-      {/if}
+      {@render eventEntries()}
     </div>
   {:else}
     <div class="events">
-      {#each events as event, i}
-        {#if isFirstDay || (event && event.date.start.getTime() >= date.getTime())}
-          <EventEntry
-            event={event}
-            isFirstDay={isFirstDay}
-            isLastDay={isLastDay}
-            date={date}
-            visible={i < actualMaxEvents}
-            bind:currentlyHoveredEvent={currentlyHoveredEvent}
-            bind:currentlyClickedEvent={currentlyClickedEvent}
-            clickCallback={clickCallback}
-          />
-        {/if}
-      {/each}
-      {#if events.length > maxEvents && actualMaxEvents >= 0}
-        <span class="more">
-          and {events.length - actualMaxEvents} more
-        </span>
-      {/if}
+      {@render eventEntries()}
     </div>
   {/if}
 </div>
 
-
-<!--
-TODO: use snippets when svelte 5 is out
-{#snippet eventRows}
-  {#each events as event, i}
-    <CalendarEvent
+{#snippet eventEntries()}
+  <!-- TODO: forcing EventEntry to be unique for each event and i like that
+  fixes a few issues but might be less performant. figure out the right
+  compromise -->
+  {#each events as event, i ((event?.id || 0) + i.toString())}
+    <Event
       event={event}
       isFirstDay={isFirstDay}
       isLastDay={isLastDay}
       date={date}
       visible={i < actualMaxEvents}
-      bind:currentlyHoveredEvent={currentlyHoveredEvent}
-      bind:currentlyClickedEvent={currentlyClickedEvent}
-      clickCallback={clickCallback}
     />
   {/each}
-  {#if events.length > maxEvents}
-    <span class="more">
-      and {events.length - actualMaxEvents} more
-    </span>
+  {#if events.length > maxEvents && actualMaxEvents >= 0}
+    <button class="more" onclick={() => showMore(date, events)}>
+      {#if actualMaxEvents == 0}
+       {events.length} events
+      {:else}
+        and {events.length - actualMaxEvents} more
+      {/if}
+    </button>
   {/if}
 {/snippet}
--->

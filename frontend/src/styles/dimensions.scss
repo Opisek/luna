@@ -5,16 +5,7 @@ $gapSmall: 0.5em;
 $gap: 1em;
 $gapLarge: 2em;
 
-/* Boxes */
-$paddingTiny: .25em;
-$paddingSmaller: .5em;
-$paddingSmall: 1em;
-$padding: 2em;
-$paddingLarge: 5em;
-$paddingLarger: 10em;
-
-$borderWidth: .1em;
-
+/* Border Radius */
 $borderRadiusSmall: .25em;
 $borderRadius: .5em;
 $borderRadiusLarge: 1em;
@@ -29,3 +20,8 @@ $thumbnailWidthSmall: 3em;
 
 /* Blur */
 $blur: 0.15em;
+
+/* Lines */
+$borderWidth: .1em;
+$underlineWidth: .15em;
+$barFocusIndicatorWidth: .3em;

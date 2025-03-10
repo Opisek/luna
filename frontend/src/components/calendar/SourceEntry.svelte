@@ -1,52 +1,89 @@
 <script lang="ts">
-  import { calendars, faultySources, fetchSourceCalendars } from "$lib/client/repository";
-  import { collapsedSources, setSourceCollapse } from "../../lib/client/localStorage";
   import CollapseToggle from "../interactive/CollapseToggle.svelte";
+  import Spinner from "../decoration/Spinner.svelte";
   import Tooltip from "../interactive/Tooltip.svelte";
-  import SourceModal from "../modals/SourceModal.svelte";
 
-  export let source: SourceModel;
+  import { NoOp } from "$lib/client/placeholders";
+  import { calendars, faultySources, loadingSources } from "$lib/client/repository";
+  import { collapsedSources, setSourceCollapse } from "$lib/client/localStorage";
+  import { focusIndicator } from "$lib/client/decoration";
 
-  let hasErrored = false;
+  import { getContext } from "svelte";
+
+  interface Props {
+    source: SourceModel;
+  }
+
+  let {
+    source = $bindable()
+  }: Props = $props();
+
+  let hasErrored = $state(false);
   faultySources.subscribe((faulty) => {
+    if (!source || !source.id) return;
     hasErrored = faulty.has(source.id);
   });
 
-  let hasCals = false;
-  calendars.subscribe(async () => {
-    hasCals = (await fetchSourceCalendars(source.id)).length > 0;
+  let isLoading = $state(false);
+  loadingSources.subscribe((loading) => {
+    if (!source || !source.id) return;
+    isLoading = loading.has(source.id) as boolean;
+  });
+
+  let hasCals = $state(false);
+  calendars.subscribe(async (cals) => {
+    hasCals = false;
+    if (!source) return;
+    for (const cal of cals) {
+      if (cal.source === source.id) {
+        hasCals = true;
+        break;
+      }
+    }
   })
 
-  let showModal: () => any;
+  let showModal: ((source: SourceModel) => Promise<SourceModel>) = getContext("showSourceModal");
+  function showModalInternal() {
+    showModal(source).then(newSource => source = newSource).catch(NoOp);
+  }
 
-  $: if (source && source.id) setSourceCollapse(source.id, source.collapsed);
+  $effect(() => {
+    if (source.id) setSourceCollapse(source.id, source.collapsed);
+  })
   collapsedSources.subscribe((collapsed) => {
+    if (!source) return;
     source.collapsed = collapsed.has(source.id);
   });
 </script>
 
 <style lang="scss">
-  @import "../../styles/animations.scss";
-  @import "../../styles/dimensions.scss";
-  @import "../../styles/colors.scss";
+  @use "../../styles/animations.scss";
+  @use "../../styles/dimensions.scss";
+  @use "../../styles/colors.scss";
 
-  button.row {
-    all: unset;
-    color: $foregroundFaded;
+  div {
+    color: colors.$foregroundDim;
     height: 1.25em;
     display: flex;
     justify-content: space-between;
     align-items: center;
     align-content: center;
-    cursor: pointer;
   }
 
-  span.buttons {
+  span {
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
-    gap: $gapTiny;
+    gap: dimensions.$gapTiny;
     align-items: center;
+  }
+
+  button {
+    all: unset;
+    cursor: pointer;
+    display: inline;
+    width: max-content;
+    position: relative;
   }
 
   //span :global(button) {
@@ -59,9 +96,14 @@
   //}
 </style>
 
-<button on:click={showModal} class="row">
+<div>
+  <button onclick={showModalInternal} use:focusIndicator={{ type: "underline" }}>
     {source.name}
-  <span class="buttons">
+  </button>
+  <span>
+    {#if isLoading}
+      <Spinner/>
+    {/if}
     {#if hasCals}
       <CollapseToggle bind:collapsed={source.collapsed}/>
     {/if}
@@ -76,9 +118,4 @@
     <CogIcon size={16}/>
   </IconButton>
   -->
-</button>
-
-<SourceModal
-  bind:showModal={showModal}
-  source={source}
-/>
+</div>

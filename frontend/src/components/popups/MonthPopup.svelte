@@ -1,35 +1,54 @@
 <script lang="ts">
   import { ChevronLeft, ChevronRight } from "lucide-svelte";
-  import { getMonthName } from "../../lib/common/humanization";
+
   import IconButton from "../interactive/IconButton.svelte";
   import Popup from "./Popup.svelte";
 
-  let popupVisible: boolean = false;
+  import { NoOp } from '$lib/client/placeholders';
+  import { focusIndicator } from "$lib/client/decoration";
+  import { getMonthName } from "$lib/common/humanization";
 
-  export const show = () => {
+  interface Props {
+    date: Date;
+    showPopup?: () => any;
+    hidePopup?: () => any;
+    onSelect?: (date: Date) => void;
+  }
+
+  let {
+    date = $bindable(new Date()),
+    showPopup = $bindable(NoOp),
+    hidePopup = $bindable(NoOp),
+    onSelect = NoOp,
+  }: Props = $props();
+
+  let popupVisible: boolean = $state(false);
+  let selectingMonth: boolean = $state(true);
+
+  let internalShow: () => void = $state(NoOp);
+  let internalClose: () => void = $state(NoOp);
+
+  showPopup = () => {
     if (popupVisible) return;
-    selectedYear = year;
+    selectedYear = date.getFullYear();
     selectingMonth = true;
     setTimeout(internalShow, 0);
   }
-  let internalShow: () => void;
-  let internalClose: () => void;
 
-  export let month: number;
-  export let year: number;
+  hidePopup = () => {
+    internalClose();
+    onSelect(date);
+  }
 
-  let selectedYear: number;
-  let decadeStart: number;
-
-  $: decadeStart = Math.floor(selectedYear / 10) * 10;
-
-  let selectingMonth: boolean;
+  let selectedMonth: number = $state(date.getMonth());
+  let selectedYear: number = $state(date.getFullYear());
+  let decadeStart: number = $derived(Math.floor(selectedYear / 10) * 10);
 
   function clickMonth(e: MouseEvent, i: number) {
     //addRipple(e);
-    month = i;
-    year = selectedYear;
-    internalClose();
+    selectedMonth = i;
+    date = new Date(selectedYear, selectedMonth, date.getDate());
+    hidePopup();
   }
 
   function clickYear(e: MouseEvent, i: number) {
@@ -51,12 +70,13 @@
 </script>
 
 <style lang="scss">
-  @import "../../styles/colors.scss";
-  @import "../../styles/dimensions.scss";
+  @use "../../styles/animations.scss";
+  @use "../../styles/colors.scss";
+  @use "../../styles/dimensions.scss";
 
   div.grid {
     display: grid;
-    gap: $gapSmall;
+    gap: dimensions.$gapSmall;
   }
 
   div.grid.month {
@@ -71,8 +91,8 @@
 
   div.topRow {
     display: flex;
-    justify-content: center;
-    align-items: space-between;
+    justify-content: space-between;
+    align-items: center;
   }
 
   button.display {
@@ -80,9 +100,9 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 100%;
     cursor: pointer;
     user-select: none;
+    position: relative;
   } 
 
   button.button {
@@ -90,12 +110,18 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    border-radius: $borderRadiusSmall;
-    color: $foregroundSecondary;
-    background-color: $backgroundSecondary;
-    padding: $paddingSmaller;
+    border-radius: dimensions.$borderRadiusSmall;
+    color: colors.$foregroundSecondary;
+    background-color: colors.$backgroundSecondary;
+    padding: dimensions.$gapSmall;
     cursor: pointer;
     user-select: none;
+    position: relative;
+    overflow: hidden;
+  }
+
+  button.month {
+    width: 2em;
   }
 
   button.year {
@@ -103,20 +129,23 @@
   }
 </style>
 
-<Popup bind:show={internalShow} bind:close={internalClose} bind:visible={popupVisible}>
+<Popup bind:showPopup={internalShow} bind:hidePopup={internalClose} bind:visible={popupVisible}>
   <div class="topRow">
     <IconButton click={prev}>
       <ChevronLeft/>
     </IconButton>
-    {#if selectingMonth}
-      <button class="display year" on:click={() => {selectingMonth = false}}>
+    <button
+      class="display"
+      type="button"
+      onclick={() => {selectingMonth = !selectingMonth}}
+      use:focusIndicator={{ type: "underline" }}
+    >
+      {#if selectingMonth}
         {selectedYear}
-      </button>
-    {:else}
-      <button class="display decade" on:click={() => {selectingMonth = true}}>
+      {:else}
         {decadeStart} - {decadeStart + 9}
-      </button>
-    {/if}
+      {/if}
+    </button>
     <IconButton click={next}>
       <ChevronRight/>
     </IconButton>
@@ -124,7 +153,12 @@
   {#if selectingMonth}
   <div class="grid month">
     {#each Array(12) as _, i}
-      <button class="button month" on:click={(e) => clickMonth(e, i)}>
+      <button
+        class="button month"
+        type="button"
+        onclick={(e) => clickMonth(e, i)}
+        use:focusIndicator
+      >
         {getMonthName(i).substring(0, 3)}
       </button>
     {/each}
@@ -132,7 +166,12 @@
   {:else}
   <div class="grid year">
     {#each Array(10) as _, i}
-      <button class="button year" on:click={(e) => clickYear(e, i)}>
+      <button
+        class="button year"
+        type="button"
+        onclick={(e) => clickYear(e, i)}
+        use:focusIndicator
+      >
         {decadeStart + i}
       </button>
     {/each}

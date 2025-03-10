@@ -1,22 +1,89 @@
 <script lang="ts">
-  import VisibilityToggle from "../interactive/VisibilityToggle.svelte";
   import Label from "./Label.svelte";
+  import VisibilityToggle from "../interactive/VisibilityToggle.svelte";
 
-  export let value: string = "";
-  export let placeholder: string;
-  export let name: string;
+  import { alwaysValid, valid } from "$lib/client/validation";
+  import { focusIndicator } from "$lib/client/decoration";
+  import { NoOp } from "../../lib/client/placeholders";
 
-  export let editable: boolean = true;
+  let passwordVisible: boolean = $state(false);
 
-  export let multiline: boolean = false;
+  let wrapper: HTMLDivElement | null = $state(null);
 
-  export let password: boolean = false;
-  let passwordVisible: boolean = false;
+  let lastValidationFunction = $state(alwaysValid); // TODO: check if still needed in svelte 5
+  interface Props {
+    value?: string | undefined;
+    placeholder: string;
+    name: string;
+    editable?: boolean;
+    multiline?: boolean;
+    password?: boolean;
+    label?: boolean;
+    onChange?: (value: string) => any;
+    onInput?: (value: string) => any;
+    onFocus?: () => any;
+    validation?: InputValidation;
+    validity?: any;
+  }
 
-  export let label: boolean = true;
+  let {
+    value = $bindable(),
+    placeholder,
+    name,
+    editable = true,
+    multiline = false,
+    password = false,
+    label = true,
+    onChange = NoOp,
+    onInput = NoOp,
+    onFocus = NoOp,
+    validation = alwaysValid,
+    validity = $bindable(value ? validation(value) : valid)
+  }: Props = $props();
 
-  export let onChange: (value: string) => any = () => {};
-  export let onFocus: () => any = () => {};
+
+  // If the value is set programmatically, update the validity.
+  // For example when opening a new form
+  let lastValue: string | null = $state(null); // TODO: check if still needed in svelte 5
+  $effect(() => {
+    ((value) => {
+      if (!value || value === lastValue) return; // prevents some infinite loop that i don't understand, might be a svelte bug
+      lastValue = value;
+      if (wrapper != null && (document.activeElement === wrapper || wrapper.contains(document.activeElement))) return;
+      validity = value ? validation(value) : valid;
+    })(value);
+  });
+
+  // This determines whether input has errored due to empty value.
+  // This is still considered an error, but we don't want to display it.
+  let empty = $state(value === "");
+
+  // Once the user has finished typing, update the validity.
+  function internalOnChange() {
+    if (!value) return;
+    validity = validation(value);
+    empty = value === "";
+    onChange(value);
+  }
+
+  // Immediately tell the user if the input becomes valid,
+  // but not if it becomes invalid, as they are not done typing yet.
+  function internalOnInput() {
+    if (!value) return;
+    const res = validation(value);
+    if (res.valid) validity = res;
+    onInput(value);
+  }
+
+  // If the validation function changes, like for the repeat password field,
+  // rerun the validation function.
+  $effect(() => {
+    ((_) => {
+      if (validation === lastValidationFunction) return;
+      lastValidationFunction = validation;
+      internalOnChange();
+    })(validation);
+  });
 
   // TODO: automatic height 
   // let textArea: HTMLTextAreaElement;
@@ -29,92 +96,130 @@
 </script>
 
 <style lang="scss">
-  @import "../../styles/colors.scss";
-  @import "../../styles/dimensions.scss";
-  @import "../../styles/text.scss";
+  @use "../../styles/animations.scss";
+  @use "../../styles/colors.scss";
+  @use "../../styles/dimensions.scss";
+  @use "../../styles/text.scss";
+
+  div.wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: dimensions.$gap;
+    position: relative;
+    border-radius: calc(dimensions.$borderRadius + 0.1em);
+    overflow: hidden;
+  }
 
   input, textarea {
     all: unset;
+    padding: dimensions.$gapSmall;
+    border-radius: dimensions.$borderRadius;
   }
 
-  input, div.textarea-wrapper {
-    padding: $gapSmall;
-    border-radius: $borderRadius;
+  div.editable > input, div.editable > textarea {
+    background: colors.$backgroundSecondary;
   }
-
-  .editable {
-    background: $backgroundSecondary;
+  div.noneditable {
+    --barFocusIndicatorColor: transparent;
   }
 
   textarea {
     min-height: 0;
     white-space: pre-wrap;
     word-wrap: break-word;
-    width: 100%;
-    padding: 0;
-    margin: 0;
+    //padding: 0;
+    //margin: 0;
   }
 
   div.visibility {
-    text-align: right;
-    position: relative;
-    // TODO: don't use hard-coded values
-    top: calc(-1.31em - 2 * $gapSmall - 0.5 * $fontSize);
-    margin-bottom: calc(-1.5em - $gapSmall - 0.5 * $fontSize);
-    right: calc(-100% + 1.25em + $gapSmall);
-    width: fit-content;
-    display: flex;
-    justify-content: flex-end;
-    color: $foregroundFaded;
+    position: absolute;
+    //height: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    right: dimensions.$gapSmaller;
+    color: colors.$foregroundDim;
+  }
+
+  span.label {
+    font-size: text.$fontSizeSmall;
+    margin-bottom: -2 * dimensions.$gapSmall;
+    padding-left: calc(dimensions.$gapSmall * (text.$fontSize / text.$fontSizeSmall));
+  }
+
+  span.errorMessage {
+    color: colors.$backgroundFailure;
+    font-size: text.$fontSizeSmall;
   }
 </style>
 
-{#if label}
-<Label name={name}>{placeholder}</Label>
+{#if label || (!validity?.valid && !empty)}
+  <span class="label">
+    {#if label}
+      <Label name={name} ownPositioning={false}>{placeholder}</Label>
+    {/if}
+    {#if !validity?.valid && !empty}
+      <span class="errorMessage">
+        {validity.message}
+      </span>
+    {/if}
+  </span>
 {/if}
-{#if multiline}
-  <div
-    class="textarea-wrapper"
-    class:editable={editable} 
-  >
-    <textarea
+<div
+  class="wrapper"
+  class:editable={editable} 
+  class:noneditable={!editable} 
+  tabindex="-1"
+  use:focusIndicator
+  class:error={!validity.valid && !empty}
+  bind:this={wrapper}
+>
+  {#if multiline}
+      <textarea
+        bind:value={value}
+        onchange={internalOnChange}
+        oninput={internalOnInput}
+        onfocusout={internalOnChange}
+        onfocusin={onFocus}
+        name={name}
+        placeholder={placeholder}
+        disabled={!editable}
+        rows=6
+        tabindex={editable ? 0 : -1}
+></textarea>
+  {:else if password && !passwordVisible}
+    <input
       bind:value={value}
-      on:change={() => onChange(value)}
-      on:focusout={() => onChange(value)}
-      on:focusin={() => onFocus()}
+      onchange={internalOnChange}
+      oninput={internalOnInput}
+      onfocusout={internalOnChange}
+      onfocusin={onFocus}
       name={name}
       placeholder={placeholder}
       disabled={!editable}
-      rows=6
+      class:editable={editable}
+      tabindex={editable ? 0 : -1}
+      type="password"
     />
+  {:else}
+    <input
+      bind:value={value}
+      onchange={internalOnChange}
+      oninput={internalOnInput}
+      onfocusout={internalOnChange}
+      onfocusin={onFocus}
+      name={name}
+      placeholder={placeholder}
+      disabled={!editable}
+      class:editable={editable}
+      tabindex={editable ? 0 : -1}
+      type="text"
+    />
+  {/if}
+  {#if password && editable}
+  <div class="visibility">
+    <VisibilityToggle bind:visible={passwordVisible} momentary={true} />
   </div>
-{:else if password && !passwordVisible}
-  <input
-    bind:value={value}
-    on:change={() => onChange(value)}
-    on:focusout={() => onChange(value)}
-    on:focusin={() => onFocus()}
-    name={name}
-    placeholder={placeholder}
-    disabled={!editable}
-    class:editable={editable}
-    type="password"
-  />
-{:else}
-  <input
-    bind:value={value}
-    on:change={() => onChange(value)}
-    on:focusout={() => onChange(value)}
-    on:focusin={() => onFocus()}
-    name={name}
-    placeholder={placeholder}
-    disabled={!editable}
-    class:editable={editable}
-    type="text"
-  />
-{/if}
-{#if password && editable}
-<div class="visibility">
-  <VisibilityToggle bind:visible={passwordVisible} momentary={true} />
+  {/if}
 </div>
-{/if}
+
+<!-- TODO: snippets and svelte:element in conjuction with {...otherProps} to reduce amount of rewritten code -->

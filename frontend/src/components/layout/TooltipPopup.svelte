@@ -1,14 +1,21 @@
 <script lang="ts">
+  import type { Snippet } from 'svelte';
+
   import { browser } from "$app/environment";
-  import { calculateOptimalPopupPosition } from "../../lib/common/calculations";
+
+  import { calculateOptimalPopupPosition } from "$lib/common/calculations";
+
+  interface Props {
+    children?: Snippet;
+  }
+
+  let { children }: Props = $props();
 
   let popup: HTMLElement;
 
-  let bottom: boolean = false;
-  let center: boolean = false;
-  let right: boolean = false;
-
-  $: setupListener(popup);
+  let bottom: boolean = $state(false);
+  let center: boolean = $state(false);
+  let right: boolean = $state(false);
 
   function setupListener(popup: HTMLElement) {
     if (!popup || !popup.parentElement) return;
@@ -19,19 +26,23 @@
   function checkPosition() {
     if (!popup || !popup.parentElement || !browser) return;
 
-    const res = calculateOptimalPopupPosition(popup, 3);
+    const res = calculateOptimalPopupPosition(popup.parentElement, 3);
 
     bottom = res.bottom;
     right = res.right;
     center = res.center;
   }
+
+  $effect(() => {
+    setupListener(popup);
+  });
 </script>
 
 <style lang="scss">
-  @import "../../styles/animations.scss";
-  @import "../../styles/colors.scss";
-  @import "../../styles/decoration.scss";
-  @import "../../styles/dimensions.scss";
+  @use "../../styles/animations.scss";
+  @use "../../styles/colors.scss";
+  @use "../../styles/decorations.scss";
+  @use "../../styles/dimensions.scss";
 
   span.popup {
     position: absolute;
@@ -61,20 +72,21 @@
   span.contents {
     position: fixed;
     opacity: 0;
-    border-radius: $borderRadius;
-    padding: $paddingSmaller;
-    background-color: $backgroundPrimary;
-    color: $foregroundPrimary;
-    transition: opacity $animationSpeed $cubic;
+    border-radius: dimensions.$borderRadius;
+    padding: dimensions.$gapSmall;
+    background-color: colors.$backgroundPrimary;
+    color: colors.$foregroundPrimary;
+    transition: opacity animations.$animationSpeed animations.$cubic;
     z-index: 10;
     pointer-events: none;
     min-width: none;
     width: max-content;
     max-width: 80vw;
-    box-shadow: $boxShadow;
+    box-shadow: decorations.$boxShadow;
     white-space: nowrap;
   }
-  :global(*:hover) > span.popup > span.contents {
+  :global(*:hover) > span.popup > span.contents,
+  :global(*:focus-within) > span.popup > span.contents {
     opacity: 1;
   }
 </style>
@@ -91,6 +103,6 @@
     class:right={right && !center}
     class:center={center}
   >
-    <slot/>
+    {@render children?.()}
   </span>
 </span>

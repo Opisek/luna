@@ -1,52 +1,106 @@
 <script lang="ts">
   import EditableModal from "./EditableModal.svelte";
-  import TextInput from "../forms/TextInput.svelte";
   import SelectButtons from "../forms/SelectButtons.svelte";
-  import { queueNotification } from "$lib/client/notifications";
+  import TextInput from "../forms/TextInput.svelte";
+
+  import { EmptySource, NoOp } from "$lib/client/placeholders";
   import { createSource, deleteSource, editSource } from "$lib/client/repository";
+  import { deepCopy, deepEquality } from "$lib/common/misc";
+  import { isValidUrl, valid } from "$lib/client/validation";
+  import { queueNotification } from "$lib/client/notifications";
 
-  export let source: SourceModel;
-  let sourceDetailed: SourceModel;
+  interface Props {
+    showCreateModal?: () => any;
+    showModal?: (source: SourceModel) => Promise<SourceModel>;
+  }
 
-  export const showCreateModal = () => {
-    sourceDetailed = source;
+  let {
+    showCreateModal = $bindable(),
+    showModal = $bindable(),
+  }: Props = $props();
+
+  let sourceDetailed: SourceModel = $state(EmptySource);
+  let originalSource: SourceModel;
+
+  let saveSource = (_: SourceModel | PromiseLike<SourceModel>) => {};
+  let cancelSource = (_?: any) => {};
+
+  showCreateModal = () => {
+    cancelSource();
+
+    sourceDetailed = {
+      id: "",
+      name: "",
+      type: "caldav",
+      settings: {},
+      auth_type: "none",
+      auth: {},
+      collapsed: false
+    };
+
     showCreateModalInternal();
   }
-  export const showModal = async () => {
+  showModal = async (source: SourceModel): Promise<SourceModel> => {
+    cancelSource();
+
     const res = await fetch(`/api/sources/${source.id}`);
     if (res.ok) {
       sourceDetailed = await res.json();
     } else {
       queueNotification("failure", `Failed to fetch source details: ${res.statusText}`);
-      return
+      return Promise.reject();
     }
 
+    originalSource = await deepCopy(sourceDetailed);
+
     showModalInternal();
+    return new Promise((resolve, reject) => {
+      saveSource = resolve;
+      cancelSource = reject;
+    })
   };
-  let showCreateModalInternal: () => boolean;
-  let showModalInternal: () => boolean;
 
-  let title: string;
-  $: title = (sourceDetailed && sourceDetailed.id) ? (editMode ? "Edit source" : "Source") : "Add source";
+  let showCreateModalInternal: () => any = $state(NoOp);
+  let showModalInternal: () => any = $state(NoOp);
 
-  let editMode: boolean;
+  let editMode: boolean = $state(false);
+  let title: string = $derived(sourceDetailed.id ? (editMode ? "Edit source" : "Source") : "Add source");
 
   const onDelete = async () => {
-    const res = await deleteSource(sourceDetailed.id);
-    if (res === "") return "";
-    else return `Could not delete source: ${res}`;
+    await deleteSource(sourceDetailed.id).catch(err => {
+      throw new Error(`Could not delete source ${sourceDetailed.name}: ${err.message}`);
+    });
+    cancelSource();
   };
   const onEdit = async () => {
     if (sourceDetailed.id === "") {
-      const res = await createSource(sourceDetailed);
-      if (res === "") return "";
-      else return `Could not create source: ${res}`;
+      await createSource(sourceDetailed).catch(err => {
+        cancelSource();
+        throw new Error(`Could not create source ${sourceDetailed.name}: ${err.message}`);
+      });
+      saveSource(sourceDetailed);
     } else {
-      const res = await editSource(sourceDetailed);
-      if (res === "") return "";
-      else return `Could not edit source: ${res}`;
+      const changes = {
+        name: sourceDetailed.name != originalSource.name,
+        type: sourceDetailed.type != originalSource.type,
+        settings: !deepEquality(sourceDetailed.settings, originalSource.settings),
+        auth: sourceDetailed.auth_type != originalSource.auth_type || !deepEquality(sourceDetailed.auth, originalSource.auth)
+      }
+      await editSource(sourceDetailed, changes).catch(err => {
+        cancelSource();
+        throw new Error(`Could not edit source ${sourceDetailed.name}: ${err.message}`);
+      });
+      saveSource(sourceDetailed);
     }
   };
+
+  let caldavLinkValidity: Validity = $state(valid);
+  let icalLinkValidity: Validity = $state(valid);
+
+  let canSubmit: boolean = $derived(sourceDetailed && sourceDetailed.name !== "" && sourceDetailed.type !== "" && (
+    (sourceDetailed.type === "caldav" && caldavLinkValidity?.valid) ||
+    (sourceDetailed.type === "ical" && icalLinkValidity?.valid)
+  ));
 </script>
 
 <EditableModal
@@ -57,6 +111,7 @@
   bind:showModal={showModalInternal}
   onDelete={onDelete}
   onEdit={onEdit}
+  submittable={canSubmit}
 >
   {#if sourceDetailed}
     <TextInput bind:value={sourceDetailed.name} name="name" placeholder="Name" editable={editMode} />
@@ -83,10 +138,10 @@
       }
     ]}/>
     {#if sourceDetailed.type === "caldav"}
-      <TextInput bind:value={sourceDetailed.settings.url} name="caldav_url" placeholder="CalDav URL" editable={editMode} />
+      <TextInput bind:value={sourceDetailed.settings.url} name="caldav_url" placeholder="CalDav URL" editable={editMode} validation={isValidUrl} bind:validity={caldavLinkValidity} />
     {/if}
     {#if sourceDetailed.type === "ical"}
-      <TextInput bind:value={sourceDetailed.settings.url} name="ical_url" placeholder="iCal URL" editable={editMode} />
+      <TextInput bind:value={sourceDetailed.settings.url} name="ical_url" placeholder="iCal URL" editable={editMode} validation={isValidUrl} bind:validity={icalLinkValidity} />
     {/if}
     
     <SelectButtons bind:value={sourceDetailed.auth_type} name="auth_type" placeholder={"Authentication Type"} editable={editMode} options={[

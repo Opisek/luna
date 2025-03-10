@@ -1,15 +1,15 @@
 import adapter from '@sveltejs/adapter-node';
-import preprocess from 'svelte-preprocess';
+import { sveltePreprocess } from 'svelte-preprocess';
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
-	preprocess: preprocess({}),
+	preprocess: sveltePreprocess({}),
 	kit: {
 		adapter: adapter({
 			precompress: true
 		}),
 		csrf: {
-			checkOrigin: false // TODO: remove from production!!!!!!!!
+			checkOrigin: false // TODO: reenable in production or implement an alterative
 		}
 	}
 };
