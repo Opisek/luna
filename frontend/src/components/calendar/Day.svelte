@@ -67,10 +67,6 @@
     height: calc(100% - dimensions.$gapSmall);
   }
 
-  div.otherMonth {
-    opacity: .5;
-  }
-
   span.top {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
@@ -121,6 +117,10 @@
     height: calc(100% - var(--topMargin) - var(--gapBetweenDays));
     width: 100%;
   }
+
+  .otherMonth {
+    background-color: colors.$backgroundSecondaryFaded !important;
+  }
 </style>
 
 <div class="day">
@@ -161,7 +161,7 @@
     />
   {/each}
   {#if events.length > maxEvents && actualMaxEvents >= 0}
-    <button class="more" onclick={() => showMore(date, events)}>
+    <button class="more" class:otherMonth={!isCurrentMonth} onclick={() => showMore(date, events)}>
       {#if actualMaxEvents == 0}
        {events.length} events
       {:else}
