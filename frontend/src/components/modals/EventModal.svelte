@@ -8,6 +8,7 @@
 
   import { EmptyEvent } from "$lib/client/placeholders";
   import { createEvent, deleteEvent, editEvent, getAllCalendars, moveEvent } from "$lib/client/repository";
+  import { deepCopy } from "$lib/common/misc";
 
   interface Props {
     showCreateModal?: (date: Date) => Promise<EventModel>;
@@ -20,7 +21,7 @@
   }: Props = $props();
 
   let event: EventModel = $state(EmptyEvent);
-  let originalCalendar = "";
+  let originalEvent: EventModel;
   let currentCalendars: CalendarModel[] = $state([]);
 
   let saveEvent = (_: EventModel | PromiseLike<EventModel>) => {};
@@ -80,7 +81,8 @@
     if (event.date.allDay) {
       event.date.end.setDate(event.date.end.getDate() - 1);
     }
-    originalCalendar = original.calendar;
+
+    originalEvent = await deepCopy(original);
 
     currentCalendars = await getAllCalendars().catch(err => {
       throw new Error(`Could not get calendars: ${err.message}`);
@@ -115,8 +117,17 @@
         throw new Error(`Could not create event ${event.name}: ${err.message}`);
       });
       saveEvent(event);
-    } else if (event.calendar == originalCalendar) {
-      await editEvent(event).catch(err => {
+    } else if (event.calendar == originalEvent.calendar) {
+      const changes = {
+        name: event.name != originalEvent.name,
+        desc: event.desc != originalEvent.desc,
+        color: event.color != originalEvent.color,
+        date: 
+          event.date.start.getTime() != originalEvent.date.start.getTime() &&
+          event.date.end.getTime() != originalEvent.date.end.getTime() &&
+          event.date.allDay != originalEvent.date.allDay,
+      };
+      await editEvent(event, changes).catch(err => {
         cancelEvent();
         throw new Error(`Could not edit event ${event.name}: ${err.message}`);
       });

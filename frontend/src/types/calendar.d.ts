@@ -5,3 +5,8 @@ type CalendarModel = {
   url: string;
   color: string;
 }
+
+type CalendarModelChanges = {
+  name: boolean;
+  color: boolean;
+}

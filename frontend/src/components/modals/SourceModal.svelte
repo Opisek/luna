@@ -5,6 +5,7 @@
 
   import { EmptySource, NoOp } from "$lib/client/placeholders";
   import { createSource, deleteSource, editSource } from "$lib/client/repository";
+  import { deepCopy, deepEquality } from "$lib/common/misc";
   import { isValidUrl, valid } from "$lib/client/validation";
   import { queueNotification } from "$lib/client/notifications";
 
@@ -19,6 +20,7 @@
   }: Props = $props();
 
   let sourceDetailed: SourceModel = $state(EmptySource);
+  let originalSource: SourceModel;
 
   let saveSource = (_: SourceModel | PromiseLike<SourceModel>) => {};
   let cancelSource = (_?: any) => {};
@@ -49,6 +51,8 @@
       return Promise.reject();
     }
 
+    originalSource = await deepCopy(sourceDetailed);
+
     showModalInternal();
     return new Promise((resolve, reject) => {
       saveSource = resolve;
@@ -76,7 +80,13 @@
       });
       saveSource(sourceDetailed);
     } else {
-      await editSource(sourceDetailed).catch(err => {
+      const changes = {
+        name: sourceDetailed.name != originalSource.name,
+        type: sourceDetailed.type != originalSource.type,
+        settings: !deepEquality(sourceDetailed.settings, originalSource.settings),
+        auth: sourceDetailed.auth_type != originalSource.auth_type || !deepEquality(sourceDetailed.auth, originalSource.auth)
+      }
+      await editSource(sourceDetailed, changes).catch(err => {
         cancelSource();
         throw new Error(`Could not edit source ${sourceDetailed.name}: ${err.message}`);
       });

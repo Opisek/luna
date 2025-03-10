@@ -1,11 +1,12 @@
-import { atLeastOnePromise } from "$lib/common/misc";
 import { browser } from "$app/environment";
 
 import { writable } from "svelte/store";
 
 import { hiddenCalendars, isCalendarVisible } from "./localStorage";
 import { queueNotification } from "./notifications";
-import { NoOp } from "./placeholders";
+import { AllChangesEvent, AllChangesSource, NoOp } from "./placeholders";
+
+import { atLeastOnePromise } from "$lib/common/misc";
 
 //
 // Constants
@@ -100,52 +101,60 @@ async function fetchJson(url: string, options: RequestInit = {}) {
 // Form Data
 //
 
-function getSourceFormData(source: SourceModel): FormData {
+function getSourceFormData(source: SourceModel, changes: SourceModelChanges = AllChangesSource): FormData {
   const formData = new FormData();
-  formData.set("name", source.name);
-  formData.set("type", source.type);
-  switch (source.type) {
-    case "caldav":
-      formData.set("url", source.settings.url);
-      break;
-    default:
-      throw new Error("Unsupported source type");
+  if (changes.name) formData.set("name", source.name);
+  if (changes.type) formData.set("type", source.type);
+  if (changes.type || changes.settings) {
+    switch (source.type) {
+      case "caldav":
+        formData.set("url", source.settings.url);
+        break;
+      default:
+        throw new Error("Unsupported source type");
+    }
   }
-  formData.set("auth_type", source.auth_type);
-  switch (source.auth_type) {
-    case "none":
-      break;
-    case "basic":
-      formData.set("auth_username", source.auth.username);
-      formData.set("auth_password", source.auth.password);
-      break;
-    case "bearer":
-      formData.set("auth_token", source.auth.token);
-      break;
-    default:
-      throw new Error("Unsupported auth type");
+  if (changes.auth) {
+    formData.set("auth_type", source.auth_type);
+    switch (source.auth_type) {
+      case "none":
+        break;
+      case "basic":
+        formData.set("auth_username", source.auth.username);
+        formData.set("auth_password", source.auth.password);
+        break;
+      case "bearer":
+        formData.set("auth_token", source.auth.token);
+        break;
+      default:
+        throw new Error("Unsupported auth type");
+    }
   }
   return formData;
 }
 
-function getEventFormData(event: EventModel): FormData {
+function getEventFormData(event: EventModel, changes: EventModelChanges = AllChangesEvent): FormData {
   const formData = new FormData();
-  formData.set("name", event.name);
-  formData.set("desc", event.desc);
-  if (event.date.allDay) {
-    const start = new Date(event.date.start.getTime() - (event.date.start.getTimezoneOffset() * 60000));
-    const end = new Date(event.date.end.getTime() - (event.date.end.getTimezoneOffset() * 60000));
-    formData.set("date_start", start.toISOString());
-    formData.set("date_end", end.toISOString());
-  } else {
-    formData.set("date_start", event.date.start.toISOString());
-    formData.set("date_end", event.date.end.toISOString());
+  if (changes.name) formData.set("name", event.name);
+  if (changes.desc) formData.set("desc", event.desc);
+  if (changes.date) {
+    if (event.date.allDay) {
+      const start = new Date(event.date.start.getTime() - (event.date.start.getTimezoneOffset() * 60000));
+      const end = new Date(event.date.end.getTime() - (event.date.end.getTimezoneOffset() * 60000));
+      formData.set("date_start", start.toISOString());
+      formData.set("date_end", end.toISOString());
+    } else {
+      formData.set("date_start", event.date.start.toISOString());
+      formData.set("date_end", event.date.end.toISOString());
+    }
+    formData.set("date_all_day", event.date.allDay ? "true" : "false");
   }
-  formData.set("date_all_day", event.date.allDay ? "true" : "false");
-  if (event.color && event.color !== "") {
-    formData.set("color", event.color);
-  } else {
-    formData.set("color", "null");
+  if (changes.color) {
+    if (event.color && event.color !== "") {
+      formData.set("color", event.color);
+    } else {
+      formData.set("color", "null");
+    }
   }
   return formData;
 }
@@ -328,10 +337,10 @@ export async function createSource(newSource: SourceModel): Promise<void> {
   saveCache();
 }
 
-export async function editSource(modifiedSource: SourceModel): Promise<void> {
+export async function editSource(modifiedSource: SourceModel, changes: SourceModelChanges): Promise<void> {
   if (!browser) return;
 
-  let formData = getSourceFormData(modifiedSource);
+  let formData = getSourceFormData(modifiedSource, changes);
 
   await fetchResponse(`/api/sources/${modifiedSource.id}`, { method: "PATCH", body: formData }).catch((err) => { throw err; });
   
@@ -676,7 +685,7 @@ export async function createEvent(newEvent: EventModel): Promise<void> {
   if (isCalendarVisible(newEvent.calendar) && newEvent.date.start <= eventsRangeEnd && newEvent.date.end >= eventsRangeStart) events.update((events) => events.concat(newEvent));
 };
 
-export async function editEvent(modifiedEvent: EventModel): Promise<void> {
+export async function editEvent(modifiedEvent: EventModel, changes: EventModelChanges): Promise<void> {
   if (!browser) return;
 
   // update in database
@@ -685,7 +694,7 @@ export async function editEvent(modifiedEvent: EventModel): Promise<void> {
     modifiedEvent.date.end.setHours(0, 0, 0, 0);
   }
 
-  const formData = getEventFormData(modifiedEvent);
+  const formData = getEventFormData(modifiedEvent, changes);
 
   await fetchResponse(`/api/events/${modifiedEvent.id}`, { method: "PATCH", body: formData }).catch((err) => { throw err; });
 

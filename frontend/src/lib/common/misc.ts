@@ -15,3 +15,11 @@ export async function atLeastOnePromise<T>(promises: Promise<T>[]): Promise<[T[]
 
     return [fulfilled, rejected];
 }
+
+export async function deepCopy<T>(obj: T): Promise<T> {
+    return JSON.parse(JSON.stringify(obj));
+}
+
+export function deepEquality<T>(a: T, b: T): boolean {
+    return JSON.stringify(a) === JSON.stringify(b);
+}

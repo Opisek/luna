@@ -10,3 +10,10 @@ type EventModel = {
     allDay: boolean;
   }
 };
+
+type EventModelChanges = {
+  name: boolean;
+  desc: boolean;
+  color: boolean;
+  date: boolean;
+}

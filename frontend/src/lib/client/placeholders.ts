@@ -14,6 +14,13 @@ export const EmptySource: SourceModel = {
   collapsed: false
 }
 
+export const AllChangesSource: SourceModelChanges = {
+  name: true,
+  type: true,
+  settings: true,
+  auth: true
+}
+
 export const PlaceholderDate = new Date(0);
 
 export const EmptyEvent: EventModel = {
@@ -27,6 +34,13 @@ export const EmptyEvent: EventModel = {
     end: PlaceholderDate,
     allDay: false,
   }
+}
+
+export const AllChangesEvent: EventModelChanges = {
+  name: true,
+  desc: true,
+  color: true,
+  date: true
 }
 
 export const NoOp = () => {};
