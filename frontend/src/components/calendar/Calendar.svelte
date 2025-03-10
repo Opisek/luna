@@ -164,8 +164,6 @@
     display: grid;
     gap: 0;
     flex-grow: 1;
-    // TODO: figure out proper height
-    height: 90%;
   }
   
   div.columns-month,
