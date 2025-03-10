@@ -8,7 +8,7 @@
 
   import { EmptyEvent } from "$lib/client/placeholders";
   import { createEvent, deleteEvent, editEvent, getAllCalendars, moveEvent } from "$lib/client/repository";
-  import { deepCopy } from "$lib/common/misc";
+  import { deepCopy, deepEquality } from "$lib/common/misc";
 
   interface Props {
     showCreateModal?: (date: Date) => Promise<EventModel>;
@@ -83,8 +83,6 @@
     }
 
     originalEvent = await deepCopy(original);
-    originalEvent.date.start = new Date(originalEvent.date.start);
-    originalEvent.date.end = new Date(originalEvent.date.start);
 
     currentCalendars = await getAllCalendars().catch(err => {
       throw new Error(`Could not get calendars: ${err.message}`);
@@ -124,10 +122,7 @@
         name: event.name != originalEvent.name,
         desc: event.desc != originalEvent.desc,
         color: event.color != originalEvent.color,
-        date: 
-          event.date.start.getTime() != originalEvent.date.start.getTime() &&
-          event.date.end.getTime() != originalEvent.date.end.getTime() &&
-          event.date.allDay != originalEvent.date.allDay,
+        date: !deepEquality(event.date, originalEvent.date)
       };
       await editEvent(event, changes).catch(err => {
         cancelEvent();
