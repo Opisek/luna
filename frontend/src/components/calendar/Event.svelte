@@ -12,7 +12,6 @@
     visible?: boolean;
     event: EventModel | null;
     isFirstDay: boolean;
-    isLastDay: boolean;
     date: Date;
     view: "month" | "week" | "day";
   }
@@ -21,7 +20,6 @@
     visible = true,
     event,
     isFirstDay,
-    isLastDay,
     date,
     view
   }: Props = $props();
@@ -219,6 +217,5 @@
     {/if}
   </div>
 {:else}
-  <div class="placeholder">
-  </div>
+  <div class="placeholder" class:hidden={!visible}></div>
 {/if}

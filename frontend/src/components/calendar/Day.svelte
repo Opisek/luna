@@ -24,7 +24,6 @@
     date,
     isCurrentMonth,
     isFirstDay,
-    isLastDay,
     events,
     maxEvents = 1,
     containerHeight = $bindable(),
@@ -152,7 +151,6 @@
     <Event
       event={event}
       isFirstDay={isFirstDay}
-      isLastDay={isLastDay}
       date={date}
       visible={i < actualMaxEvents}
       view={view}
