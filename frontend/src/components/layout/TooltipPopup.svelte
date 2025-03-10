@@ -46,7 +46,7 @@
 
   span.popup {
     position: absolute;
-    z-index: 10;
+    z-index: 50;
     pointer-events: none;
     left: 50%;
     top: 0;
