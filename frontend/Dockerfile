@@ -5,9 +5,7 @@ WORKDIR /app
 # Install bun production dependencies
 FROM base AS dependencies
 COPY package.json bun.lock ./
-# TODO: figure out why we can't use the --production flag
-#RUN bun install --production
-RUN bun install
+RUN bun install --production
 
 # Install bun development dependencies
 FROM dependencies AS devDependencies
