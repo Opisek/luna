@@ -23,8 +23,8 @@ Make sure you have **make** and **docker** installed.
 ## Baremetal
 For baremetal deployment, you must ensure your system has:
 - **make**
-- **node.js** (v20.11.1)
-- **go** (go1.23)
+- **bun** (v1.2.5 or higher)
+- **go** (go1.23 or higher)
 - a running **postgres** (version 16) database
 
 For the backend, create an `.env` file in the `backend` directory inside the repository and fill it out accordingly to `.env.example`. To start the backend, run `make` inside the `backend` directory.
