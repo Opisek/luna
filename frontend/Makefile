@@ -3,10 +3,10 @@ VERSION := $(shell cat ./VERSION)
 .PHONY: run build ver
 
 run: ver
-	npm run dev
+	bun run dev
 
 build: ver
-	npm run build
+	bun run build
 
 ver:
 	cd script && node inject-version.js $(VERSION)

@@ -1,15 +1,17 @@
 # Base
-FROM node:20-alpine AS base
+FROM oven/bun:alpine AS base
 WORKDIR /app
 
-# Install node production dependencies
+# Install bun production dependencies
 FROM base AS dependencies
-COPY package.json package-lock.json ./
-RUN npm install --production
+COPY package.json bun.lock ./
+# TODO: figure out why we can't use the --production flag
+#RUN bun install --production
+RUN bun install
 
-# Install node development dependencies
+# Install bun development dependencies
 FROM dependencies AS devDependencies
-RUN npm install
+RUN bun install
 
 # Build the frontend
 FROM base AS build
@@ -28,5 +30,5 @@ WORKDIR /app
 COPY package.json .
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY --from=build /app/build ./build
-USER node:node
-ENTRYPOINT [ "node", "build/index.js" ]
+USER bun:bun
+ENTRYPOINT [ "bun", "./build/index.js" ]
