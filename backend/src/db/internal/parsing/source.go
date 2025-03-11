@@ -7,6 +7,7 @@ import (
 	"luna-backend/db/internal/tables"
 	"luna-backend/interface/primitives"
 	"luna-backend/interface/protocols/caldav"
+	"luna-backend/interface/protocols/ical"
 	"luna-backend/types"
 )
 
@@ -50,7 +51,18 @@ func ParseSource(entry *tables.SourceEntry) (primitives.Source, error) {
 		)
 		return caldavSource, nil
 	case types.SourceIcal:
-		fallthrough
+		settings := &ical.IcalSourceSettings{}
+		err = json.Unmarshal(entry.Settings, settings)
+		if err != nil {
+			return nil, fmt.Errorf("could not unmarshal ical settings: %v", err)
+		}
+		icalSource := ical.PackIcalSource(
+			entry.Id,
+			entry.Name,
+			settings,
+			authMethod,
+		)
+		return icalSource, nil
 	default:
 		return nil, fmt.Errorf("unknown source type: %v", entry.Type)
 	}

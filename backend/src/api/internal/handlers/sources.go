@@ -12,6 +12,7 @@ import (
 	"luna-backend/db"
 	"luna-backend/interface/primitives"
 	"luna-backend/interface/protocols/caldav"
+	"luna-backend/interface/protocols/ical"
 	"luna-backend/types"
 
 	"github.com/gin-gonic/gin"
@@ -156,10 +157,22 @@ func parseSource(c *gin.Context, sourceName string, sourceAuth auth.AuthMethod) 
 
 		source = caldav.NewCaldavSource(sourceName, sourceUrl, sourceAuth)
 	case types.SourceIcal:
-		fallthrough
-	default:
-		return nil, errors.New("invalid source type")
+		rawUrl := c.PostForm("url")
+		if rawUrl == "" {
+			return nil, errors.New("missing caldav url")
+		}
+		if util.IsValidUrl(rawUrl) != nil {
+			return nil, errors.New("invalid caldav url")
+		}
+		sourceUrl, err := types.NewUrl(rawUrl)
+		if err != nil {
+			return nil, errors.New("invalid caldav url")
+		}
+
+		source = ical.NewIcalSource(sourceName, sourceUrl, sourceAuth)
 	case "":
+		return nil, errors.New("invalid source type")
+	default:
 		return nil, errors.New("missing source type")
 	}
 

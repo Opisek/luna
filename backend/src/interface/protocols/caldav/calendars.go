@@ -81,10 +81,6 @@ func (calendar *CaldavCalendar) GetSource() primitives.Source {
 	return calendar.source
 }
 
-func (calendar *CaldavCalendar) GetAuth() auth.AuthMethod {
-	return calendar.auth
-}
-
 func (calendar *CaldavCalendar) GetSettings() primitives.CalendarSettings {
 	return calendar.settings
 }

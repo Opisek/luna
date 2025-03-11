@@ -110,6 +110,9 @@ function getSourceFormData(source: SourceModel, changes: SourceModelChanges = Al
       case "caldav":
         formData.set("url", source.settings.url);
         break;
+      case "ical":
+        formData.set("url", source.settings.url);
+        break;
       default:
         throw new Error("Unsupported source type");
     }
@@ -545,7 +548,7 @@ export async function getAllEvents(start: Date, end: Date, forceRefresh = false)
 }
 
 async function getEventsFromSource(source: string, start: Date, end: Date, forceRefresh = false): Promise<EventModel[]> {
-  let cals = await getCalendars(source, forceRefresh);
+  let cals = await getCalendars(source, forceRefresh).catch((err) => { throw err; });
   cals = cals.filter(x => isCalendarVisible(x.id)); // only fetch events from visible calendars
   const [events, errors] = await atLeastOnePromise(cals.map((calendar) => getEventsFromCalendar(calendar.id, start, end, forceRefresh))).catch(() => {
     throw new Error("Failed to fetch events");
