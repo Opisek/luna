@@ -16,7 +16,7 @@ type IcalSource struct {
 }
 
 type IcalSourceSettings struct {
-	Url *types.Url
+	Url *types.Url `json:"url"`
 }
 
 func (settings *IcalSourceSettings) GetBytes() []byte {
