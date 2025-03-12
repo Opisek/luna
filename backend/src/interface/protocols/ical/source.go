@@ -78,13 +78,13 @@ func NewIcalSource(name string, url *types.Url, auth auth.AuthMethod) *IcalSourc
 		auth: auth,
 		settings: &IcalSourceSettings{
 			Url:  url,
-			file: files.NewRemoteFile(url), // TDOO: allow remote files and local (uploaded) files
+			file: files.NewRemoteFile(url, auth), // TDOO: allow remote files and local (uploaded) files
 		},
 	}
 }
 
 func PackIcalSource(id types.ID, name string, settings *IcalSourceSettings, auth auth.AuthMethod) *IcalSource {
-	settings.file = files.NewRemoteFile(settings.Url) // TDOO: allow remote files and local (uploaded) files
+	settings.file = files.NewRemoteFile(settings.Url, auth) // TDOO: allow remote files and local (uploaded) files
 
 	return &IcalSource{
 		id:       id,

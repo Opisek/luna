@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"luna-backend/auth"
 	"luna-backend/common"
 	"luna-backend/crypto"
 	"luna-backend/net"
@@ -16,10 +17,11 @@ type RemoteFile struct {
 	url     *types.Url
 	date    *time.Time
 	content []byte
+	auth    auth.AuthMethod
 }
 
-func NewRemoteFile(url *types.Url) *RemoteFile {
-	return &RemoteFile{url: url}
+func NewRemoteFile(url *types.Url, auth auth.AuthMethod) *RemoteFile {
+	return &RemoteFile{url: url, auth: auth}
 }
 
 func (file *RemoteFile) GetId() types.ID {
@@ -27,7 +29,7 @@ func (file *RemoteFile) GetId() types.ID {
 }
 
 func (file *RemoteFile) fetchContentFromRemote(q types.FileQueries) (io.Reader, error) {
-	content, err := net.FetchFile(file.url)
+	content, err := net.FetchFile(file.url, file.auth)
 	if err != nil {
 		return nil, fmt.Errorf("could not fetch remote file content: %w", err)
 	}
