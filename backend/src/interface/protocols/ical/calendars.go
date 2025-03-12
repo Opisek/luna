@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"luna-backend/crypto"
 	"luna-backend/interface/primitives"
+	common "luna-backend/interface/protocols/internal"
 	"luna-backend/types"
 	"time"
 
@@ -55,8 +56,8 @@ func (source *IcalSource) calendarFromIcal(rawCalendar *ical.Calendar) (*IcalCal
 	settings := &IcalCalendarSettings{}
 
 	calendar := &IcalCalendar{
-		name:         name.Value,
-		desc:         desc.Value,
+		name:         common.UnespaceIcalString(name.Value),
+		desc:         common.UnespaceIcalString(desc.Value),
 		source:       source,
 		color:        calColor,
 		settings:     settings,
