@@ -81,7 +81,6 @@
     all: unset;
     padding: dimensions.$gapSmall;
     border-radius: dimensions.$borderRadius;
-    cursor: pointer;
   }
 
   //input::file-selector-button {
@@ -113,6 +112,7 @@
 
   div.editable > input {
     background: colors.$backgroundSecondary;
+    cursor: pointer;
   }
   div.noneditable {
     --barFocusIndicatorColor: transparent;
@@ -168,19 +168,21 @@
     bind:this={fileInput}
     bind:files
 />
-  {#if empty}
-    <div class="upload button">
-      <IconButton click={select} tabindex={editable && empty ? 0 : -1}>
-          <!-- Upload, FileUp, MonitorUp, CloudUpload, HardDriveUpload -->
-          <Upload size={16}/>
-      </IconButton>
-    </div>
-  {:else}
-    <div class="clear button">
-      <IconButton click={clear} tabindex={editable && !empty ? 0 : -1}>
-          <X size={16}/>
-      </IconButton>
-    </div>
+  {#if editable}
+    {#if empty}
+      <div class="upload button">
+        <IconButton click={select} tabindex={editable && empty ? 0 : -1}>
+            <!-- Upload, FileUp, MonitorUp, CloudUpload, HardDriveUpload -->
+            <Upload size={16}/>
+        </IconButton>
+      </div>
+    {:else}
+      <div class="clear button">
+        <IconButton click={clear} tabindex={editable && !empty ? 0 : -1}>
+            <X size={16}/>
+        </IconButton>
+      </div>
+    {/if}
   {/if}
 </div>
 
