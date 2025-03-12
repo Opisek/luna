@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"luna-backend/crypto"
 	"luna-backend/interface/primitives"
-	util "luna-backend/interface/protocols/caldav/internal"
+	common "luna-backend/interface/protocols/internal"
 	"luna-backend/types"
 	"time"
 
@@ -96,7 +96,7 @@ func (calendar *CaldavCalendar) SetColor(color *types.Color) {
 }
 
 func (calendar *CaldavCalendar) convertEvent(event *caldav.CalendarObject, q types.DatabaseQueries) (primitives.Event, error) {
-	convertedEvent, err := eventFromCaldav(calendar, event, q)
+	convertedEvent, err := calendar.eventFromCaldav(event, q)
 	if err != nil {
 		return nil, fmt.Errorf("could not convert event %v: %w", event.Path, err)
 	}
@@ -186,18 +186,18 @@ func setEventProps(cal *ical.Calendar, id string, name string, desc string, colo
 
 	event.Props.SetText(ical.PropUID, id)
 
-	event.Props.SetText(ical.PropSummary, escapeString(name))
+	event.Props.SetText(ical.PropSummary, common.EscapeIcalString(name))
 
 	if desc != "" {
-		event.Props.SetText(ical.PropDescription, escapeString(desc))
+		event.Props.SetText(ical.PropDescription, common.EscapeIcalString(desc))
 	} else {
 		event.Props.Del(ical.PropDescription)
 	}
 
 	if color.IsEmpty() {
 		event.Props.Del(ical.PropColor)
-		event.Props.Del(util.PropColor)
-		event.Props.Del(util.PropLastColorName)
+		event.Props.Del(common.PropColor)
+		event.Props.Del(common.PropLastColorName)
 	} else {
 		colorName, exact := types.ColorToName(color)
 
@@ -207,12 +207,12 @@ func setEventProps(cal *ical.Calendar, id string, name string, desc string, colo
 
 		event.Props.SetText(ical.PropColor, colorName)
 		if exact {
-			event.Props.Del(util.PropColor)
-			event.Props.Del(util.PropLastColorName)
+			event.Props.Del(common.PropColor)
+			event.Props.Del(common.PropLastColorName)
 		} else {
-			event.Props.SetText(util.PropColor, color.String())
+			event.Props.SetText(common.PropColor, color.String())
 			// To detect when the color is changed by another client, we store the last color name in a custom property.
-			event.Props.SetText(util.PropLastColorName, colorName)
+			event.Props.SetText(common.PropLastColorName, colorName)
 		}
 	}
 
@@ -265,7 +265,7 @@ func (calendar *CaldavCalendar) AddEvent(name string, desc string, color *types.
 		return nil, fmt.Errorf("could not get finished event: %w", err)
 	}
 
-	finishedEvent, err := eventFromCaldav(calendar, obj, q)
+	finishedEvent, err := calendar.eventFromCaldav(obj, q)
 	if err != nil {
 		return nil, fmt.Errorf("could not parse finished event: %w", err)
 	}
@@ -294,7 +294,7 @@ func (calendar *CaldavCalendar) EditEvent(originalEvent primitives.Event, name s
 		return nil, fmt.Errorf("could not get finished event: %w", err)
 	}
 
-	finishedEvent, err := eventFromCaldav(calendar, obj, q)
+	finishedEvent, err := calendar.eventFromCaldav(obj, q)
 	if err != nil {
 		return nil, fmt.Errorf("could not parse finished event: %w", err)
 	}

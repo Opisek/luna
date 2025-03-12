@@ -2,9 +2,13 @@ package ical
 
 import (
 	"encoding/json"
+	"fmt"
 	"luna-backend/crypto"
 	"luna-backend/interface/primitives"
+	common "luna-backend/interface/protocols/internal"
 	"luna-backend/types"
+
+	"github.com/emersion/go-ical"
 )
 
 type IcalEvent struct {
@@ -17,6 +21,29 @@ type IcalEvent struct {
 }
 
 type IcalEventSettings struct {
+	Uid string `json:"uid"`
+	//rawEvent *ical.Event `json:"-"`
+}
+
+func (calendar *IcalCalendar) eventFromIcal(props *ical.Props) (*IcalEvent, error) {
+	parsedProps, _, err := common.ParseIcalEvent(props)
+	if err != nil {
+		return nil, fmt.Errorf("could not parse ical event: %w", err)
+	}
+
+	event := &IcalEvent{
+		name:  parsedProps.Name,
+		desc:  parsedProps.Desc,
+		color: parsedProps.Color,
+		settings: &IcalEventSettings{
+			Uid: parsedProps.Uid,
+			//rawEvent: icalEvent,
+		},
+		calendar:  calendar,
+		eventDate: parsedProps.EventDate,
+	}
+
+	return event, nil
 }
 
 func (settings *IcalEventSettings) Bytes() []byte {
@@ -32,7 +59,7 @@ func genEventId(calendarId types.ID, uid string) types.ID {
 }
 
 func (event *IcalEvent) GetId() types.ID {
-	return genEventId(event.calendar.GetId(), "TODO")
+	return genEventId(event.calendar.GetId(), event.settings.Uid)
 }
 
 func (event *IcalEvent) GetName() string {

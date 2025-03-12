@@ -23,6 +23,49 @@ type IcalCalendar struct {
 type IcalCalendarSettings struct {
 }
 
+func (source *IcalSource) calendarFromIcal(rawCalendar *ical.Calendar) (*IcalCalendar, error) {
+	name := rawCalendar.Props.Get(ical.PropName)
+	if name == nil {
+		name = rawCalendar.Props.Get("X-WR-CALNAME")
+	}
+	if name == nil {
+		name = ical.NewProp(ical.PropName)
+		name.SetText(source.name)
+	}
+
+	desc := rawCalendar.Props.Get(ical.PropDescription)
+	if desc == nil {
+		desc = rawCalendar.Props.Get("X-WR-CALDESC")
+	}
+	if desc == nil {
+		desc = ical.NewProp(ical.PropDescription)
+		desc.SetText("")
+	}
+
+	var calColor *types.Color = nil
+	colProp := rawCalendar.Props.Get(ical.PropColor)
+	if colProp != nil {
+		var err error
+		calColor, err = types.ParseColor(colProp.Value)
+		if err != nil {
+			calColor = nil
+		}
+	}
+
+	settings := &IcalCalendarSettings{}
+
+	calendar := &IcalCalendar{
+		name:         name.Value,
+		desc:         desc.Value,
+		source:       source,
+		color:        calColor,
+		settings:     settings,
+		icalCalendar: rawCalendar,
+	}
+
+	return calendar, nil
+}
+
 func (settings *IcalCalendarSettings) Bytes() []byte {
 	bytes, err := json.Marshal(settings)
 	if err != nil {
@@ -69,11 +112,50 @@ func (calendar *IcalCalendar) SetColor(color *types.Color) {
 }
 
 func (calendar *IcalCalendar) GetEvents(start time.Time, end time.Time, q types.DatabaseQueries) ([]primitives.Event, error) {
-	return nil, fmt.Errorf("not implemented")
+	res := make([]primitives.Event, len(calendar.icalCalendar.Children))
+
+	count := 0
+	for _, comp := range calendar.icalCalendar.Children {
+		if comp.Name != "VEVENT" {
+			continue
+		}
+
+		event, err := calendar.eventFromIcal(&comp.Props)
+		if err != nil {
+			return nil, err
+		}
+
+		if event.GetDate().Start().Before(start) || event.GetDate().End().After(end) {
+			continue
+		}
+
+		res[count] = event
+		count++
+	}
+
+	return res[:count], nil
 }
 
 func (calendar *IcalCalendar) GetEvent(settings primitives.EventSettings, q types.DatabaseQueries) (primitives.Event, error) {
-	return nil, fmt.Errorf("not implemented")
+	icalSettings := settings.(*IcalEventSettings)
+	targetUid := icalSettings.Uid
+
+	for _, comp := range calendar.icalCalendar.Children {
+		if comp.Name != "VEVENT" {
+			continue
+		}
+
+		event, err := calendar.eventFromIcal(&comp.Props)
+		if err != nil {
+			return nil, err
+		}
+
+		if event.GetSettings().(*IcalEventSettings).Uid == targetUid {
+			return event, nil
+		}
+	}
+
+	return nil, fmt.Errorf("event not found")
 }
 
 /* Ical calendar is read-only */

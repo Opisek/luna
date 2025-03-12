@@ -20,10 +20,14 @@ func NewEventDateFromEndTime(start *time.Time, end *time.Time, allDay bool, recu
 	if allDay {
 		_, offset := start.Zone()
 		newStart := start.Add(time.Duration(offset) * time.Second).UTC()
-		start = &newStart
 
 		_, offset = end.Zone()
+		if end.Equal(*start) {
+			offset += int((24 * time.Hour).Seconds())
+		}
 		newEnd := end.Add(time.Duration(offset) * time.Second).UTC()
+
+		start = &newStart
 		end = &newEnd
 	}
 

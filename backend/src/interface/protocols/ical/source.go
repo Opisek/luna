@@ -43,41 +43,6 @@ func (source *IcalSource) getIcalFile(q types.FileQueries) (*ical.Calendar, erro
 	return source.icalCalendar, nil
 }
 
-func (source *IcalSource) calendarFromIcal(rawCalendar *ical.Calendar) (*IcalCalendar, error) {
-	name := rawCalendar.Props.Get(ical.PropName)
-	if name == nil {
-		name = rawCalendar.Props.Get("X-WR-CALNAME")
-	}
-	if name == nil {
-		name = ical.NewProp(ical.PropName)
-		name.SetText(source.name)
-	}
-
-	desc := rawCalendar.Props.Get(ical.PropDescription)
-	if desc == nil {
-		desc = rawCalendar.Props.Get("X-WR-CALDESC")
-	}
-	if desc == nil {
-		desc = ical.NewProp(ical.PropDescription)
-		desc.SetText("")
-	}
-
-	// TODO: fetch color
-
-	settings := &IcalCalendarSettings{}
-
-	calendar := &IcalCalendar{
-		name:         name.Value,
-		desc:         desc.Value,
-		source:       source,
-		color:        nil,
-		settings:     settings,
-		icalCalendar: rawCalendar,
-	}
-
-	return calendar, nil
-}
-
 func (settings *IcalSourceSettings) GetBytes() []byte {
 	bytes, err := json.Marshal(settings)
 	if err != nil {
@@ -144,7 +109,11 @@ func (source *IcalSource) GetCalendars(q types.DatabaseQueries) ([]primitives.Ca
 }
 
 func (source *IcalSource) GetCalendar(settings primitives.CalendarSettings, q types.DatabaseQueries) (primitives.Calendar, error) {
-	return nil, fmt.Errorf("not implemented")
+	cals, err := source.GetCalendars(q)
+	if err != nil {
+		return nil, fmt.Errorf("could not get calendar: %v", err)
+	}
+	return cals[0], nil
 }
 
 /* Ical source is read-only */
