@@ -58,7 +58,8 @@ func (q *Queries) SetFilecacheWithoutId(file types.File, content io.Reader) (typ
 		INSERT INTO filecache (file, date)
 		VALUES ($1, CURRENT_TIMESTAMP)
 		ON CONFLICT (id) DO UPDATE
-		SET file = $1;
+		SET file = $1
+		RETURNING id;
 	`
 
 	var id types.ID

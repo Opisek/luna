@@ -18,9 +18,13 @@ func NewDatabaseFile(id types.ID) *DatabaseFile {
 	return &DatabaseFile{id: id}
 }
 
-func NewDatabaseFileFromContent(content []byte, q types.FileQueries) (*DatabaseFile, error) {
-	file := &DatabaseFile{content: content}
-	_, err := q.SetFilecacheWithoutId(file, bytes.NewReader(content))
+func NewDatabaseFileFromContent(content io.Reader, q types.FileQueries) (*DatabaseFile, error) {
+	buf, err := io.ReadAll(content)
+	file := &DatabaseFile{content: buf}
+	if err != nil {
+		return nil, fmt.Errorf("could not read content: %w", err)
+	}
+	_, err = q.SetFilecacheWithoutId(file, bytes.NewReader(buf))
 	if err != nil {
 		return nil, fmt.Errorf("could not create file: %w", err)
 	}

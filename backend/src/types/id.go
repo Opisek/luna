@@ -48,10 +48,15 @@ func IdFromBytes(bytes []byte) (ID, error) {
 }
 
 func IdFromString(str string) (ID, error) {
+	if str == "" {
+		return EmptyId(), nil
+	}
+
 	id, err := uuid.Parse(str)
 	if err != nil {
 		return EmptyId(), err
 	}
+
 	return IdFromUuid(id), nil
 }
 

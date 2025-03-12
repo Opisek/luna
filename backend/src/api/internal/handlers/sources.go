@@ -137,7 +137,7 @@ func parseAuthMethod(c *gin.Context) (auth.AuthMethod, error) {
 	return sourceAuth, nil
 }
 
-func parseSource(c *gin.Context, sourceName string, sourceAuth auth.AuthMethod) (primitives.Source, error) {
+func parseSource(c *gin.Context, sourceName string, sourceAuth auth.AuthMethod, q types.DatabaseQueries) (primitives.Source, error) {
 	var source primitives.Source
 
 	sourceType := c.PostForm("type")
@@ -157,19 +157,62 @@ func parseSource(c *gin.Context, sourceName string, sourceAuth auth.AuthMethod) 
 
 		source = caldav.NewCaldavSource(sourceName, sourceUrl, sourceAuth)
 	case types.SourceIcal:
-		rawUrl := c.PostForm("url")
-		if rawUrl == "" {
-			return nil, errors.New("missing caldav url")
-		}
-		if util.IsValidUrl(rawUrl) != nil {
-			return nil, errors.New("invalid caldav url")
-		}
-		sourceUrl, err := types.NewUrl(rawUrl)
-		if err != nil {
-			return nil, errors.New("invalid caldav url")
+		locationType := c.PostForm("location")
+		if locationType == "" {
+			return nil, errors.New("missing ical location")
 		}
 
-		source = ical.NewIcalSource(sourceName, sourceUrl, sourceAuth)
+		switch locationType {
+		case "remote":
+			rawUrl := c.PostForm("url")
+			if rawUrl == "" {
+				return nil, errors.New("missing ical url")
+			}
+			if util.IsValidUrl(rawUrl) != nil {
+				return nil, errors.New("invalid ical url")
+			}
+			sourceUrl, err := types.NewUrl(rawUrl)
+			if err != nil {
+				return nil, errors.New("invalid ical url")
+			}
+			source = ical.NewRemoteIcalSource(sourceName, sourceUrl, sourceAuth)
+		case "local":
+			if sourceAuth.GetType() != types.AuthNone {
+				return nil, errors.New("local ical sources cannot have auth")
+			}
+			rawPath := c.PostForm("path")
+			if rawPath == "" {
+				return nil, errors.New("missing ical path")
+			}
+			sourcePath, err := types.NewPath(rawPath)
+			if err != nil {
+				return nil, errors.New("invalid ical path")
+			}
+			source = ical.NewLocalIcalSource(sourceName, sourcePath)
+		case "database":
+			if sourceAuth.GetType() != types.AuthNone {
+				return nil, errors.New("database ical sources cannot have auth")
+			}
+
+			fileHeader, err := c.FormFile("file")
+			if err != nil || fileHeader == nil {
+				return nil, fmt.Errorf("missing or errornous ical file: %w", err)
+			}
+			if fileHeader.Size > 50*1000*1000 {
+				return nil, errors.New("ical file too large")
+			}
+
+			file, err := fileHeader.Open()
+			if err != nil {
+				return nil, fmt.Errorf("could not open ical file: %w", err)
+			}
+
+			source, err = ical.NewDatabaseIcalSource(sourceName, file, q)
+			if err != nil {
+				return nil, fmt.Errorf("could not create database ical source: %w", err)
+			}
+		}
+
 	case "":
 		return nil, errors.New("invalid source type")
 	default:
@@ -199,7 +242,7 @@ func PutSource(c *gin.Context) {
 		return
 	}
 
-	source, err := parseSource(c, sourceName, sourceAuth)
+	source, err := parseSource(c, sourceName, sourceAuth, tx.Queries())
 	if err != nil {
 		apiConfig.Logger.Warnf("could not parse source: %v", err)
 		util.ErrorDetailed(c, util.ErrorPayload, util.DetailSource)
@@ -258,7 +301,7 @@ func PatchSource(c *gin.Context) {
 
 	var newSourceSettings primitives.SourceSettings = nil
 	if newType != "" {
-		newSource, err := parseSource(c, newName, newAuth)
+		newSource, err := parseSource(c, newName, newAuth, tx.Queries())
 		if err != nil {
 			apiConfig.Logger.Warnf("could not parse source: %v", err)
 			util.ErrorDetailed(c, util.ErrorPayload, util.DetailSource)

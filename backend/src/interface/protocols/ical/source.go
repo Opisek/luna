@@ -3,6 +3,7 @@ package ical
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"luna-backend/auth"
 	"luna-backend/files"
 	"luna-backend/interface/primitives"
@@ -19,7 +20,10 @@ type IcalSource struct {
 }
 
 type IcalSourceSettings struct {
-	Url          *types.Url     `json:"url"`
+	Location     string         `json:"location"`
+	Url          *types.Url     `json:"url"`  // for Location == "remote"
+	Path         *types.Path    `json:"path"` // for Location == "local"
+	FileId       types.ID       `json:"file"` // for Location == "database"
 	file         types.File     `json:"-"`
 	icalCalendar *ical.Calendar `json:"-"`
 }
@@ -71,27 +75,68 @@ func (source *IcalSource) GetSettings() primitives.SourceSettings {
 	return source.settings
 }
 
-func NewIcalSource(name string, url *types.Url, auth auth.AuthMethod) *IcalSource {
+func NewRemoteIcalSource(name string, url *types.Url, auth auth.AuthMethod) *IcalSource {
 	return &IcalSource{
 		id:   types.EmptyId(), // Placeholder until the database assigns an ID
 		name: name,
 		auth: auth,
 		settings: &IcalSourceSettings{
-			Url:  url,
-			file: files.NewRemoteFile(url, auth), // TDOO: allow remote files and local (uploaded) files
+			Location: "remote",
+			Url:      url,
+			file:     files.NewRemoteFile(url, auth), // TDOO: allow remote files and local (uploaded) files
 		},
 	}
 }
 
-func PackIcalSource(id types.ID, name string, settings *IcalSourceSettings, auth auth.AuthMethod) *IcalSource {
-	settings.file = files.NewRemoteFile(settings.Url, auth) // TDOO: allow remote files and local (uploaded) files
+func NewDatabaseIcalSource(name string, content io.Reader, q types.DatabaseQueries) (*IcalSource, error) {
+	file, err := files.NewDatabaseFileFromContent(content, q)
+	if err != nil {
+		return nil, fmt.Errorf("could not create database file: %v", err)
+	}
+
+	return &IcalSource{
+		id:   types.EmptyId(), // Placeholder until the database assigns an ID
+		name: name,
+		auth: auth.NoAuth{},
+		settings: &IcalSourceSettings{
+			Location: "database",
+			FileId:   file.GetId(),
+			file:     file,
+		},
+	}, nil
+}
+
+func NewLocalIcalSource(name string, path *types.Path) *IcalSource {
+	return &IcalSource{
+		id:   types.EmptyId(), // Placeholder until the database assigns an ID
+		name: name,
+		auth: auth.NoAuth{},
+		settings: &IcalSourceSettings{
+			Location: "local",
+			Path:     path,
+			file:     files.NewLocalFile(path),
+		},
+	}
+}
+
+func PackIcalSource(id types.ID, name string, settings *IcalSourceSettings, auth auth.AuthMethod) (*IcalSource, error) {
+	switch settings.Location {
+	case "remote":
+		settings.file = files.NewRemoteFile(settings.Url, auth)
+	case "local":
+		settings.file = files.NewLocalFile(settings.Path)
+	case "database":
+		settings.file = files.NewDatabaseFile(settings.FileId)
+	default:
+		return nil, fmt.Errorf("unknown file location type: %v", settings.Location)
+	}
 
 	return &IcalSource{
 		id:       id,
 		name:     name,
 		settings: settings,
 		auth:     auth,
-	}
+	}, nil
 }
 
 func (source *IcalSource) GetCalendars(q types.DatabaseQueries) ([]primitives.Calendar, error) {

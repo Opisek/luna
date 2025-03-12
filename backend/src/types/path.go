@@ -10,7 +10,7 @@ func (p *Path) MarshalJSON() ([]byte, error) {
 	if p == nil {
 		return json.Marshal(nil)
 	}
-	return json.Marshal(p)
+	return json.Marshal(p.String())
 }
 
 func (p *Path) UnmarshalJSON(data []byte) error {

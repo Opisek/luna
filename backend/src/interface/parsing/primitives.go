@@ -61,12 +61,15 @@ func (PrimitivesParser) ParseSource(entry *types.SourceDatabaseEntry) (primitive
 		if err != nil {
 			return nil, fmt.Errorf("could not unmarshal ical settings: %v", err)
 		}
-		icalSource := ical.PackIcalSource(
+		icalSource, err := ical.PackIcalSource(
 			entry.Id,
 			entry.Name,
 			settings,
 			authMethod,
 		)
+		if err != nil {
+			return nil, fmt.Errorf("could not pack ical source: %v", err)
+		}
 		return icalSource, nil
 	default:
 		return nil, fmt.Errorf("unknown source type: %v", entry.Type)

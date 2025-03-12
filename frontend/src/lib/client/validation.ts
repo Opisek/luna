@@ -15,6 +15,7 @@ const invalidResponse = (message: string): Validity => {
 }
 
 export const alwaysValid: InputValidation = () => valid;
+export const alwaysValidFile: FileValidation = () => valid;
 
 export const isValidUsername: InputValidation = (username) => {
   if (username.length < 3)
@@ -53,5 +54,23 @@ export const isValidUrl: InputValidation = (url) => {
 export const isValidEmail: InputValidation = (email) => {
   if (!emailRegex.test(email))
     return invalidResponse("Invalid email address");
+  return valid;
+}
+
+export const isValidPath: InputValidation = (path) => {
+  if (path.length < 1)
+    return invalidResponse("Path must be at least 1 character long.");
+  return valid;
+}
+
+export const isValidFile: FileValidation = (files) => {
+  if (files.length === 0)
+    return invalidResponse("No files selected.");
+  if (files.length > 1)
+    return invalidResponse("Too many files selected.");
+  if (files.item(0) === null)
+    return invalidResponse("File is null.");
+  if ((files.item(0) as File).size > 50000000)
+    return invalidResponse("File must not be larger than 50MB.");
   return valid;
 }

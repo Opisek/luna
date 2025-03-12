@@ -30,11 +30,11 @@
     click();
   }
 
-  function leaveInternal(e: MouseEvent) {
+  function leaveInternal() {
     button.blur();
     up();
   }
-  function upInternal(e: MouseEvent) {
+  function upInternal() {
     button.blur();
     up();
   }

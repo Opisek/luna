@@ -92,10 +92,12 @@ func (q *Queries) GetSources(userId types.ID) ([]primitives.Source, error) {
 }
 
 func (q *Queries) InsertSource(userId types.ID, source primitives.Source) (types.ID, error) {
+	fmt.Println("-------------------- ONE")
 	encryptionKey, err := util.GetUserEncryptionKey(q.CommonConfig, userId)
 	if err != nil {
 		return types.EmptyId(), fmt.Errorf("could not get user encryption key: %v", err)
 	}
+	fmt.Println("-------------------- TWO")
 
 	query := `
 		INSERT INTO sources (userid, name, type, settings, auth_type, auth)

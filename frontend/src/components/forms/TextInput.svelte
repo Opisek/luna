@@ -136,7 +136,7 @@
     //height: 100%;
     top: 50%;
     transform: translateY(-50%);
-    right: dimensions.$gapSmaller;
+    right: calc(1.5 * dimensions.$gapSmaller);
     color: colors.$foregroundDim;
   }
 

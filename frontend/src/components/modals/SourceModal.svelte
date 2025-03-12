@@ -6,8 +6,9 @@
   import { EmptySource, NoOp } from "$lib/client/placeholders";
   import { createSource, deleteSource, editSource } from "$lib/client/repository";
   import { deepCopy, deepEquality } from "$lib/common/misc";
-  import { isValidUrl, valid } from "$lib/client/validation";
+  import { isValidFile, isValidPath, isValidUrl, valid } from "$lib/client/validation";
   import { queueNotification } from "$lib/client/notifications";
+  import FileUpload from "../forms/FileUpload.svelte";
 
   interface Props {
     showCreateModal?: () => any;
@@ -34,6 +35,7 @@
       type: "caldav",
       settings: {
         location: "remote",
+        file: null,
       },
       auth_type: "none",
       auth: {},
@@ -53,7 +55,17 @@
       return Promise.reject();
     }
 
-    originalSource = await deepCopy(sourceDetailed);
+    if (sourceDetailed.type === "ical" && sourceDetailed.settings.location === "database" && sourceDetailed.settings.file !== null) {
+      // https://stackoverflow.com/questions/52078853/is-it-possible-to-update-filelist
+      const list = new DataTransfer();
+      const file = new File([], `${sourceDetailed.settings.file}.ics`);
+      list.items.add(file);
+      sourceDetailed.settings.file = list.files;
+    } else {
+      sourceDetailed.settings.file = null;
+    }
+
+    originalSource = deepCopy(sourceDetailed);
 
     showModalInternal();
     return new Promise((resolve, reject) => {
@@ -98,10 +110,16 @@
 
   let caldavLinkValidity: Validity = $state(valid);
   let icalLinkValidity: Validity = $state(valid);
+  let icalFileValidity: Validity = $state(valid);
+  let icalPathValidity: Validity = $state(valid);
 
   let canSubmit: boolean = $derived(sourceDetailed && sourceDetailed.name !== "" && sourceDetailed.type !== "" && (
     (sourceDetailed.type === "caldav" && caldavLinkValidity?.valid) ||
-    (sourceDetailed.type === "ical" && icalLinkValidity?.valid)
+    (sourceDetailed.type === "ical" && (
+      (sourceDetailed.settings.location === "remote"   && icalLinkValidity?.valid) ||
+      (sourceDetailed.settings.location === "database" && icalFileValidity?.valid) ||
+      (sourceDetailed.settings.location === "local"    && icalPathValidity?.valid)
+    ))
   ));
 </script>
 
@@ -117,18 +135,7 @@
 >
   {#if sourceDetailed}
     <TextInput bind:value={sourceDetailed.name} name="name" placeholder="Name" editable={editMode} />
-    <!--
-    <SelectInput bind:value={sourceType} name="type" placeholder={"Type"} editable={editMode} options={[
-      {
-        value: "caldav",
-        name: "CalDav"
-      },
-      {
-        value: "ical",
-        name: "iCal"
-      }
-    ]}></SelectInput>
-    -->
+
     <SelectButtons bind:value={sourceDetailed.type} name="type" placeholder={"Type"} editable={editMode} options={[
       {
         value: "caldav",
@@ -148,8 +155,12 @@
           name: "Internet Link",
         },
         {
-          value: "local",
+          value: "database",
           name: "Upload File",
+        },
+        {
+          value: "local",
+          name: "Server Filepath",
         },
       ]}/>
     {/if}
@@ -160,12 +171,14 @@
     {#if sourceDetailed.type === "ical"}
       {#if sourceDetailed.settings.location === "remote"}
         <TextInput bind:value={sourceDetailed.settings.url} name="ical_url" placeholder="iCal URL" editable={editMode} validation={isValidUrl} bind:validity={icalLinkValidity} />
+      {:else if sourceDetailed.settings.location === "database"}
+        <FileUpload bind:files={sourceDetailed.settings.file} name="ical_file" placeholder="iCal File" editable={editMode} validation={isValidFile} bind:validity={icalFileValidity} />
       {:else if sourceDetailed.settings.location === "local"}
-        TODO: Upload file...
+        <TextInput bind:value={sourceDetailed.settings.path} name="ical_path" placeholder="iCal Path" editable={editMode} validation={isValidPath} bind:validity={icalPathValidity} />
       {/if}
     {/if}
     
-    {#if !(sourceDetailed.type === "ical" && sourceDetailed.settings.location === "local")}
+    {#if !(sourceDetailed.type === "ical" && sourceDetailed.settings.location !== "remote")}
       <SelectButtons bind:value={sourceDetailed.auth_type} name="auth_type" placeholder={"Authentication Type"} editable={editMode} options={[
         {
           value: "none",

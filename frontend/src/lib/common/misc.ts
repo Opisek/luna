@@ -23,3 +23,10 @@ export async function deepCopy<T>(obj: T): Promise<T> {
 export function deepEquality<T>(a: T, b: T): boolean {
     return JSON.stringify(a) === JSON.stringify(b);
 }
+
+export function isDescendentOf(descendent: HTMLElement, element: HTMLElement): boolean {
+    for (let node: (HTMLElement | null) = descendent; node; node = node.parentElement) {
+        if (node === element) return true;
+    }
+    return false;
+}

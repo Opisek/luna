@@ -111,7 +111,22 @@ function getSourceFormData(source: SourceModel, changes: SourceModelChanges = Al
         formData.set("url", source.settings.url);
         break;
       case "ical":
-        formData.set("url", source.settings.url);
+        switch (source.settings.location) {
+          case "remote":
+            formData.set("location", "remote");
+            formData.set("url", source.settings.url);
+            break
+          case "database":
+            formData.set("location", "database");
+            formData.set("file", source.settings.file.item(0));
+            break;
+          case "local":
+            formData.set("location", "local");
+            formData.set("path", source.settings.path);
+            break;
+          default:
+            throw new Error("Unsupported iCal file location");
+        }
         break;
       default:
         throw new Error("Unsupported source type");

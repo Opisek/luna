@@ -14,6 +14,7 @@ type Validity = {
 }
 
 type InputValidation = (value: string) => Validity;
+type FileValidation = (value: FileList) => Validity;
 
 type CacheEntry<T> = {
   date: number;
