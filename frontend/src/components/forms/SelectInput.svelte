@@ -33,6 +33,7 @@
   let optionsWrapper: HTMLElement;
 
   function selectClick() {
+    if (!active && !editable) return;
     active = !active;
     if (!active) return;
 
@@ -73,11 +74,11 @@
     switch(event.key) {
       case "ArrowDown":
         event.preventDefault();
-        focusNext(event);
+        focusNext();
         break;
       case "ArrowUp":
         event.preventDefault();
-        focusPrevious(event);
+        focusPrevious();
         break;
       case "Escape":
         event.preventDefault();
@@ -86,7 +87,7 @@
     }
   }
 
-  function focusNext(event: KeyboardEvent) {
+  function focusNext() {
     const currentFocus = document.activeElement;
 
     let currentIndex = -1;
@@ -103,7 +104,7 @@
     (optionsWrapper.children[currentIndex] as HTMLElement).focus();
   }
 
-  function focusPrevious(event: KeyboardEvent) {
+  function focusPrevious() {
     const currentFocus = document.activeElement;
 
     let currentIndex = options.length;
