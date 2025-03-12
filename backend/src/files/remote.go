@@ -25,7 +25,11 @@ func NewRemoteFile(url *types.Url, auth auth.AuthMethod) *RemoteFile {
 }
 
 func (file *RemoteFile) GetId() types.ID {
-	return crypto.DeriveID(types.UrlNamespace(), file.url.URL().String())
+	return crypto.DeriveID(types.UrlNamespace(), file.url.String())
+}
+
+func (file *RemoteFile) SetId(id types.ID) {
+	panic("illegal operation")
 }
 
 func (file *RemoteFile) fetchContentFromRemote(q types.FileQueries) (io.Reader, error) {
@@ -64,6 +68,9 @@ func (file *RemoteFile) GetContent(q types.FileQueries) (io.Reader, error) {
 	// Try to get from the database first
 	if file.content == nil {
 		reader, file.date, _ = file.fetchContentFromDatabase(q)
+	}
+	if file.content != nil {
+		reader = bytes.NewReader(file.content)
 	}
 
 	// Refetch from the remote based on the cache lifetime

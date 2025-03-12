@@ -34,5 +34,6 @@ type SourceDatabaseEntry struct {
 type DatabaseQueries interface {
 	GetFilecache(file File) (io.Reader, *time.Time, error)
 	SetFilecache(file File, content io.Reader) error
+	SetFilecacheWithoutId(file File, content io.Reader) (ID, error)
 	DeleteFilecache(file File) error
 }

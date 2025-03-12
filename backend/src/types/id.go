@@ -21,6 +21,10 @@ func UrlNamespace() ID {
 	return ID(uuid.NameSpaceURL)
 }
 
+func PathNamespace() ID {
+	return ID(uuid.NameSpaceOID) // no unique well-known namespace for paths, so we'll just use OID
+}
+
 func (id ID) String() string {
 	uuids := uuid.UUIDs([]uuid.UUID{uuid.UUID(id)})
 	strings := uuids.Strings()

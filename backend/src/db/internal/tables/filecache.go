@@ -13,7 +13,7 @@ func (q *Tables) InitializeFilecacheTable() error {
 		context.TODO(),
 		`
 		CREATE TABLE IF NOT EXISTS filecache (
-			id UUID PRIMARY KEY,
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 			date TIMESTAMP NOT NULL,
 			file BYTEA
 		);

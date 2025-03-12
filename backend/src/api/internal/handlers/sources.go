@@ -267,7 +267,19 @@ func PatchSource(c *gin.Context) {
 		newSourceSettings = newSource.GetSettings()
 	}
 
-	apiConfig.Logger.Debugf("parsed params")
+	source, err := tx.Queries().GetSource(userId, sourceId)
+	if err != nil {
+		apiConfig.Logger.Errorf("could not get source: %v", err)
+		util.Error(c, util.ErrorDatabase)
+		return
+	} else if source.GetType() == "ical" {
+		err = source.Cleanup(tx.Queries())
+		if err != nil {
+			apiConfig.Logger.Errorf("error cleaning up source before editing: %v", err)
+			util.Error(c, util.ErrorDatabase)
+			return
+		}
+	}
 
 	err = tx.Queries().UpdateSource(userId, sourceId, newName, newAuth, newType, newSourceSettings)
 	if err != nil {
