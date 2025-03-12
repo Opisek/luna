@@ -82,7 +82,7 @@
     } else {
       const changes = {
         name: sourceDetailed.name != originalSource.name,
-        type: sourceDetailed.type != originalSource.type,
+        type: sourceDetailed.type != originalSource.type || !deepEquality(sourceDetailed.settings, originalSource.settings),
         settings: !deepEquality(sourceDetailed.settings, originalSource.settings),
         auth: sourceDetailed.auth_type != originalSource.auth_type || !deepEquality(sourceDetailed.auth, originalSource.auth)
       }
