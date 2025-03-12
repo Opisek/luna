@@ -7,14 +7,17 @@ import (
 	"luna-backend/interface/primitives"
 	"luna-backend/types"
 	"time"
+
+	"github.com/emersion/go-ical"
 )
 
 type IcalCalendar struct {
-	name     string
-	desc     string
-	source   *IcalSource
-	color    *types.Color
-	settings *IcalCalendarSettings
+	name         string
+	desc         string
+	source       *IcalSource
+	color        *types.Color
+	settings     *IcalCalendarSettings
+	icalCalendar *ical.Calendar
 }
 
 type IcalCalendarSettings struct {
@@ -33,7 +36,8 @@ func genCalId(sourceId types.ID, uid string) types.ID {
 }
 
 func (calendar *IcalCalendar) GetId() types.ID {
-	return genCalId(calendar.source.id, "TODO")
+	// ical files only have a single calendar, so they sometimes don't come with a unique ID
+	return genCalId(calendar.source.id, "calendar")
 }
 
 func (calendar *IcalCalendar) GetName() string {

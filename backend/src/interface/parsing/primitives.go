@@ -83,7 +83,12 @@ func (PrimitivesParser) ParseCalendarSettings(sourceType string, settings []byte
 		}
 		return parsedSettings, nil
 	case types.SourceIcal:
-		fallthrough
+		parsedSettings := &ical.IcalCalendarSettings{}
+		err := json.Unmarshal(settings, parsedSettings)
+		if err != nil {
+			return nil, fmt.Errorf("could not unmarshal ical settings: %v", err)
+		}
+		return parsedSettings, nil
 	default:
 		return nil, fmt.Errorf("unknown source type %v", sourceType)
 	}
@@ -99,7 +104,12 @@ func (PrimitivesParser) ParseEventSettings(sourceType string, settings []byte) (
 		}
 		return parsedSettings, nil
 	case types.SourceIcal:
-		fallthrough
+		parsedSettings := &ical.IcalEventSettings{}
+		err := json.Unmarshal(settings, parsedSettings)
+		if err != nil {
+			return nil, fmt.Errorf("could not unmarshal ical settings: %v", err)
+		}
+		return parsedSettings, nil
 	default:
 		return nil, fmt.Errorf("unknown source type %v", sourceType)
 	}

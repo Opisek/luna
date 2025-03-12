@@ -3,7 +3,6 @@ package queries
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"io"
 	"luna-backend/types"
 	"time"
@@ -16,7 +15,7 @@ func (q *Queries) GetFilecache(file types.File) (io.Reader, *time.Time, error) {
 	err := q.Tx.QueryRow(
 		context.TODO(),
 		`
-		SELECT content, date
+		SELECT file, date
 		FROM filecache
 		WHERE id = $1;
 		`,
@@ -36,16 +35,14 @@ func (q *Queries) SetFilecache(file types.File, content io.Reader) error {
 	_, err = q.Tx.Exec(
 		context.TODO(),
 		`
-		INSERT INTO filecache (id, content, date)
+		INSERT INTO filecache (id, file, date)
 		VALUES ($1, $2, CURRENT_TIMESTAMP)
 		ON CONFLICT (id) DO UPDATE
-		SET content = $2;
+		SET file = $2;
 		`,
 		file.GetId().UUID(),
 		buf,
 	)
-
-	fmt.Println(err)
 
 	return err
 }
