@@ -12,21 +12,21 @@ import (
 )
 
 type IcalSource struct {
-	id           types.ID
-	name         string
-	settings     *IcalSourceSettings
-	auth         auth.AuthMethod
-	file         types.File
-	icalCalendar *ical.Calendar
+	id       types.ID
+	name     string
+	settings *IcalSourceSettings
+	auth     auth.AuthMethod
 }
 
 type IcalSourceSettings struct {
-	Url *types.Url `json:"url"`
+	Url          *types.Url     `json:"url"`
+	file         types.File     `json:"-"`
+	icalCalendar *ical.Calendar `json:"-"`
 }
 
 func (source *IcalSource) getIcalFile(q types.FileQueries) (*ical.Calendar, error) {
-	if source.icalCalendar == nil {
-		content, err := source.file.GetContent(q)
+	if source.settings.icalCalendar == nil {
+		content, err := source.settings.file.GetContent(q)
 		if err != nil {
 			return nil, fmt.Errorf("could not get ical file: %v", err)
 		}
@@ -38,9 +38,9 @@ func (source *IcalSource) getIcalFile(q types.FileQueries) (*ical.Calendar, erro
 			return nil, fmt.Errorf("could not decode ical file: %v", err)
 		}
 
-		source.icalCalendar = cal
+		source.settings.icalCalendar = cal
 	}
-	return source.icalCalendar, nil
+	return source.settings.icalCalendar, nil
 }
 
 func (settings *IcalSourceSettings) GetBytes() []byte {
@@ -77,19 +77,20 @@ func NewIcalSource(name string, url *types.Url, auth auth.AuthMethod) *IcalSourc
 		name: name,
 		auth: auth,
 		settings: &IcalSourceSettings{
-			Url: url,
+			Url:  url,
+			file: files.NewRemoteFile(url), // TDOO: allow remote files and local (uploaded) files
 		},
-		file: files.NewRemoteFile(url), // TDOO: allow remote files and local (uploaded) files
 	}
 }
 
 func PackIcalSource(id types.ID, name string, settings *IcalSourceSettings, auth auth.AuthMethod) *IcalSource {
+	settings.file = files.NewRemoteFile(settings.Url) // TDOO: allow remote files and local (uploaded) files
+
 	return &IcalSource{
 		id:       id,
 		name:     name,
 		settings: settings,
 		auth:     auth,
-		file:     files.NewRemoteFile(settings.Url), // TDOO: allow remote files and local (uploaded) files
 	}
 }
 
@@ -131,5 +132,5 @@ func (source *IcalSource) DeleteCalendar(calendar primitives.Calendar, q types.D
 }
 
 func (source *IcalSource) Cleanup(q types.DatabaseQueries) error {
-	return q.DeleteFilecache(source.file)
+	return q.DeleteFilecache(source.settings.file)
 }
