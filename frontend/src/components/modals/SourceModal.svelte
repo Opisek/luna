@@ -32,7 +32,9 @@
       id: "",
       name: "",
       type: "caldav",
-      settings: {},
+      settings: {
+        location: "remote",
+      },
       auth_type: "none",
       auth: {},
       collapsed: false
@@ -137,33 +139,54 @@
         name: "iCal"
       }
     ]}/>
+
+
+    {#if sourceDetailed.type === "ical"}
+      <SelectButtons bind:value={sourceDetailed.settings.location} name="ical_location" placeholder={"File Location"} editable={editMode} options={[
+        {
+          value: "remote",
+          name: "Internet Link",
+        },
+        {
+          value: "local",
+          name: "Upload File",
+        },
+      ]}/>
+    {/if}
+
     {#if sourceDetailed.type === "caldav"}
       <TextInput bind:value={sourceDetailed.settings.url} name="caldav_url" placeholder="CalDav URL" editable={editMode} validation={isValidUrl} bind:validity={caldavLinkValidity} />
     {/if}
     {#if sourceDetailed.type === "ical"}
-      <TextInput bind:value={sourceDetailed.settings.url} name="ical_url" placeholder="iCal URL" editable={editMode} validation={isValidUrl} bind:validity={icalLinkValidity} />
+      {#if sourceDetailed.settings.location === "remote"}
+        <TextInput bind:value={sourceDetailed.settings.url} name="ical_url" placeholder="iCal URL" editable={editMode} validation={isValidUrl} bind:validity={icalLinkValidity} />
+      {:else if sourceDetailed.settings.location === "local"}
+        TODO: Upload file...
+      {/if}
     {/if}
     
-    <SelectButtons bind:value={sourceDetailed.auth_type} name="auth_type" placeholder={"Authentication Type"} editable={editMode} options={[
-      {
-        value: "none",
-        name: "None",
-      },
-      {
-        value: "basic",
-        name: "Password",
-      },
-      {
-        value: "bearer",
-        name: "Token",
-      },
-    ]}/>
-    {#if sourceDetailed.auth_type === "basic"}
-      <TextInput bind:value={sourceDetailed.auth.username} name="auth_username" placeholder="Username" editable={editMode} />
-      <TextInput bind:value={sourceDetailed.auth.password} name="auth_password" placeholder="Password" editable={editMode} password={true} />
-    {/if}
-    {#if sourceDetailed.auth_type === "bearer"}
-      <TextInput bind:value={sourceDetailed.auth.token} name="auth_token" placeholder="Token" editable={editMode} password={true} />
+    {#if !(sourceDetailed.type === "ical" && sourceDetailed.settings.location === "local")}
+      <SelectButtons bind:value={sourceDetailed.auth_type} name="auth_type" placeholder={"Authentication Type"} editable={editMode} options={[
+        {
+          value: "none",
+          name: "None",
+        },
+        {
+          value: "basic",
+          name: "Password",
+        },
+        {
+          value: "bearer",
+          name: "Token",
+        },
+      ]}/>
+      {#if sourceDetailed.auth_type === "basic"}
+        <TextInput bind:value={sourceDetailed.auth.username} name="auth_username" placeholder="Username" editable={editMode} />
+        <TextInput bind:value={sourceDetailed.auth.password} name="auth_password" placeholder="Password" editable={editMode} password={true} />
+      {/if}
+      {#if sourceDetailed.auth_type === "bearer"}
+        <TextInput bind:value={sourceDetailed.auth.token} name="auth_token" placeholder="Token" editable={editMode} password={true} />
+      {/if}
     {/if}
   {/if}
 </EditableModal>
