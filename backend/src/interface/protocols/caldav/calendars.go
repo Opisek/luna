@@ -21,7 +21,6 @@ type CaldavCalendar struct {
 	source   *CaldavSource
 	color    *types.Color
 	settings *CaldavCalendarSettings
-	auth     auth.AuthMethod
 	client   *caldav.Client
 }
 
