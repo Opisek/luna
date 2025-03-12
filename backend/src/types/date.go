@@ -21,11 +21,13 @@ func NewEventDateFromEndTime(start *time.Time, end *time.Time, allDay bool, recu
 		_, offset := start.Zone()
 		newStart := start.Add(time.Duration(offset) * time.Second).UTC()
 
-		_, offset = end.Zone()
-		if end.Equal(*start) {
-			offset += int((24 * time.Hour).Seconds())
+		var newEnd time.Time
+		if end.After(*start) {
+			_, offset = end.Zone()
+			newEnd = end.Add(time.Duration(offset) * time.Second).UTC()
+		} else {
+			newEnd = start.Add(24 * time.Hour)
 		}
-		newEnd := end.Add(time.Duration(offset) * time.Second).UTC()
 
 		start = &newStart
 		end = &newEnd
@@ -53,6 +55,23 @@ func NewEventDateFromDuration(start *time.Time, duration *time.Duration, allDay 
 		allDay:          allDay,
 		recurrence:      recurrence,
 		specifyDuration: true,
+	}
+}
+
+func NewEventDateFromSingleDay(start *time.Time, recurrence *EventRecurrence) *EventDate {
+	_, offset := start.Zone()
+	newStart := start.Add(time.Duration(offset) * time.Second).UTC()
+	newEnd := newStart.Add(24 * time.Hour).UTC()
+
+	start = &newStart
+	end := &newEnd
+
+	return &EventDate{
+		start:           start,
+		end:             end,
+		allDay:          true,
+		recurrence:      recurrence,
+		specifyDuration: false,
 	}
 }
 
