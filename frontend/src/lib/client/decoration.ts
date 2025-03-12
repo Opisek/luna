@@ -35,8 +35,8 @@ export const focusIndicator = (node: HTMLElement, settings: FocusIndicatorSettin
   const focusOut = (e: FocusEvent) => {
     if (!e.relatedTarget) return;
     if (settings.ignoreParent && e.relatedTarget && node.parentElement?.contains(e.relatedTarget as HTMLElement)) return;
-    if (e.target instanceof HTMLInputElement && e.relatedTarget && isDescendentOf(e.relatedTarget as HTMLElement, e.target.parentElement as HTMLElement)) return;
-    //if (e.relatedTarget && (e.relatedTarget as HTMLElement).parentElement?.parentElement?.parentElement instanceof HTMLDialogElement) return;
+    if (e.target instanceof HTMLInputElement && e.relatedTarget && isDescendentOf(e.relatedTarget as HTMLElement, e.target.parentElement as HTMLElement)) return; // for select buttons
+    if (e.target instanceof HTMLButtonElement && e.target.parentElement?.parentElement?.classList.contains('sources') && (e.relatedTarget && (e.relatedTarget as HTMLElement).parentElement?.parentElement?.parentElement instanceof HTMLDialogElement)) return; // for source entries
     node.classList.remove("clicked");
   }
 
