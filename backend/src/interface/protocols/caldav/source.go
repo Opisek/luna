@@ -16,11 +16,11 @@ type CaldavSource struct {
 	name     string
 	settings *CaldavSourceSettings
 	auth     auth.AuthMethod
-	client   *caldav.Client
 }
 
 type CaldavSourceSettings struct {
-	Url *types.Url `json:"url"`
+	Url    *types.Url     `json:"url"`
+	client *caldav.Client `json:"-"`
 }
 
 func (settings *CaldavSourceSettings) GetBytes() []byte {
@@ -72,9 +72,9 @@ func PackCaldavSource(id types.ID, name string, settings *CaldavSourceSettings, 
 }
 
 func (source *CaldavSource) getClient() (*caldav.Client, error) {
-	if source.client == nil {
+	if source.settings.client == nil {
 		var err error
-		source.client, err = caldav.NewClient(
+		source.settings.client, err = caldav.NewClient(
 			source.auth,
 			source.settings.Url.URL().String(),
 		)
@@ -83,7 +83,7 @@ func (source *CaldavSource) getClient() (*caldav.Client, error) {
 			return nil, err
 		}
 	}
-	return source.client, nil
+	return source.settings.client, nil
 }
 
 func (source *CaldavSource) GetCalendars(_ types.DatabaseQueries) ([]primitives.Calendar, error) {

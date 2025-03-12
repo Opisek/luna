@@ -45,7 +45,7 @@ func (source *CaldavSource) calendarFromCaldav(rawCalendar caldav.Calendar) (*Ca
 		source:   source,
 		color:    nil,
 		settings: settings,
-		client:   source.client,
+		client:   source.settings.client,
 	}
 
 	return calendar, nil
