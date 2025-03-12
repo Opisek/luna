@@ -3,18 +3,7 @@ package tables
 import (
 	"context"
 	"fmt"
-	"luna-backend/types"
 )
-
-type SourceEntry struct {
-	Id       types.ID `db:"id" encrypted:"false"`
-	UserId   types.ID `db:"userid" encrypted:"false"`
-	Name     string   `db:"name" encrypted:"false"`
-	Type     string   `db:"type" encrypted:"false"`
-	Settings []byte   `db:"settings" encrypted:"false"`
-	AuthType string   `db:"auth_type" encrypted:"true"`
-	Auth     []byte   `db:"auth" encrypted:"true"`
-}
 
 func (q *Tables) InitializeSourcesTable() error {
 	var err error

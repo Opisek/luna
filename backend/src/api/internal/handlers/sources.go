@@ -297,6 +297,16 @@ func DeleteSource(c *gin.Context) {
 	tx := context.GetTransaction(c)
 	defer tx.Rollback(apiConfig.Logger)
 
+	source, err := tx.Queries().GetSource(userId, sourceId)
+	if err != nil {
+		apiConfig.Logger.Warnf("could not get source: %v", err)
+	} else {
+		err = source.Cleanup(tx.Queries())
+		if err != nil {
+			apiConfig.Logger.Warnf("error cleaning up after source: %v", err)
+		}
+	}
+
 	deleted, err := tx.Queries().DeleteSource(userId, sourceId)
 	if err != nil {
 		apiConfig.Logger.Errorf("could not delete source: %v", err)

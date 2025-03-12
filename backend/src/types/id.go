@@ -17,6 +17,10 @@ func RandomId() ID {
 	return IdFromUuid(id)
 }
 
+func UrlNamespace() ID {
+	return ID(uuid.NameSpaceURL)
+}
+
 func (id ID) String() string {
 	uuids := uuid.UUIDs([]uuid.UUID{uuid.UUID(id)})
 	strings := uuids.Strings()

@@ -63,9 +63,10 @@ func (tx *Transaction) Rollback(logger *logrus.Entry) error {
 func (tx *Transaction) Queries() *queries.Queries {
 	if tx.queries == nil {
 		tx.queries = &queries.Queries{
-			Tx:           tx.tx,
-			Logger:       tx.db.logger,
-			CommonConfig: tx.db.commonConfig,
+			Tx:               tx.tx,
+			Logger:           tx.db.logger,
+			CommonConfig:     tx.db.commonConfig,
+			PrimitivesParser: &tx.db.primitivesParser,
 		}
 	}
 	return tx.queries

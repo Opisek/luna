@@ -66,7 +66,7 @@ func GetEvents(c *gin.Context) {
 		endTime = startTime.Add(time.Hour * 24 * 365)
 	}
 
-	eventsFromCal, err := calendar.GetEvents(startTime, endTime)
+	eventsFromCal, err := calendar.GetEvents(startTime, endTime, tx.Queries())
 	if err != nil {
 		config.Logger.Errorf("could not get events: could not get events from calendar %v: %v", calendar.GetName(), err)
 		util.Error(c, util.ErrorUnknown)
@@ -211,7 +211,7 @@ func PutEvent(c *gin.Context) {
 		date = types.NewEventDateFromDuration(&eventDateStart, &eventDateDuration, eventDateAllDay, nil)
 	}
 
-	event, err := calendar.AddEvent(eventName, eventDesc, eventColor, date)
+	event, err := calendar.AddEvent(eventName, eventDesc, eventColor, date, tx.Queries())
 	if err != nil {
 		apiConfig.Logger.Errorf("could not add event: %v", err)
 		util.Error(c, util.ErrorInternal)
@@ -310,7 +310,7 @@ func PatchEvent(c *gin.Context) {
 		}
 	}
 
-	newEvent, err := event.GetCalendar().EditEvent(event, newEventName, newEventDesc, newEventColor, newEventDate)
+	newEvent, err := event.GetCalendar().EditEvent(event, newEventName, newEventDesc, newEventColor, newEventDate, tx.Queries())
 	if err != nil {
 		apiConfig.Logger.Errorf("could not edit event: %v", err)
 		util.Error(c, util.ErrorInternal)
@@ -354,7 +354,7 @@ func DeleteEvent(c *gin.Context) {
 	}
 
 	// Remove the calendar from the upstream source
-	err = event.GetCalendar().DeleteEvent(event)
+	err = event.GetCalendar().DeleteEvent(event, tx.Queries())
 	if err != nil {
 		apiConfig.Logger.Errorf("could not delete event from remote source: %v", err)
 		util.Error(c, util.ErrorInternal)

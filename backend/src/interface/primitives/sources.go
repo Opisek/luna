@@ -11,11 +11,12 @@ type Source interface {
 	GetName() string
 	GetAuth() auth.AuthMethod
 	GetSettings() SourceSettings
-	GetCalendars() ([]Calendar, error)
-	GetCalendar(settings CalendarSettings) (Calendar, error)
-	AddCalendar(name string, color *types.Color) (Calendar, error)
-	EditCalendar(calendar Calendar, name string, color *types.Color) (Calendar, error)
-	DeleteCalendar(calendar Calendar) error
+	GetCalendars(q types.DatabaseQueries) ([]Calendar, error)
+	GetCalendar(settings CalendarSettings, q types.DatabaseQueries) (Calendar, error)
+	AddCalendar(name string, color *types.Color, q types.DatabaseQueries) (Calendar, error)
+	EditCalendar(calendar Calendar, name string, color *types.Color, q types.DatabaseQueries) (Calendar, error)
+	DeleteCalendar(calendar Calendar, q types.DatabaseQueries) error
+	Cleanup(q types.DatabaseQueries) error
 }
 
 type SourceSettings interface {

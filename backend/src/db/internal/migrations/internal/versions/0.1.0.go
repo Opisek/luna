@@ -82,6 +82,11 @@ func init() {
 			return fmt.Errorf("could not initialize events table: %v", err)
 		}
 
+		err = q.Tables.InitializeFilecacheTable()
+		if err != nil {
+			return fmt.Errorf("could not initialize filecache table: %v", err)
+		}
+
 		return nil
 	})
 }

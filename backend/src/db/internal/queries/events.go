@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"luna-backend/db/internal/parsing"
-	"luna-backend/db/internal/tables"
 	"luna-backend/db/internal/util"
 	"luna-backend/interface/primitives"
 	"luna-backend/types"
@@ -48,7 +47,7 @@ func (q *Queries) insertEvents(cals []primitives.Event) error {
 	return nil
 }
 
-func (q *Queries) getEventEntries(events []primitives.Event) ([]*tables.EventEntry, error) {
+func (q *Queries) getEventEntries(events []primitives.Event) ([]*types.EventDatabaseEntry, error) {
 	query := fmt.Sprintf(
 		`
 		SELECT id, calendar, color, settings
@@ -72,9 +71,9 @@ func (q *Queries) getEventEntries(events []primitives.Event) ([]*tables.EventEnt
 
 	defer rows.Close()
 
-	entries := []*tables.EventEntry{}
+	entries := []*types.EventDatabaseEntry{}
 	for rows.Next() {
-		entry := &tables.EventEntry{}
+		entry := &types.EventDatabaseEntry{}
 
 		err := rows.Scan(&entry.Id, &entry.Calendar, &entry.Color, &entry.Settings)
 		if err != nil {
@@ -127,7 +126,7 @@ func (q *Queries) GetEvent(userId types.ID, eventId types.ID) (primitives.Event,
 		return nil, fmt.Errorf("could not get user decryption key: %v", err)
 	}
 
-	scanner := parsing.NewPgxScanner()
+	scanner := parsing.NewPgxScanner(q.PrimitivesParser, q)
 	scanner.ScheduleEvent()
 	cols, params := scanner.Variables(3)
 

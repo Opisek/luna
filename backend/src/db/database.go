@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"luna-backend/common"
+	"luna-backend/db/internal/parsing"
 
 	"github.com/jackc/pgx"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -15,11 +16,13 @@ type Database struct {
 	pgxConfig *pgx.ConnConfig
 	pool      *pgxpool.Pool
 
-	commonConfig *common.CommonConfig
-	logger       *logrus.Entry
+	commonConfig     *common.CommonConfig
+	primitivesParser parsing.PrimitivesParser
+
+	logger *logrus.Entry
 }
 
-func NewDatabase(host string, port uint16, username, password, database string, commonConfig *common.CommonConfig, logger *logrus.Entry) *Database {
+func NewDatabase(host string, port uint16, username, password, database string, commonConfig *common.CommonConfig, primitivesParser parsing.PrimitivesParser, logger *logrus.Entry) *Database {
 	pgxConfig := &pgx.ConnConfig{
 		Host:     host,
 		Port:     port,
@@ -36,10 +39,11 @@ func NewDatabase(host string, port uint16, username, password, database string, 
 	}
 
 	db := &Database{
-		pgxConfig:    pgxConfig,
-		pool:         pool,
-		commonConfig: commonConfig,
-		logger:       logger,
+		pgxConfig:        pgxConfig,
+		pool:             pool,
+		commonConfig:     commonConfig,
+		primitivesParser: primitivesParser,
+		logger:           logger,
 	}
 
 	return db

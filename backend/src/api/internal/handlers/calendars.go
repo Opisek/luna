@@ -41,7 +41,7 @@ func GetCalendars(c *gin.Context) {
 	}
 
 	// Get the associated calendars
-	calsFromSource, err := source.GetCalendars()
+	calsFromSource, err := source.GetCalendars(tx.Queries())
 
 	if err != nil {
 		config.Logger.Errorf("could not fetch calendars from source %v: %v", source.GetName(), err)
@@ -150,7 +150,7 @@ func PutCalendar(c *gin.Context) {
 		return
 	}
 
-	cal, err := source.AddCalendar(calName, calColor)
+	cal, err := source.AddCalendar(calName, calColor, tx.Queries())
 	if err != nil {
 		apiConfig.Logger.Errorf("could not add calendar: %v", err)
 		util.Error(c, util.ErrorUnknown)
@@ -210,7 +210,7 @@ func PatchCalendar(c *gin.Context) {
 		newCalColor = calendar.GetColor()
 	}
 
-	newCal, err := calendar.GetSource().EditCalendar(calendar, newCalName, newCalColor)
+	newCal, err := calendar.GetSource().EditCalendar(calendar, newCalName, newCalColor, tx.Queries())
 	if err != nil {
 		apiConfig.Logger.Errorf("could not edit calendar: %v", err)
 		util.Error(c, util.ErrorUnknown)
@@ -252,7 +252,7 @@ func DeleteCalendar(c *gin.Context) {
 		return
 	}
 
-	err = calendar.GetSource().DeleteCalendar(calendar)
+	err = calendar.GetSource().DeleteCalendar(calendar, tx.Queries())
 	if err != nil {
 		apiConfig.Logger.Errorf("could not delete calendar: %v", err)
 		util.Error(c, util.ErrorUnknown)

@@ -86,7 +86,7 @@ func (source *CaldavSource) getClient() (*caldav.Client, error) {
 	return source.client, nil
 }
 
-func (source *CaldavSource) GetCalendars() ([]primitives.Calendar, error) {
+func (source *CaldavSource) GetCalendars(_ types.DatabaseQueries) ([]primitives.Calendar, error) {
 	client, err := source.getClient()
 	if err != nil {
 		return nil, err
@@ -112,7 +112,7 @@ func (source *CaldavSource) GetCalendars() ([]primitives.Calendar, error) {
 	return result, nil
 }
 
-func (source *CaldavSource) GetCalendar(settings primitives.CalendarSettings) (primitives.Calendar, error) {
+func (source *CaldavSource) GetCalendar(settings primitives.CalendarSettings, _ types.DatabaseQueries) (primitives.Calendar, error) {
 	caldavSettings := settings.(*CaldavCalendarSettings)
 
 	client, err := source.getClient()
@@ -141,7 +141,7 @@ func (source *CaldavSource) GetCalendar(settings primitives.CalendarSettings) (p
 
 // TODO: Add, Edit, and Delete are not supported by upstream yet
 
-func (source *CaldavSource) AddCalendar(name string, color *types.Color) (primitives.Calendar, error) {
+func (source *CaldavSource) AddCalendar(name string, color *types.Color, _ types.DatabaseQueries) (primitives.Calendar, error) {
 	//caldavCal := calendar.(*CaldavCalendar)
 
 	//client, err := source.getClient()
@@ -152,7 +152,7 @@ func (source *CaldavSource) AddCalendar(name string, color *types.Color) (primit
 	return nil, fmt.Errorf("not implemented")
 }
 
-func (source *CaldavSource) EditCalendar(calendar primitives.Calendar, name string, color *types.Color) (primitives.Calendar, error) {
+func (source *CaldavSource) EditCalendar(calendar primitives.Calendar, name string, color *types.Color, _ types.DatabaseQueries) (primitives.Calendar, error) {
 	//caldavCal := calendar.(*CaldavCalendar)
 
 	//client, err := source.getClient()
@@ -163,7 +163,7 @@ func (source *CaldavSource) EditCalendar(calendar primitives.Calendar, name stri
 	return nil, fmt.Errorf("not implemented")
 }
 
-func (source *CaldavSource) DeleteCalendar(calendar primitives.Calendar) error {
+func (source *CaldavSource) DeleteCalendar(calendar primitives.Calendar, _ types.DatabaseQueries) error {
 	//caldavCal := calendar.(*CaldavCalendar)
 
 	//client, err := source.getClient()
@@ -173,3 +173,5 @@ func (source *CaldavSource) DeleteCalendar(calendar primitives.Calendar) error {
 
 	return fmt.Errorf("not implemented")
 }
+
+func (source *CaldavSource) Cleanup(_ types.DatabaseQueries) error { return nil }

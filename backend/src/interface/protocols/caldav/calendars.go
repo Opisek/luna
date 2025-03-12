@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"luna-backend/auth"
 	"luna-backend/crypto"
 	"luna-backend/interface/primitives"
 	util "luna-backend/interface/protocols/caldav/internal"
@@ -96,8 +95,8 @@ func (calendar *CaldavCalendar) SetColor(color *types.Color) {
 	calendar.color = color
 }
 
-func (calendar *CaldavCalendar) convertEvent(event *caldav.CalendarObject) (primitives.Event, error) {
-	convertedEvent, err := eventFromCaldav(calendar, event)
+func (calendar *CaldavCalendar) convertEvent(event *caldav.CalendarObject, q types.DatabaseQueries) (primitives.Event, error) {
+	convertedEvent, err := eventFromCaldav(calendar, event, q)
 	if err != nil {
 		return nil, fmt.Errorf("could not convert event %v: %w", event.Path, err)
 	}
@@ -107,7 +106,7 @@ func (calendar *CaldavCalendar) convertEvent(event *caldav.CalendarObject) (prim
 	return castedEvent, nil
 }
 
-func (calendar *CaldavCalendar) getEvents(query *caldav.CalendarQuery) ([]primitives.Event, error) {
+func (calendar *CaldavCalendar) getEvents(query *caldav.CalendarQuery, q types.DatabaseQueries) ([]primitives.Event, error) {
 	client, err := calendar.source.getClient()
 	if err != nil {
 		return nil, fmt.Errorf("could not get caldav client: %w", err)
@@ -120,7 +119,7 @@ func (calendar *CaldavCalendar) getEvents(query *caldav.CalendarQuery) ([]primit
 
 	convertedEvents := make([]primitives.Event, len(events))
 	for i, event := range events {
-		convertedEvents[i], err = calendar.convertEvent(&event)
+		convertedEvents[i], err = calendar.convertEvent(&event, q)
 		if err != nil {
 			return nil, err
 		}
@@ -129,7 +128,7 @@ func (calendar *CaldavCalendar) getEvents(query *caldav.CalendarQuery) ([]primit
 	return convertedEvents, nil
 }
 
-func (calendar *CaldavCalendar) GetEvents(start time.Time, end time.Time) ([]primitives.Event, error) {
+func (calendar *CaldavCalendar) GetEvents(start time.Time, end time.Time, q types.DatabaseQueries) ([]primitives.Event, error) {
 	return calendar.getEvents(&caldav.CalendarQuery{
 		CompRequest: caldav.CalendarCompRequest{
 			Name: "VCALENDAR",
@@ -152,10 +151,10 @@ func (calendar *CaldavCalendar) GetEvents(start time.Time, end time.Time) ([]pri
 				End:   end,
 			}},
 		},
-	})
+	}, q)
 }
 
-func (calendar *CaldavCalendar) GetEvent(settings primitives.EventSettings) (primitives.Event, error) {
+func (calendar *CaldavCalendar) GetEvent(settings primitives.EventSettings, q types.DatabaseQueries) (primitives.Event, error) {
 	caldavSettings := settings.(*CaldavEventSettings)
 
 	obj, err := calendar.client.GetCalendarObject(context.TODO(), caldavSettings.Url.Path)
@@ -163,7 +162,7 @@ func (calendar *CaldavCalendar) GetEvent(settings primitives.EventSettings) (pri
 		return nil, fmt.Errorf("could not get event: %w", err)
 	}
 
-	cal, err := calendar.convertEvent(obj)
+	cal, err := calendar.convertEvent(obj, q)
 	if err != nil {
 		return nil, fmt.Errorf("could not get event: %w", err)
 	}
@@ -245,7 +244,7 @@ func setEventProps(cal *ical.Calendar, id string, name string, desc string, colo
 	return nil
 }
 
-func (calendar *CaldavCalendar) AddEvent(name string, desc string, color *types.Color, date *types.EventDate) (primitives.Event, error) {
+func (calendar *CaldavCalendar) AddEvent(name string, desc string, color *types.Color, date *types.EventDate, q types.DatabaseQueries) (primitives.Event, error) {
 	id := types.RandomId()
 	cal := ical.NewCalendar()
 
@@ -266,7 +265,7 @@ func (calendar *CaldavCalendar) AddEvent(name string, desc string, color *types.
 		return nil, fmt.Errorf("could not get finished event: %w", err)
 	}
 
-	finishedEvent, err := eventFromCaldav(calendar, obj)
+	finishedEvent, err := eventFromCaldav(calendar, obj, q)
 	if err != nil {
 		return nil, fmt.Errorf("could not parse finished event: %w", err)
 	}
@@ -274,7 +273,7 @@ func (calendar *CaldavCalendar) AddEvent(name string, desc string, color *types.
 	return finishedEvent, nil
 }
 
-func (calendar *CaldavCalendar) EditEvent(originalEvent primitives.Event, name string, desc string, color *types.Color, date *types.EventDate) (primitives.Event, error) {
+func (calendar *CaldavCalendar) EditEvent(originalEvent primitives.Event, name string, desc string, color *types.Color, date *types.EventDate, q types.DatabaseQueries) (primitives.Event, error) {
 	originalCaldavEvent := originalEvent.(*CaldavEvent)
 	uid := originalCaldavEvent.GetSettings().(*CaldavEventSettings).Uid
 	originalRawEvent := originalCaldavEvent.settings.rawEvent
@@ -295,7 +294,7 @@ func (calendar *CaldavCalendar) EditEvent(originalEvent primitives.Event, name s
 		return nil, fmt.Errorf("could not get finished event: %w", err)
 	}
 
-	finishedEvent, err := eventFromCaldav(calendar, obj)
+	finishedEvent, err := eventFromCaldav(calendar, obj, q)
 	if err != nil {
 		return nil, fmt.Errorf("could not parse finished event: %w", err)
 	}
@@ -303,7 +302,7 @@ func (calendar *CaldavCalendar) EditEvent(originalEvent primitives.Event, name s
 	return finishedEvent, nil
 }
 
-func (calendar *CaldavCalendar) DeleteEvent(event primitives.Event) error {
+func (calendar *CaldavCalendar) DeleteEvent(event primitives.Event, _ types.DatabaseQueries) error {
 	settings := event.GetSettings().(*CaldavEventSettings)
 
 	err := calendar.client.RemoveAll(context.TODO(), settings.Url.Path)

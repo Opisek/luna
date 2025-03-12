@@ -4,14 +4,19 @@ import (
 	"encoding/json"
 	"fmt"
 	"luna-backend/auth"
-	"luna-backend/db/internal/tables"
 	"luna-backend/interface/primitives"
 	"luna-backend/interface/protocols/caldav"
 	"luna-backend/interface/protocols/ical"
 	"luna-backend/types"
 )
 
-func ParseSource(entry *tables.SourceEntry) (primitives.Source, error) {
+type PrimitivesParser struct{}
+
+func GetPrimitivesParser() PrimitivesParser {
+	return PrimitivesParser{}
+}
+
+func (PrimitivesParser) ParseSource(entry *types.SourceDatabaseEntry) (primitives.Source, error) {
 	var err error
 
 	var authMethod auth.AuthMethod
@@ -65,5 +70,37 @@ func ParseSource(entry *tables.SourceEntry) (primitives.Source, error) {
 		return icalSource, nil
 	default:
 		return nil, fmt.Errorf("unknown source type: %v", entry.Type)
+	}
+}
+
+func (PrimitivesParser) ParseCalendarSettings(sourceType string, settings []byte) (primitives.CalendarSettings, error) {
+	switch sourceType {
+	case types.SourceCaldav:
+		parsedSettings := &caldav.CaldavCalendarSettings{}
+		err := json.Unmarshal(settings, parsedSettings)
+		if err != nil {
+			return nil, fmt.Errorf("could not unmarshal caldav settings: %v", err)
+		}
+		return parsedSettings, nil
+	case types.SourceIcal:
+		fallthrough
+	default:
+		return nil, fmt.Errorf("unknown source type %v", sourceType)
+	}
+}
+
+func (PrimitivesParser) ParseEventSettings(sourceType string, settings []byte) (primitives.EventSettings, error) {
+	switch sourceType {
+	case types.SourceCaldav:
+		parsedSettings := &caldav.CaldavEventSettings{}
+		err := json.Unmarshal(settings, parsedSettings)
+		if err != nil {
+			return nil, fmt.Errorf("could not unmarshal caldav settings: %v", err)
+		}
+		return parsedSettings, nil
+	case types.SourceIcal:
+		fallthrough
+	default:
+		return nil, fmt.Errorf("unknown source type %v", sourceType)
 	}
 }

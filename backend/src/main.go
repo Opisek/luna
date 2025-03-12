@@ -5,6 +5,7 @@ import (
 	"luna-backend/api"
 	"luna-backend/common"
 	"luna-backend/db"
+	"luna-backend/interface/parsing"
 	"luna-backend/log"
 	"os"
 	"time"
@@ -42,7 +43,7 @@ func setupConfig() (*logrus.Logger, *logrus.Entry, *common.CommonConfig, error) 
 
 func setupDb(commonConfig *common.CommonConfig, mainLogger *logrus.Entry, dbLogger *logrus.Entry) (*db.Database, error) {
 	env := commonConfig.Env
-	db := db.NewDatabase(env.DB_HOST, env.DB_PORT, env.DB_USERNAME, env.DB_PASSWORD, env.DB_DATABASE, commonConfig, dbLogger)
+	db := db.NewDatabase(env.DB_HOST, env.DB_PORT, env.DB_USERNAME, env.DB_PASSWORD, env.DB_DATABASE, commonConfig, parsing.GetPrimitivesParser(), dbLogger)
 
 	tx, err := db.BeginTransaction()
 	if err != nil {

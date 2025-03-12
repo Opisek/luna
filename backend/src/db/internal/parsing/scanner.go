@@ -2,7 +2,6 @@ package parsing
 
 import (
 	"fmt"
-	"luna-backend/db/internal/tables"
 	"luna-backend/interface/primitives"
 	"luna-backend/types"
 	"reflect"
@@ -10,36 +9,41 @@ import (
 )
 
 type PgxScanner struct {
-	source       *tables.SourceEntry
+	source       *types.SourceDatabaseEntry
 	scanSource   bool
-	calendar     *tables.CalendarEntry
+	calendar     *types.CalendarDatabaseEntry
 	scanCalendar bool
-	event        *tables.EventEntry
+	event        *types.EventDatabaseEntry
 	scanEvent    bool
+
+	primitivesParser PrimitivesParser
+	queries          types.DatabaseQueries
 }
 
-func NewPgxScanner() *PgxScanner {
+func NewPgxScanner(primitivesParser *PrimitivesParser, queries types.DatabaseQueries) *PgxScanner {
 	return &PgxScanner{
-		scanSource:   false,
-		scanCalendar: false,
-		scanEvent:    false,
+		scanSource:       false,
+		scanCalendar:     false,
+		scanEvent:        false,
+		primitivesParser: *primitivesParser,
+		queries:          queries,
 	}
 }
 
 func (s *PgxScanner) ScheduleSource() {
-	s.source = &tables.SourceEntry{}
+	s.source = &types.SourceDatabaseEntry{}
 	s.scanSource = true
 }
 
 func (s *PgxScanner) ScheduleCalendar() {
 	s.ScheduleSource()
-	s.calendar = &tables.CalendarEntry{}
+	s.calendar = &types.CalendarDatabaseEntry{}
 	s.scanCalendar = true
 }
 
 func (s *PgxScanner) ScheduleEvent() {
 	s.ScheduleCalendar()
-	s.event = &tables.EventEntry{}
+	s.event = &types.EventDatabaseEntry{}
 	s.scanEvent = true
 }
 
@@ -93,20 +97,20 @@ func (s *PgxScanner) Variables(keyPos int) (string, []any) {
 	return strings.Join(columns, ", "), vars
 }
 
-func (s *PgxScanner) GetSourceEntry() *tables.SourceEntry {
+func (s *PgxScanner) GetSourceEntry() *types.SourceDatabaseEntry {
 	return s.source
 }
 
-func (s *PgxScanner) GetCalendarEntry() *tables.CalendarEntry {
+func (s *PgxScanner) GetCalendarEntry() *types.CalendarDatabaseEntry {
 	return s.calendar
 }
 
-func (s *PgxScanner) GetEventEntry() *tables.EventEntry {
+func (s *PgxScanner) GetEventEntry() *types.EventDatabaseEntry {
 	return s.event
 }
 
 func (s *PgxScanner) GetSource() (primitives.Source, error) {
-	source, err := ParseSource(s.source)
+	source, err := s.primitivesParser.ParseSource(s.source)
 	if err != nil {
 		return nil, fmt.Errorf("could not get source: %v", err)
 	}
@@ -119,12 +123,12 @@ func (s *PgxScanner) GetCalendar() (primitives.Calendar, error) {
 		return nil, fmt.Errorf("could not get calendar: %v", err)
 	}
 
-	settings, err := ParseCalendarSettings(source.GetType(), s.calendar.Settings)
+	settings, err := s.primitivesParser.ParseCalendarSettings(source.GetType(), s.calendar.Settings)
 	if err != nil {
 		return nil, fmt.Errorf("could not get calendar:  %v", err)
 	}
 
-	calendar, err := source.GetCalendar(settings)
+	calendar, err := source.GetCalendar(settings, s.queries)
 	if err != nil {
 		return nil, fmt.Errorf("could not get calendar: %v", err)
 	}
@@ -142,12 +146,12 @@ func (s *PgxScanner) GetEvent() (primitives.Event, error) {
 		return nil, fmt.Errorf("could not parse event: %v", err)
 	}
 
-	settings, err := ParseEventSettings(calendar.GetSource().GetType(), s.event.Settings)
+	settings, err := s.primitivesParser.ParseEventSettings(calendar.GetSource().GetType(), s.event.Settings)
 	if err != nil {
 		return nil, fmt.Errorf("could not parse event: %v", err)
 	}
 
-	event, err := calendar.GetEvent(settings)
+	event, err := calendar.GetEvent(settings, s.queries)
 	if err != nil {
 		return nil, fmt.Errorf("could not parse event: %v", err)
 	}

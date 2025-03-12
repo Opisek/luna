@@ -19,7 +19,7 @@ func (q *Queries) GetSource(userId types.ID, sourceId types.ID) (primitives.Sour
 		return nil, fmt.Errorf("could not get user decryption key: %v", err)
 	}
 
-	scanner := parsing.NewPgxScanner()
+	scanner := parsing.NewPgxScanner(q.PrimitivesParser, q)
 	scanner.ScheduleSource()
 	cols, params := scanner.Variables(3)
 
@@ -54,7 +54,7 @@ func (q *Queries) GetSources(userId types.ID) ([]primitives.Source, error) {
 		return nil, fmt.Errorf("could not get user decryption key: %v", err)
 	}
 
-	scanner := parsing.NewPgxScanner()
+	scanner := parsing.NewPgxScanner(q.PrimitivesParser, q)
 	scanner.ScheduleSource()
 	cols, params := scanner.Variables(2)
 

@@ -3,15 +3,7 @@ package tables
 import (
 	"context"
 	"fmt"
-	"luna-backend/types"
 )
-
-type EventEntry struct {
-	Id       types.ID `db:"id" encrypted:"false"`
-	Calendar types.ID `db:"calendar" encrypted:"false"`
-	Color    []byte   `db:"color" encrypted:"false"`
-	Settings []byte   `db:"settings" encrypted:"false"`
-}
 
 func (q *Tables) InitializeEventsTable() error {
 	var err error

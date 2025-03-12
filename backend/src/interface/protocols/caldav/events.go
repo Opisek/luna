@@ -65,7 +65,7 @@ func parseTime(icalTime *ical.Prop) (*time.Time, error) {
 	return &parsedTime, nil
 }
 
-func eventFromCaldav(calendar *CaldavCalendar, obj *caldav.CalendarObject) (*CaldavEvent, error) {
+func eventFromCaldav(calendar *CaldavCalendar, obj *caldav.CalendarObject, q types.DatabaseQueries) (*CaldavEvent, error) {
 	mustUpdate := false
 
 	eventIndex := -1
@@ -189,7 +189,7 @@ func eventFromCaldav(calendar *CaldavCalendar, obj *caldav.CalendarObject) (*Cal
 	}
 
 	if mustUpdate {
-		calendar.EditEvent(event, summaryStr, descStr, color, eventDate)
+		calendar.EditEvent(event, summaryStr, descStr, color, eventDate, q)
 		// TODO: we might want to catch errors and display them as notifications here
 	}
 

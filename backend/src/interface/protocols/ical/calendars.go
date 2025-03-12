@@ -64,24 +64,24 @@ func (calendar *IcalCalendar) SetColor(color *types.Color) {
 	calendar.color = color
 }
 
-func (calendar *IcalCalendar) GetEvents(start time.Time, end time.Time) ([]primitives.Event, error) {
+func (calendar *IcalCalendar) GetEvents(start time.Time, end time.Time, q types.DatabaseQueries) ([]primitives.Event, error) {
 	return nil, fmt.Errorf("not implemented")
 }
 
-func (calendar *IcalCalendar) GetEvent(settings primitives.EventSettings) (primitives.Event, error) {
+func (calendar *IcalCalendar) GetEvent(settings primitives.EventSettings, q types.DatabaseQueries) (primitives.Event, error) {
 	return nil, fmt.Errorf("not implemented")
 }
 
 /* Ical calendar is read-only */
 
-func (calendar *IcalCalendar) AddEvent(name string, desc string, color *types.Color, date *types.EventDate) (primitives.Event, error) {
+func (calendar *IcalCalendar) AddEvent(name string, desc string, color *types.Color, date *types.EventDate, q types.DatabaseQueries) (primitives.Event, error) {
 	return nil, fmt.Errorf("not supported")
 }
 
-func (calendar *IcalCalendar) EditEvent(originalEvent primitives.Event, name string, desc string, color *types.Color, date *types.EventDate) (primitives.Event, error) {
+func (calendar *IcalCalendar) EditEvent(originalEvent primitives.Event, name string, desc string, color *types.Color, date *types.EventDate, q types.DatabaseQueries) (primitives.Event, error) {
 	return nil, fmt.Errorf("not supported")
 }
 
-func (calendar *IcalCalendar) DeleteEvent(event primitives.Event) error {
+func (calendar *IcalCalendar) DeleteEvent(event primitives.Event, q types.DatabaseQueries) error {
 	return fmt.Errorf("not supported")
 }
