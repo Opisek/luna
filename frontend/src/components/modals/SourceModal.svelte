@@ -4,7 +4,7 @@
   import TextInput from "../forms/TextInput.svelte";
 
   import { EmptySource, NoOp } from "$lib/client/placeholders";
-  import { createSource, deleteSource, editSource } from "$lib/client/repository";
+  import { createSource, deleteSource, editSource, getSourceDetails } from "$lib/client/repository";
   import { deepCopy, deepEquality } from "$lib/common/misc";
   import { isValidFile, isValidPath, isValidUrl, valid } from "$lib/client/validation";
   import { queueNotification } from "$lib/client/notifications";
@@ -48,13 +48,10 @@
     cancelSource();
 
     // TODO: this should be a call to repository with force refresh = true
-    const res = await fetch(`/api/sources/${source.id}`);
-    if (res.ok) {
-      sourceDetailed = await res.json();
-    } else {
-      queueNotification("failure", `Failed to fetch source details: ${res.statusText}`);
+    sourceDetailed = await getSourceDetails(source.id).catch(err => {
+      queueNotification("failure", `Could not get source details: ${err.message}`);
       return Promise.reject();
-    }
+    });
 
     if (sourceDetailed.type === "ical" && sourceDetailed.settings.location === "database" && sourceDetailed.settings.file !== null) {
       // https://stackoverflow.com/questions/52078853/is-it-possible-to-update-filelist

@@ -2,7 +2,7 @@ import { browser } from "$app/environment";
 
 import { writable } from "svelte/store";
 
-import { hiddenCalendars, isCalendarVisible } from "./localStorage";
+import { hiddenCalendars, isCalendarVisible, isSourceCollapsed } from "./localStorage";
 import { queueNotification } from "./notifications";
 import { AllChangesCalendar, AllChangesEvent, AllChangesSource, NoOp } from "./placeholders";
 
@@ -326,10 +326,14 @@ export async function getSources(forceRefresh = false): Promise<SourceModel[]> {
 
   indicateStartLoading();
 
-  const fetchedSources = await fetchJson("/api/sources").catch((err) => {
+  const fetchedSources: SourceModel[] = await fetchJson("/api/sources").catch((err) => {
     throw err;
   }).finally(() => {
     indicateStopLoading();
+  });
+
+  fetchedSources.forEach((source) => {
+    source.collapsed = isSourceCollapsed(source.id);
   });
 
   sourcesCache.date = Date.now(),
@@ -347,7 +351,9 @@ export async function getSourceDetails(id: string, forceRefresh = false): Promis
     if (cached) return Promise.resolve(cached);
   }
 
-  const fetched = await fetchJson(`/api/sources/${id}`).catch((err) => { throw err; });
+  const fetched: SourceModel = await fetchJson(`/api/sources/${id}`).catch((err) => { throw err; });
+
+  fetched.collapsed = isSourceCollapsed(id);
 
   sourceDetailsCache.set(id, {
     date: Date.now(),
