@@ -100,7 +100,11 @@ Luna uses its own (UU)IDs for every resource accessed through it. Therefore, the
 
 Depending on the `type` field, additional information may need to be passed:
 - `caldav`: `url`
-- `ical`: Not yet implemented
+- `ical`:
+   - `location` (one of `remote`, `database` or `local`)
+   - `url` (if chosen `remote`)
+   - `file` (if chosen `database`)
+   - `path` (if chosen `local`)
 
 Depending on the `auth_type` field, additional information may need to be passed:
 - `none`: No additional information
