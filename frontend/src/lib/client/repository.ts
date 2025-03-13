@@ -6,7 +6,7 @@ import { hiddenCalendars, isCalendarVisible } from "./localStorage";
 import { queueNotification } from "./notifications";
 import { AllChangesEvent, AllChangesSource, NoOp } from "./placeholders";
 
-import { atLeastOnePromise } from "$lib/common/misc";
+import { atLeastOnePromise, deepCopy } from "$lib/common/misc";
 
 //
 // Constants
@@ -43,6 +43,24 @@ function indicateStopLoading() {
   if (--loadingCounter == 0) loadingData.set(false);
 }
 
+async function mapBaseEventToRecurrenceInstance(idAndDate: [string, number]): Promise<EventModel | null> {
+  const baseEvent = eventsMap.get(idAndDate[0]);
+  if (baseEvent == undefined) return null;
+
+  const baseDuration = baseEvent.date.end.getTime() - baseEvent.date.start.getTime();
+
+  const copiedEvent = await deepCopy(baseEvent);
+  copiedEvent.date.start = new Date(idAndDate[1]);
+  copiedEvent.date.end = new Date(idAndDate[1]);
+  copiedEvent.date.end.setTime(copiedEvent.date.end.getTime() + baseDuration);
+
+  return copiedEvent;
+}
+
+async function mapAllRecurrenceInstances(idAndDates: [string, number][]): Promise<EventModel[]> {
+  return (await Promise.all(idAndDates.map(async (idAndDate) => mapBaseEventToRecurrenceInstance(idAndDate)))).filter(x => x != null);
+}
+
 //
 // Caching
 //
@@ -57,7 +75,7 @@ let lastCacheSave = Date.now();
 let sourcesCache: CacheEntry<SourceModel[]> = emptyCache; // sources
 let sourceDetailsCache: Map<string, CacheEntry<SourceModel>> = new Map(); // source -> details
 let calendarsCache: Map<string, CacheEntry<CalendarModel[]>> = new Map(); // source -> calendars
-let eventsCache: Map<string, Map<number, CacheEntry<string[]>>> = new Map(); // calendar -> month -> event id
+let eventsCache: Map<string, Map<number, CacheEntry<[string, number][]>>> = new Map(); // calendar -> month -> event id, start date (because of recurring events having the same id)
 let eventsMap: Map<string, EventModel> = new Map(); // event id -> event
 
 function cacheOk<T>(cache: CacheEntry<T> | undefined): (T | null) {
@@ -198,7 +216,7 @@ let compileEventsTimeout: ReturnType<typeof setTimeout>;
 function compileEvents(start: Date, end: Date) {
   clearTimeout(compileEventsTimeout);
 
-  compileEventsTimeout = setTimeout(() => {
+  compileEventsTimeout = setTimeout(async () => {
     const allEvents = 
       Array.from(eventsCache.entries())
       .filter(x => isCalendarVisible(x[0]) && x[1] != null) // Event must be visible
@@ -209,9 +227,9 @@ function compileEvents(start: Date, end: Date) {
       .filter(x => x != null) // Event must exist
       .flat();
     
-    const uniqueEvents = [ ...new Set(allEvents) ];
+    const uniqueEvents = [ ...new Map(allEvents.map(x => [`${x[0]}${x[1]}`, x])).values() ];
 
-    const eventsWithData = uniqueEvents.map((event) => eventsMap.get(event)).filter((event) => event != null);
+    const eventsWithData = await mapAllRecurrenceInstances(uniqueEvents);
 
     events.set(eventsWithData);
   }, spoolerDelay)
@@ -492,13 +510,13 @@ hiddenCalendars.subscribe(() => {
 
 function determineEventMonths(event: EventModel): Date[] {
   const start = new Date(event.date.start);
-  start.setDate(1);
-  start.setHours(0, 0, 0, 0);
+  start.setUTCDate(1);
+  start.setUTCHours(0, 0, 0, 0);
   const end = new Date(event.date.end);
 
-  const months = [start];
+  const months = [];
   while (start < end) {
-    start.setMonth(start.getMonth() + 1);
+    start.setUTCMonth(start.getUTCMonth() + 1);
     months.push(new Date(start));
   }
 
@@ -520,7 +538,7 @@ function addEventToCache(event: EventModel, date: Date) {
 
   calendarEventsCache.set(date.getTime(), {
     date: cacheEntry.date,
-    value: [ ...cacheEntry.value || [], event.id ]
+    value: [ ...cacheEntry.value || [], [event.id, event.date.start.getTime()] ]
   });
 }
 
@@ -528,7 +546,7 @@ function removeEventFromCache(event: EventModel, date: Date) {
   if (!eventsCache.has(event.calendar)) return;
   const cacheEntry = eventsCache.get(event.calendar)?.get(date.getTime());
   if (!cacheEntry || !cacheEntry.value) return;
-  cacheEntry.value = cacheEntry.value.filter((id) => id !== event.id);
+  cacheEntry.value = cacheEntry.value.filter((idAndDate) => idAndDate[0] !== event.id);
 }
 
 export async function getAllEvents(start: Date, end: Date, forceRefresh = false): Promise<EventModel[]> {
@@ -580,7 +598,7 @@ async function getEventsFromSource(source: string, start: Date, end: Date, force
 async function getEventsFromCalendar(calendar: string, start: Date, end: Date, forceRefresh = false): Promise<EventModel[]> {
   let result: EventModel[] = [];
 
-  const cache = (forceRefresh ? null : eventsCache.get(calendar)) || new Map<number, CacheEntry<string[]>>();
+  const cache = (forceRefresh ? null : eventsCache.get(calendar)) || new Map<number, CacheEntry<[string, number][]>>();
 
   // Limit the range we need to ask for but only use one request per calendar
   const fetchStart = new Date(start);
@@ -589,14 +607,14 @@ async function getEventsFromCalendar(calendar: string, start: Date, end: Date, f
   while (fetchStart.getTime() <= fetchEnd.getTime()) {
     const cached = cacheOk(cache.get(fetchStart.getTime()));
     if (!cached) break;
-    result = result.concat(cached.map((id) => eventsMap.get(id)).filter((event) => event != null));
+    result = result.concat(await mapAllRecurrenceInstances(cached));
     fetchStart.setMonth(fetchStart.getMonth() + 1);
   }
 
   while (fetchEnd.getTime() >= fetchStart.getTime()) {
     const cached = cacheOk(cache.get(fetchEnd.getTime()));
     if (!cached) break;
-    result = result.concat(cached.map((id) => eventsMap.get(id)).filter((event) => event != null));
+    result = result.concat(await mapAllRecurrenceInstances(cached));
     fetchEnd.setMonth(fetchEnd.getMonth() - 1);
   }
 
