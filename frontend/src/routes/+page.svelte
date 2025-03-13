@@ -179,21 +179,26 @@
   @use "../styles/animations.scss";
   @use "../styles/dimensions.scss";
 
+  :global(body) {
+    display: flex;
+    flex-direction: row;
+    //display: grid;
+    //grid-template-columns: auto 1fr;
+    ////grid-template-rows: 1fr auto;
+    ////grid-template-areas:
+    ////  "aside main"
+    ////  "aside footer";
+    //grid-template-rows: auto;
+    //grid-template-areas: "aside main";
+  }
+  
   main {
     width: 100%;
     height: 100%;
     display: flex;
     flex-direction: column;
     gap: dimensions.$gap;
-  }
-
-  div.wrapper {
-    display: flex;
-    flex-direction: row;
-    gap: dimensions.$gap;
-    padding: dimensions.$gap;
-    height: 100%;
-    width: 100%;
+    grid-area: main;
   }
   
   aside {
@@ -204,6 +209,7 @@
     width: 20vw;
     max-width: 20em;
     overflow: hidden;
+    grid-area: aside;
   }
 
   div.sources {
@@ -237,50 +243,49 @@
 <CalendarModal bind:showCreateModal={showNewCalendarModal} bind:showModal={showCalendarModal}/>
 <EventModal bind:showCreateModal={showNewEventModal} bind:showModal={showEventModal}/>
 
-<div class="wrapper">
-  <aside>
-    <Title>Luna</Title>
+<aside>
+  <Title>Luna</Title>
 
-    <!-- SmallCalendar put here only for testing purposes but might consider leaving it if it can serve some useful purpose -->
-    <!--<SmallCalendar year={selectedYear} month={selectedMonth}/>-->
+  <!-- SmallCalendar put here only for testing purposes but might consider leaving it if it can serve some useful purpose -->
+  <!--<SmallCalendar year={selectedYear} month={selectedMonth}/>-->
 
-    <div class="sources">
-      {@render sourceEntries(localSources)}
-    </div>
-    <Horizontal position="center">
-      <IconButton click={showNewSourceModal}>
-        <PlusIcon/>
+  <div class="sources">
+    {@render sourceEntries(localSources)}
+  </div>
+  <Horizontal position="center">
+    <IconButton click={showNewSourceModal}>
+      <PlusIcon/>
+    </IconButton>
+  </Horizontal>
+</aside>
+
+<main>
+  <div class="toprow">
+    <MonthSelection bind:date granularity={view} />
+    <Horizontal position="right" width="auto">
+      <IconButton click={forceRefresh}>
+        <span class="refreshButtonWrapper" class:spin={loaderAnimation} onanimationiteration={() => { if (!isLoading) loaderAnimation = false; }}>
+          <RefreshCw size={20}/>
+        </span>
       </IconButton>
-    </Horizontal>
-  </aside>
-  <main>
-    <div class="toprow">
-      <MonthSelection bind:date granularity={view} />
-      <Horizontal position="right" width="auto">
-        <IconButton click={forceRefresh}>
-          <span class="refreshButtonWrapper" class:spin={loaderAnimation} onanimationiteration={() => { if (!isLoading) loaderAnimation = false; }}>
-            <RefreshCw size={20}/>
-          </span>
-        </IconButton>
-        <SelectButtons
-          name="layout"
-          compact={true}
-          bind:value={view}
-          options={[
-            { value: "day", name: "Day"},
-            { value: "week", name: "Week"},
-            { value: "month", name: "Month"},
-          ]}
-        />
-      </Horizontal>
-    </div>
-      <Calendar
-        date={date}
-        view={view}
-        events={localEvents}
+      <SelectButtons
+        name="layout"
+        compact={true}
+        bind:value={view}
+        options={[
+          { value: "day", name: "Day"},
+          { value: "week", name: "Week"},
+          { value: "month", name: "Month"},
+        ]}
       />
-  </main>
-</div>
+    </Horizontal>
+  </div>
+    <Calendar
+      date={date}
+      view={view}
+      events={localEvents}
+    />
+</main>
 
 {#snippet sourceEntries(sources: SourceModel[])}
   {#each sources as source, i}
