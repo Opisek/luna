@@ -625,6 +625,11 @@ async function getEventsFromCalendar(calendar: string, start: Date, end: Date, f
     });
   });
 
+  faultyCalendars.update((faulty) => {
+    faulty.delete(calendar);
+    return faulty;
+  });
+
   compileEvents(start, end);
   saveCache();
   return result.concat(fetchedEvents);
