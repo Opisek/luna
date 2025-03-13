@@ -1,8 +1,11 @@
 <script lang="ts">
-  import { PlusIcon, RefreshCw } from "lucide-svelte";
+  import { Github } from "svelte-simples"
+  import { PlusIcon, RefreshCw, Settings } from "lucide-svelte";
+  import { setContext, untrack } from "svelte";
 
   import Calendar from "../components/calendar/Calendar.svelte";
   import CalendarEntry from "../components/calendar/CalendarEntry.svelte";
+  import CalendarModal from "../components/modals/CalendarModal.svelte";
   import EventModal from "../components/modals/EventModal.svelte";
   import Horizontal from "../components/layout/Horizontal.svelte";
   import IconButton from "../components/interactive/IconButton.svelte";
@@ -19,8 +22,6 @@
   import { calendars, events, getAllEvents, getSources, invalidateCache, loadingData, sources } from "$lib/client/repository";
   import { queueNotification } from "$lib/client/notifications";
 
-  import { setContext, untrack } from "svelte";
-  import CalendarModal from "../components/modals/CalendarModal.svelte";
 
   /* Constants */
   let autoRefreshInterval = 1000 * 60; // 1 minute
@@ -267,8 +268,14 @@
     {@render sourceEntries(localSources)}
   </div>
   <Horizontal position="center">
+    <IconButton isLink={true} href="/settings">
+      <Settings/>
+    </IconButton>
     <IconButton click={showNewSourceModal}>
       <PlusIcon/>
+    </IconButton>
+    <IconButton isLink={true} href="https://github.com/Opisek/luna">
+      <Github/>
     </IconButton>
   </Horizontal>
 </aside>

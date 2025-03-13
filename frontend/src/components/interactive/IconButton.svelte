@@ -10,6 +10,8 @@
     visible?: boolean;
     style?: string;
     tabindex?: number;
+    isLink?: boolean;
+    href?: string;
     children?: Snippet;
   }
 
@@ -20,9 +22,13 @@
     visible = true,
     style = "",
     tabindex = 0,
+    isLink = false,
+    href = "",
     children
   }: Props = $props();
 
+  // svelte-ignore non_reactive_update
+  // isLink is set once and never changed
   let button: HTMLElement;
 
   function clickInternal(e: MouseEvent) {
@@ -45,7 +51,7 @@
   @use "../../styles/colors.scss";
   @use "../../styles/dimensions.scss";
 
-  button {
+  button, a {
     all: unset;
     border-radius: 50%;
     display: flex;
@@ -56,7 +62,7 @@
     transition: all animations.$cubic animations.$animationSpeed;
   }
 
-  button.hidden {
+  button.hidden, a.hidden {
     visibility: hidden;
   }
 
@@ -70,16 +76,17 @@
     width: 0%;
     height: 0%;
     transition: all animations.$cubic animations.$animationSpeed;
+    pointer-events: none;
   }
 
-  button:hover div.circle, button:focus div.circle {
+  button:hover div.circle, button:focus div.circle, a:hover div.circle, a:focus div.circle {
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
   }
 
-  button:active div.circle {
+  button:active div.circle, a:active div.circle {
     width: 125%;
     height: 125%;
     left: -12.5%;
@@ -87,17 +94,30 @@
   }
 </style>
 
-<button
-  bind:this={button}
-  onclick={clickInternal}
-  onmousedown={down}
-  onmouseleave={leaveInternal}
-  onmouseup={upInternal}
-  class:hidden={!visible}
-  type="button"
-  style={style}
-  tabindex="{tabindex}"
->
-  <div class="circle"></div>
-  {@render children?.()}
-</button>
+{#if isLink}
+  <a
+    bind:this={button}
+    class:hidden={!visible}
+    href={href}
+    style={style}
+    tabindex="{tabindex}"
+  >
+    <div class="circle"></div>
+    {@render children?.()}
+  </a>
+{:else}
+  <button
+    bind:this={button}
+    onclick={clickInternal}
+    onmousedown={down}
+    onmouseleave={leaveInternal}
+    onmouseup={upInternal}
+    class:hidden={!visible}
+    type="button"
+    style={style}
+    tabindex="{tabindex}"
+  >
+    <div class="circle"></div>
+    {@render children?.()}
+  </button>
+{/if}
