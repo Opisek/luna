@@ -289,6 +289,13 @@ func PatchSource(c *gin.Context) {
 		return
 	}
 
+	source, err := tx.Queries().GetSource(userId, sourceId)
+	if err != nil {
+		apiConfig.Logger.Errorf("could not get source: %v", err)
+		util.Error(c, util.ErrorDatabase)
+		return
+	}
+
 	var newAuth auth.AuthMethod = nil
 	if newAuthType != "" {
 		newAuth, err = parseAuthMethod(c)
@@ -297,6 +304,8 @@ func PatchSource(c *gin.Context) {
 			util.ErrorDetailed(c, util.ErrorPayload, util.DetailAuth)
 			return
 		}
+	} else {
+		newAuth = source.GetAuth()
 	}
 
 	var newSourceSettings primitives.SourceSettings = nil
@@ -309,13 +318,7 @@ func PatchSource(c *gin.Context) {
 		}
 		newSourceSettings = newSource.GetSettings()
 	}
-
-	source, err := tx.Queries().GetSource(userId, sourceId)
-	if err != nil {
-		apiConfig.Logger.Errorf("could not get source: %v", err)
-		util.Error(c, util.ErrorDatabase)
-		return
-	} else if source.GetType() == "ical" {
+	if source.GetType() == "ical" {
 		err = source.Cleanup(tx.Queries())
 		if err != nil {
 			apiConfig.Logger.Errorf("error cleaning up source before editing: %v", err)

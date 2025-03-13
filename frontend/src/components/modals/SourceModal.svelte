@@ -65,7 +65,8 @@
       sourceDetailed.settings.file = null;
     }
 
-    originalSource = deepCopy(sourceDetailed);
+    originalSource = await deepCopy(sourceDetailed);
+    if (sourceDetailed.settings.file !== null) originalSource.settings.file = sourceDetailed.settings.file;
 
     showModalInternal();
     return new Promise((resolve, reject) => {
@@ -94,6 +95,9 @@
       });
       saveSource(sourceDetailed);
     } else {
+      if (originalSource.settings.file instanceof String && sourceDetailed.settings.file instanceof FileList && sourceDetailed.settings.file.length === 1 && sourceDetailed.settings.file[0].name === originalSource.settings.file) {
+        sourceDetailed.settings.file = sourceDetailed.settings.file[0];
+      }
       const changes = {
         name: sourceDetailed.name != originalSource.name,
         type: sourceDetailed.type != originalSource.type || !deepEquality(sourceDetailed.settings, originalSource.settings),

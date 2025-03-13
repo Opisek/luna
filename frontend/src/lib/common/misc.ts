@@ -20,8 +20,27 @@ export async function deepCopy<T>(obj: T): Promise<T> {
     return JSON.parse(JSON.stringify(obj));
 }
 
+// https://stackoverflow.com/questions/25456013/javascript-deepequal-comparison
 export function deepEquality<T>(a: T, b: T): boolean {
-    return JSON.stringify(a) === JSON.stringify(b);
+    if (a === b)
+        return true;
+
+    if (isPrimitive(a) && isPrimitive(b))
+        return a === b;
+
+    if (Object.keys(a as Object).length !== Object.keys(b as Object).length)
+        return false;
+
+    for (let key in a) {
+        if(!(key in (b as Object))) return false;
+        if(!deepEquality(a[key], b[key])) return false;
+    }
+
+    return true;
+}
+
+function isPrimitive(obj: any) {
+    return (obj !== Object(obj));
 }
 
 export function isDescendentOf(descendent: HTMLElement, element: HTMLElement): boolean {
