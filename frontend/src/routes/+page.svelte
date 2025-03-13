@@ -179,18 +179,32 @@
   @use "../styles/animations.scss";
   @use "../styles/dimensions.scss";
 
+  :global(body) {
+    display: flex;
+    flex-direction: row;
+    //display: grid;
+    //grid-template-columns: auto 1fr;
+    ////grid-template-rows: 1fr auto;
+    ////grid-template-areas:
+    ////  "aside main"
+    ////  "aside footer";
+    //grid-template-rows: auto;
+    //grid-template-areas: "aside main";
+  }
+  
   main {
     width: 100%;
     height: 100%;
     display: flex;
     flex-direction: column;
     gap: dimensions.$gap;
+    grid-area: main;
   }
 
   div.wrapper {
     display: flex;
     flex-direction: row;
-    gap: dimensions.$gap;
+    gap: dimensions.$gapSmall;
     padding: dimensions.$gap;
     height: 100%;
     width: 100%;
@@ -204,6 +218,7 @@
     width: 20vw;
     max-width: 20em;
     overflow: hidden;
+    grid-area: aside;
   }
 
   div.sources {
@@ -237,7 +252,6 @@
 <CalendarModal bind:showCreateModal={showNewCalendarModal} bind:showModal={showCalendarModal}/>
 <EventModal bind:showCreateModal={showNewEventModal} bind:showModal={showEventModal}/>
 
-<div class="wrapper">
   <aside>
     <Title>Luna</Title>
 
@@ -280,7 +294,6 @@
         events={localEvents}
       />
   </main>
-</div>
 
 {#snippet sourceEntries(sources: SourceModel[])}
   {#each sources as source, i}

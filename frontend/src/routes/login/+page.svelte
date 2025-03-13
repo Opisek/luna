@@ -11,6 +11,7 @@
 
   import { isValidPassword, isValidUsername, valid } from '$lib/client/validation';
   import { queueNotification } from '$lib/client/notifications';
+  import SimplePage from '../../components/layout/SimplePage.svelte';
 
   interface Props {
     form: ActionData;
@@ -41,17 +42,7 @@
   let canSubmit: boolean = $derived(usernameValidity?.valid && passwordValidity?.valid);
 </script>
 
-<style lang="scss">
-  div {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-</style>
-
-<div>
+<SimplePage>
   <Form title="Login" submittable={canSubmit}>
     <TextInput
       name="username"
@@ -73,4 +64,4 @@
     <Link href="/register?redirect={encodeURIComponent(redirect)}">No account yet?</Link>
     <Link href="/recover?redirect={encodeURIComponent(redirect)}">Forgot password?</Link>
   </Form>
-</div>
+</SimplePage>

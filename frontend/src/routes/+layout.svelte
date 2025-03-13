@@ -57,8 +57,12 @@
 
   :global(body) {
     margin: 0;
-    padding: 0;
+    padding: dimensions.$gap;
+    gap: dimensions.$gapSmall;
+
     height: 100vh;
+    width: 100vw;
+
     font-family: text.$fontFamilyText;
     font-size: text.$fontSize;
   }
@@ -83,3 +87,5 @@
     />
   {/each}
 </div>
+
+<!--<Footer/>-->
