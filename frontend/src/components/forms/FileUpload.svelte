@@ -33,7 +33,6 @@
   }
 
   function clear() {
-    console.log("clear")
     if (!editable) return;
     if (fileInput) fileInput.value = "";
     files = null;
