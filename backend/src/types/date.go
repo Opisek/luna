@@ -63,7 +63,7 @@ func NewEventDateFromDuration(start *time.Time, duration *time.Duration, allDay 
 func NewEventDateFromSingleDay(start *time.Time, recurrence *EventRecurrence) *EventDate {
 	_, offset := start.Zone()
 	newStart := start.Add(time.Duration(offset) * time.Second).UTC()
-	newEnd := newStart.Add(24 * time.Hour).UTC()
+	newEnd := newStart
 
 	start = &newStart
 	end := &newEnd

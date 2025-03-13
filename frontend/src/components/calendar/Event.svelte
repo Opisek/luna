@@ -34,14 +34,14 @@
     const remainingTime = event.date.end.getTime() - date.getTime();
     const remainingDays = Math.ceil(remainingTime / (1000 * 60 * 60 * 24));
 
-    return remainingDays;
+    return Math.max(remainingDays, 1);
   })
 
   let remainingDaysThisWeek = $derived.by(() => {
     const myDayIndex = (date.getDay() + 6) % 7;
     const remainingDaysThisWeek = Math.min(remainingDays, 7 - myDayIndex);
 
-    return remainingDaysThisWeek;
+    return Math.max(remainingDaysThisWeek, 1);
   })
 
   let eventEndsThisWeek = $derived(remainingDays == remainingDaysThisWeek);
