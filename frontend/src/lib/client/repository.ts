@@ -256,6 +256,9 @@ function loadCache() {
   const newEventsCache = localStorage.getItem("cache.events");
   if (newEventsCache) eventsCache = new Map(JSON.parse(newEventsCache).map((x: [string, [number, CacheEntry<string>][]]) => [x[0], new Map(x[1])]));
 
+  const newCalendarsMap = localStorage.getItem("cache.calendarsMap");
+  if (newCalendarsMap) calendarsMap = new Map(JSON.parse(newCalendarsMap));
+
   const newEventsMap = localStorage.getItem("cache.eventsMap");
   if (newEventsMap) {
     eventsMap = new Map(JSON.parse(newEventsMap));
@@ -291,6 +294,7 @@ function saveCache() {
       localStorage.setItem("cache.sourceDetails", JSON.stringify(Array.from(sourceDetailsCache.entries())));
       localStorage.setItem("cache.calendars", JSON.stringify(Array.from(calendarsCache.entries())));
       localStorage.setItem("cache.events", JSON.stringify(Array.from(eventsCache.entries().map(x => [x[0], Array.from(x[1].entries())]))));
+      localStorage.setItem("cache.calendarsMap", JSON.stringify(Array.from(calendarsMap.entries())));
       localStorage.setItem("cache.eventsMap", JSON.stringify(Array.from(eventsMap.entries())));
     }, spoolerDelay)
   }
