@@ -20,6 +20,7 @@
   import { queueNotification } from "$lib/client/notifications";
 
   import { setContext, untrack } from "svelte";
+  import CalendarModal from "../components/modals/CalendarModal.svelte";
 
   /* Constants */
   let autoRefreshInterval = 1000 * 60; // 1 minute
@@ -159,8 +160,11 @@
   const showSourceModalInternal = (source: SourceModel) => { return showSourceModal(source); };
   setContext("showSourceModal", showSourceModalInternal);
 
-  //let showNewCalendarModal: () => any = $state(NoOp);
-  //let showCalendarModal: () => any = $state(NoOp);
+  let showNewCalendarModal: () => any = $state(NoOp);
+
+  let showCalendarModal: (calendar: CalendarModel) => any = $state(NoOp);
+  const showCalendarModalInternal = (calendar: CalendarModel) => { return showCalendarModal(calendar); };
+  setContext("showCalendarModal", showCalendarModalInternal);
 
   let showNewEventModal: (date: Date) => any = $state(NoOp);
   const showNewEventModalInternal = (date: Date) => { return showNewEventModal(date); };
@@ -230,7 +234,7 @@
 </style>
 
 <SourceModal bind:showCreateModal={showNewSourceModal} bind:showModal={showSourceModal}/>
-<!--<CalendarModal bind:showCreateModal={showNewCalendarModal} bind:showModal={showCalendarModal}}/>-->
+<CalendarModal bind:showCreateModal={showNewCalendarModal} bind:showModal={showCalendarModal}/>
 <EventModal bind:showCreateModal={showNewEventModal} bind:showModal={showEventModal}/>
 
 <div class="wrapper">

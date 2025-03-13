@@ -1,13 +1,16 @@
 <script lang="ts">
   import ColorCircle from "../misc/ColorCircle.svelte";
+  import Spinner from "../decoration/Spinner.svelte";
   import Tooltip from "../interactive/Tooltip.svelte";
   import VisibilityToggle from "../interactive/VisibilityToggle.svelte";
 
   import { GetCalendarColor } from "$lib/common/colors";
+  import { NoOp } from "$lib/client/placeholders";
   import { faultyCalendars, loadingCalendars } from "$lib/client/repository";
   import { focusIndicator } from "$lib/client/decoration";
   import { isCalendarVisible, setCalendarVisibility } from "$lib/client/localStorage";
-  import Spinner from "../decoration/Spinner.svelte";
+
+  import { getContext } from "svelte";
 
   interface Props {
     calendar: CalendarModel;
@@ -27,6 +30,10 @@
     isLoading = loading.has(calendar.id);
   });
 
+  let showModal: ((calendar: CalendarModel) => Promise<CalendarModel>) = getContext("showCalendarModal");
+  function showModalInternal() {
+    showModal(calendar).then(newCalendar => calendar = newCalendar).catch(NoOp);
+  }
 
   $effect(() => {
     if (calendar && calendar.id) setCalendarVisibility(calendar.id, calendarVisible);
@@ -79,7 +86,7 @@
       color={GetCalendarColor(calendar)}
       size="small"
     />
-    <button use:focusIndicator={{ type: "underline" }}>
+    <button onclick={showModalInternal} use:focusIndicator={{ type: "underline" }}>
       {calendar.name}
     </button>
   </span>

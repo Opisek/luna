@@ -49,3 +49,10 @@ export function isDescendentOf(descendent: HTMLElement, element: HTMLElement): b
     }
     return false;
 }
+
+export function isChildOfModal(element: HTMLElement): boolean {
+    for (let node: (HTMLElement | null) = element; node; node = node.parentElement) {
+        if (node instanceof HTMLDialogElement) return true;
+    }
+    return false;
+}

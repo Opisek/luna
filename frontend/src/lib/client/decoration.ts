@@ -3,7 +3,7 @@ import { mount } from "svelte";
 import BarFocusIndicator from "../../components/decoration/focus/BarFocusIndicator.svelte";
 import Ripple from "../../components/decoration/Ripple.svelte"
 import UnderlineFocusIndicator from "../../components/decoration/focus/UnderlineFocusIndicator.svelte";
-import { isDescendentOf } from "$lib/common/misc";
+import { isChildOfModal, isDescendentOf } from "$lib/common/misc";
 
 export const addRipple = (e: MouseEvent, addToParent: boolean = true) => {
   if (!e.target) return;
@@ -36,7 +36,7 @@ export const focusIndicator = (node: HTMLElement, settings: FocusIndicatorSettin
     if (!e.relatedTarget) return;
     if (settings.ignoreParent && e.relatedTarget && node.parentElement?.contains(e.relatedTarget as HTMLElement)) return;
     if (e.target instanceof HTMLInputElement && e.relatedTarget && isDescendentOf(e.relatedTarget as HTMLElement, e.target.parentElement as HTMLElement)) return; // for select buttons
-    if (e.target instanceof HTMLButtonElement && e.target.parentElement?.parentElement?.classList.contains('sources') && (e.relatedTarget && (e.relatedTarget as HTMLElement).parentElement?.parentElement?.parentElement instanceof HTMLDialogElement)) return; // for source entries
+    if (!isChildOfModal(e.target as HTMLElement) && isChildOfModal(e.relatedTarget as HTMLElement)) return; // buttons that open modals
     node.classList.remove("clicked");
   }
 

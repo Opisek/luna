@@ -36,7 +36,6 @@
       <Event
         event={event}
         isFirstDay={true}
-        isLastDay={true}
         date={date}
         visible={true}
         view="day"

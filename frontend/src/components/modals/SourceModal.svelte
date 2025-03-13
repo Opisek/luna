@@ -47,6 +47,7 @@
   showModal = async (source: SourceModel): Promise<SourceModel> => {
     cancelSource();
 
+    // TODO: this should be a call to repository with force refresh = true
     const res = await fetch(`/api/sources/${source.id}`);
     if (res.ok) {
       sourceDetailed = await res.json();

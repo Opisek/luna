@@ -21,6 +21,20 @@ export const AllChangesSource: SourceModelChanges = {
   auth: true
 }
 
+export const EmptyCalendar: CalendarModel = {
+  id: "",
+  source: "",
+  name: "",
+  desc: "",
+  color: ""
+}
+
+export const AllChangesCalendar: CalendarModelChanges = {
+  name: true,
+  desc: true,
+  color: true
+}
+
 export const PlaceholderDate = new Date(0);
 
 export const EmptyEvent: EventModel = {

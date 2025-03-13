@@ -4,7 +4,7 @@ import { writable } from "svelte/store";
 
 import { hiddenCalendars, isCalendarVisible } from "./localStorage";
 import { queueNotification } from "./notifications";
-import { AllChangesEvent, AllChangesSource, NoOp } from "./placeholders";
+import { AllChangesCalendar, AllChangesEvent, AllChangesSource, NoOp } from "./placeholders";
 
 import { atLeastOnePromise, deepCopy } from "$lib/common/misc";
 
@@ -105,8 +105,8 @@ async function fetchResponse(url: string, options: RequestInit = {}): Promise<Re
   } else {
     const json = await response.json().catch(() => null);
     let err = null;
-    if (!err) err = json.error;
-    if (!err) err = json.message;
+    if (!err && json != null) err = json.error;
+    if (!err && json != null) err = json.message;
     if (!err) err = `${response.statusText ? response.statusText : "Could not contact server"} (${response.status})`;
     throw new Error(err);
   }
@@ -167,6 +167,14 @@ function getSourceFormData(source: SourceModel, changes: SourceModelChanges = Al
         throw new Error("Unsupported auth type");
     }
   }
+  return formData;
+}
+
+function getCalendarFormData(calendar: CalendarModel, changes: CalendarModelChanges = AllChangesCalendar): FormData {
+  const formData = new FormData();
+  if (changes.name) formData.set("name", calendar.name);
+  if (changes.desc) formData.set("desc", calendar.desc);
+  if (changes.color) formData.set("color", calendar.color);
   return formData;
 }
 
@@ -235,6 +243,10 @@ function compileEvents(start: Date, end: Date) {
     events.set(eventsWithData);
   }, spoolerDelay)
 }
+
+hiddenCalendars.subscribe(() => {
+  compileEvents(eventsRangeStart, eventsRangeEnd);
+});
 
 //
 // Local Storage
@@ -518,9 +530,90 @@ export async function getCalendar(id: string, forceRefresh = false): Promise<Cal
   return calendarsMap.get(id) || null; // TODO: needs a bit of refactoring plus actual fetch of the relevant endpoint depending on cache age
 }
 
-hiddenCalendars.subscribe(() => {
+export async function createCalendar(newCalendar: CalendarModel): Promise<void> {
+  if (!browser) return;
+
+  // add to database
+  const formData = getCalendarFormData(newCalendar);
+
+  const json = await fetchJson(`/api/sources/${newCalendar.source}/calendars`, { method: "PUT", body: formData }).catch((err) => { throw err; });
+
+  newCalendar.id = json.id;
+
+  // add to cache
+  calendarsMap.set(newCalendar.id, newCalendar);
+  calendarsCache.set(newCalendar.source, {
+    date: calendarsCache.get(newCalendar.source)?.date || Date.now(),
+    value: calendarsCache.get(newCalendar.source)?.value?.concat(newCalendar.id) || [ newCalendar.id ]
+  });
+
+  // add to display
+  calendars.update((calendars) => calendars.concat(newCalendar));
+
+  saveCache();
+};
+
+export async function editCalendar(modifiedCalendar: CalendarModel, changes: CalendarModelChanges): Promise<void> {
+  if (!browser) return;
+
+  // update in database
+  const formData = getCalendarFormData(modifiedCalendar, changes);
+
+  await fetchResponse(`/api/calendars/${modifiedCalendar.id}`, { method: "PATCH", body: formData }).catch((err) => { throw err; });
+
+  // update in cache
+  calendarsMap.set(modifiedCalendar.id, modifiedCalendar);
+
+  // update on display
+  calendars.update((calendars) => calendars.map((cal) => cal.id === modifiedCalendar.id ? modifiedCalendar : cal));
+
+  saveCache();
+}
+
+export async function deleteCalendar(id: string): Promise<void> {
+  if (!browser) return;
+
+  // remove from database
+  await fetchResponse(`/api/calendars/${id}`, { method: "DELETE" }).catch((err) => { throw err; });
+
+  const calendar = calendarsMap.get(id);
+  if (!calendar) return;
+  calendarsMap.delete(id);
+
+  // remove from cache
+  eventsCache.delete(id);
+  calendarsCache.set(calendar.source, {
+    date: calendarsCache.get(calendar.source)?.date || Date.now(),
+    value: calendarsCache.get(calendar.source)?.value?.filter((cal) => cal !== id) || []
+  });
+
+  // remove from display
+  calendars.update((calendars) => calendars.filter((cal) => cal.id !== id));
   compileEvents(eventsRangeStart, eventsRangeEnd);
-});
+
+  saveCache();
+}
+
+export async function moveCalendar(calendar: CalendarModel): Promise<void> {
+  throw new Error("Not implemented");
+
+  if (!browser) return;
+
+  const oldId = calendar.id;
+
+  // add to the new calendar
+  await createCalendar(calendar).catch((err) => { throw err; });
+
+  // TODO: MOVE ALL EVENTS!!!
+
+  // remove from the old calendar
+  await deleteCalendar(calendar.id).catch((err) => {
+    // undo changes
+    deleteCalendar(calendar.id).catch(NoOp);
+    calendar.id = oldId;
+    throw err;
+  });
+}
 
 //
 // Events
@@ -742,6 +835,8 @@ export async function createEvent(newEvent: EventModel): Promise<void> {
 
   // add to display
   if (isCalendarVisible(newEvent.calendar) && newEvent.date.start <= eventsRangeEnd && newEvent.date.end >= eventsRangeStart) events.update((events) => events.concat(newEvent));
+
+  saveCache();
 };
 
 export async function editEvent(modifiedEvent: EventModel, changes: EventModelChanges): Promise<void> {
