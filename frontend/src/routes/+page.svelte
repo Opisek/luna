@@ -192,6 +192,19 @@
     //grid-template-areas: "aside main";
   }
   
+  :global(body) {
+    display: flex;
+    flex-direction: row;
+    //display: grid;
+    //grid-template-columns: auto 1fr;
+    ////grid-template-rows: 1fr auto;
+    ////grid-template-areas:
+    ////  "aside main"
+    ////  "aside footer";
+    //grid-template-rows: auto;
+    //grid-template-areas: "aside main";
+  }
+  
   main {
     width: 100%;
     height: 100%;
@@ -209,6 +222,7 @@
     width: 20vw;
     max-width: 20em;
     overflow: hidden;
+    grid-area: aside;
     grid-area: aside;
   }
 
