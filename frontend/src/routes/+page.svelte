@@ -21,6 +21,7 @@
   import { NoOp } from "$lib/client/placeholders";
   import { calendars, events, getAllEvents, getSources, invalidateCache, loadingData, sources } from "$lib/client/repository";
   import { queueNotification } from "$lib/client/notifications";
+  import SmallCalendar from "../components/interactive/SmallCalendar.svelte";
 
 
   /* Constants */
@@ -261,8 +262,7 @@
 <aside>
   <Title>Luna</Title>
 
-  <!-- SmallCalendar put here only for testing purposes but might consider leaving it if it can serve some useful purpose -->
-  <!--<SmallCalendar year={selectedYear} month={selectedMonth}/>-->
+  <SmallCalendar date={date} onDayClick={(newDate) => date=newDate}></SmallCalendar>
 
   <div class="sources">
     {@render sourceEntries(localSources)}
