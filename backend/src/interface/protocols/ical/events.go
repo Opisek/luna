@@ -93,3 +93,14 @@ func (event *IcalEvent) SetColor(color *types.Color) {
 func (event *IcalEvent) GetDate() *types.EventDate {
 	return event.eventDate
 }
+
+func (event *IcalEvent) Clone() primitives.Event {
+	return &IcalEvent{
+		name:      event.name,
+		desc:      event.desc,
+		color:     event.color.Clone(),
+		settings:  event.settings,
+		calendar:  event.calendar,
+		eventDate: event.eventDate.Clone(),
+	}
+}

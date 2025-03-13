@@ -116,3 +116,14 @@ func (event *CaldavEvent) SetColor(color *types.Color) {
 func (event *CaldavEvent) GetDate() *types.EventDate {
 	return event.eventDate
 }
+
+func (event *CaldavEvent) Clone() primitives.Event {
+	return &CaldavEvent{
+		name:      event.name,
+		desc:      event.desc,
+		color:     event.color.Clone(),
+		settings:  event.settings,
+		calendar:  event.calendar,
+		eventDate: event.eventDate.Clone(),
+	}
+}

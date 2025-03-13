@@ -126,10 +126,9 @@ func (calendar *IcalCalendar) GetEvents(start time.Time, end time.Time, q types.
 			return nil, err
 		}
 
-		if event.GetDate().Start().Before(start) || event.GetDate().End().After(end) {
+		if !event.GetDate().Recurrence().Repeats() && (event.GetDate().Start().Before(start) || event.GetDate().End().After(end)) {
 			continue
 		}
-
 		res[count] = event
 		count++
 	}

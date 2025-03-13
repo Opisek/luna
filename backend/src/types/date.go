@@ -3,8 +3,10 @@ package types
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
 	"time"
+
+	"github.com/emersion/go-ical"
+	"github.com/teambition/rrule-go"
 )
 
 type EventDate struct {
@@ -79,6 +81,10 @@ func (ed *EventDate) Start() *time.Time {
 	return ed.start
 }
 
+func (ed *EventDate) SetStart(start *time.Time) {
+	ed.start = start
+}
+
 func (ed *EventDate) End() *time.Time {
 	if ed.specifyDuration {
 		endTime := ed.start.Add(*ed.duration)
@@ -86,6 +92,11 @@ func (ed *EventDate) End() *time.Time {
 	} else {
 		return ed.end
 	}
+}
+
+func (ed *EventDate) SetEnd(end *time.Time) {
+	ed.end = end
+	ed.specifyDuration = false
 }
 
 func (ed *EventDate) Duration() *time.Duration {
@@ -101,9 +112,9 @@ func (ed *EventDate) SpecifyDuration() bool {
 	return ed.specifyDuration
 }
 
-//func (ed *EventDate) Recurrence() *EventRecurrence {
-//	return ed.recurrence
-//}
+func (ed *EventDate) Recurrence() *EventRecurrence {
+	return ed.recurrence
+}
 
 func (ed *EventDate) AllDay() bool {
 	return ed.allDay
@@ -163,10 +174,37 @@ func (ed *EventDate) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// TODO: validation according to RFC-5545 3.3.10, 3.8.5.3
+func (ed *EventDate) Clone() *EventDate {
+	if ed.specifyDuration {
+		return NewEventDateFromDuration(ed.start, ed.duration, ed.allDay, ed.recurrence.Clone())
+	} else {
+		return NewEventDateFromEndTime(ed.start, ed.end, ed.allDay, ed.recurrence.Clone())
+	}
+}
+
+// RFC-5545 3.3.10, 3.8.5.3
 type EventRecurrence struct {
 	repeats bool
-	rule    map[string]string
+	rule    *rrule.ROption
+}
+
+func (er *EventRecurrence) Clone() *EventRecurrence {
+	if !er.repeats {
+		return EmptyEventRecurrence()
+	}
+
+	return &EventRecurrence{
+		repeats: er.repeats,
+		rule:    er.rule,
+	}
+}
+
+func (er *EventRecurrence) Repeats() bool {
+	return er.repeats
+}
+
+func (er *EventRecurrence) Rule() *rrule.ROption {
+	return er.rule
 }
 
 func EmptyEventRecurrence() *EventRecurrence {
@@ -175,25 +213,19 @@ func EmptyEventRecurrence() *EventRecurrence {
 	}
 }
 
-func EventRecurrenceFromIcal(ical string) (*EventRecurrence, error) {
-	if ical == "" {
-		return EmptyEventRecurrence(), nil
+func EventRecurrenceFromIcal(ical *ical.Props) (*EventRecurrence, error) {
+	roption, err := ical.RecurrenceRule()
+	if err != nil {
+		return nil, fmt.Errorf("could not get recurrence rule: %v", err)
 	}
 
-	// PROP=VAL;PROP=VAL;...
-	recMap := make(map[string]string)
-	parts := strings.Split(ical, ";")
-	for _, part := range parts {
-		kv := strings.Split(part, "=")
-		if len(kv) != 2 {
-			return EmptyEventRecurrence(), fmt.Errorf("could not parse key-value pair %v", part)
-		}
-		recMap[kv[0]] = kv[1]
+	if roption == nil {
+		return EmptyEventRecurrence(), nil
 	}
 
 	return &EventRecurrence{
 		repeats: true,
-		rule:    recMap,
+		rule:    roption,
 	}, nil
 }
 
@@ -211,12 +243,12 @@ func (er *EventRecurrence) UnmarshalJSON(data []byte) error {
 		return nil
 	}
 
-	var erMap map[string]string
-	if err := json.Unmarshal(data, &erMap); err != nil {
-		return fmt.Errorf("could not unmarshal EventRecurrence: %v", err)
+	var roption rrule.ROption
+	if err := json.Unmarshal(data, &roption); err == nil {
+		er.repeats = true
+		er.rule = &roption
+		return nil
 	}
 
-	er.repeats = true
-	er.rule = erMap
 	return nil
 }

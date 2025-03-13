@@ -3,6 +3,7 @@ package handlers
 import (
 	"luna-backend/api/internal/context"
 	"luna-backend/api/internal/util"
+	"luna-backend/interface/primitives"
 	"luna-backend/types"
 	"net/http"
 	"time"
@@ -80,9 +81,32 @@ func GetEvents(c *gin.Context) {
 		return
 	}
 
+	// Expand recurring events
+	expandedEvents := make([]primitives.Event, len(events))
+	count := 0
+	for _, event := range events {
+		expanded, err := primitives.ExpandRecurrence(event, &startTime, &endTime)
+		if err != nil {
+			config.Logger.Errorf("could not expand recurrence: %v", err)
+			util.Error(c, util.ErrorUnknown)
+			return
+		}
+
+		if len(expanded) > 1 {
+			newRes := make([]primitives.Event, len(expandedEvents)-1+len(expanded))
+			copy(newRes, expandedEvents[:count])
+			expandedEvents = newRes
+		}
+
+		for _, e := range expanded {
+			expandedEvents[count] = e
+			count++
+		}
+	}
+
 	// Convert to exposed format
-	convertedEvents := make([]exposedEvent, len(events))
-	for i, event := range events {
+	convertedEvents := make([]exposedEvent, count)
+	for i, event := range expandedEvents[:count] {
 		if event.GetName() == "" { // TODO: error handling
 			continue
 		}

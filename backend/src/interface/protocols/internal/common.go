@@ -139,16 +139,10 @@ func ParseIcalEvent(props *ical.Props) (*IcalEventProps, bool, error) {
 		}
 	}
 
-	// TODO: X-CO-RECURRINGID and other ways of getting RRULE
-	rrule := props.Get("RRULE")
-	var eventRecurrence *types.EventRecurrence
-	if rrule == nil {
-		eventRecurrence = types.EmptyEventRecurrence()
-	} else {
-		eventRecurrence, err = types.EventRecurrenceFromIcal(rrule.Value)
-		if err != nil {
-			return nil, false, fmt.Errorf("could not parse recurrence rule %v: %v", rrule.Value, err)
-		}
+	// TODO: X-CO-RECURRINGID?
+	eventRecurrence, err := types.EventRecurrenceFromIcal(props)
+	if err != nil {
+		return nil, false, fmt.Errorf("could not parse recurrence rule: %v", err)
 	}
 
 	var eventDate *types.EventDate

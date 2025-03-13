@@ -205,3 +205,15 @@ func (c *Color) Equals(other *Color) bool {
 
 	return c.RGBA() == other.RGBA()
 }
+
+func (c *Color) Clone() *Color {
+	if c == nil {
+		return nil
+	}
+
+	if c.IsEmpty() {
+		return ColorEmpty
+	}
+
+	return ColorFromRGBA(c.RGBA())
+}

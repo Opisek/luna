@@ -9,11 +9,11 @@ import (
 	"luna-backend/types"
 )
 
-func (q *Queries) insertEvents(cals []primitives.Event) error {
+func (q *Queries) insertEvents(events []primitives.Event) error {
 	rows := [][]any{}
 
-	for _, cal := range cals {
-		color := cal.GetColor()
+	for _, event := range events {
+		color := event.GetColor()
 		var colBytes []byte
 		if color.IsEmpty() {
 			colBytes = nil
@@ -22,10 +22,10 @@ func (q *Queries) insertEvents(cals []primitives.Event) error {
 		}
 
 		row := []any{
-			cal.GetId(),
-			cal.GetCalendar().GetId(),
+			event.GetId(),
+			event.GetCalendar().GetId(),
 			colBytes,
-			cal.GetSettings().Bytes(),
+			event.GetSettings().Bytes(),
 		}
 
 		rows = append(rows, row)
