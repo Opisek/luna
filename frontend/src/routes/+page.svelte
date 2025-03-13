@@ -262,11 +262,12 @@
 <aside>
   <Title>Luna</Title>
 
-  <SmallCalendar date={date} onDayClick={(newDate) => date=newDate}></SmallCalendar>
+  <SmallCalendar date={date} smaller={true} onDayClick={(newDate) => date=newDate}></SmallCalendar>
 
   <div class="sources">
     {@render sourceEntries(localSources)}
   </div>
+
   <Horizontal position="center">
     <IconButton isLink={true} href="/settings">
       <Settings/>

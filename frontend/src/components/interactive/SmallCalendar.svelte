@@ -5,11 +5,13 @@
   interface Props {
     date: Date;
     onDayClick?: (date: Date) => any;
+    smaller?: boolean;
   }
 
   let {
     date = $bindable(new Date()),
-    onDayClick = NoOp
+    onDayClick = NoOp,
+    smaller = false,
   }: Props = $props();
 
   let [days, amountOfRows] = $derived((() => {
@@ -44,11 +46,17 @@
   @use "../../styles/animations.scss";
   @use "../../styles/colors.scss";
   @use "../../styles/dimensions.scss";
+  @use "../../styles/text.scss";
 
   div.calendar {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     gap: dimensions.$gapSmall; 
+  }
+
+  div.smaller {
+    font-size: text.$fontSizeSmall;
+    gap: dimensions.$gapSmaller; 
   }
 
   button.day {
@@ -75,7 +83,7 @@
   }
 </style>
 
-<div class="calendar" style="grid-template-rows: repeat({amountOfRows}, 1fr)">
+<div class="calendar" class:smaller={smaller} style="grid-template-rows: repeat({amountOfRows}, 1fr)">
   {#each days as day, i}
     <button
       class="day"
