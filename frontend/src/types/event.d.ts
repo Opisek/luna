@@ -8,6 +8,7 @@ type EventModel = {
     start: Date;
     end: Date;
     allDay: boolean;
+    recurrence: any;
   }
 };
 

@@ -7,7 +7,7 @@
   import TextInput from "../forms/TextInput.svelte";
 
   import { EmptyEvent } from "$lib/client/placeholders";
-  import { createEvent, deleteEvent, editEvent, getAllCalendars, moveEvent } from "$lib/client/repository";
+  import { createEvent, deleteEvent, editEvent, getAllCalendars, getCalendar, getSourceDetails, moveEvent } from "$lib/client/repository";
   import { deepCopy, deepEquality } from "$lib/common/misc";
 
   interface Props {
@@ -22,6 +22,7 @@
 
   let event: EventModel = $state(EmptyEvent);
   let originalEvent: EventModel;
+  let eventSourceType = $state("");
   let currentCalendars: CalendarModel[] = $state([]);
 
   let saveEvent = (_: EventModel | PromiseLike<EventModel>) => {};
@@ -48,6 +49,7 @@
         start: start,
         end: end,
         allDay: false,
+        recurrence: false,
       }
     };
 
@@ -76,6 +78,7 @@
         start: new Date(original.date.start),
         end: new Date(original.date.end),
         allDay: original.date.allDay,
+        recurrence: await deepCopy(original.date.recurrence),
       }
     }
     if (event.date.allDay) {
@@ -83,6 +86,19 @@
     }
 
     originalEvent = await deepCopy(original);
+    const calendar = await getCalendar(original.calendar).catch(err => {
+      throw new Error(`Could not get calendar: ${err.message}`);
+    });
+    if (calendar) {
+      const source = await getSourceDetails(calendar.source).catch(err => {
+        throw new Error(`Could not get source details: ${err.message}`);
+      });
+      if (source) {
+        eventSourceType = source.type;
+      }
+    } else {
+      eventSourceType = "";
+    }
 
     currentCalendars = await getAllCalendars().catch(err => {
       throw new Error(`Could not get calendars: ${err.message}`);
@@ -100,6 +116,10 @@
 
   let editMode: boolean = $state(false);
   let title: string = $derived((event && event.id) ? (editMode ? "Edit event" : "Event") : "Create event");
+  let editable: boolean = $derived(event && !(
+    eventSourceType === "ical" || // iCal files are treated as read-only
+    event.date.recurrence != false // for now we won't allow editing recurring events
+  ))
 
   const onDelete = async () => {
     await deleteEvent(event.id).catch(err => {
@@ -170,6 +190,7 @@
   bind:showModal={showModalInternal}
   onDelete={onDelete}
   onEdit={onEdit}
+  editable={editable}
   submittable={event.calendar !== "" && event.name !== "" && (event.date.start.getTime() < event.date.end.getTime() || (event.date.start.getTime() <= event.date.end.getTime() && event.date.allDay))}
 >
   {#if event != EmptyEvent}

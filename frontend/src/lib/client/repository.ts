@@ -74,9 +74,10 @@ let lastCacheSave = Date.now();
 
 let sourcesCache: CacheEntry<SourceModel[]> = emptyCache; // sources
 let sourceDetailsCache: Map<string, CacheEntry<SourceModel>> = new Map(); // source -> details
-let calendarsCache: Map<string, CacheEntry<CalendarModel[]>> = new Map(); // source -> calendars
+let calendarsCache: Map<string, CacheEntry<string[]>> = new Map(); // source -> calendars
 let eventsCache: Map<string, Map<number, CacheEntry<[string, number][]>>> = new Map(); // calendar -> month -> event id, start date (because of recurring events having the same id)
 let eventsMap: Map<string, EventModel> = new Map(); // event id -> event
+let calendarsMap: Map<string, CalendarModel> = new Map(); // calendar id -> calendar
 
 function cacheOk<T>(cache: CacheEntry<T> | undefined): (T | null) {
   return (cache && Date.now() - cache.date < maxCacheAge) ? cache.value : null;
@@ -208,7 +209,7 @@ function compileCalendars() {
   clearTimeout(compileCalendarsTimeout);
   compileCalendarsTimeout = setTimeout(() => {
     const allCalendars = Array.from(calendarsCache.values().map(x => x.value).filter(x => x != null)).flat();
-    calendars.set(allCalendars);
+    calendars.set(allCalendars.map(x => calendarsMap.get(x)).filter(x => x != null));
   }, spoolerDelay)
 }
 
@@ -413,7 +414,10 @@ export async function deleteSource(id: string): Promise<void> {
   sourcesCache.value = sourcesCache.value?.filter((source) => source.id !== id) || [];
   compileSources();
 
-  for (const calendar of calendarsCache.get(id)?.value || []) eventsCache.delete(calendar.id);
+  for (const calendar of calendarsCache.get(id)?.value || []) {
+    eventsCache.delete(calendar);
+    calendarsMap.delete(calendar);
+  }
 
   compileCalendars();
   compileEvents(eventsRangeStart, eventsRangeEnd);
@@ -449,7 +453,7 @@ async function getCalendars(id: string, forceRefresh = false): Promise<CalendarM
 
   if (!forceRefresh) {
     const cached = cacheOk(calendarsCache.get(id));
-    if (cached) return Promise.resolve(cached);
+    if (cached) return Promise.resolve(cached.map(x => calendarsMap.get(x)).filter(x => x != null));
   }
 
   indicateStartLoading();
@@ -483,21 +487,31 @@ async function getCalendars(id: string, forceRefresh = false): Promise<CalendarM
   let anyOrphaned = false;
   const fetchedSet = new Set(fetched.map(x => x.id));
   for (const calendar of calendarsCache.get(id)?.value || []) {
-    if (!fetchedSet.has(calendar.id)) {
-      eventsCache.delete(calendar.id);
+    if (!fetchedSet.has(calendar)) {
+      eventsCache.delete(calendar);
       anyOrphaned = true;
     }
+  }
+
+  for (const calendar of fetched) {
+    calendarsMap.set(calendar.id, calendar)
   }
   
   calendarsCache.set(id, {
     date: Date.now(),
-    value: fetched
+    value: fetched.map(x => x.id)
   });
 
   compileCalendars();
   if (anyOrphaned) compileEvents(eventsRangeStart, eventsRangeEnd);
   saveCache();
   return fetched;
+}
+
+export async function getCalendar(id: string, forceRefresh = false): Promise<CalendarModel | null> {
+  if (!browser) return {} as CalendarModel;
+
+  return calendarsMap.get(id) || null; // TODO: needs a bit of refactoring plus actual fetch of the relevant endpoint depending on cache age
 }
 
 hiddenCalendars.subscribe(() => {
@@ -695,7 +709,7 @@ export async function getEventsFromPreviouslyHiddenCalendar(calendar: string) {
   if (!browser) return;
 
   getEventsFromCalendar(calendar, eventsRangeStart, eventsRangeEnd).catch((err) => {
-    const calendarName = calendarsCache.get(calendar)?.value?.find((cal) => cal.id === calendar)?.name;
+    const calendarName = calendarsMap.get(calendarsCache.get(calendar)?.value?.find((cal) => cal === calendar) || "")?.name;
     queueNotification(
       "failure",
       `Failed to fetch events from calendar${calendarName ? " " + calendarName : ""}: ${err.message}`

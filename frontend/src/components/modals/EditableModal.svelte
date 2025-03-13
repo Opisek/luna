@@ -12,6 +12,7 @@
     title: string;
     deleteConfirmation: string;
     editMode?: boolean;
+    editable?: boolean;
     submittable?: boolean;
     onEdit: () => Promise<void>;
     onDelete: () => Promise<void>;
@@ -25,6 +26,7 @@
     title,
     deleteConfirmation,
     editMode = $bindable(false),
+    editable = true,
     submittable = true,
     onEdit,
     onDelete,
@@ -103,8 +105,12 @@
         </Button>
         <Button onClick={cancelEdit} color="failure">Cancel</Button>
       {:else}
-        <Button onClick={startEditMode} color="accent">Edit</Button>
-        <Button onClick={showDeleteModal} color="failure">Delete</Button>
+        {#if editable}
+          <Button onClick={startEditMode} color="accent">Edit</Button>
+          <Button onClick={showDeleteModal} color="failure">Delete</Button>
+        {:else}
+          <Button onClick={hideModal} color="accent">Close</Button>
+        {/if}
       {/if}
     
   {/snippet}
