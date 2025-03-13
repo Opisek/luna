@@ -193,20 +193,7 @@
     //grid-template-rows: auto;
     //grid-template-areas: "aside main";
   }
-  
-  :global(body) {
-    display: flex;
-    flex-direction: row;
-    //display: grid;
-    //grid-template-columns: auto 1fr;
-    ////grid-template-rows: 1fr auto;
-    ////grid-template-areas:
-    ////  "aside main"
-    ////  "aside footer";
-    //grid-template-rows: auto;
-    //grid-template-areas: "aside main";
-  }
-  
+
   main {
     width: 100%;
     height: 100%;
@@ -223,8 +210,6 @@
     min-width: 10em;
     width: 20vw;
     max-width: 20em;
-    overflow: hidden;
-    grid-area: aside;
     grid-area: aside;
   }
 
@@ -233,6 +218,9 @@
     display: flex;
     flex-direction: column;
     gap: dimensions.$gap;
+    overflow: auto;
+    margin: -(dimensions.$gapSmall);
+    padding: dimensions.$gapSmall;
   }
 
   div.toprow {
