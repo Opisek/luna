@@ -3,6 +3,7 @@ import { browser } from "$app/environment";
 import { writable } from "svelte/store";
 
 import { AllChangesCalendar, AllChangesEvent, AllChangesSource, NoOp } from "./placeholders";
+import { fetchJson, fetchResponse } from "./net";
 import { getMetadata } from "./metadata";
 import { queueNotification } from "./notifications";
 
@@ -88,31 +89,6 @@ class Repository {
     this.calendarsCache.forEach((cache) => cache.date = 0);
     this.eventsCache.forEach((cache) => cache.forEach((entry) => entry.date = 0));
     this.saveCache();
-  }
-
-  // 
-  // Web
-  // 
-
-  private async fetchResponse(url: string, options: RequestInit = {}): Promise<Response> {
-    const response = await fetch(url, options).catch((err) => {
-      if (!err) err = new Error("Could not contact server");
-      throw err;
-    });
-    if (response.ok) {
-      return response;
-    } else {
-      const json = await response.json().catch(() => null);
-      let err = null;
-      if (!err && json != null) err = json.error;
-      if (!err && json != null) err = json.message;
-      if (!err) err = `${response.statusText ? response.statusText : "Could not contact server"} (${response.status})`;
-      throw new Error(err);
-    }
-  }
-
-  private async fetchJson(url: string, options: RequestInit = {}) {
-    return (await this.fetchResponse(url, options).catch(err => { throw err; })).json();
   }
 
   //
@@ -316,7 +292,7 @@ class Repository {
 
     const stopLoading = getMetadata().startLoading();
 
-    const fetchedSources: SourceModel[] = await this.fetchJson("/api/sources").catch((err) => {
+    const fetchedSources: SourceModel[] = await fetchJson("/api/sources").catch((err) => {
       throw err;
     }).finally(() => {
       stopLoading();
@@ -337,7 +313,7 @@ class Repository {
       if (cached) return Promise.resolve(cached);
     }
 
-    const fetched: SourceModel = await this.fetchJson(`/api/sources/${id}`).catch((err) => { throw err; });
+    const fetched: SourceModel = await fetchJson(`/api/sources/${id}`).catch((err) => { throw err; });
 
     this.sourceDetailsCache.set(id, {
       date: Date.now(),
@@ -352,7 +328,7 @@ class Repository {
 
     const formData = this.getSourceFormData(newSource);
 
-    const json = await this.fetchJson(`/api/sources`, { method: "PUT", body: formData }).catch((err) => { throw err; });
+    const json = await fetchJson(`/api/sources`, { method: "PUT", body: formData }).catch((err) => { throw err; });
 
     newSource.id = json.id;
     this.sourcesCache.value = this.sourcesCache.value?.concat(newSource) || [ newSource ];
@@ -385,7 +361,7 @@ class Repository {
 
     let formData = this.getSourceFormData(modifiedSource, changes);
 
-    await this.fetchResponse(`/api/sources/${modifiedSource.id}`, { method: "PATCH", body: formData }).catch((err) => { throw err; });
+    await fetchResponse(`/api/sources/${modifiedSource.id}`, { method: "PATCH", body: formData }).catch((err) => { throw err; });
     
     this.sourcesCache.value = this.sourcesCache.value?.map((source => source.id === modifiedSource.id ? modifiedSource : source)) || [ modifiedSource ];
     this.compileSources();
@@ -415,7 +391,7 @@ class Repository {
   async deleteSource(id: string): Promise<void> {
     if (!browser) return;
 
-    await this.fetchResponse(`/api/sources/${id}`, { method: "DELETE" }).catch((err) => { throw err; });
+    await fetchResponse(`/api/sources/${id}`, { method: "DELETE" }).catch((err) => { throw err; });
 
     this.sourcesCache.value = this.sourcesCache.value?.filter((source) => source.id !== id) || [];
     this.compileSources();
@@ -464,7 +440,7 @@ class Repository {
 
     const stopLoading = getMetadata().startLoadingSource(id);
 
-    const response = await this.fetchJson(`/api/sources/${id}/calendars`).catch((err) => {
+    const response = await fetchJson(`/api/sources/${id}/calendars`).catch((err) => {
       getMetadata().addFaultySource(id, err.message);
       throw err;
     }).finally(() => {
@@ -512,7 +488,7 @@ class Repository {
     // add to database
     const formData = this.getCalendarFormData(newCalendar);
 
-    const json = await this.fetchJson(`/api/sources/${newCalendar.source}/calendars`, { method: "PUT", body: formData }).catch((err) => { throw err; });
+    const json = await fetchJson(`/api/sources/${newCalendar.source}/calendars`, { method: "PUT", body: formData }).catch((err) => { throw err; });
 
     newCalendar.id = json.id;
 
@@ -535,7 +511,7 @@ class Repository {
     // update in database
     const formData = this.getCalendarFormData(modifiedCalendar, changes);
 
-    await this.fetchResponse(`/api/calendars/${modifiedCalendar.id}`, { method: "PATCH", body: formData }).catch((err) => { throw err; });
+    await fetchResponse(`/api/calendars/${modifiedCalendar.id}`, { method: "PATCH", body: formData }).catch((err) => { throw err; });
 
     // update in cache
     this.calendarsMap.set(modifiedCalendar.id, modifiedCalendar);
@@ -550,7 +526,7 @@ class Repository {
     if (!browser) return;
 
     // remove from database
-    await this.fetchResponse(`/api/calendars/${id}`, { method: "DELETE" }).catch((err) => { throw err; });
+    await fetchResponse(`/api/calendars/${id}`, { method: "DELETE" }).catch((err) => { throw err; });
 
     const calendar = this.calendarsMap.get(id);
     if (!calendar) return;
@@ -731,7 +707,7 @@ class Repository {
     const localEnd = new Date(end);
     localEnd.setHours(23, 59, 59, 999);
 
-    const fetched: EventModel[] = (await this.fetchJson(`/api/calendars/${calendar}/events?start=${encodeURIComponent(localStart.toISOString())}&end=${encodeURIComponent(localEnd.toISOString())}`)).events;
+    const fetched: EventModel[] = (await fetchJson(`/api/calendars/${calendar}/events?start=${encodeURIComponent(localStart.toISOString())}&end=${encodeURIComponent(localEnd.toISOString())}`)).events;
 
     let calendarEventsCache = this.eventsCache.get(calendar);
     if (!calendarEventsCache) {
@@ -786,7 +762,7 @@ class Repository {
 
     const formData = this.getEventFormData(newEvent);
 
-    const json = await this.fetchJson(`/api/calendars/${newEvent.calendar}/events`, { method: "PUT", body: formData }).catch((err) => { throw err; });
+    const json = await fetchJson(`/api/calendars/${newEvent.calendar}/events`, { method: "PUT", body: formData }).catch((err) => { throw err; });
 
     newEvent.id = json.id;
 
@@ -811,7 +787,7 @@ class Repository {
 
     const formData = this.getEventFormData(modifiedEvent, changes);
 
-    await this.fetchResponse(`/api/events/${modifiedEvent.id}`, { method: "PATCH", body: formData }).catch((err) => { throw err; });
+    await fetchResponse(`/api/events/${modifiedEvent.id}`, { method: "PATCH", body: formData }).catch((err) => { throw err; });
 
     // update in cache
     const previousMonths = this.determineEventMonths(this.eventsMap.get(modifiedEvent.id)!);
@@ -844,7 +820,7 @@ class Repository {
     if (!browser) return;
 
     // remove from database
-    await this.fetchResponse(`/api/events/${id}`, { method: "DELETE" }).catch((err) => { throw err; });
+    await fetchResponse(`/api/events/${id}`, { method: "DELETE" }).catch((err) => { throw err; });
 
     const event = this.eventsMap.get(id);
     if (!event) return;
