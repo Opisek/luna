@@ -21,6 +21,8 @@
     events,
   }: Props = $props();
 
+  let today = new Date();
+
   let currentlyClickedEvent = writable(null);
   let currentlyHoveredEvent = writable(null);
   setContext("currentlyHoveredEvent", currentlyHoveredEvent);
@@ -207,7 +209,7 @@
         isCurrentMonth={day.getMonth() === date.getMonth()} 
         events={processedEvents[i]}
         isFirstDay={i == 0}
-        isLastDay={i == days.length - 1}
+        isToday={day.getDate() === today.getDate() && day.getMonth() === today.getMonth() && day.getFullYear() === today.getFullYear()}
         maxEvents={maxEvents}
         bind:containerHeight={containerHeight}
         view={view}

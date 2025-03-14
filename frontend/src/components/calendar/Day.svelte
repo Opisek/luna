@@ -12,7 +12,7 @@
     date: Date;
     isCurrentMonth: boolean;
     isFirstDay: boolean;
-    isLastDay: boolean;
+    isToday: boolean;
     events: (EventModel | null)[];
     maxEvents?: number;
     containerHeight: number;
@@ -24,6 +24,7 @@
     date,
     isCurrentMonth,
     isFirstDay,
+    isToday,
     events,
     maxEvents = 1,
     containerHeight = $bindable(),
@@ -79,9 +80,25 @@
     display: block;
     grid-area: date;
     user-select: none;
+    z-index: 1;
   }
   span.sunday {
     color: colors.$foregroundSunday;
+  }
+  span.today {
+    color: colors.$foregroundAccent;
+  }
+  span.today::before {
+    content: "";
+    background-color: colors.$backgroundAccent;
+    color: colors.$foregroundAccent;
+    position: absolute;
+    width: calc(1.25 * text.$fontSize);
+    aspect-ratio: 1 / 1;
+    border-radius: 50%;
+    left: calc(50% - 1.25 * 0.5 * #{text.$fontSize});
+    top: translateY(1.25 * 0.5 * text.$fontSize - #{dimensions.$gapSmall});
+    z-index: -1;
   }
   span.add {
     grid-area: add;
@@ -126,7 +143,7 @@
 <div class="day">
   <div class="background" class:otherMonth={!isCurrentMonth}>
     <span class="top">
-      <span class="date" class:sunday={date.getDay() === 0}>
+      <span class="date" class:sunday={date.getDay() === 0} class:today={isToday}>
         {date.getDate()}
       </span>
       <span class="add">

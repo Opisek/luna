@@ -14,6 +14,8 @@
     smaller = false,
   }: Props = $props();
 
+  let today = new Date();
+
   let [days, amountOfRows] = $derived((() => {
     // Date calculation
     const firstMonthDay = new Date(date.getFullYear(), date.getMonth(), 1);
@@ -78,6 +80,11 @@
     color: colors.$foregroundSunday;
   }
 
+  button.day.today {
+    background-color: colors.$backgroundAccent;
+    color: colors.$foregroundAccent;
+  }
+
   button.day.otherMonth {
     opacity: 0.5;
   }
@@ -88,6 +95,7 @@
     <button
       class="day"
       class:sunday={day.getDay() == 0}
+      class:today={day.getDate() == today.getDate() && day.getMonth() == today.getMonth() && day.getFullYear() == today.getFullYear()}
       class:otherMonth={day.getMonth() != date.getMonth()}
       type="button"
       onclick={() => (onDayClick(day))}
