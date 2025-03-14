@@ -4,7 +4,6 @@ import { writable } from "svelte/store";
 
 import { AllChangesCalendar, AllChangesEvent, AllChangesSource, NoOp } from "./placeholders";
 import { getMetadata } from "./metadata";
-import { hiddenCalendars, isCalendarVisible, isSourceCollapsed } from "./localStorage";
 import { queueNotification } from "./notifications";
 
 import { atLeastOnePromise, deepCopy } from "$lib/common/misc";
@@ -29,7 +28,7 @@ class Repository {
   // Constructor
   //
   constructor() {
-    hiddenCalendars.subscribe(() => {
+    getMetadata().hiddenCalendars.subscribe(() => {
       this.compileEvents(this.eventsRangeStart, this.eventsRangeEnd);
     });
 
@@ -228,7 +227,7 @@ class Repository {
     this.compileEventsTimeout = setTimeout(async () => {
       const allEvents = 
         Array.from(this.eventsCache.entries())
-        .filter(x => isCalendarVisible(x[0]) && x[1] != null) // Event must be visible
+        .filter(x => !getMetadata().hiddenCalendars.has(x[0]) && x[1] != null) // Event must be visible
         .map(x => Array.from(x[1].entries()))
         .flat()
         .filter(x => x[1] != null && x[0] >= start.getTime() && x[0] <= end.getTime()) // Event must be in the time frame
@@ -324,7 +323,7 @@ class Repository {
     });
 
     fetchedSources.forEach((source) => {
-      source.collapsed = isSourceCollapsed(source.id);
+      source.collapsed = getMetadata().collapsedSources.has(source.id);
     });
 
     this.sourcesCache.date = Date.now(),
@@ -344,7 +343,7 @@ class Repository {
 
     const fetched: SourceModel = await this.fetchJson(`/api/sources/${id}`).catch((err) => { throw err; });
 
-    fetched.collapsed = isSourceCollapsed(id);
+    fetched.collapsed = getMetadata().collapsedSources.has(id);
 
     this.sourceDetailsCache.set(id, {
       date: Date.now(),
@@ -676,7 +675,7 @@ class Repository {
 
   private async getEventsFromSource(source: string, start: Date, end: Date, forceRefresh = false): Promise<EventModel[]> {
     let cals = await this.getCalendars(source, forceRefresh).catch((err) => { throw err; });
-    cals = cals.filter(x => isCalendarVisible(x.id)); // only fetch events from visible calendars
+    cals = cals.filter(x => !getMetadata().hiddenCalendars.has(x.id)); // only fetch events from visible calendars
     const [events, errors] = await atLeastOnePromise(cals.map((calendar) => this.getEventsFromCalendar(calendar.id, start, end, forceRefresh))).catch(() => {
       throw new Error("Failed to fetch events");
     })
@@ -802,7 +801,7 @@ class Repository {
     for (const month of this.determineEventMonths(newEvent)) this.addEventToCache(newEvent, month);
 
     // add to display
-    if (isCalendarVisible(newEvent.calendar) && newEvent.date.start <= this.eventsRangeEnd && newEvent.date.end >= this.eventsRangeStart) this.events.update((events) => events.concat(newEvent));
+    if (!getMetadata().hiddenCalendars.has(newEvent.calendar) && newEvent.date.start <= this.eventsRangeEnd && newEvent.date.end >= this.eventsRangeStart) this.events.update((events) => events.concat(newEvent));
 
     this.saveCache();
   };

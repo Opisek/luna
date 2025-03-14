@@ -4,7 +4,6 @@
   import Tooltip from "../interactive/Tooltip.svelte";
 
   import { NoOp } from "$lib/client/placeholders";
-  import { collapsedSources, setSourceCollapse } from "$lib/client/localStorage";
   import { focusIndicator } from "$lib/client/decoration";
   import { getMetadata } from "$lib/client/metadata";
   import { getRepository } from "$lib/client/repository";
@@ -49,9 +48,9 @@
   }
 
   $effect(() => {
-    if (source.id) setSourceCollapse(source.id, source.collapsed);
+    if (source.id) getMetadata().setSourceCollapse(source.id, source.collapsed);
   })
-  collapsedSources.subscribe((collapsed) => {
+  getMetadata().collapsedSources.subscribe((collapsed) => {
     if (!source) return;
     source.collapsed = collapsed.has(source.id);
   });

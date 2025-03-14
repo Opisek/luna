@@ -8,7 +8,6 @@
   import { NoOp } from "$lib/client/placeholders";
   import { focusIndicator } from "$lib/client/decoration";
   import { getMetadata } from "$lib/client/metadata";
-  import { isCalendarVisible, setCalendarVisibility } from "$lib/client/localStorage";
 
   import { getContext } from "svelte";
 
@@ -18,7 +17,7 @@
 
   let { calendar = $bindable() }: Props = $props();
 
-  let calendarVisible = $state(calendar ? isCalendarVisible(calendar.id) : false);
+  let calendarVisible = $state(calendar ? !getMetadata().hiddenCalendars.has(calendar.id) : false);
 
   let hasErrored = $state(false);
   getMetadata().faultyCalendars.subscribe((faulty) => {
@@ -36,7 +35,7 @@
   }
 
   $effect(() => {
-    if (calendar && calendar.id) setCalendarVisibility(calendar.id, calendarVisible);
+    if (calendar && calendar.id) getMetadata().setCalendarVisibility(calendar.id, calendarVisible);
   });
 </script>
 

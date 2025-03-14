@@ -1,4 +1,62 @@
+import { browser } from "$app/environment";
+
 import { writable, type Writable } from "svelte/store";
+
+class SubscribeableSet<T> {
+  private internalSet: Set<T> | Map<T, number>;
+  private store: Writable<Set<T>>;
+
+  constructor(countable: boolean = false, initial: T[] = []) {
+    this.internalSet = countable ? new Map(initial.map(x => [x, 1])) : new Set(initial);
+    this.store = writable(new Set(initial));
+  }
+
+  has(value: T) {
+    return this.internalSet.has(value);
+  }
+
+  subscribe(callback: (value: Set<T>) => void) {
+    return this.store.subscribe(callback);
+  }
+
+  add(value: T) {
+    if (this.internalSet instanceof Map) {
+      const count = this.internalSet.get(value) || 0;
+      this.internalSet.set(value, count + 1);
+      if (count === 0) this.store.update(s => { s.add(value); return s; });
+    } else {
+      if (this.internalSet.has(value)) return;
+      this.internalSet.add(value);
+      this.store.set(this.internalSet);
+    }
+  }
+
+  delete(value: T) {
+    if (this.internalSet instanceof Map) {
+      const count = this.internalSet.get(value) || 0;
+      if (count === 1) {
+        this.internalSet.delete(value);
+        this.store.update(s => { s.delete(value); return s; });
+      } else {
+        this.internalSet.set(value, count - 1);
+      }
+    }
+    else {
+      if (!this.internalSet.has(value)) return;
+      this.internalSet.delete(value);
+      this.store.set(this.internalSet);
+    }
+  }
+
+  set(value: Set<T>) {
+    if (this.internalSet instanceof Map) {
+      this.internalSet = new Map(Array.from(value).map(x => [x, 1]));
+    } else {
+      this.internalSet = new Set(value);
+    }
+    this.store.set(value);
+  }
+}
 
 class Metadata {
   //
@@ -6,55 +64,68 @@ class Metadata {
   //
 
   // Faults
-  readonly faultySources = writable(new Set<string>());
-  readonly faultyCalendars = writable(new Set<string>());
+  readonly faultySources: SubscribeableSet<string>;
+  readonly faultyCalendars: SubscribeableSet<string>;
 
   // Loading
-  readonly loadingSources = writable(new Set<string>());
-  private readonly loadingSourcesCounter = new Map<string, number>();
-  readonly loadingCalendars = writable(new Set<string>());
-  readonly loadingData = writable(false);
+  readonly loadingSources: SubscribeableSet<string>;
+  readonly loadingCalendars: SubscribeableSet<string>;
+  readonly loadingData: Writable<boolean>;
+  private loadingCounter;
 
   // Hidden / Collapsed
+  readonly collapsedSources: SubscribeableSet<string>;
+  readonly hiddenCalendars: SubscribeableSet<string>;
+
+  //
+  // Constructor
+  //
+  constructor() {
+    this.faultySources = new SubscribeableSet();
+    this.faultyCalendars = new SubscribeableSet();
+
+    this.loadingSources = new SubscribeableSet(true);
+    this.loadingCalendars = new SubscribeableSet(true);
+    this.loadingData = writable(false);
+    this.loadingCounter = 0;
+
+    if (browser) {
+      this.collapsedSources = new SubscribeableSet(false, JSON.parse(localStorage.getItem("collapsedSources") || "[]"));
+      this.hiddenCalendars = new SubscribeableSet(false, JSON.parse(localStorage.getItem("hiddenCalendars") || "[]"));
+    } else {
+      this.collapsedSources = new SubscribeableSet();
+      this.hiddenCalendars = new SubscribeableSet();
+    }
+
+    this.collapsedSources.subscribe(value => {
+      if (browser) localStorage.setItem("collapsedSources", JSON.stringify(Array.from(value)));
+    });
+    this.hiddenCalendars.subscribe(value => {
+      if (browser) localStorage.setItem("hiddenCalendars", JSON.stringify(Array.from(value)));
+    });
+
+    if (browser) {
+      window.addEventListener("storage", () => {
+        const newCollapsedSources = localStorage.getItem("collapsedSources");
+        if (newCollapsedSources) {
+          const set = new Set<string>(JSON.parse(newCollapsedSources) as string[]);
+          this.collapsedSources.set(set);
+        }
+
+        const newHiddenCalendars = localStorage.getItem("hiddenCalendars");
+        if (newHiddenCalendars) {
+          const set = new Set<string>(JSON.parse(newHiddenCalendars) as string[]);
+          this.hiddenCalendars.set(set);
+        }
+      })
+    }
+  }
 
   //
   // Logic
   //
 
-  // Misc
-  private addToSet<T>(set: Writable<Set<T>>, source: T) {
-    set.update(s => {
-      s.add(source);
-      return s;
-    });
-  }
-
-  private removeFromSet<T>(set: Writable<Set<T>>, source: T) {
-    set.update(s => {
-      s.delete(source);
-      return s;
-    });
-  }
-
-  private addToCounter<T>(map: Map<T, number>, set: Writable<Set<T>>, source: T) {
-    map.set(source, (map.get(source) || 0) + 1);
-    this.addToSet(set, source);
-  }
-
-  private removeFromCounter<T>(map: Map<T, number>, set: Writable<Set<T>>, source: T) {
-    const count = map.get(source);
-    if (count === undefined) return;
-    if (count === 1) {
-      map.delete(source);
-      this.removeFromSet(set, source);
-    } else {
-      map.set(source, count - 1);
-    }
-  }
-
   // Loading
-  private loadingCounter = 0;
-
   startLoading(): (() => void) {
     this.loadingCounter++;
     this.loadingData.set(true);
@@ -69,21 +140,21 @@ class Metadata {
   }
 
   startLoadingSource(source: string): (() => void) {
-    this.addToCounter(this.loadingSourcesCounter, this.loadingSources, source);
+    this.loadingSources.add(source);
     const stopLoadingInternal = this.startLoading();
 
     let called = false;
     return (() => {
       if (!called) {
         called = true;
-        this.removeFromCounter(this.loadingSourcesCounter, this.loadingSources, source);
+        this.loadingSources.delete(source);
         stopLoadingInternal();
       }
     });
   }
 
   startLoadingCalendar(calendar: string): (() => void) {
-    this.addToSet(this.loadingCalendars, calendar);
+    this.loadingCalendars.add(calendar);
     const stopLoadingInternal = this.startLoading();
     // TODO: start loading the calendar's source as well
 
@@ -91,7 +162,7 @@ class Metadata {
     return (() => {
       if (!called) {
         called = true;
-        this.removeFromSet(this.loadingCalendars, calendar);
+        this.loadingCalendars.delete(calendar);
         stopLoadingInternal();
       }
     });
@@ -99,19 +170,30 @@ class Metadata {
 
   // Faults
   addFaultySource(source: string, fault: string) {
-    this.addToSet(this.faultySources, source);
+    this.faultySources.add(source);
   }
 
   removeFaultySource(source: string) {
-    this.removeFromSet(this.faultySources, source);
+    this.faultySources.delete(source);
   }
 
   addFaultyCalendar(calendar: string, fault: string) {
-    this.addToSet(this.faultyCalendars, calendar);
+    this.faultyCalendars.add(calendar);
   }
 
   removeFaultyCalendar(calendar: string) {
-    this.removeFromSet(this.faultyCalendars, calendar);
+    this.faultyCalendars.delete(calendar);
+  }
+
+  // Hidden / Collapsed
+  setSourceCollapse = (sourceId: string, collapsed: boolean) => {
+    if (collapsed) this.collapsedSources.add(sourceId);
+    else this.collapsedSources.delete(sourceId);
+  }
+
+  setCalendarVisibility = (calendarId: string, visible: boolean) => {
+    if (visible) this.hiddenCalendars.delete(calendarId);
+    else this.hiddenCalendars.add(calendarId);
   }
 }
 
