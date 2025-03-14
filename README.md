@@ -17,8 +17,10 @@ You may also follow the progress in the [development roadmap](https://todo.opise
 Since Luna is not ready to be used yet, this only serves as instructions on how to get Luna up and running for development purposes!
 
 ## Docker
-Currently, no pre-made images are available. Instead, you can generate and run the images simply by typing `make` in the root directory of this repository.
+Currently, no first-party docker images are available. Instead, you can generate and run the images simply by typing `make` in the root directory of this repository.
 Make sure you have **make** and **docker** installed.
+
+Until docker images are generated officially, you can also use community-compiled images for the [frontend](https://hub.docker.com/r/tiritibambix/lunafrontend) and the [backend](https://hub.docker.com/r/tiritibambix/lunabackend). These images are provided with no warranty or liability from the main author.
 
 ## Baremetal
 For baremetal deployment, you must ensure your system has:
