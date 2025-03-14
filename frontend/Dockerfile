@@ -8,7 +8,7 @@ COPY package.json bun.lock ./
 RUN bun install --production
 
 # Install bun development dependencies
-FROM dependencies AS devDependencies
+FROM dependencies AS devdependencies
 RUN bun install
 
 # Build the frontend
@@ -19,7 +19,7 @@ COPY Makefile .env .npmrc svelte.config.js tsconfig.json VERSION vite.config.ts 
 COPY script script
 COPY static static
 COPY src src
-COPY --from=devDependencies /app/node_modules ./node_modules
+COPY --from=devdependencies /app/node_modules ./node_modules
 RUN make build
 
 # Run the frontend
