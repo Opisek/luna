@@ -112,18 +112,20 @@
   onclose={() => (visible = false)}
   class:closed={visible}
 >
-	<form onsubmit={submitInternal}>
-    <Horizontal>
-      <Title>
-        {title}
-      </Title>
-      <CloseButton onClick={hideModal} />
-    </Horizontal>
-		{@render children?.()}
-    <Horizontal position="right">
-      {#if buttons}{@render buttons()}{:else}
-        <Button onClick={hideModal}>Close</Button>
-      {/if}
-    </Horizontal>
-	</form>
+  {#if visible}
+    <form onsubmit={submitInternal}>
+      <Horizontal>
+        <Title>
+          {title}
+        </Title>
+        <CloseButton onClick={hideModal} />
+      </Horizontal>
+      {@render children?.()}
+      <Horizontal position="right">
+        {#if buttons}{@render buttons()}{:else}
+          <Button onClick={hideModal}>Close</Button>
+        {/if}
+      </Horizontal>
+    </form>
+  {/if}
 </dialog>
