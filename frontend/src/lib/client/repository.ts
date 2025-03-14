@@ -771,7 +771,16 @@ class Repository {
     for (const month of this.determineEventMonths(newEvent)) this.addEventToCache(newEvent, month);
 
     // add to display
-    if (!getMetadata().hiddenCalendars.has(newEvent.calendar) && newEvent.date.start <= this.eventsRangeEnd && newEvent.date.end >= this.eventsRangeStart) this.events.update((events) => events.concat(newEvent));
+    const isHidden = getMetadata().hiddenCalendars.has(newEvent.calendar)
+    if (!isHidden && newEvent.date.start <= this.eventsRangeEnd && newEvent.date.end >= this.eventsRangeStart) this.events.update((events) => events.concat(newEvent));
+
+    // info if the event is hidden
+    if (isHidden) {
+      queueNotification(
+        "info",
+        `Event ${newEvent.name} was added to a hidden calendar.`
+      );
+    }
 
     this.saveCache();
   };
