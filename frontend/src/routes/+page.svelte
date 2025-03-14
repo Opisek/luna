@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Github } from "svelte-simples"
-  import { PlusIcon, RefreshCw, Settings } from "lucide-svelte";
+  import { PlusIcon, RefreshCw, Settings, WifiOff } from "lucide-svelte";
   import { setContext, untrack } from "svelte";
 
   import Calendar from "../components/calendar/Calendar.svelte";
@@ -23,6 +23,10 @@
   import { getMetadata } from "$lib/client/metadata";
   import { getRepository } from "$lib/client/repository";
   import { queueNotification } from "$lib/client/notifications";
+  import { getConnectivity, Reachability } from "$lib/client/connectivity";
+
+  /* Reachability */
+  let reachability: Reachability = $state(Reachability.Database);
 
   /* Constants */
   let autoRefreshInterval = 1000 * 60; // 1 minute
@@ -133,6 +137,8 @@
       queueNotification("failure", `Failed to fetch events: ${err.message}`);
     });
 
+    getConnectivity().check().then((res) => reachability = res);
+
     clearTimeout(spooledRefresh);
     spooledRefresh = setTimeout(() => {
       refresh(date);
@@ -185,6 +191,7 @@
 
 <style lang="scss">
   @use "../styles/animations.scss";
+  @use "../styles/colors.scss";
   @use "../styles/dimensions.scss";
 
   :global(body) {
@@ -238,6 +245,15 @@
     align-items: center;
   }
 
+  span.reachability {
+    color: colors.$backgroundFailure;
+    align-items: center;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: dimensions.$gapSmall;
+  }
+
   span.refreshButtonWrapper {
     display: flex;
     align-items: center;
@@ -278,12 +294,28 @@
 <main>
   <div class="toprow">
     <MonthSelection bind:date granularity={view} />
-    <Horizontal position="right" width="auto">
+    <Horizontal position="justify" width="auto">
+      {#if reachability != Reachability.Database}
+        <span class="reachability">
+          {#if reachability == Reachability.Backend}
+            The database cannot be reached
+          {:else if reachability == Reachability.Frontend}
+            The backend server cannot be reached
+          {:else if reachability == Reachability.None}
+            The frontend server cannot be reached
+          {:else}
+            Unknown network error
+          {/if}
+          <WifiOff size={20}/>
+        </span>
+      {/if}
+      
       <IconButton click={forceRefresh}>
         <span class="refreshButtonWrapper" class:spin={loaderAnimation} onanimationiteration={() => { if (!isLoading) loaderAnimation = false; }}>
           <RefreshCw size={20}/>
         </span>
       </IconButton>
+
       <SelectButtons
         name="layout"
         compact={true}

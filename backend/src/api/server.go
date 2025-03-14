@@ -29,6 +29,7 @@ func run(api *config.Api) {
 	endpoints.POST("/login", handlers.Login)
 	endpoints.POST("/register", handlers.Register)
 	endpoints.GET("/version", handlers.GetVersion)
+	endpoints.GET("/health", handlers.GetHealth)
 
 	authenticatedEndpoints := endpoints.Group("", handlers.AuthMiddleware())
 

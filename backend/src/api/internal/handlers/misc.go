@@ -16,3 +16,18 @@ func GetVersion(c *gin.Context) {
 	apiConfig := context.GetConfig(c)
 	c.JSON(http.StatusOK, gin.H{"version": apiConfig.CommonConfig.Version.String()})
 }
+
+func GetHealth(c *gin.Context) {
+	config := context.GetConfig(c)
+	tx := context.GetTransaction(c)
+
+	err := tx.Queries().CheckHealth()
+	if err == nil {
+		c.JSON(http.StatusOK, gin.H{"status": "ok"})
+		tx.Commit(config.Logger)
+	} else {
+		// With the current setup, this is never even reached, because the middleware already aborts the request earlier
+		c.JSON(http.StatusInternalServerError, gin.H{"status": "error"})
+		tx.Rollback(config.Logger)
+	}
+}
