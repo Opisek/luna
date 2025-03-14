@@ -52,7 +52,7 @@
   }
   div.compact > button {
     min-width: max-content;
-    padding: dimensions.$gapSmaller;
+    padding: dimensions.$gapSmall;
   }
 
   button {
@@ -84,7 +84,7 @@
   }
 </style>
 
-{#if label}
+{#if label && placeholder}
   <Label name={name}>{placeholder}</Label>
 {/if}
 {#if editable}

@@ -24,6 +24,7 @@
   import { getRepository } from "$lib/client/repository";
   import { queueNotification } from "$lib/client/notifications";
   import { getConnectivity, Reachability } from "$lib/client/connectivity";
+  import Button from "../components/interactive/Button.svelte";
 
   /* Reachability */
   let reachability: Reachability = $state(Reachability.Database);
@@ -53,8 +54,15 @@
     if (isLoading) loaderAnimation = true;
   });
 
-  const today = new Date();
-  let date = $state(today);
+  let today = $state(new Date());
+  let date = $state(new Date());
+  let todayInRange = $state(true);
+
+  function seeToday() {
+    today = new Date();
+    date = new Date(today);
+    todayInRange = true;
+  }
 
   function getRangeFromStorage() {
     if (pageLoaded) return;
@@ -71,44 +79,40 @@
     pageLoaded = false;
   });
 
-  (async () => {
-    if (!browser) return;
+  getRepository().getSources().catch(NoOp);
 
-    getRepository().getSources().catch(NoOp);
+  getRepository().events.subscribe((newEvents) => {
+    localEvents = newEvents;
 
-    getRepository().events.subscribe((newEvents) => {
-      localEvents = newEvents;
-
-      calendarEvents = new Map();
-      localEvents.forEach((event, i) => {
-        if (calendarEvents.has(event.calendar)) {
-          // @ts-ignore typescript says that this might be undefined despite the check above
-          calendarEvents.get(event.calendar).push(i);
-        } else {
-          calendarEvents.set(event.calendar, [ i ]);
-        }
-      });
+    calendarEvents = new Map();
+    localEvents.forEach((event, i) => {
+      if (calendarEvents.has(event.calendar)) {
+        // @ts-ignore typescript says that this might be undefined despite the check above
+        calendarEvents.get(event.calendar).push(i);
+      } else {
+        calendarEvents.set(event.calendar, [ i ]);
+      }
     });
+  });
 
-    getRepository().calendars.subscribe((newCalendars) => {
-      localCalendars = newCalendars;
+  getRepository().calendars.subscribe((newCalendars) => {
+    localCalendars = newCalendars;
 
-      sourceCalendars = new Map();
-      localCalendars.forEach((calendar, i) => {
-        if (sourceCalendars.has(calendar.source)) {
-          // @ts-ignore typescript says that this might be undefined despite the check above
-          sourceCalendars.get(calendar.source).push(i);
-        } else {
-          sourceCalendars.set(calendar.source, [ i ]);
-        }
-      });
+    sourceCalendars = new Map();
+    localCalendars.forEach((calendar, i) => {
+      if (sourceCalendars.has(calendar.source)) {
+        // @ts-ignore typescript says that this might be undefined despite the check above
+        sourceCalendars.get(calendar.source).push(i);
+      } else {
+        sourceCalendars.set(calendar.source, [ i ]);
+      }
     });
+  });
 
-    getRepository().sources.subscribe((newSources) => {
-      isCollapsed = newSources.map((source) => getMetadata().collapsedSources.has(source.id));
-      localSources = newSources;
-    });
-  })();
+  getRepository().sources.subscribe((newSources) => {
+    isCollapsed = newSources.map((source) => getMetadata().collapsedSources.has(source.id));
+    localSources = newSources;
+  });
 
   let spooledRefresh: ReturnType<typeof setTimeout>;
   function refresh(date: Date, force = false) {
@@ -132,6 +136,8 @@
       case "day":
       default:
     }
+
+    todayInRange = rangeStart.getTime() <= today.getTime() && today.getTime() <= rangeEnd.getTime();
 
     getRepository().getAllEvents(rangeStart, rangeEnd, force).catch((err) => {
       queueNotification("failure", `Failed to fetch events: ${err.message}`);
@@ -295,6 +301,12 @@
   <div class="toprow">
     <MonthSelection bind:date granularity={view} />
     <Horizontal position="justify" width="auto">
+      {#if !todayInRange}
+        <Button onClick={seeToday}>
+          Today
+        </Button>
+      {/if}
+
       {#if reachability != Reachability.Database}
         <span class="reachability">
           {#if reachability == Reachability.Backend}
