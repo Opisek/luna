@@ -79,6 +79,12 @@ Luna uses its own (UU)IDs for every resource accessed through it. Therefore, the
 - **Body**: Empty
 - **Purpose**: Returns the current backend version. This will be used by the frontend to verify compatibility based on the major version.
 
+#### Health
+- **Path**: ``/api/health``
+- **Method**: ``GET``
+- **Body**: Empty
+- **Purpose**: Determines whether the frontend, the backend, and the database are all functioning correctly.
+
 ### Sources
 #### Get Sources
 - **Path**: ``/api/sources``
