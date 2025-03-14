@@ -322,10 +322,6 @@ class Repository {
       stopLoading();
     });
 
-    fetchedSources.forEach((source) => {
-      source.collapsed = getMetadata().collapsedSources.has(source.id);
-    });
-
     this.sourcesCache.date = Date.now(),
     this.sourcesCache.value = fetchedSources;
     this.compileSources();
@@ -342,8 +338,6 @@ class Repository {
     }
 
     const fetched: SourceModel = await this.fetchJson(`/api/sources/${id}`).catch((err) => { throw err; });
-
-    fetched.collapsed = getMetadata().collapsedSources.has(id);
 
     this.sourceDetailsCache.set(id, {
       date: Date.now(),

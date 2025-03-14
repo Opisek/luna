@@ -17,7 +17,7 @@
 
   let { calendar = $bindable() }: Props = $props();
 
-  let calendarVisible = $state(calendar ? !getMetadata().hiddenCalendars.has(calendar.id) : false);
+  let calendarVisible = $state(calendar && calendar.id ? !getMetadata().hiddenCalendars.has(calendar.id) : false);
 
   let hasErrored = $state(false);
   getMetadata().faultyCalendars.subscribe((faulty) => {
@@ -34,6 +34,10 @@
     showModal(calendar).then(newCalendar => calendar = newCalendar).catch(NoOp);
   }
 
+  getMetadata().hiddenCalendars.subscribe((collapsed) => {
+    if (!calendar || !calendar.id) return;
+    calendarVisible = !collapsed.has(calendar.id);
+  });
   $effect(() => {
     if (calendar && calendar.id) getMetadata().setCalendarVisibility(calendar.id, calendarVisible);
   });

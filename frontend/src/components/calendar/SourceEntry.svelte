@@ -8,7 +8,7 @@
   import { getMetadata } from "$lib/client/metadata";
   import { getRepository } from "$lib/client/repository";
 
-  import { getContext } from "svelte";
+  import { getContext, untrack } from "svelte";
 
   interface Props {
     source: SourceModel;
@@ -47,12 +47,13 @@
     showModal(source).then(newSource => source = newSource).catch(NoOp);
   }
 
-  $effect(() => {
-    if (source.id) getMetadata().setSourceCollapse(source.id, source.collapsed);
-  })
+  let sourceCollapsed = $state(source ? getMetadata().collapsedSources.has(source.id) : false);
   getMetadata().collapsedSources.subscribe((collapsed) => {
-    if (!source) return;
-    source.collapsed = collapsed.has(source.id);
+    if (!source || !source.id) return;
+    sourceCollapsed = collapsed.has(source.id);
+  });
+  $effect(() => {
+    if (source && source.id) getMetadata().setSourceCollapse(source.id, sourceCollapsed);
   });
 </script>
 
@@ -105,7 +106,7 @@
       <Spinner/>
     {/if}
     {#if hasCals}
-      <CollapseToggle bind:collapsed={source.collapsed}/>
+      <CollapseToggle bind:collapsed={sourceCollapsed}/>
     {/if}
     {#if hasErrored}
       <Tooltip msg="An error occurred trying to retrieve calendars from this source." error={true}/>

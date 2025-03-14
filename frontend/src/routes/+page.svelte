@@ -32,6 +32,7 @@
 
   /* Fetched data */
   let localSources: SourceModel[] = $state([]);
+  let isCollapsed: boolean[] = $state([]);
   let localCalendars: CalendarModel[] = $state([]);
   let localEvents: EventModel[] = $state([]);
 
@@ -100,6 +101,7 @@
     });
 
     getRepository().sources.subscribe((newSources) => {
+      isCollapsed = newSources.map((source) => getMetadata().collapsedSources.has(source.id));
       localSources = newSources;
     });
   })();
@@ -153,6 +155,10 @@
         refresh(date);
       });
     })(date, pageLoaded);
+  });
+
+  getMetadata().collapsedSources.subscribe((collapsed) => {
+    isCollapsed = localSources.map((source) => collapsed.has(source.id));
   });
 
   /* Single instance modal logic */
@@ -300,8 +306,8 @@
 {#snippet sourceEntries(sources: SourceModel[])}
   {#each sources as source, i}
     <SourceEntry bind:source={localSources[i]}/>
-    {#if (!source.collapsed)}
-      {@render calendarEntries(sourceCalendars.get(source.id) || [])} 
+    {#if !isCollapsed[i]}
+      {@render calendarEntries(sourceCalendars.get(source.id) || [])}
     {/if}
   {/each}
 {/snippet}
