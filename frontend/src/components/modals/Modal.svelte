@@ -7,6 +7,7 @@
   import Title from "../layout/Title.svelte";
 
   import { NoOp } from "$lib/client/placeholders";
+  import { redrawNotifications } from "$lib/client/notifications";
 
   interface Props {
     title: string;
@@ -56,6 +57,7 @@
     window.addEventListener("click", clickOutside);
     visible = true
     setTimeout(resetFocus, 0);
+    setTimeout(redrawNotifications, 0); // hacky way to make sure that notifications are always on the very top. sometimes has a visible blink. should revisit one day.
   }
   hideModal = () => {
     window.removeEventListener("click", clickOutside);

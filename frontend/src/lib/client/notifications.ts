@@ -42,3 +42,7 @@ function showNotification() {
     }, 500);
   }
 }
+
+export function redrawNotifications() {
+  notifications.update((notifications) => notifications);
+}

@@ -1,13 +1,15 @@
 <script lang="ts">
   import Notification from "../components/interactive/Notification.svelte";
 
-  import { notificationExpireTime, notifications } from "$lib/client/notifications";
+  import { notificationExpireTime, notifications, queueNotification } from "$lib/client/notifications";
 
   interface Props {
     children?: import('svelte').Snippet;
   }
 
   let { children }: Props = $props();
+
+  let notifsWrapper: HTMLDivElement;
 
   // We store the height of every notification element so we can calculate the
   // proper Y-offsets for each notification.
@@ -43,8 +45,12 @@
     while(notifsHeights.length < $notifications.length) {
       notifsHeights.push(0);
     }
-  });
 
+    if (notifsWrapper) {
+      notifsWrapper.hidePopover();
+      notifsWrapper.showPopover();
+    }
+  });
 </script>
 
 <style lang="scss">
@@ -69,16 +75,25 @@
 
   div.notifications {
     position: fixed;
-    right: 0;
-    bottom: 0;
-    margin: dimensions.$gapSmaller;
+    left: calc(100vw - 15em - dimensions.$gapSmall);
+    top: calc(100vh - dimensions.$gapSmaller);
     width: 15em;
+    height: 0;
+    background-color: transparent;
+    outline: 0;
+    border: 0;
+    overflow: visible;
   }
 </style>
 
 {@render children?.()}
 
-<div class="notifications" style="--notificationExpireTime: {notificationExpireTime}ms">
+<div
+  bind:this={notifsWrapper}
+  class="notifications"
+  style="--notificationExpireTime: {notificationExpireTime}ms"
+  popover="manual"
+>
   {#each $notifications as notification, i (notification.created.getTime())}
     <Notification
       notification={notification}
