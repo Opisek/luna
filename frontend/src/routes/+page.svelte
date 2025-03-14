@@ -323,7 +323,7 @@
       </IconButton>
 
       {#if !todayInRange}
-        <Button onClick={seeToday}>
+        <Button onClick={seeToday} compact={true}>
           Today
         </Button>
       {/if}

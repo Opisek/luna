@@ -51,7 +51,7 @@
     gap: 0;
   }
   div.compact > button {
-    min-width: max-content;
+    min-width: dimensions.$buttonMinWidthCompact;
     padding: dimensions.$gapSmall;
   }
 

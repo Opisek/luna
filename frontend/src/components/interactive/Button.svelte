@@ -6,6 +6,7 @@
     // TODO: could not figure out enums for this, try again later
     color?: string;
     type?: "button" | "submit";
+    compact?: boolean;
     enabled?: boolean;
     href?: string;
     children?: Snippet;
@@ -15,6 +16,7 @@
     onClick = () => {},
     color = "neutral",
     type = "button",
+    compact = false,
     enabled = true,
     href = "",
     children
@@ -46,13 +48,17 @@
     padding: dimensions.$gapSmall;
     border-radius: dimensions.$borderRadius;
 
-    min-width: 5em;
+    min-width: dimensions.$buttonMinWidth;
     text-align: center;
     
     position: relative;
     overflow: hidden; 
 
     transition: background-color animations.$cubic animations.$animationSpeed;
+  }
+
+  button.compact, a.compact {
+    min-width: dimensions.$buttonMinWidthCompact;
   }
 
   .disabled {
@@ -77,6 +83,7 @@
     class:failure={color == "failure"}
     class:accent={color == "accent"}
     class:neutral={color == "neutral"}
+    class:compact={compact}
     onmouseleave={(e) => {(e.target as HTMLButtonElement).blur()}}
     class:disabled={!enabled}
     href={enabled ? href : "#"}
@@ -89,6 +96,7 @@
     class:failure={color == "failure"}
     class:accent={color == "accent"}
     class:neutral={color == "neutral"}
+    class:compact={compact}
     onclick={onClick}
     onmouseleave={(e) => {(e.target as HTMLButtonElement).blur()}}
     type={type}
