@@ -198,4 +198,4 @@ The description field is optional. Either the end date or the event duration is 
 - **Path**: ``/api/events/<ID>``
 - **Method**: ``DELETE``
 - **Body**: Empty
-- **Purpose**: Deletes the event from the local database and the upstream source calendar source.
+- **Purpose**: Deletes the event from the local database and the upstream source.
