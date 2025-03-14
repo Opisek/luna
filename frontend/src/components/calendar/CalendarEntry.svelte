@@ -6,7 +6,7 @@
 
   import { GetCalendarColor } from "$lib/common/colors";
   import { NoOp } from "$lib/client/placeholders";
-  import { faultyCalendars, loadingCalendars } from "$lib/client/repository";
+  import { getRepository } from "$lib/client/repository";
   import { focusIndicator } from "$lib/client/decoration";
   import { isCalendarVisible, setCalendarVisibility } from "$lib/client/localStorage";
 
@@ -21,12 +21,12 @@
   let calendarVisible = $state(calendar ? isCalendarVisible(calendar.id) : false);
 
   let hasErrored = $state(false);
-  faultyCalendars.subscribe((faulty) => {
+  getRepository().faultyCalendars.subscribe((faulty) => {
     hasErrored = faulty.has(calendar.id);
   });
 
   let isLoading = $state(false);
-  loadingCalendars.subscribe((loading) => {
+  getRepository().loadingCalendars.subscribe((loading) => {
     isLoading = loading.has(calendar.id);
   });
 

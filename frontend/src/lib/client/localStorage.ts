@@ -2,7 +2,7 @@ import { browser } from "$app/environment";
 
 import { writable } from "svelte/store";
 
-import { getEventsFromPreviouslyHiddenCalendar } from "./repository";
+import { getRepository } from "./repository";
 
 let localCollapsedSources = new Set<string>(browser && JSON.parse(localStorage.getItem("collapsedSources") || "[]") || []);
 export const collapsedSources = writable(localCollapsedSources);
@@ -55,7 +55,7 @@ export const setCalendarVisibility = (calendarId: string, visible: boolean) => {
     set.add(calendarId);
   } else {
     set.delete(calendarId);
-    getEventsFromPreviouslyHiddenCalendar(calendarId); 
+    getRepository().getEventsFromPreviouslyHiddenCalendar(calendarId); 
   }
   hiddenCalendars.set(set);
 }

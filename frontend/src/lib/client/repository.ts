@@ -8,916 +8,930 @@ import { AllChangesCalendar, AllChangesEvent, AllChangesSource, NoOp } from "./p
 
 import { atLeastOnePromise, deepCopy } from "$lib/common/misc";
 
-//
-// Constants
-//
 
-const spoolerDelay = 50; // 50ms
-const maxCacheAge = 1000 * 60 * 10; // 10 minutes
+class Repository {
+  //
+  // Constants
+  //
 
-//
-// Subscribeable Stores
-//
+  private readonly spoolerDelay = 50; // 50ms
+  private readonly maxCacheAge = 1000 * 60 * 10; // 10 minutes
 
-export const sources = writable([] as SourceModel[]);
-export const calendars = writable([] as CalendarModel[]);
-export const events = writable([] as EventModel[]);
+  //
+  // Subscribeable Stores
+  //
 
-export const faultySources = writable(new Set<string>());
-export const faultyCalendars = writable(new Set<string>());
+  readonly sources = writable([] as SourceModel[]);
+  readonly calendars = writable([] as CalendarModel[]);
+  readonly events = writable([] as EventModel[]);
 
-export const loadingSources = writable(new Set<string>());
-export const loadingCalendars = writable(new Set<string>());
-export const loadingData = writable(false);
+  readonly faultySources = writable(new Set<string>());
+  readonly faultyCalendars = writable(new Set<string>());
 
-//
-// Misc
-//
+  readonly loadingSources = writable(new Set<string>());
+  readonly loadingCalendars = writable(new Set<string>());
+  readonly loadingData = writable(false);
 
-let loadingCounter = 0;
-function indicateStartLoading() {
-  loadingCounter++;
-  loadingData.set(true);
-}
-function indicateStopLoading() {
-  if (--loadingCounter == 0) loadingData.set(false);
-}
+  //
+  // Constructor
+  //
+  constructor() {
+    hiddenCalendars.subscribe(() => {
+      this.compileEvents(this.eventsRangeStart, this.eventsRangeEnd);
+    });
 
-async function mapBaseEventToRecurrenceInstance(idAndDate: [string, number]): Promise<EventModel | null> {
-  const baseEvent = eventsMap.get(idAndDate[0]);
-  if (baseEvent == undefined) return null;
-
-  const baseDuration = baseEvent.date.end.getTime() - baseEvent.date.start.getTime();
-
-  const copiedEvent = await deepCopy(baseEvent);
-  copiedEvent.date.start = new Date(idAndDate[1]);
-  copiedEvent.date.end = new Date(idAndDate[1]);
-  copiedEvent.date.end.setTime(copiedEvent.date.end.getTime() + baseDuration);
-
-  return copiedEvent;
-}
-
-async function mapAllRecurrenceInstances(idAndDates: [string, number][]): Promise<EventModel[]> {
-  return (await Promise.all(idAndDates.map(async (idAndDate) => mapBaseEventToRecurrenceInstance(idAndDate)))).filter(x => x != null);
-}
-
-//
-// Caching
-//
-
-let eventsRangeStart: Date = new Date();
-let eventsRangeEnd: Date = new Date();
-
-const emptyCache = { date: 0, value: null };
-
-let lastCacheSave = Date.now();
-
-let sourcesCache: CacheEntry<SourceModel[]> = emptyCache; // sources
-let sourceDetailsCache: Map<string, CacheEntry<SourceModel>> = new Map(); // source -> details
-let calendarsCache: Map<string, CacheEntry<string[]>> = new Map(); // source -> calendars
-let eventsCache: Map<string, Map<number, CacheEntry<[string, number][]>>> = new Map(); // calendar -> month -> event id, start date (because of recurring events having the same id)
-let eventsMap: Map<string, EventModel> = new Map(); // event id -> event
-let calendarsMap: Map<string, CalendarModel> = new Map(); // calendar id -> calendar
-
-function cacheOk<T>(cache: CacheEntry<T> | undefined): (T | null) {
-  return (cache && Date.now() - cache.date < maxCacheAge) ? cache.value : null;
-}
-
-export function invalidateCache() {
-  sourcesCache.date = 0;
-  sourceDetailsCache.forEach((cache) => cache.date = 0);
-  calendarsCache.forEach((cache) => cache.date = 0);
-  eventsCache.forEach((cache) => cache.forEach((entry) => entry.date = 0));
-  saveCache();
-}
-
-// 
-// Web
-// 
-
-async function fetchResponse(url: string, options: RequestInit = {}): Promise<Response> {
-  const response = await fetch(url, options).catch((err) => {
-    if (!err) err = new Error("Could not contact server");
-    throw err;
-  });
-  if (response.ok) {
-    return response;
-  } else {
-    const json = await response.json().catch(() => null);
-    let err = null;
-    if (!err && json != null) err = json.error;
-    if (!err && json != null) err = json.message;
-    if (!err) err = `${response.statusText ? response.statusText : "Could not contact server"} (${response.status})`;
-    throw new Error(err);
+    if (browser) {
+      window.addEventListener("storage", () => this.loadCache());
+      this.loadCache();
+    }
   }
-}
 
-async function fetchJson(url: string, options: RequestInit = {}) {
-  return (await fetchResponse(url, options).catch(err => { throw err; })).json();
-}
+  //
+  // Misc
+  //
 
-//
-// Form Data
-//
+  private loadingCounter = 0;
+  private indicateStartLoading() {
+    this.loadingCounter++;
+    this.loadingData.set(true);
+  }
+  private indicateStopLoading() {
+    if (--this.loadingCounter == 0) this.loadingData.set(false);
+  }
 
-function getSourceFormData(source: SourceModel, changes: SourceModelChanges = AllChangesSource): FormData {
-  const formData = new FormData();
-  if (changes.name) formData.set("name", source.name);
-  if (changes.type) formData.set("type", source.type);
-  if (changes.type || changes.settings) {
-    switch (source.type) {
-      case "caldav":
-        formData.set("url", source.settings.url);
-        break;
-      case "ical":
-        switch (source.settings.location) {
-          case "remote":
-            formData.set("location", "remote");
-            formData.set("url", source.settings.url);
-            break
-          case "database":
-            formData.set("location", "database");
-            formData.set("file", source.settings.file.item(0));
-            break;
-          case "local":
-            formData.set("location", "local");
-            formData.set("path", source.settings.path);
-            break;
-          default:
-            throw new Error("Unsupported iCal file location");
+  private async mapBaseEventToRecurrenceInstance(idAndDate: [string, number]): Promise<EventModel | null> {
+    const baseEvent = this.eventsMap.get(idAndDate[0]);
+    if (baseEvent == undefined) return null;
+
+    const baseDuration = baseEvent.date.end.getTime() - baseEvent.date.start.getTime();
+
+    const copiedEvent = await deepCopy(baseEvent);
+    copiedEvent.date.start = new Date(idAndDate[1]);
+    copiedEvent.date.end = new Date(idAndDate[1]);
+    copiedEvent.date.end.setTime(copiedEvent.date.end.getTime() + baseDuration);
+
+    return copiedEvent;
+  }
+
+  private async mapAllRecurrenceInstances(idAndDates: [string, number][]): Promise<EventModel[]> {
+    return (await Promise.all(idAndDates.map(async (idAndDate) => this.mapBaseEventToRecurrenceInstance(idAndDate)))).filter(x => x != null);
+  }
+
+  //
+  // Caching
+  //
+
+  private eventsRangeStart: Date = new Date();
+  private eventsRangeEnd: Date = new Date();
+
+  private readonly emptyCache = { date: 0, value: null };
+
+  private lastCacheSave = Date.now();
+
+  private sourcesCache: CacheEntry<SourceModel[]> = this.emptyCache; // sources
+  private sourceDetailsCache: Map<string, CacheEntry<SourceModel>> = new Map(); // source -> details
+  private calendarsCache: Map<string, CacheEntry<string[]>> = new Map(); // source -> calendars
+  private eventsCache: Map<string, Map<number, CacheEntry<[string, number][]>>> = new Map(); // calendar -> month -> event id, start date (because of recurring events having the same id)
+  private eventsMap: Map<string, EventModel> = new Map(); // event id -> event
+  private calendarsMap: Map<string, CalendarModel> = new Map(); // calendar id -> calendar
+
+  private cacheOk<T>(cache: CacheEntry<T> | undefined): (T | null) {
+    return (cache && Date.now() - cache.date < this.maxCacheAge) ? cache.value : null;
+  }
+
+  invalidateCache() {
+    this.sourcesCache.date = 0;
+    this.sourceDetailsCache.forEach((cache) => cache.date = 0);
+    this.calendarsCache.forEach((cache) => cache.date = 0);
+    this.eventsCache.forEach((cache) => cache.forEach((entry) => entry.date = 0));
+    this.saveCache();
+  }
+
+  // 
+  // Web
+  // 
+
+  private async fetchResponse(url: string, options: RequestInit = {}): Promise<Response> {
+    const response = await fetch(url, options).catch((err) => {
+      if (!err) err = new Error("Could not contact server");
+      throw err;
+    });
+    if (response.ok) {
+      return response;
+    } else {
+      const json = await response.json().catch(() => null);
+      let err = null;
+      if (!err && json != null) err = json.error;
+      if (!err && json != null) err = json.message;
+      if (!err) err = `${response.statusText ? response.statusText : "Could not contact server"} (${response.status})`;
+      throw new Error(err);
+    }
+  }
+
+  private async fetchJson(url: string, options: RequestInit = {}) {
+    return (await this.fetchResponse(url, options).catch(err => { throw err; })).json();
+  }
+
+  //
+  // Form Data
+  //
+
+  private getSourceFormData(source: SourceModel, changes: SourceModelChanges = AllChangesSource): FormData {
+    const formData = new FormData();
+    if (changes.name) formData.set("name", source.name);
+    if (changes.type) formData.set("type", source.type);
+    if (changes.type || changes.settings) {
+      switch (source.type) {
+        case "caldav":
+          formData.set("url", source.settings.url);
+          break;
+        case "ical":
+          switch (source.settings.location) {
+            case "remote":
+              formData.set("location", "remote");
+              formData.set("url", source.settings.url);
+              break
+            case "database":
+              formData.set("location", "database");
+              formData.set("file", source.settings.file.item(0));
+              break;
+            case "local":
+              formData.set("location", "local");
+              formData.set("path", source.settings.path);
+              break;
+            default:
+              throw new Error("Unsupported iCal file location");
+          }
+          break;
+        default:
+          throw new Error("Unsupported source type");
+      }
+    }
+    if (changes.auth) {
+      formData.set("auth_type", source.auth_type);
+      switch (source.auth_type) {
+        case "none":
+          break;
+        case "basic":
+          formData.set("auth_username", source.auth.username);
+          formData.set("auth_password", source.auth.password);
+          break;
+        case "bearer":
+          formData.set("auth_token", source.auth.token);
+          break;
+        default:
+          throw new Error("Unsupported auth type");
+      }
+    }
+    return formData;
+  }
+
+  private getCalendarFormData(calendar: CalendarModel, changes: CalendarModelChanges = AllChangesCalendar): FormData {
+    const formData = new FormData();
+    if (changes.name) formData.set("name", calendar.name);
+    if (changes.desc) formData.set("desc", calendar.desc);
+    if (changes.color) formData.set("color", calendar.color);
+    return formData;
+  }
+
+  private getEventFormData(event: EventModel, changes: EventModelChanges = AllChangesEvent): FormData {
+    const formData = new FormData();
+    if (changes.name) formData.set("name", event.name);
+    if (changes.desc) formData.set("desc", event.desc);
+    if (changes.date) {
+      if (event.date.allDay) {
+        const start = new Date(event.date.start.getTime() - (event.date.start.getTimezoneOffset() * 60000));
+        const end = new Date(event.date.end.getTime() - (event.date.end.getTimezoneOffset() * 60000));
+        formData.set("date_start", start.toISOString());
+        formData.set("date_end", end.toISOString());
+      } else {
+        formData.set("date_start", event.date.start.toISOString());
+        formData.set("date_end", event.date.end.toISOString());
+      }
+      formData.set("date_all_day", event.date.allDay ? "true" : "false");
+    }
+    if (changes.color) {
+      if (event.color && event.color !== "") {
+        formData.set("color", event.color);
+      } else {
+        formData.set("color", "null");
+      }
+    }
+    return formData;
+  }
+
+  //
+  // Visibility
+  //
+
+  private compileSources() {
+    this.sources.set(this.sourcesCache.value || []);
+  }
+
+  private compileCalendarsTimeout: (ReturnType<typeof setTimeout> | undefined) = undefined;
+  private compileCalendars() {
+    clearTimeout(this.compileCalendarsTimeout);
+    this.compileCalendarsTimeout = setTimeout(() => {
+      const allCalendars = Array.from(this.calendarsCache.values().map(x => x.value).filter(x => x != null)).flat();
+      this.calendars.set(allCalendars.map(x => this.calendarsMap.get(x)).filter(x => x != null));
+    }, this.spoolerDelay)
+  }
+
+  private compileEventsTimeout: (ReturnType<typeof setTimeout> | undefined) = undefined;
+  private compileEvents(start: Date, end: Date) {
+    clearTimeout(this.compileEventsTimeout);
+
+    this.compileEventsTimeout = setTimeout(async () => {
+      const allEvents = 
+        Array.from(this.eventsCache.entries())
+        .filter(x => isCalendarVisible(x[0]) && x[1] != null) // Event must be visible
+        .map(x => Array.from(x[1].entries()))
+        .flat()
+        .filter(x => x[1] != null && x[0] >= start.getTime() && x[0] <= end.getTime()) // Event must be in the time frame
+        .map(x => x[1].value)
+        .filter(x => x != null) // Event must exist
+        .flat();
+      
+      const uniqueEvents = [ ...new Map(allEvents.map(x => [`${x[0]}${x[1]}`, x])).values() ];
+
+      const eventsWithData = await this.mapAllRecurrenceInstances(uniqueEvents);
+
+      this.events.set(eventsWithData);
+    }, this.spoolerDelay)
+  }
+
+  //
+  // Local Storage
+  //
+
+  private loadCache() {
+    const cacheTimestamp = localStorage.getItem("cache.timestamp");
+    if (cacheTimestamp != null && Number.parseInt(cacheTimestamp) == this.lastCacheSave) return;
+
+    const newSourcesCache = localStorage.getItem("cache.sources");
+    if (newSourcesCache) this.sourcesCache = JSON.parse(newSourcesCache);
+
+    const newSourceDetailsCache = localStorage.getItem("cache.sourceDetails");
+    if (newSourceDetailsCache) this.sourceDetailsCache = new Map(JSON.parse(newSourceDetailsCache));
+
+    const newCalendarsCache = localStorage.getItem("cache.calendars");
+    if (newCalendarsCache) this.calendarsCache = new Map(JSON.parse(newCalendarsCache));
+
+    const newEventsCache = localStorage.getItem("cache.events");
+    if (newEventsCache) this.eventsCache = new Map(JSON.parse(newEventsCache).map((x: [string, [number, CacheEntry<string>][]]) => [x[0], new Map(x[1])]));
+
+    const newCalendarsMap = localStorage.getItem("cache.calendarsMap");
+    if (newCalendarsMap) this.calendarsMap = new Map(JSON.parse(newCalendarsMap));
+
+    const newEventsMap = localStorage.getItem("cache.eventsMap");
+    if (newEventsMap) {
+      this.eventsMap = new Map(JSON.parse(newEventsMap));
+      this.eventsMap.forEach((event) => {
+        event.date.start = new Date(event.date.start);
+        event.date.end = new Date(event.date.end);
+        if (event.date.allDay) {
+          event.date.start.setHours(0, 0, 0, 0);
+          event.date.end.setHours(0, 0, 0, 0);
         }
-        break;
-      default:
-        throw new Error("Unsupported source type");
+      });
+    }
+
+    this.compileSources();
+    this.compileCalendars();
+    this.compileEvents(this.eventsRangeStart, this.eventsRangeEnd);
+  }
+
+  private saveCacheTimeout: (ReturnType<typeof setTimeout> | undefined) = undefined;
+  private saveCache() {
+    if (browser) {
+      // @ts-ignore if only typescript were consistent...
+      clearTimeout(this.saveCacheTimeout);
+      setTimeout(() => {
+        this.lastCacheSave = Date.now();
+        localStorage.setItem("cache.timestamp", this.lastCacheSave.toString());
+        localStorage.setItem("cache.sources", JSON.stringify(this.sourcesCache));
+        localStorage.setItem("cache.sourceDetails", JSON.stringify(Array.from(this.sourceDetailsCache.entries())));
+        localStorage.setItem("cache.calendars", JSON.stringify(Array.from(this.calendarsCache.entries())));
+        localStorage.setItem("cache.events", JSON.stringify(Array.from(this.eventsCache.entries().map(x => [x[0], Array.from(x[1].entries())]))));
+        localStorage.setItem("cache.calendarsMap", JSON.stringify(Array.from(this.calendarsMap.entries())));
+        localStorage.setItem("cache.eventsMap", JSON.stringify(Array.from(this.eventsMap.entries())));
+      }, this.spoolerDelay)
     }
   }
-  if (changes.auth) {
-    formData.set("auth_type", source.auth_type);
-    switch (source.auth_type) {
-      case "none":
-        break;
-      case "basic":
-        formData.set("auth_username", source.auth.username);
-        formData.set("auth_password", source.auth.password);
-        break;
-      case "bearer":
-        formData.set("auth_token", source.auth.token);
-        break;
-      default:
-        throw new Error("Unsupported auth type");
+
+  // 
+  // Sources
+  // 
+
+  async getSources(forceRefresh = false): Promise<SourceModel[]> {
+    if (!browser) return [];
+
+    if (!forceRefresh) {
+      const cached = this.cacheOk(this.sourcesCache);
+      if (cached) return Promise.resolve(cached);
     }
+
+    this.indicateStartLoading();
+
+    const fetchedSources: SourceModel[] = await this.fetchJson("/api/sources").catch((err) => {
+      throw err;
+    }).finally(() => {
+      this.indicateStopLoading();
+    });
+
+    fetchedSources.forEach((source) => {
+      source.collapsed = isSourceCollapsed(source.id);
+    });
+
+    this.sourcesCache.date = Date.now(),
+    this.sourcesCache.value = fetchedSources;
+    this.compileSources();
+    this.saveCache();
+    return fetchedSources;
   }
-  return formData;
-}
 
-function getCalendarFormData(calendar: CalendarModel, changes: CalendarModelChanges = AllChangesCalendar): FormData {
-  const formData = new FormData();
-  if (changes.name) formData.set("name", calendar.name);
-  if (changes.desc) formData.set("desc", calendar.desc);
-  if (changes.color) formData.set("color", calendar.color);
-  return formData;
-}
+  async getSourceDetails(id: string, forceRefresh = false): Promise<SourceModel> {
+    if (!browser) return {} as SourceModel;
 
-function getEventFormData(event: EventModel, changes: EventModelChanges = AllChangesEvent): FormData {
-  const formData = new FormData();
-  if (changes.name) formData.set("name", event.name);
-  if (changes.desc) formData.set("desc", event.desc);
-  if (changes.date) {
-    if (event.date.allDay) {
-      const start = new Date(event.date.start.getTime() - (event.date.start.getTimezoneOffset() * 60000));
-      const end = new Date(event.date.end.getTime() - (event.date.end.getTimezoneOffset() * 60000));
-      formData.set("date_start", start.toISOString());
-      formData.set("date_end", end.toISOString());
-    } else {
-      formData.set("date_start", event.date.start.toISOString());
-      formData.set("date_end", event.date.end.toISOString());
+    if (!forceRefresh) {
+      const cached = this.cacheOk(this.sourceDetailsCache.get(id));
+      if (cached) return Promise.resolve(cached);
     }
-    formData.set("date_all_day", event.date.allDay ? "true" : "false");
+
+    const fetched: SourceModel = await this.fetchJson(`/api/sources/${id}`).catch((err) => { throw err; });
+
+    fetched.collapsed = isSourceCollapsed(id);
+
+    this.sourceDetailsCache.set(id, {
+      date: Date.now(),
+      value: fetched
+    });
+    this.saveCache();
+    return fetched;
   }
-  if (changes.color) {
-    if (event.color && event.color !== "") {
-      formData.set("color", event.color);
-    } else {
-      formData.set("color", "null");
-    }
+
+  async createSource(newSource: SourceModel): Promise<void> {
+    if (!browser) return;
+
+    const formData = this.getSourceFormData(newSource);
+
+    const json = await this.fetchJson(`/api/sources`, { method: "PUT", body: formData }).catch((err) => { throw err; });
+
+    newSource.id = json.id;
+    this.sourcesCache.value = this.sourcesCache.value?.concat(newSource) || [ newSource ];
+    this.sources.update((sources) => sources.concat(newSource));
+
+    this.getCalendars(newSource.id).then(async (cals) => {
+      this.compileCalendars();
+      const [_, errors] = await atLeastOnePromise(cals.map((cal) => this.getEventsFromCalendar(cal.id, this.eventsRangeStart, this.eventsRangeEnd))).catch(() => {
+        throw new Error("Failed to fetch events");
+      });
+      errors.forEach((err) => {
+        queueNotification(
+          "failure",
+          `Failed to fetch events from ${cals[err[0]].name}: ${err[1].message}`
+        );
+      });
+      this.compileEvents(this.eventsRangeStart, this.eventsRangeEnd);
+    }).catch((err) => {
+      queueNotification(
+        "failure",
+        `Failed to fetch calendars from ${newSource.name}: ${err.message}`
+      );
+    });
+
+    this.saveCache();
   }
-  return formData;
-}
 
-//
-// Visibility
-//
+  async editSource(modifiedSource: SourceModel, changes: SourceModelChanges): Promise<void> {
+    if (!browser) return;
 
-function compileSources() {
-  sources.set(sourcesCache.value || []);
-}
+    let formData = this.getSourceFormData(modifiedSource, changes);
 
-let compileCalendarsTimeout: ReturnType<typeof setTimeout>;
-function compileCalendars() {
-  clearTimeout(compileCalendarsTimeout);
-  compileCalendarsTimeout = setTimeout(() => {
-    const allCalendars = Array.from(calendarsCache.values().map(x => x.value).filter(x => x != null)).flat();
-    calendars.set(allCalendars.map(x => calendarsMap.get(x)).filter(x => x != null));
-  }, spoolerDelay)
-}
-
-let compileEventsTimeout: ReturnType<typeof setTimeout>;
-function compileEvents(start: Date, end: Date) {
-  clearTimeout(compileEventsTimeout);
-
-  compileEventsTimeout = setTimeout(async () => {
-    const allEvents = 
-      Array.from(eventsCache.entries())
-      .filter(x => isCalendarVisible(x[0]) && x[1] != null) // Event must be visible
-      .map(x => Array.from(x[1].entries()))
-      .flat()
-      .filter(x => x[1] != null && x[0] >= start.getTime() && x[0] <= end.getTime()) // Event must be in the time frame
-      .map(x => x[1].value)
-      .filter(x => x != null) // Event must exist
-      .flat();
+    await this.fetchResponse(`/api/sources/${modifiedSource.id}`, { method: "PATCH", body: formData }).catch((err) => { throw err; });
     
-    const uniqueEvents = [ ...new Map(allEvents.map(x => [`${x[0]}${x[1]}`, x])).values() ];
+    this.sourcesCache.value = this.sourcesCache.value?.map((source => source.id === modifiedSource.id ? modifiedSource : source)) || [ modifiedSource ];
+    this.compileSources();
 
-    const eventsWithData = await mapAllRecurrenceInstances(uniqueEvents);
+    this.getCalendars(modifiedSource.id).then(async (cals) => {
+      this.compileCalendars();
+      const [_, errors] = await atLeastOnePromise(cals.map((cal) => this.getEventsFromCalendar(cal.id, this.eventsRangeStart, this.eventsRangeEnd))).catch(() => {
+        throw new Error("Failed to fetch events");
+      });
+      errors.forEach((err) => {
+        queueNotification(
+          "failure",
+          `Failed to fetch events from ${cals[err[0]].name}: ${err[1].message}`
+        );
+      });
+      this.compileEvents(this.eventsRangeStart, this.eventsRangeEnd);
+    }).catch((err) => {
+      queueNotification(
+        "failure",
+        `Failed to fetch calendars from ${modifiedSource.name}: ${err.message}`
+      );
+    });
 
-    events.set(eventsWithData);
-  }, spoolerDelay)
-}
+    this.saveCache();
+  }
 
-hiddenCalendars.subscribe(() => {
-  compileEvents(eventsRangeStart, eventsRangeEnd);
-});
+  async deleteSource(id: string): Promise<void> {
+    if (!browser) return;
 
-//
-// Local Storage
-//
+    await this.fetchResponse(`/api/sources/${id}`, { method: "DELETE" }).catch((err) => { throw err; });
 
-function loadCache() {
-  const cacheTimestamp = localStorage.getItem("cache.timestamp");
-  if (cacheTimestamp != null && Number.parseInt(cacheTimestamp) == lastCacheSave) return;
+    this.sourcesCache.value = this.sourcesCache.value?.filter((source) => source.id !== id) || [];
+    this.compileSources();
 
-  const newSourcesCache = localStorage.getItem("cache.sources");
-  if (newSourcesCache) sourcesCache = JSON.parse(newSourcesCache);
+    for (const calendar of this.calendarsCache.get(id)?.value || []) {
+      this.eventsCache.delete(calendar);
+      this.calendarsMap.delete(calendar);
+    }
 
-  const newSourceDetailsCache = localStorage.getItem("cache.sourceDetails");
-  if (newSourceDetailsCache) sourceDetailsCache = new Map(JSON.parse(newSourceDetailsCache));
+    this.compileCalendars();
+    this.compileEvents(this.eventsRangeStart, this.eventsRangeEnd);
 
-  const newCalendarsCache = localStorage.getItem("cache.calendars");
-  if (newCalendarsCache) calendarsCache = new Map(JSON.parse(newCalendarsCache));
+    this.saveCache();
+  }
 
-  const newEventsCache = localStorage.getItem("cache.events");
-  if (newEventsCache) eventsCache = new Map(JSON.parse(newEventsCache).map((x: [string, [number, CacheEntry<string>][]]) => [x[0], new Map(x[1])]));
+  //
+  // Calendars
+  //
 
-  const newCalendarsMap = localStorage.getItem("cache.calendarsMap");
-  if (newCalendarsMap) calendarsMap = new Map(JSON.parse(newCalendarsMap));
+  async getAllCalendars(forceRefresh = false): Promise<CalendarModel[]> {
+    if (!browser) return [];
 
-  const newEventsMap = localStorage.getItem("cache.eventsMap");
-  if (newEventsMap) {
-    eventsMap = new Map(JSON.parse(newEventsMap));
-    eventsMap.forEach((event) => {
+    const allSources = await this.getSources(forceRefresh);
+
+    const [calendars, errors] = await atLeastOnePromise(allSources.map((source) => this.getCalendars(source.id, forceRefresh))).catch(() => {
+      throw new Error("Failed to fetch calendars");
+    });
+
+    errors.forEach((err) => {
+      queueNotification(
+        "failure",
+        `Failed to fetch calendars from ${allSources[err[0]].name}: ${err[1].message}`
+      );
+    });
+
+    return calendars.flat();
+  }
+
+  private async getCalendars(id: string, forceRefresh = false): Promise<CalendarModel[]> {
+    if (!browser) return [];
+
+    if (!forceRefresh) {
+      const cached = this.cacheOk(this.calendarsCache.get(id));
+      if (cached) return Promise.resolve(cached.map(x => this.calendarsMap.get(x)).filter(x => x != null));
+    }
+
+    this.indicateStartLoading();
+    this.loadingSources.update((loading) => {
+      loading.add(id);
+      return loading;
+    });
+
+    const response = await this.fetchJson(`/api/sources/${id}/calendars`).catch((err) => {
+      this.faultySources.update((faulty) => {
+        faulty.add(id);
+        return faulty;
+      });
+      throw err;
+    }).finally(() => {
+      this.indicateStopLoading();
+      this.loadingSources.update((loading) => {
+        loading.delete(id);
+        return loading;
+      });
+    });
+
+    this.faultySources.update((faulty) => {
+      faulty.delete(id);
+      return faulty;
+    });
+
+    const fetched: CalendarModel[] = response.calendars;
+
+    // Delete orphans
+    let anyOrphaned = false;
+    const fetchedSet = new Set(fetched.map(x => x.id));
+    for (const calendar of this.calendarsCache.get(id)?.value || []) {
+      if (!fetchedSet.has(calendar)) {
+        this.eventsCache.delete(calendar);
+        anyOrphaned = true;
+      }
+    }
+
+    for (const calendar of fetched) {
+      this.calendarsMap.set(calendar.id, calendar)
+    }
+    
+    this.calendarsCache.set(id, {
+      date: Date.now(),
+      value: fetched.map(x => x.id)
+    });
+
+    this.compileCalendars();
+    if (anyOrphaned) this.compileEvents(this.eventsRangeStart, this.eventsRangeEnd);
+    this.saveCache();
+    return fetched;
+  }
+
+  async getCalendar(id: string, forceRefresh = false): Promise<CalendarModel | null> {
+    if (!browser) return {} as CalendarModel;
+
+    return this.calendarsMap.get(id) || null; // TODO: needs a bit of refactoring plus actual fetch of the relevant endpoint depending on cache age
+  }
+
+  async createCalendar(newCalendar: CalendarModel): Promise<void> {
+    if (!browser) return;
+
+    // add to database
+    const formData = this.getCalendarFormData(newCalendar);
+
+    const json = await this.fetchJson(`/api/sources/${newCalendar.source}/calendars`, { method: "PUT", body: formData }).catch((err) => { throw err; });
+
+    newCalendar.id = json.id;
+
+    // add to cache
+    this.calendarsMap.set(newCalendar.id, newCalendar);
+    this.calendarsCache.set(newCalendar.source, {
+      date: this.calendarsCache.get(newCalendar.source)?.date || Date.now(),
+      value: this.calendarsCache.get(newCalendar.source)?.value?.concat(newCalendar.id) || [ newCalendar.id ]
+    });
+
+    // add to display
+    this.calendars.update((calendars) => calendars.concat(newCalendar));
+
+    this.saveCache();
+  };
+
+  async editCalendar(modifiedCalendar: CalendarModel, changes: CalendarModelChanges): Promise<void> {
+    if (!browser) return;
+
+    // update in database
+    const formData = this.getCalendarFormData(modifiedCalendar, changes);
+
+    await this.fetchResponse(`/api/calendars/${modifiedCalendar.id}`, { method: "PATCH", body: formData }).catch((err) => { throw err; });
+
+    // update in cache
+    this.calendarsMap.set(modifiedCalendar.id, modifiedCalendar);
+
+    // update on display
+    this.calendars.update((calendars) => calendars.map((cal) => cal.id === modifiedCalendar.id ? modifiedCalendar : cal));
+
+    this.saveCache();
+  }
+
+  async deleteCalendar(id: string): Promise<void> {
+    if (!browser) return;
+
+    // remove from database
+    await this.fetchResponse(`/api/calendars/${id}`, { method: "DELETE" }).catch((err) => { throw err; });
+
+    const calendar = this.calendarsMap.get(id);
+    if (!calendar) return;
+    this.calendarsMap.delete(id);
+
+    // remove from cache
+    this.eventsCache.delete(id);
+    this.calendarsCache.set(calendar.source, {
+      date: this.calendarsCache.get(calendar.source)?.date || Date.now(),
+      value: this.calendarsCache.get(calendar.source)?.value?.filter((cal) => cal !== id) || []
+    });
+
+    // remove from display
+    this.calendars.update((calendars) => calendars.filter((cal) => cal.id !== id));
+    this.compileEvents(this.eventsRangeStart, this.eventsRangeEnd);
+
+    this.saveCache();
+  }
+
+  async moveCalendar(calendar: CalendarModel): Promise<void> {
+    throw new Error("Not implemented");
+
+    if (!browser) return;
+
+    const oldId = calendar.id;
+
+    // add to the new calendar
+    await this.createCalendar(calendar).catch((err) => { throw err; });
+
+    // TODO: MOVE ALL EVENTS!!!
+
+    // remove from the old calendar
+    await this.deleteCalendar(calendar.id).catch((err) => {
+      // undo changes
+      this.deleteCalendar(calendar.id).catch(NoOp);
+      calendar.id = oldId;
+      throw err;
+    });
+  }
+
+  //
+  // Events
+  //
+
+  private determineEventMonths(event: EventModel): Date[] {
+    const start = new Date(event.date.start);
+    start.setUTCDate(1);
+    start.setUTCHours(0, 0, 0, 0);
+    const end = new Date(event.date.end);
+
+    const months = [];
+    while (start < end) {
+      start.setUTCMonth(start.getUTCMonth() + 1);
+      months.push(new Date(start));
+    }
+
+    return months;
+  }
+
+  private addEventToCache(event: EventModel, date: Date) {
+    let calendarEventsCache = this.eventsCache.get(event.calendar);
+    if (!calendarEventsCache) {
+      calendarEventsCache = new Map();
+      this.eventsCache.set(event.calendar, calendarEventsCache);
+    }
+
+    let cacheEntry = calendarEventsCache.get(date.getTime());
+    if (!cacheEntry) {
+      cacheEntry = { date: Date.now(), value: [] };
+      calendarEventsCache.set(date.getTime(), cacheEntry);
+    }
+
+    calendarEventsCache.set(date.getTime(), {
+      date: cacheEntry.date,
+      value: [ ...cacheEntry.value || [], [event.id, event.date.start.getTime()] ]
+    });
+  }
+
+  private removeEventFromCache(event: EventModel, date: Date) {
+    if (!this.eventsCache.has(event.calendar)) return;
+    const cacheEntry = this.eventsCache.get(event.calendar)?.get(date.getTime());
+    if (!cacheEntry || !cacheEntry.value) return;
+    cacheEntry.value = cacheEntry.value.filter((idAndDate) => idAndDate[0] !== event.id);
+  }
+
+  async getAllEvents(start: Date, end: Date, forceRefresh = false): Promise<EventModel[]> {
+    if (!browser) return [];
+    this.eventsRangeStart = start;
+    this.eventsRangeEnd = end;
+
+    start.setUTCHours(0, 0, 0, 0);
+    end.setUTCHours(23, 59, 59, 999);
+
+    // Set start and end to the start and end of each month
+    start.setDate(1);
+    end.setMonth(end.getMonth() + 1);
+    end.setDate(0);
+
+    // Add one month of padding in both directions
+    start.setMonth(start.getMonth() - 1);
+    end.setMonth(end.getMonth() + 1);
+
+    this.compileEvents(start, end);
+    const allSources = await this.getSources(forceRefresh).catch((err) => { throw err; });
+    const [events, errors] = await atLeastOnePromise(allSources.map((source) => this.getEventsFromSource(source.id, start, end, forceRefresh))).catch(() => {
+      throw new Error("Failed to fetch events");
+    });
+    errors.forEach((err) => {
+      queueNotification(
+        "failure",
+        `Failed to fetch events from ${allSources[err[0]].name}: ${err[1].message}`
+      );
+    });
+    return events.flat();
+  }
+
+  private async getEventsFromSource(source: string, start: Date, end: Date, forceRefresh = false): Promise<EventModel[]> {
+    let cals = await this.getCalendars(source, forceRefresh).catch((err) => { throw err; });
+    cals = cals.filter(x => isCalendarVisible(x.id)); // only fetch events from visible calendars
+    const [events, errors] = await atLeastOnePromise(cals.map((calendar) => this.getEventsFromCalendar(calendar.id, start, end, forceRefresh))).catch(() => {
+      throw new Error("Failed to fetch events");
+    })
+    errors.forEach((err) => {
+      queueNotification(
+        "failure",
+        `Failed to fetch events from ${cals[err[0]].name}: ${err[1].message}`
+      );
+    });
+    return events.flat();
+  }
+
+  private async getEventsFromCalendar(calendar: string, start: Date, end: Date, forceRefresh = false): Promise<EventModel[]> {
+    let result: EventModel[] = [];
+
+    const cache = (forceRefresh ? null : this.eventsCache.get(calendar)) || new Map<number, CacheEntry<[string, number][]>>();
+
+    // Limit the range we need to ask for but only use one request per calendar
+    const fetchStart = new Date(start);
+    const fetchEnd = new Date(end);
+
+    while (fetchStart.getTime() <= fetchEnd.getTime()) {
+      const cached = this.cacheOk(cache.get(fetchStart.getTime()));
+      if (!cached) break;
+      result = result.concat(await this.mapAllRecurrenceInstances(cached));
+      fetchStart.setMonth(fetchStart.getMonth() + 1);
+    }
+
+    while (fetchEnd.getTime() >= fetchStart.getTime()) {
+      const cached = this.cacheOk(cache.get(fetchEnd.getTime()));
+      if (!cached) break;
+      result = result.concat(await this.mapAllRecurrenceInstances(cached));
+      fetchEnd.setMonth(fetchEnd.getMonth() - 1);
+    }
+
+    if (fetchStart.getTime() > fetchEnd.getTime()) {
+      return result;
+    }
+
+    this.indicateStartLoading();
+    this.loadingCalendars.update((loading) => {
+      loading.add(calendar);
+      return loading;
+    });
+
+    const fetchedEvents = await this.fetchEvents(calendar, start, end).catch((err) => {
+      this.faultyCalendars.update((faulty) => {
+        faulty.add(calendar);
+        return faulty;
+      });
+
+      throw err;
+    }).finally(() => {
+      this.indicateStopLoading();
+      this.loadingCalendars.update((loading) => {
+        loading.delete(calendar);
+        return loading;
+      });
+    });
+
+    this.faultyCalendars.update((faulty) => {
+      faulty.delete(calendar);
+      return faulty;
+    });
+
+    this.compileEvents(start, end);
+    this.saveCache();
+    return result.concat(fetchedEvents);
+  }
+
+  async fetchEvents(calendar: string, start: Date, end: Date): Promise<EventModel[]> {
+    const localStart = new Date(start);
+    localStart.setHours(0, 0, 0, 0);
+    const localEnd = new Date(end);
+    localEnd.setHours(23, 59, 59, 999);
+
+    const fetched: EventModel[] = (await this.fetchJson(`/api/calendars/${calendar}/events?start=${encodeURIComponent(localStart.toISOString())}&end=${encodeURIComponent(localEnd.toISOString())}`)).events;
+
+    let calendarEventsCache = this.eventsCache.get(calendar);
+    if (!calendarEventsCache) {
+      calendarEventsCache = new Map();
+      this.eventsCache.set(calendar, calendarEventsCache);
+    }
+    for (let i = new Date(start); i.getTime() < end.getTime(); i.setMonth(i.getMonth() + 1)) {
+      calendarEventsCache.set(i.getTime(), {
+        date: Date.now(),
+        value: []
+      });
+    }
+
+    for (const event of fetched) {
       event.date.start = new Date(event.date.start);
       event.date.end = new Date(event.date.end);
+
       if (event.date.allDay) {
         event.date.start.setHours(0, 0, 0, 0);
         event.date.end.setHours(0, 0, 0, 0);
       }
-    });
+
+      this.eventsMap.set(event.id, event);
+      for (const month of this.determineEventMonths(event)) {
+        this.addEventToCache(event, month);
+      }
+    }
+
+    return fetched;
   }
 
-  compileSources();
-  compileCalendars();
-  compileEvents(eventsRangeStart, eventsRangeEnd);
-}
+  async getEventsFromPreviouslyHiddenCalendar(calendar: string) {
+    if (!browser) return;
 
-if (browser) {
-  window.addEventListener("storage", () => loadCache());
-  loadCache();
-}
-
-let saveCacheTimeout: ReturnType<typeof setTimeout>;
-function saveCache() {
-  if (browser) {
-    // @ts-ignore if only typescript were consistent...
-    clearTimeout(saveCacheTimeout);
-    setTimeout(() => {
-      lastCacheSave = Date.now();
-      localStorage.setItem("cache.timestamp", lastCacheSave.toString());
-      localStorage.setItem("cache.sources", JSON.stringify(sourcesCache));
-      localStorage.setItem("cache.sourceDetails", JSON.stringify(Array.from(sourceDetailsCache.entries())));
-      localStorage.setItem("cache.calendars", JSON.stringify(Array.from(calendarsCache.entries())));
-      localStorage.setItem("cache.events", JSON.stringify(Array.from(eventsCache.entries().map(x => [x[0], Array.from(x[1].entries())]))));
-      localStorage.setItem("cache.calendarsMap", JSON.stringify(Array.from(calendarsMap.entries())));
-      localStorage.setItem("cache.eventsMap", JSON.stringify(Array.from(eventsMap.entries())));
-    }, spoolerDelay)
-  }
-}
-
-// 
-// Sources
-// 
-
-export async function getSources(forceRefresh = false): Promise<SourceModel[]> {
-  if (!browser) return [];
-
-  if (!forceRefresh) {
-    const cached = cacheOk(sourcesCache);
-    if (cached) return Promise.resolve(cached);
-  }
-
-  indicateStartLoading();
-
-  const fetchedSources: SourceModel[] = await fetchJson("/api/sources").catch((err) => {
-    throw err;
-  }).finally(() => {
-    indicateStopLoading();
-  });
-
-  fetchedSources.forEach((source) => {
-    source.collapsed = isSourceCollapsed(source.id);
-  });
-
-  sourcesCache.date = Date.now(),
-  sourcesCache.value = fetchedSources;
-  compileSources();
-  saveCache();
-  return fetchedSources;
-}
-
-export async function getSourceDetails(id: string, forceRefresh = false): Promise<SourceModel> {
-  if (!browser) return {} as SourceModel;
-
-  if (!forceRefresh) {
-    const cached = cacheOk(sourceDetailsCache.get(id));
-    if (cached) return Promise.resolve(cached);
-  }
-
-  const fetched: SourceModel = await fetchJson(`/api/sources/${id}`).catch((err) => { throw err; });
-
-  fetched.collapsed = isSourceCollapsed(id);
-
-  sourceDetailsCache.set(id, {
-    date: Date.now(),
-    value: fetched
-  });
-  saveCache();
-  return fetched;
-}
-
-export async function createSource(newSource: SourceModel): Promise<void> {
-  if (!browser) return;
-
-  const formData = getSourceFormData(newSource);
-
-  const json = await fetchJson(`/api/sources`, { method: "PUT", body: formData }).catch((err) => { throw err; });
-
-  newSource.id = json.id;
-  sourcesCache.value = sourcesCache.value?.concat(newSource) || [ newSource ];
-  sources.update((sources) => sources.concat(newSource));
-
-  getCalendars(newSource.id).then(async (cals) => {
-    compileCalendars();
-    const [_, errors] = await atLeastOnePromise(cals.map((cal) => getEventsFromCalendar(cal.id, eventsRangeStart, eventsRangeEnd))).catch(() => {
-      throw new Error("Failed to fetch events");
-    });
-    errors.forEach((err) => {
+    this.getEventsFromCalendar(calendar, this.eventsRangeStart, this.eventsRangeEnd).catch((err) => {
+      const calendarName = this.calendarsMap.get(this.calendarsCache.get(calendar)?.value?.find((cal) => cal === calendar) || "")?.name;
       queueNotification(
         "failure",
-        `Failed to fetch events from ${cals[err[0]].name}: ${err[1].message}`
+        `Failed to fetch events from calendar${calendarName ? " " + calendarName : ""}: ${err.message}`
       );
     });
-    compileEvents(eventsRangeStart, eventsRangeEnd);
-  }).catch((err) => {
-    queueNotification(
-      "failure",
-      `Failed to fetch calendars from ${newSource.name}: ${err.message}`
-    );
-  });
-
-  saveCache();
-}
-
-export async function editSource(modifiedSource: SourceModel, changes: SourceModelChanges): Promise<void> {
-  if (!browser) return;
-
-  let formData = getSourceFormData(modifiedSource, changes);
-
-  await fetchResponse(`/api/sources/${modifiedSource.id}`, { method: "PATCH", body: formData }).catch((err) => { throw err; });
-  
-  sourcesCache.value = sourcesCache.value?.map((source => source.id === modifiedSource.id ? modifiedSource : source)) || [ modifiedSource ];
-  compileSources();
-
-  getCalendars(modifiedSource.id).then(async (cals) => {
-    compileCalendars();
-    const [_, errors] = await atLeastOnePromise(cals.map((cal) => getEventsFromCalendar(cal.id, eventsRangeStart, eventsRangeEnd))).catch(() => {
-      throw new Error("Failed to fetch events");
-    });
-    errors.forEach((err) => {
-      queueNotification(
-        "failure",
-        `Failed to fetch events from ${cals[err[0]].name}: ${err[1].message}`
-      );
-    });
-    compileEvents(eventsRangeStart, eventsRangeEnd);
-  }).catch((err) => {
-    queueNotification(
-      "failure",
-      `Failed to fetch calendars from ${modifiedSource.name}: ${err.message}`
-    );
-  });
-
-  saveCache();
-}
-
-export async function deleteSource(id: string): Promise<void> {
-  if (!browser) return;
-
-  await fetchResponse(`/api/sources/${id}`, { method: "DELETE" }).catch((err) => { throw err; });
-
-  sourcesCache.value = sourcesCache.value?.filter((source) => source.id !== id) || [];
-  compileSources();
-
-  for (const calendar of calendarsCache.get(id)?.value || []) {
-    eventsCache.delete(calendar);
-    calendarsMap.delete(calendar);
   }
 
-  compileCalendars();
-  compileEvents(eventsRangeStart, eventsRangeEnd);
-
-  saveCache();
-}
-
-//
-// Calendars
-//
-
-export async function getAllCalendars(forceRefresh = false): Promise<CalendarModel[]> {
-  if (!browser) return [];
-
-  const allSources = await getSources(forceRefresh);
-
-  const [calendars, errors] = await atLeastOnePromise(allSources.map((source) => getCalendars(source.id, forceRefresh))).catch(() => {
-    throw new Error("Failed to fetch calendars");
-  });
-
-  errors.forEach((err) => {
-    queueNotification(
-      "failure",
-      `Failed to fetch calendars from ${allSources[err[0]].name}: ${err[1].message}`
-    );
-  });
-
-  return calendars.flat();
-}
-
-async function getCalendars(id: string, forceRefresh = false): Promise<CalendarModel[]> {
-  if (!browser) return [];
-
-  if (!forceRefresh) {
-    const cached = cacheOk(calendarsCache.get(id));
-    if (cached) return Promise.resolve(cached.map(x => calendarsMap.get(x)).filter(x => x != null));
-  }
-
-  indicateStartLoading();
-  loadingSources.update((loading) => {
-    loading.add(id);
-    return loading;
-  });
-
-  const response = await fetchJson(`/api/sources/${id}/calendars`).catch((err) => {
-    faultySources.update((faulty) => {
-      faulty.add(id);
-      return faulty;
-    });
-    throw err;
-  }).finally(() => {
-    indicateStopLoading();
-    loadingSources.update((loading) => {
-      loading.delete(id);
-      return loading;
-    });
-  });
-
-  faultySources.update((faulty) => {
-    faulty.delete(id);
-    return faulty;
-  });
-
-  const fetched: CalendarModel[] = response.calendars;
-
-  // Delete orphans
-  let anyOrphaned = false;
-  const fetchedSet = new Set(fetched.map(x => x.id));
-  for (const calendar of calendarsCache.get(id)?.value || []) {
-    if (!fetchedSet.has(calendar)) {
-      eventsCache.delete(calendar);
-      anyOrphaned = true;
-    }
-  }
-
-  for (const calendar of fetched) {
-    calendarsMap.set(calendar.id, calendar)
-  }
-  
-  calendarsCache.set(id, {
-    date: Date.now(),
-    value: fetched.map(x => x.id)
-  });
-
-  compileCalendars();
-  if (anyOrphaned) compileEvents(eventsRangeStart, eventsRangeEnd);
-  saveCache();
-  return fetched;
-}
-
-export async function getCalendar(id: string, forceRefresh = false): Promise<CalendarModel | null> {
-  if (!browser) return {} as CalendarModel;
-
-  return calendarsMap.get(id) || null; // TODO: needs a bit of refactoring plus actual fetch of the relevant endpoint depending on cache age
-}
-
-export async function createCalendar(newCalendar: CalendarModel): Promise<void> {
-  if (!browser) return;
-
-  // add to database
-  const formData = getCalendarFormData(newCalendar);
-
-  const json = await fetchJson(`/api/sources/${newCalendar.source}/calendars`, { method: "PUT", body: formData }).catch((err) => { throw err; });
-
-  newCalendar.id = json.id;
-
-  // add to cache
-  calendarsMap.set(newCalendar.id, newCalendar);
-  calendarsCache.set(newCalendar.source, {
-    date: calendarsCache.get(newCalendar.source)?.date || Date.now(),
-    value: calendarsCache.get(newCalendar.source)?.value?.concat(newCalendar.id) || [ newCalendar.id ]
-  });
-
-  // add to display
-  calendars.update((calendars) => calendars.concat(newCalendar));
-
-  saveCache();
-};
-
-export async function editCalendar(modifiedCalendar: CalendarModel, changes: CalendarModelChanges): Promise<void> {
-  if (!browser) return;
-
-  // update in database
-  const formData = getCalendarFormData(modifiedCalendar, changes);
-
-  await fetchResponse(`/api/calendars/${modifiedCalendar.id}`, { method: "PATCH", body: formData }).catch((err) => { throw err; });
-
-  // update in cache
-  calendarsMap.set(modifiedCalendar.id, modifiedCalendar);
-
-  // update on display
-  calendars.update((calendars) => calendars.map((cal) => cal.id === modifiedCalendar.id ? modifiedCalendar : cal));
-
-  saveCache();
-}
-
-export async function deleteCalendar(id: string): Promise<void> {
-  if (!browser) return;
-
-  // remove from database
-  await fetchResponse(`/api/calendars/${id}`, { method: "DELETE" }).catch((err) => { throw err; });
-
-  const calendar = calendarsMap.get(id);
-  if (!calendar) return;
-  calendarsMap.delete(id);
-
-  // remove from cache
-  eventsCache.delete(id);
-  calendarsCache.set(calendar.source, {
-    date: calendarsCache.get(calendar.source)?.date || Date.now(),
-    value: calendarsCache.get(calendar.source)?.value?.filter((cal) => cal !== id) || []
-  });
-
-  // remove from display
-  calendars.update((calendars) => calendars.filter((cal) => cal.id !== id));
-  compileEvents(eventsRangeStart, eventsRangeEnd);
-
-  saveCache();
-}
-
-export async function moveCalendar(calendar: CalendarModel): Promise<void> {
-  throw new Error("Not implemented");
-
-  if (!browser) return;
-
-  const oldId = calendar.id;
-
-  // add to the new calendar
-  await createCalendar(calendar).catch((err) => { throw err; });
-
-  // TODO: MOVE ALL EVENTS!!!
-
-  // remove from the old calendar
-  await deleteCalendar(calendar.id).catch((err) => {
-    // undo changes
-    deleteCalendar(calendar.id).catch(NoOp);
-    calendar.id = oldId;
-    throw err;
-  });
-}
-
-//
-// Events
-//
-
-function determineEventMonths(event: EventModel): Date[] {
-  const start = new Date(event.date.start);
-  start.setUTCDate(1);
-  start.setUTCHours(0, 0, 0, 0);
-  const end = new Date(event.date.end);
-
-  const months = [];
-  while (start < end) {
-    start.setUTCMonth(start.getUTCMonth() + 1);
-    months.push(new Date(start));
-  }
-
-  return months;
-}
-
-function addEventToCache(event: EventModel, date: Date) {
-  let calendarEventsCache = eventsCache.get(event.calendar);
-  if (!calendarEventsCache) {
-    calendarEventsCache = new Map();
-    eventsCache.set(event.calendar, calendarEventsCache);
-  }
-
-  let cacheEntry = calendarEventsCache.get(date.getTime());
-  if (!cacheEntry) {
-    cacheEntry = { date: Date.now(), value: [] };
-    calendarEventsCache.set(date.getTime(), cacheEntry);
-  }
-
-  calendarEventsCache.set(date.getTime(), {
-    date: cacheEntry.date,
-    value: [ ...cacheEntry.value || [], [event.id, event.date.start.getTime()] ]
-  });
-}
-
-function removeEventFromCache(event: EventModel, date: Date) {
-  if (!eventsCache.has(event.calendar)) return;
-  const cacheEntry = eventsCache.get(event.calendar)?.get(date.getTime());
-  if (!cacheEntry || !cacheEntry.value) return;
-  cacheEntry.value = cacheEntry.value.filter((idAndDate) => idAndDate[0] !== event.id);
-}
-
-export async function getAllEvents(start: Date, end: Date, forceRefresh = false): Promise<EventModel[]> {
-  if (!browser) return [];
-  eventsRangeStart = start;
-  eventsRangeEnd = end;
-
-  start.setUTCHours(0, 0, 0, 0);
-  end.setUTCHours(23, 59, 59, 999);
-
-  // Set start and end to the start and end of each month
-  start.setDate(1);
-  end.setMonth(end.getMonth() + 1);
-  end.setDate(0);
-
-  // Add one month of padding in both directions
-  start.setMonth(start.getMonth() - 1);
-  end.setMonth(end.getMonth() + 1);
-
-  compileEvents(start, end);
-  const allSources = await getSources(forceRefresh).catch((err) => { throw err; });
-  const [events, errors] = await atLeastOnePromise(allSources.map((source) => getEventsFromSource(source.id, start, end, forceRefresh))).catch(() => {
-    throw new Error("Failed to fetch events");
-  });
-  errors.forEach((err) => {
-    queueNotification(
-      "failure",
-      `Failed to fetch events from ${allSources[err[0]].name}: ${err[1].message}`
-    );
-  });
-  return events.flat();
-}
-
-async function getEventsFromSource(source: string, start: Date, end: Date, forceRefresh = false): Promise<EventModel[]> {
-  let cals = await getCalendars(source, forceRefresh).catch((err) => { throw err; });
-  cals = cals.filter(x => isCalendarVisible(x.id)); // only fetch events from visible calendars
-  const [events, errors] = await atLeastOnePromise(cals.map((calendar) => getEventsFromCalendar(calendar.id, start, end, forceRefresh))).catch(() => {
-    throw new Error("Failed to fetch events");
-  })
-  errors.forEach((err) => {
-    queueNotification(
-      "failure",
-      `Failed to fetch events from ${cals[err[0]].name}: ${err[1].message}`
-    );
-  });
-  return events.flat();
-}
-
-async function getEventsFromCalendar(calendar: string, start: Date, end: Date, forceRefresh = false): Promise<EventModel[]> {
-  let result: EventModel[] = [];
-
-  const cache = (forceRefresh ? null : eventsCache.get(calendar)) || new Map<number, CacheEntry<[string, number][]>>();
-
-  // Limit the range we need to ask for but only use one request per calendar
-  const fetchStart = new Date(start);
-  const fetchEnd = new Date(end);
-
-  while (fetchStart.getTime() <= fetchEnd.getTime()) {
-    const cached = cacheOk(cache.get(fetchStart.getTime()));
-    if (!cached) break;
-    result = result.concat(await mapAllRecurrenceInstances(cached));
-    fetchStart.setMonth(fetchStart.getMonth() + 1);
-  }
-
-  while (fetchEnd.getTime() >= fetchStart.getTime()) {
-    const cached = cacheOk(cache.get(fetchEnd.getTime()));
-    if (!cached) break;
-    result = result.concat(await mapAllRecurrenceInstances(cached));
-    fetchEnd.setMonth(fetchEnd.getMonth() - 1);
-  }
-
-  if (fetchStart.getTime() > fetchEnd.getTime()) {
-    return result;
-  }
-
-  indicateStartLoading();
-  loadingCalendars.update((loading) => {
-    loading.add(calendar);
-    return loading;
-  });
-
-  const fetchedEvents = await fetchEvents(calendar, start, end).catch((err) => {
-    faultyCalendars.update((faulty) => {
-      faulty.add(calendar);
-      return faulty;
-    });
-
-    throw err;
-  }).finally(() => {
-    indicateStopLoading();
-    loadingCalendars.update((loading) => {
-      loading.delete(calendar);
-      return loading;
-    });
-  });
-
-  faultyCalendars.update((faulty) => {
-    faulty.delete(calendar);
-    return faulty;
-  });
-
-  compileEvents(start, end);
-  saveCache();
-  return result.concat(fetchedEvents);
-}
-
-async function fetchEvents(calendar: string, start: Date, end: Date): Promise<EventModel[]> {
-  const localStart = new Date(start);
-  localStart.setHours(0, 0, 0, 0);
-  const localEnd = new Date(end);
-  localEnd.setHours(23, 59, 59, 999);
-
-  const fetched: EventModel[] = (await fetchJson(`/api/calendars/${calendar}/events?start=${encodeURIComponent(localStart.toISOString())}&end=${encodeURIComponent(localEnd.toISOString())}`)).events;
-
-  let calendarEventsCache = eventsCache.get(calendar);
-  if (!calendarEventsCache) {
-    calendarEventsCache = new Map();
-    eventsCache.set(calendar, calendarEventsCache);
-  }
-  for (let i = new Date(start); i.getTime() < end.getTime(); i.setMonth(i.getMonth() + 1)) {
-    calendarEventsCache.set(i.getTime(), {
-      date: Date.now(),
-      value: []
-    });
-  }
-
-  for (const event of fetched) {
-    event.date.start = new Date(event.date.start);
-    event.date.end = new Date(event.date.end);
-
-    if (event.date.allDay) {
-      event.date.start.setHours(0, 0, 0, 0);
-      event.date.end.setHours(0, 0, 0, 0);
+  async createEvent(newEvent: EventModel): Promise<void> {
+    if (!browser) return;
+
+    // add to database
+    if (newEvent.date.allDay) {
+      newEvent.date.start.setHours(0, 0, 0, 0);
+      newEvent.date.end.setHours(0, 0, 0, 0);
     }
 
-    eventsMap.set(event.id, event);
-    for (const month of determineEventMonths(event)) {
-      addEventToCache(event, month);
+    const formData = this.getEventFormData(newEvent);
+
+    const json = await this.fetchJson(`/api/calendars/${newEvent.calendar}/events`, { method: "PUT", body: formData }).catch((err) => { throw err; });
+
+    newEvent.id = json.id;
+
+    // add to cache
+    this.eventsMap.set(newEvent.id, newEvent);
+    for (const month of this.determineEventMonths(newEvent)) this.addEventToCache(newEvent, month);
+
+    // add to display
+    if (isCalendarVisible(newEvent.calendar) && newEvent.date.start <= this.eventsRangeEnd && newEvent.date.end >= this.eventsRangeStart) this.events.update((events) => events.concat(newEvent));
+
+    this.saveCache();
+  };
+
+  async editEvent(modifiedEvent: EventModel, changes: EventModelChanges): Promise<void> {
+    if (!browser) return;
+
+    // update in database
+    if (modifiedEvent.date.allDay) {
+      modifiedEvent.date.start.setHours(0, 0, 0, 0);
+      modifiedEvent.date.end.setHours(0, 0, 0, 0);
     }
-  }
 
-  return fetched;
-}
+    const formData = this.getEventFormData(modifiedEvent, changes);
 
-export async function getEventsFromPreviouslyHiddenCalendar(calendar: string) {
-  if (!browser) return;
+    await this.fetchResponse(`/api/events/${modifiedEvent.id}`, { method: "PATCH", body: formData }).catch((err) => { throw err; });
 
-  getEventsFromCalendar(calendar, eventsRangeStart, eventsRangeEnd).catch((err) => {
-    const calendarName = calendarsMap.get(calendarsCache.get(calendar)?.value?.find((cal) => cal === calendar) || "")?.name;
-    queueNotification(
-      "failure",
-      `Failed to fetch events from calendar${calendarName ? " " + calendarName : ""}: ${err.message}`
-    );
-  });
-}
+    // update in cache
+    const previousMonths = this.determineEventMonths(this.eventsMap.get(modifiedEvent.id)!);
+    const currentMonths = this.determineEventMonths(modifiedEvent);
+    this.eventsMap.set(modifiedEvent.id, modifiedEvent);
 
-export async function createEvent(newEvent: EventModel): Promise<void> {
-  if (!browser) return;
-
-  // add to database
-  if (newEvent.date.allDay) {
-    newEvent.date.start.setHours(0, 0, 0, 0);
-    newEvent.date.end.setHours(0, 0, 0, 0);
-  }
-
-  const formData = getEventFormData(newEvent);
-
-  const json = await fetchJson(`/api/calendars/${newEvent.calendar}/events`, { method: "PUT", body: formData }).catch((err) => { throw err; });
-
-  newEvent.id = json.id;
-
-  // add to cache
-  eventsMap.set(newEvent.id, newEvent);
-  for (const month of determineEventMonths(newEvent)) addEventToCache(newEvent, month);
-
-  // add to display
-  if (isCalendarVisible(newEvent.calendar) && newEvent.date.start <= eventsRangeEnd && newEvent.date.end >= eventsRangeStart) events.update((events) => events.concat(newEvent));
-
-  saveCache();
-};
-
-export async function editEvent(modifiedEvent: EventModel, changes: EventModelChanges): Promise<void> {
-  if (!browser) return;
-
-  // update in database
-  if (modifiedEvent.date.allDay) {
-    modifiedEvent.date.start.setHours(0, 0, 0, 0);
-    modifiedEvent.date.end.setHours(0, 0, 0, 0);
-  }
-
-  const formData = getEventFormData(modifiedEvent, changes);
-
-  await fetchResponse(`/api/events/${modifiedEvent.id}`, { method: "PATCH", body: formData }).catch((err) => { throw err; });
-
-  // update in cache
-  const previousMonths = determineEventMonths(eventsMap.get(modifiedEvent.id)!);
-  const currentMonths = determineEventMonths(modifiedEvent);
-  eventsMap.set(modifiedEvent.id, modifiedEvent);
-
-  for (const month of previousMonths) {
-    if (!currentMonths.includes(month)) {
-      removeEventFromCache(modifiedEvent, month);
+    for (const month of previousMonths) {
+      if (!currentMonths.includes(month)) {
+        this.removeEventFromCache(modifiedEvent, month);
+      }
     }
-  }
 
-  for (const month of currentMonths) {
-    if (!previousMonths.includes(month)) {
-      addEventToCache(modifiedEvent, month);
+    for (const month of currentMonths) {
+      if (!previousMonths.includes(month)) {
+        this.addEventToCache(modifiedEvent, month);
+      }
     }
+
+    // update on display
+    if (modifiedEvent.date.start <= this.eventsRangeEnd && modifiedEvent.date.end >= this.eventsRangeStart) {
+      this.events.update((events) => events.map((event) => event.id === modifiedEvent.id ? modifiedEvent : event));
+    } else {
+      this.events.update((events) => events.filter((event) => event.id !== modifiedEvent.id));
+    }
+
+    this.saveCache();
   }
 
-  // update on display
-  if (modifiedEvent.date.start <= eventsRangeEnd && modifiedEvent.date.end >= eventsRangeStart) {
-    events.update((events) => events.map((event) => event.id === modifiedEvent.id ? modifiedEvent : event));
-  } else {
-    events.update((events) => events.filter((event) => event.id !== modifiedEvent.id));
+  async deleteEvent(id: string): Promise<void> {
+    if (!browser) return;
+
+    // remove from database
+    await this.fetchResponse(`/api/events/${id}`, { method: "DELETE" }).catch((err) => { throw err; });
+
+    const event = this.eventsMap.get(id);
+    if (!event) return;
+    this.eventsMap.delete(id);
+
+    // remove from cache
+    const months = this.determineEventMonths(event);
+    for (const month of months) this.removeEventFromCache(event, month);
+
+    // remove from display
+    this.events.update((events) => events.filter((event) => event.id !== id));
+
+    this.saveCache();
   }
 
-  saveCache();
+  async moveEvent(event: EventModel): Promise<void> {
+    if (!browser) return;
+
+    const oldId = event.id;
+
+    // add to the new calendar
+    await this.createEvent(event).catch((err) => { throw err; });
+
+    // remove from the old calendar
+    await this.deleteEvent(oldId).catch((err) => {
+      // undo changes
+      this.deleteEvent(event.id).catch(NoOp);
+      event.id = oldId;
+      throw err;
+    });
+  }
 }
 
-export async function deleteEvent(id: string): Promise<void> {
-  if (!browser) return;
-
-  // remove from database
-  await fetchResponse(`/api/events/${id}`, { method: "DELETE" }).catch((err) => { throw err; });
-
-  const event = eventsMap.get(id);
-  if (!event) return;
-  eventsMap.delete(id);
-
-  // remove from cache
-  const months = determineEventMonths(event);
-  for (const month of months) removeEventFromCache(event, month);
-
-  // remove from display
-  events.update((events) => events.filter((event) => event.id !== id));
-
-  saveCache();
-}
-
-export async function moveEvent(event: EventModel): Promise<void> {
-  if (!browser) return;
-
-  const oldId = event.id;
-
-  // add to the new calendar
-  await createEvent(event).catch((err) => { throw err; });
-
-  // remove from the old calendar
-  await deleteEvent(oldId).catch((err) => {
-    // undo changes
-    deleteEvent(event.id).catch(NoOp);
-    event.id = oldId;
-    throw err;
-  });
+let repository: Repository | null = null;
+export function getRepository() {
+  if (!repository) repository = new Repository();
+  return repository;
 }

@@ -3,7 +3,7 @@
   import TextInput from "../forms/TextInput.svelte";
 
   import { EmptyCalendar, NoOp } from "$lib/client/placeholders";
-  import { createCalendar, deleteCalendar, editCalendar, getSources, moveCalendar } from "$lib/client/repository";
+  import { getRepository } from "$lib/client/repository";
   import { deepCopy } from "$lib/common/misc";
   import SelectInput from "../forms/SelectInput.svelte";
   import ColorInput from "../forms/ColorInput.svelte";
@@ -36,7 +36,7 @@
       color: ""
     };
 
-    currentSources = await getSources().catch(err => {
+    currentSources = await getRepository().getSources().catch(err => {
       throw new Error(`Could not get sources: ${err.message}`);
     });
     showCreateModalInternal();
@@ -47,7 +47,7 @@
     originalCalendar = await deepCopy(original);
     calendar = original;
 
-    currentSources = await getSources().catch(err => {
+    currentSources = await getRepository().getSources().catch(err => {
       throw new Error(`Could not get sources: ${err.message}`);
     });
     showModalInternal();
@@ -65,14 +65,14 @@
   let title: string = $derived(calendar.id ? (editMode ? "Edit calendar" : "Calendar") : "Add calendar");
 
   const onDelete = async () => {
-    await deleteCalendar(calendar.id).catch(err => {
+    await getRepository().deleteCalendar(calendar.id).catch(err => {
       throw new Error(`Could not delete calendar ${calendar.name}: ${err.message}`);
     });
     cancelCalendar();
   };
   const onEdit = async () => {
     if (calendar.id === "") {
-      await createCalendar(calendar).catch(err => {
+      await getRepository().createCalendar(calendar).catch(err => {
         cancelCalendar();
         throw new Error(`Could not create calendar ${calendar.name}: ${err.message}`);
       });
@@ -83,13 +83,13 @@
         desc: calendar.desc != originalCalendar.desc,
         color: calendar.color != originalCalendar.color
       }
-      await editCalendar(calendar, changes).catch(err => {
+      await getRepository().editCalendar(calendar, changes).catch(err => {
         cancelCalendar();
         throw new Error(`Could not edit calendar ${calendar.name}: ${err.message}`);
       });
       saveCalendar(calendar);
     } else {
-      await moveCalendar(calendar).catch(err => {
+      await getRepository().moveCalendar(calendar).catch(err => {
         cancelCalendar();
         throw new Error(`Could not move calendar ${calendar.name}: ${err.message}`);
       });

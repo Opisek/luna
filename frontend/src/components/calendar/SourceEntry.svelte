@@ -4,7 +4,7 @@
   import Tooltip from "../interactive/Tooltip.svelte";
 
   import { NoOp } from "$lib/client/placeholders";
-  import { calendars, faultySources, loadingSources } from "$lib/client/repository";
+  import { getRepository } from "$lib/client/repository";
   import { collapsedSources, setSourceCollapse } from "$lib/client/localStorage";
   import { focusIndicator } from "$lib/client/decoration";
 
@@ -19,19 +19,19 @@
   }: Props = $props();
 
   let hasErrored = $state(false);
-  faultySources.subscribe((faulty) => {
+  getRepository().faultySources.subscribe((faulty) => {
     if (!source || !source.id) return;
     hasErrored = faulty.has(source.id);
   });
 
   let isLoading = $state(false);
-  loadingSources.subscribe((loading) => {
+  getRepository().loadingSources.subscribe((loading) => {
     if (!source || !source.id) return;
     isLoading = loading.has(source.id) as boolean;
   });
 
   let hasCals = $state(false);
-  calendars.subscribe(async (cals) => {
+  getRepository().calendars.subscribe(async (cals) => {
     hasCals = false;
     if (!source) return;
     for (const cal of cals) {

@@ -7,7 +7,7 @@
   import TextInput from "../forms/TextInput.svelte";
 
   import { EmptyEvent } from "$lib/client/placeholders";
-  import { createEvent, deleteEvent, editEvent, getAllCalendars, getCalendar, getSourceDetails, moveEvent } from "$lib/client/repository";
+  import { getRepository } from "$lib/client/repository";
   import { deepCopy, deepEquality } from "$lib/common/misc";
 
   interface Props {
@@ -53,7 +53,7 @@
       }
     };
 
-    currentCalendars = await getAllCalendars().catch(err => {
+    currentCalendars = await getRepository().getAllCalendars().catch(err => {
       throw new Error(`Could not get calendars: ${err.message}`);
     });
     setTimeout(showCreateModalInternal, 0);
@@ -86,11 +86,11 @@
     }
 
     originalEvent = await deepCopy(original);
-    const calendar = await getCalendar(original.calendar).catch(err => {
+    const calendar = await getRepository().getCalendar(original.calendar).catch(err => {
       throw new Error(`Could not get calendar: ${err.message}`);
     });
     if (calendar) {
-      const source = await getSourceDetails(calendar.source).catch(err => {
+      const source = await getRepository().getSourceDetails(calendar.source).catch(err => {
         throw new Error(`Could not get source details: ${err.message}`);
       });
       if (source) {
@@ -100,7 +100,7 @@
       eventSourceType = "";
     }
 
-    currentCalendars = await getAllCalendars().catch(err => {
+    currentCalendars = await getRepository().getAllCalendars().catch(err => {
       throw new Error(`Could not get calendars: ${err.message}`);
     });
     setTimeout(showModalInternal, 0);
@@ -122,7 +122,7 @@
   ))
 
   const onDelete = async () => {
-    await deleteEvent(event.id).catch(err => {
+    await getRepository().deleteEvent(event.id).catch(err => {
       throw new Error(`Could not delete event ${event.name}: ${err.message}`);
     });
     cancelEvent();
@@ -132,7 +132,7 @@
       event.date.end.setDate(event.date.end.getDate() + 1);
     }
     if (event.id === "") {
-      await createEvent(event).catch(err => {
+      await getRepository().createEvent(event).catch(err => {
         cancelEvent();
         throw new Error(`Could not create event ${event.name}: ${err.message}`);
       });
@@ -144,13 +144,13 @@
         color: event.color != originalEvent.color,
         date: !deepEquality(event.date, originalEvent.date)
       };
-      await editEvent(event, changes).catch(err => {
+      await getRepository().editEvent(event, changes).catch(err => {
         cancelEvent();
         throw new Error(`Could not edit event ${event.name}: ${err.message}`);
       });
       saveEvent(event);
     } else {
-      await moveEvent(event).catch(err => {
+      await getRepository().moveEvent(event).catch(err => {
         cancelEvent();
         throw new Error(`Could not move event ${event.name}: ${err.message}`);
       });

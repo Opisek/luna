@@ -4,7 +4,7 @@
   import TextInput from "../forms/TextInput.svelte";
 
   import { EmptySource, NoOp } from "$lib/client/placeholders";
-  import { createSource, deleteSource, editSource, getSourceDetails } from "$lib/client/repository";
+  import { getRepository } from "$lib/client/repository";
   import { deepCopy, deepEquality } from "$lib/common/misc";
   import { isValidFile, isValidPath, isValidUrl, valid } from "$lib/client/validation";
   import { queueNotification } from "$lib/client/notifications";
@@ -48,7 +48,7 @@
     cancelSource();
 
     // TODO: this should be a call to repository with force refresh = true
-    sourceDetailed = await getSourceDetails(source.id).catch(err => {
+    sourceDetailed = await getRepository().getSourceDetails(source.id).catch(err => {
       queueNotification("failure", `Could not get source details: ${err.message}`);
       return Promise.reject();
     });
@@ -80,14 +80,14 @@
   let title: string = $derived(sourceDetailed.id ? (editMode ? "Edit source" : "Source") : "Add source");
 
   const onDelete = async () => {
-    await deleteSource(sourceDetailed.id).catch(err => {
+    await getRepository().deleteSource(sourceDetailed.id).catch(err => {
       throw new Error(`Could not delete source ${sourceDetailed.name}: ${err.message}`);
     });
     cancelSource();
   };
   const onEdit = async () => {
     if (sourceDetailed.id === "") {
-      await createSource(sourceDetailed).catch(err => {
+      await getRepository().createSource(sourceDetailed).catch(err => {
         cancelSource();
         throw new Error(`Could not create source ${sourceDetailed.name}: ${err.message}`);
       });
@@ -102,7 +102,7 @@
         settings: !deepEquality(sourceDetailed.settings, originalSource.settings),
         auth: sourceDetailed.auth_type != originalSource.auth_type || !deepEquality(sourceDetailed.auth, originalSource.auth)
       }
-      await editSource(sourceDetailed, changes).catch(err => {
+      await getRepository().editSource(sourceDetailed, changes).catch(err => {
         cancelSource();
         throw new Error(`Could not edit source ${sourceDetailed.name}: ${err.message}`);
       });

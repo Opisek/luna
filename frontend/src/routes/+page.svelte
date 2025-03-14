@@ -19,10 +19,9 @@
   import { browser } from "$app/environment";
 
   import { NoOp } from "$lib/client/placeholders";
-  import { calendars, events, getAllEvents, getSources, invalidateCache, loadingData, sources } from "$lib/client/repository";
+  import { getRepository } from "$lib/client/repository";
   import { queueNotification } from "$lib/client/notifications";
   import SmallCalendar from "../components/interactive/SmallCalendar.svelte";
-
 
   /* Constants */
   let autoRefreshInterval = 1000 * 60; // 1 minute
@@ -43,7 +42,7 @@
 
   let isLoading: boolean = $state(false);
   let loaderAnimation = $state(false);
-  loadingData.subscribe((loadingData) => {
+  getRepository().loadingData.subscribe((loadingData) => {
     isLoading = loadingData;
     if (isLoading) loaderAnimation = true;
   });
@@ -69,9 +68,9 @@
   (async () => {
     if (!browser) return;
 
-    getSources().catch(NoOp);
+    getRepository().getSources().catch(NoOp);
 
-    events.subscribe((newEvents) => {
+    getRepository().events.subscribe((newEvents) => {
       localEvents = newEvents;
 
       calendarEvents = new Map();
@@ -85,7 +84,7 @@
       });
     });
 
-    calendars.subscribe((newCalendars) => {
+    getRepository().calendars.subscribe((newCalendars) => {
       localCalendars = newCalendars;
 
       sourceCalendars = new Map();
@@ -99,7 +98,7 @@
       });
     });
 
-    sources.subscribe((newSources) => {
+    getRepository().sources.subscribe((newSources) => {
       localSources = newSources;
     });
   })();
@@ -127,7 +126,7 @@
       default:
     }
 
-    getAllEvents(rangeStart, rangeEnd, force).catch((err) => {
+    getRepository().getAllEvents(rangeStart, rangeEnd, force).catch((err) => {
       queueNotification("failure", `Failed to fetch events: ${err.message}`);
     });
 
@@ -138,7 +137,7 @@
   }
 
   function forceRefresh() {
-    invalidateCache();
+    getRepository().invalidateCache();
     refresh(date, true);
   }
 
