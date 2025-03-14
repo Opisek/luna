@@ -6,8 +6,8 @@
 
   import { GetCalendarColor } from "$lib/common/colors";
   import { NoOp } from "$lib/client/placeholders";
-  import { getRepository } from "$lib/client/repository";
   import { focusIndicator } from "$lib/client/decoration";
+  import { getMetadata } from "$lib/client/metadata";
   import { isCalendarVisible, setCalendarVisibility } from "$lib/client/localStorage";
 
   import { getContext } from "svelte";
@@ -21,12 +21,12 @@
   let calendarVisible = $state(calendar ? isCalendarVisible(calendar.id) : false);
 
   let hasErrored = $state(false);
-  getRepository().faultyCalendars.subscribe((faulty) => {
+  getMetadata().faultyCalendars.subscribe((faulty) => {
     hasErrored = faulty.has(calendar.id);
   });
 
   let isLoading = $state(false);
-  getRepository().loadingCalendars.subscribe((loading) => {
+  getMetadata().loadingCalendars.subscribe((loading) => {
     isLoading = loading.has(calendar.id);
   });
 

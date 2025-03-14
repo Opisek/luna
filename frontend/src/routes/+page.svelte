@@ -18,10 +18,11 @@
   import { afterNavigate, beforeNavigate } from "$app/navigation";
   import { browser } from "$app/environment";
 
+  import SmallCalendar from "../components/interactive/SmallCalendar.svelte";
   import { NoOp } from "$lib/client/placeholders";
+  import { getMetadata } from "$lib/client/metadata";
   import { getRepository } from "$lib/client/repository";
   import { queueNotification } from "$lib/client/notifications";
-  import SmallCalendar from "../components/interactive/SmallCalendar.svelte";
 
   /* Constants */
   let autoRefreshInterval = 1000 * 60; // 1 minute
@@ -42,7 +43,7 @@
 
   let isLoading: boolean = $state(false);
   let loaderAnimation = $state(false);
-  getRepository().loadingData.subscribe((loadingData) => {
+  getMetadata().loadingData.subscribe((loadingData) => {
     isLoading = loadingData;
     if (isLoading) loaderAnimation = true;
   });

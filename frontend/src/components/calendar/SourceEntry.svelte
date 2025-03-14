@@ -4,9 +4,10 @@
   import Tooltip from "../interactive/Tooltip.svelte";
 
   import { NoOp } from "$lib/client/placeholders";
-  import { getRepository } from "$lib/client/repository";
   import { collapsedSources, setSourceCollapse } from "$lib/client/localStorage";
   import { focusIndicator } from "$lib/client/decoration";
+  import { getMetadata } from "$lib/client/metadata";
+  import { getRepository } from "$lib/client/repository";
 
   import { getContext } from "svelte";
 
@@ -19,13 +20,13 @@
   }: Props = $props();
 
   let hasErrored = $state(false);
-  getRepository().faultySources.subscribe((faulty) => {
+  getMetadata().faultySources.subscribe((faulty) => {
     if (!source || !source.id) return;
     hasErrored = faulty.has(source.id);
   });
 
   let isLoading = $state(false);
-  getRepository().loadingSources.subscribe((loading) => {
+  getMetadata().loadingSources.subscribe((loading) => {
     if (!source || !source.id) return;
     isLoading = loading.has(source.id) as boolean;
   });

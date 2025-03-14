@@ -2,12 +2,12 @@ import { browser } from "$app/environment";
 
 import { writable } from "svelte/store";
 
+import { AllChangesCalendar, AllChangesEvent, AllChangesSource, NoOp } from "./placeholders";
+import { getMetadata } from "./metadata";
 import { hiddenCalendars, isCalendarVisible, isSourceCollapsed } from "./localStorage";
 import { queueNotification } from "./notifications";
-import { AllChangesCalendar, AllChangesEvent, AllChangesSource, NoOp } from "./placeholders";
 
 import { atLeastOnePromise, deepCopy } from "$lib/common/misc";
-
 
 class Repository {
   //
@@ -24,13 +24,6 @@ class Repository {
   readonly sources = writable([] as SourceModel[]);
   readonly calendars = writable([] as CalendarModel[]);
   readonly events = writable([] as EventModel[]);
-
-  readonly faultySources = writable(new Set<string>());
-  readonly faultyCalendars = writable(new Set<string>());
-
-  readonly loadingSources = writable(new Set<string>());
-  readonly loadingCalendars = writable(new Set<string>());
-  readonly loadingData = writable(false);
 
   //
   // Constructor
@@ -49,15 +42,6 @@ class Repository {
   //
   // Misc
   //
-
-  private loadingCounter = 0;
-  private indicateStartLoading() {
-    this.loadingCounter++;
-    this.loadingData.set(true);
-  }
-  private indicateStopLoading() {
-    if (--this.loadingCounter == 0) this.loadingData.set(false);
-  }
 
   private async mapBaseEventToRecurrenceInstance(idAndDate: [string, number]): Promise<EventModel | null> {
     const baseEvent = this.eventsMap.get(idAndDate[0]);
@@ -331,12 +315,12 @@ class Repository {
       if (cached) return Promise.resolve(cached);
     }
 
-    this.indicateStartLoading();
+    const stopLoading = getMetadata().startLoading();
 
     const fetchedSources: SourceModel[] = await this.fetchJson("/api/sources").catch((err) => {
       throw err;
     }).finally(() => {
-      this.indicateStopLoading();
+      stopLoading();
     });
 
     fetchedSources.forEach((source) => {
@@ -485,30 +469,16 @@ class Repository {
       if (cached) return Promise.resolve(cached.map(x => this.calendarsMap.get(x)).filter(x => x != null));
     }
 
-    this.indicateStartLoading();
-    this.loadingSources.update((loading) => {
-      loading.add(id);
-      return loading;
-    });
+    const stopLoading = getMetadata().startLoadingSource(id);
 
     const response = await this.fetchJson(`/api/sources/${id}/calendars`).catch((err) => {
-      this.faultySources.update((faulty) => {
-        faulty.add(id);
-        return faulty;
-      });
+      getMetadata().addFaultySource(id, err.message);
       throw err;
     }).finally(() => {
-      this.indicateStopLoading();
-      this.loadingSources.update((loading) => {
-        loading.delete(id);
-        return loading;
-      });
+      stopLoading();
     });
 
-    this.faultySources.update((faulty) => {
-      faulty.delete(id);
-      return faulty;
-    });
+    getMetadata().removeFaultySource(id);
 
     const fetched: CalendarModel[] = response.calendars;
 
@@ -746,31 +716,16 @@ class Repository {
       return result;
     }
 
-    this.indicateStartLoading();
-    this.loadingCalendars.update((loading) => {
-      loading.add(calendar);
-      return loading;
-    });
+    const stopLoading = getMetadata().startLoadingCalendar(calendar);
 
     const fetchedEvents = await this.fetchEvents(calendar, start, end).catch((err) => {
-      this.faultyCalendars.update((faulty) => {
-        faulty.add(calendar);
-        return faulty;
-      });
-
+      getMetadata().addFaultyCalendar(calendar, err.message);
       throw err;
     }).finally(() => {
-      this.indicateStopLoading();
-      this.loadingCalendars.update((loading) => {
-        loading.delete(calendar);
-        return loading;
-      });
+      stopLoading();
     });
 
-    this.faultyCalendars.update((faulty) => {
-      faulty.delete(calendar);
-      return faulty;
-    });
+    getMetadata().removeFaultyCalendar(calendar);
 
     this.compileEvents(start, end);
     this.saveCache();
