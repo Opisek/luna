@@ -301,12 +301,6 @@
   <div class="toprow">
     <MonthSelection bind:date granularity={view} />
     <Horizontal position="justify" width="auto">
-      {#if !todayInRange}
-        <Button onClick={seeToday}>
-          Today
-        </Button>
-      {/if}
-
       {#if reachability != Reachability.Database}
         <span class="reachability">
           {#if reachability == Reachability.Backend}
@@ -327,6 +321,12 @@
           <RefreshCw size={20}/>
         </span>
       </IconButton>
+
+      {#if !todayInRange}
+        <Button onClick={seeToday}>
+          Today
+        </Button>
+      {/if}
 
       <SelectButtons
         name="layout"
