@@ -10,7 +10,6 @@
     visible?: boolean;
     style?: string;
     tabindex?: number;
-    isLink?: boolean;
     href?: string;
     children?: Snippet;
   }
@@ -22,7 +21,6 @@
     visible = true,
     style = "",
     tabindex = 0,
-    isLink = false,
     href = "",
     children
   }: Props = $props();
@@ -94,7 +92,7 @@
   }
 </style>
 
-{#if isLink}
+{#if href !== ""}
   <a
     bind:this={button}
     class:hidden={!visible}

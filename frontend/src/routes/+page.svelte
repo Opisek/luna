@@ -279,13 +279,13 @@
   </div>
 
   <Horizontal position="center">
-    <IconButton isLink={true} href="/settings">
+    <IconButton href="/settings">
       <Settings/>
     </IconButton>
     <IconButton click={showNewSourceModal}>
       <PlusIcon/>
     </IconButton>
-    <IconButton isLink={true} href="https://github.com/Opisek/luna">
+    <IconButton href="https://github.com/Opisek/luna">
       <Github/>
     </IconButton>
   </Horizontal>

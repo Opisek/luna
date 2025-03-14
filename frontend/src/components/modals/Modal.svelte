@@ -120,7 +120,7 @@
 		{@render children?.()}
     <Horizontal position="right">
       {#if buttons}{@render buttons()}{:else}
-        <Button onClick={hideModal} color="accent">Close</Button>
+        <Button onClick={hideModal}>Close</Button>
       {/if}
     </Horizontal>
 	</form>

@@ -33,7 +33,7 @@ $foregroundAccentFaded: $foregroundFaded;
 /* Calendar colors */
 $foregroundSunday: hsl(0, 71%, 58%);
 
-/* Notification colors */
+/* Notification and button colors */
 $specialColors: (
   success: (
     background: $backgroundSuccess,
@@ -49,6 +49,11 @@ $specialColors: (
     background: $backgroundAccent,
     backgroundActive: $backgroundAccentActive,
     foreground: $foregroundAccent,
+  ),
+  neutral: (
+    background: $backgroundSecondary,
+    backgroundActive: $backgroundSecondaryActive,
+    foreground: $foregroundSecondary,
   ),
 );
 

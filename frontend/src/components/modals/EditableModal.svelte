@@ -109,7 +109,7 @@
           <Button onClick={startEditMode} color="accent">Edit</Button>
           <Button onClick={showDeleteModal} color="failure">Delete</Button>
         {:else}
-          <Button onClick={hideModal} color="accent">Close</Button>
+          <Button onClick={hideModal}>Close</Button>
         {/if}
       {/if}
     
