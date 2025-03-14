@@ -19,7 +19,6 @@ class Connectivity {
   }
 
   private async checkConnection() {
-    console.log("check");
     await fetchJson("/api/health").then(() => {
       this.reachable = Reachability.Database
     }).catch((err) => {
