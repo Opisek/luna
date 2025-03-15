@@ -52,6 +52,9 @@
       return Promise.reject();
     });
 
+    // so that when we edit a caldav source into an ical source, the location selection will default to some value (remote):
+    if (sourceDetailed.type !== "ical") sourceDetailed.settings.location = "remote";
+
     if (sourceDetailed.type === "ical" && sourceDetailed.settings.location === "database" && sourceDetailed.settings.file !== null) {
       // https://stackoverflow.com/questions/52078853/is-it-possible-to-update-filelist
       const list = new DataTransfer();
