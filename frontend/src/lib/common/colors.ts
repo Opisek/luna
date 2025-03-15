@@ -1,3 +1,5 @@
+import { getSha1Hash } from "./crypto";
+
 export const parseRGB = (color: string): [number, number, number] => {
   return [
     parseInt(color.substring(1, 3), 16),
@@ -90,10 +92,19 @@ export const HSLtoRGB = (hsl: [number, number, number]): [number, number, number
   return [ Math.round(r * 255), Math.round(g * 255), Math.round(b * 255) ];
 }
 
+// https://github.com/Opisek/opifolio-v2/blob/main/src/components/interactive/Tag.svelte
+export const DeterministicColor = (str: string): [number, number, number] => {
+  const digest = getSha1Hash(str).slice(0, 2);
+  const hue = parseInt(digest, 16) / 255 * 360;
+
+  // TODO: once theming is implemented, the ligtness should be adjusted dynamically (22% for dark, 80% for light)
+  return HSLtoRGB([hue, 70, 60]);
+}
+
 // TODO: would prefer event.getColor() but i could not figure out how to do this without creating an additional interface or class
 export const GetEventRGB = (event: EventModel | null) => {
-  if (event && event.color) {
-    return parseRGB(event.color);
+  if (event) {
+    return parseRGB(GetEventColor(event));
   } else {
     return defaultEventRGB;
   }
@@ -101,13 +112,15 @@ export const GetEventRGB = (event: EventModel | null) => {
 export const GetEventColor = (event: EventModel | null) => {
   if (event && event.color) {
     return event.color;
+  } else if (event && event.calendar) {
+    return serializeRGB(DeterministicColor(event.calendar));
   } else {
     return defaultEventColor;
   }
 }
 export const GetCalendarRGB = (calendar: CalendarModel | null) => {
   if (calendar && calendar.color) {
-    return parseRGB(calendar.color);
+    return parseRGB(GetCalendarColor(calendar));
   } else {
     return defaultCalendarRGB;
   }
@@ -115,6 +128,8 @@ export const GetCalendarRGB = (calendar: CalendarModel | null) => {
 export const GetCalendarColor = (calendar: CalendarModel | null) => {
   if (calendar && calendar.color) {
     return calendar.color;
+  } else if (calendar && calendar.id) {
+    return serializeRGB(DeterministicColor(calendar.id));
   } else {
     return defaultCalendarColor;
   }
@@ -131,9 +146,5 @@ export function calculateSecondaryColor(rgb: [number, number, number]): [number,
 }
 
 export const GetEventHoverColor = (event: EventModel | null) => {
-  if (event && event.color) {
-    return serializeRGB(calculateSecondaryColor(parseRGB(event.color)));
-  } else {
-    return serializeRGB(calculateSecondaryColor(defaultEventRGB));
-  }
+  return serializeRGB(calculateSecondaryColor(GetEventRGB(event)));
 }

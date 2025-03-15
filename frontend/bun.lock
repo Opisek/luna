@@ -6,6 +6,7 @@
       "dependencies": {
         "@sveltejs/kit": "^2.19.0",
         "dotenv": "^16.4.7",
+        "hash": "^0.2.1",
       },
       "devDependencies": {
         "@sveltejs/vite-plugin-svelte": "^4.0.4",
@@ -203,6 +204,8 @@
     "globalyzer": ["globalyzer@0.1.0", "", {}, "sha512-40oNTM9UfG6aBmuKxk/giHn5nQ8RVz/SS4Ir6zgzOv9/qC3kKZ9v4etGTcJbEl/NyVQH7FGU7d+X1egr57Md2Q=="],
 
     "globrex": ["globrex@0.1.2", "", {}, "sha512-uHJgbwAMwNFf5mLst7IWLNg14x1CkeqglJb/K3doi4dw6q2IvAAmM/Y81kevy83wP+Sst+nutFTYOGg3d1lsxg=="],
+
+    "hash": ["hash@0.2.1", "", {}, "sha512-yUBu1BNORmIBcz6XsuSIs0mUCnYTb3rsgEWE87d7giQYUCxqtxiVRkokV9mXH3xBKVfPqML+21ruSOQinnTqtg=="],
 
     "immutable": ["immutable@5.0.3", "", {}, "sha512-P8IdPQHq3lA1xVeBRi5VPqUm5HDgKnx0Ru51wZz5mjxHr5n3RWhjIpOFU7ybkUxfB+5IToy+OLaHYDBIWsv+uw=="],
 
