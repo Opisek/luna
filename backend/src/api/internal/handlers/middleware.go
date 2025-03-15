@@ -47,11 +47,14 @@ func TransactionMiddleware() gin.HandlerFunc {
 		tx, err := config.Db.BeginTransaction()
 
 		if err != nil {
+			config.Logger.Errorf("middleware failure: %v", err)
 			util.Abort(c, util.ErrorDatabase)
 		}
 
 		c.Set("transaction", tx)
 
 		c.Next()
+
+		tx.Rollback(config.Logger) // if the handler did not explicitly commit the transaction, roll it back just to be sure
 	}
 }
