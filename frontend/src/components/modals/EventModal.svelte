@@ -9,6 +9,7 @@
   import { EmptyEvent } from "$lib/client/placeholders";
   import { getRepository } from "$lib/client/repository";
   import { deepCopy, deepEquality } from "$lib/common/misc";
+  import { isSameDay } from "$lib/common/date";
 
   interface Props {
     showCreateModal?: (date: Date) => Promise<EventModel>;
@@ -77,7 +78,7 @@
         recurrence: await deepCopy(original.date.recurrence),
       }
     }
-    if (event.date.allDay) {
+    if (event.date.allDay && event.date.end.getTime() !== event.date.start.getTime() && event.date.end.getHours() === 0 && event.date.end.getMinutes() === 0 && event.date.end.getSeconds() === 0 && event.date.end.getMilliseconds() === 0) {
       event.date.end.setDate(event.date.end.getDate() - 1);
     }
 
@@ -113,6 +114,7 @@
     eventSourceType === "ical" || // iCal files are treated as read-only
     event.date.recurrence != false // for now we won't allow editing recurring events
   ))
+  let showEndDate: boolean = $derived(editMode || (event && (!event.date.allDay || !isSameDay(event.date.start, event.date.end))));
 
   let selectableCalendars = $derived.by(() => {
     let calendars = getRepository().calendars.getArray();
@@ -218,7 +220,9 @@
     {#if editMode}
         <CheckboxInput bind:value={event.date.allDay} name="all_day" description="All Day"/>
     {/if}
-    <DateTimeInput bind:value={event.date.start} name="date_start" placeholder="Start" editable={editMode} allDay={event.date.allDay} onChange={changeStart}/>
-    <DateTimeInput bind:value={event.date.end} name="date_end" placeholder="End" editable={editMode} allDay={event.date.allDay} onChange={changeEnd}/>
+    <DateTimeInput bind:value={event.date.start} name="date_start" placeholder={showEndDate ? "Start" : "Date"} editable={editMode} allDay={event.date.allDay} onChange={changeStart}/>
+    {#if showEndDate}
+      <DateTimeInput bind:value={event.date.end} name="date_end" placeholder="End" editable={editMode} allDay={event.date.allDay} onChange={changeEnd}/>
+    {/if}
   {/if}
 </EditableModal>

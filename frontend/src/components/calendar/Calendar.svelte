@@ -8,6 +8,7 @@
   import { setContext } from "svelte";
   import { writable } from "svelte/store";
   import DayViewModal from "../modals/DayViewModal.svelte";
+  import { isSameDay } from "$lib/common/date";
 
   interface Props {
     date: Date;
@@ -209,7 +210,7 @@
         isCurrentMonth={day.getMonth() === date.getMonth()} 
         events={processedEvents[i]}
         isFirstDay={i == 0}
-        isToday={day.getDate() === today.getDate() && day.getMonth() === today.getMonth() && day.getFullYear() === today.getFullYear()}
+        isToday={isSameDay(day, today)}
         maxEvents={maxEvents}
         bind:containerHeight={containerHeight}
         view={view}

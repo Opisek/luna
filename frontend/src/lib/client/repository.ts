@@ -1,7 +1,5 @@
 import { browser } from "$app/environment";
 
-import { writable } from "svelte/store";
-
 import { AllChangesCalendar, AllChangesEvent, AllChangesSource, NoOp } from "./placeholders";
 import { fetchJson, fetchResponse } from "./net";
 import { getMetadata } from "./metadata";

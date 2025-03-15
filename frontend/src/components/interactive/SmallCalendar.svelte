@@ -1,6 +1,7 @@
 <script lang="ts">
   import { NoOp } from "$lib/client/placeholders";
   import { focusIndicator } from "$lib/client/decoration";
+  import { isSameDay } from "$lib/common/date";
 
   interface Props {
     date: Date;
@@ -95,7 +96,7 @@
     <button
       class="day"
       class:sunday={day.getDay() == 0}
-      class:today={day.getDate() == today.getDate() && day.getMonth() == today.getMonth() && day.getFullYear() == today.getFullYear()}
+      class:today={isSameDay(day, today)}
       class:otherMonth={day.getMonth() != date.getMonth()}
       type="button"
       onclick={() => (onDayClick(day))}
