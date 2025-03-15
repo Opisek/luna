@@ -1,7 +1,7 @@
 <script lang="ts">
   import { CircleAlert, Info } from "lucide-svelte";
 
-  import TooltipPopup from "../layout/TooltipPopup.svelte";
+  import TooltipPopup from "../popups/TooltipPopup.svelte";
 
   interface Props {
     msg: string;

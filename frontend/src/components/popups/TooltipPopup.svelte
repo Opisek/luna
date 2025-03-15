@@ -80,10 +80,9 @@
     z-index: 10;
     pointer-events: none;
     min-width: none;
-    width: max-content;
-    max-width: 80vw;
+    width: fit-content;
+    max-width: 30em;
     box-shadow: decorations.$boxShadow;
-    white-space: nowrap;
   }
   :global(*:hover) > span.popup > span.contents,
   :global(*:focus-within) > span.popup > span.contents {
