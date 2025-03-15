@@ -307,11 +307,13 @@
       {#if reachability != Reachability.Database}
         <span class="reachability">
           {#if reachability == Reachability.Backend}
-            The database cannot be reached
+            The database cannot be reached.
           {:else if reachability == Reachability.Frontend}
-            The backend server cannot be reached
+            The backend server cannot be reached.
           {:else if reachability == Reachability.None}
-            The frontend server cannot be reached
+            The frontend server cannot be reached.
+          {:else if reachability == Reachability.Incompatible}
+            The frontend server and the backend server are not compatible.
           {:else}
             Unknown network error
           {/if}
