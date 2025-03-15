@@ -21,9 +21,8 @@
   }: Props = $props();
 
   let event: EventModel = $state(EmptyEvent);
-  let originalEvent: EventModel;
+  let originalEvent: EventModel = $state(EmptyEvent);
   let eventSourceType = $state("");
-  let currentCalendars: CalendarModel[] = $state([]);
 
   let saveEvent = (_: EventModel | PromiseLike<EventModel>) => {};
   let cancelEvent = (_?: any) => {};
@@ -53,9 +52,6 @@
       }
     };
 
-    currentCalendars = await getRepository().getAllCalendars().catch(err => {
-      throw new Error(`Could not get calendars: ${err.message}`);
-    });
     setTimeout(showCreateModalInternal, 0);
 
     return new Promise((resolve, reject) => {
@@ -100,9 +96,6 @@
       eventSourceType = "";
     }
 
-    currentCalendars = await getRepository().getAllCalendars().catch(err => {
-      throw new Error(`Could not get calendars: ${err.message}`);
-    });
     setTimeout(showModalInternal, 0);
 
     return new Promise((resolve, reject) => {
@@ -120,6 +113,26 @@
     eventSourceType === "ical" || // iCal files are treated as read-only
     event.date.recurrence != false // for now we won't allow editing recurring events
   ))
+
+  let selectableCalendars = $derived.by(() => {
+    let calendars = getRepository().calendars.getArray();
+
+    if (editMode) {
+      const sources = getRepository().sources;
+
+      calendars = calendars.filter(x => {
+        if (x.id === event.calendar) return true;
+        const source = sources.find("id", x.source);
+        console.log(source);
+        return source && source.type !== "ical";
+      });
+    } else {
+      calendars = calendars.filter(x => x.id === event.calendar);
+    }
+
+    return calendars.map(x => ({ value: x.id, name: x.name }))
+  });
+
 
   const onDelete = async () => {
     await getRepository().deleteEvent(event.id).catch(err => {
@@ -195,7 +208,7 @@
 >
   {#if event != EmptyEvent}
     <TextInput bind:value={event.name} name="name" placeholder="Name" editable={editMode} />
-    <SelectInput bind:value={event.calendar} name="calendar" placeholder="Calendar" options={currentCalendars.map(x => ({ value: x.id, name: x.name }))} editable={editMode} />
+    <SelectInput bind:value={event.calendar} name="calendar" placeholder="Calendar" options={selectableCalendars} editable={editMode} />
     {#if editMode}
       <ColorInput bind:color={event.color} name="color" editable={editMode} />
     {/if}

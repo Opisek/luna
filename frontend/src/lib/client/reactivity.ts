@@ -60,9 +60,14 @@ export class SubscribeableArray<T> {
   private internalArray: T[];
   private store: Writable<T[]>;
 
+  private mapKey: string;
+  private internalMap: Map<any, T> | null;
+
   constructor(initial: T[] = []) {
     this.internalArray = initial;
     this.store = writable(initial);
+    this.internalMap = null;
+    this.mapKey = "";
   }
 
   has(value: T) {
@@ -77,6 +82,7 @@ export class SubscribeableArray<T> {
     if (this.internalArray.includes(value)) return;
     this.internalArray.push(value);
     this.store.set(this.internalArray);
+    this.internalMap = null;
   }
 
   delete(value: T) {
@@ -84,11 +90,13 @@ export class SubscribeableArray<T> {
     if (index === -1) return;
     this.internalArray.splice(index, 1);
     this.store.set(this.internalArray);
+    this.internalMap = null;
   }
 
   set(value: T[]) {
     this.internalArray = value;
     this.store.set(value);
+    this.internalMap = null;
   }
 
   get(index: number) {
@@ -98,9 +106,23 @@ export class SubscribeableArray<T> {
   update(callback: (value: T[]) => T[]) {
     this.internalArray = callback(this.internalArray);
     this.store.set(this.internalArray);
+    this.internalMap = null;
   }
 
   getStore() {
     return this.store;
+  }
+
+  getArray() {
+    return this.internalArray;
+  }
+
+  // Whenever we want to filter the array by a certain key, we likely do it multiple times in a row for the same key.
+  find(key: string, value: any) {
+    if (!this.internalMap || this.mapKey !== key) {
+      this.internalMap = new Map(this.internalArray.filter(x => (x as Object).hasOwnProperty(key)).map(x => [(x as {[key: string]: any})[key], x]));
+      this.mapKey = key;
+    }
+    return this.internalMap.get(value);
   }
 }

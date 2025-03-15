@@ -21,6 +21,7 @@ import (
 type exposedSource struct {
 	Id   types.ID `json:"id"`
 	Name string   `json:"name"`
+	Type string   `json:"type"`
 }
 
 type exposedDetailedSource struct {
@@ -58,6 +59,7 @@ func GetSources(c *gin.Context) {
 		exposedSources[i] = exposedSource{
 			Id:   source.GetId(),
 			Name: source.GetName(),
+			Type: source.GetType(),
 		}
 	}
 

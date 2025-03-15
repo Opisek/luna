@@ -19,8 +19,7 @@
   }: Props = $props();
 
   let calendar: CalendarModel = $state(EmptyCalendar);
-  let originalCalendar: CalendarModel;
-  let currentSources: SourceModel[] = $state([]);
+  let originalCalendar: CalendarModel = $state(EmptyCalendar);
 
   let saveCalendar = (_: CalendarModel | PromiseLike<CalendarModel>) => {};
   let cancelCalendar = (_?: any) => {};
@@ -36,9 +35,6 @@
       color: ""
     };
 
-    currentSources = await getRepository().getSources().catch(err => {
-      throw new Error(`Could not get sources: ${err.message}`);
-    });
     showCreateModalInternal();
   }
   showModal = async (original: CalendarModel): Promise<CalendarModel> => {
@@ -47,9 +43,6 @@
     originalCalendar = await deepCopy(original);
     calendar = original;
 
-    currentSources = await getRepository().getSources().catch(err => {
-      throw new Error(`Could not get sources: ${err.message}`);
-    });
     showModalInternal();
 
     return new Promise((resolve, reject) => {
@@ -63,6 +56,12 @@
 
   let editMode: boolean = $state(false);
   let title: string = $derived(calendar.id ? (editMode ? "Edit calendar" : "Calendar") : "Add calendar");
+
+  let selectableSources = $derived(
+    getRepository().sources.getArray()
+      .filter(x => editMode ? x.type !== "ical" || x.id === calendar.source : x.id === calendar.source)
+      .map(x => ({ value: x.id, name: x.name }))
+  );
 
   const onDelete = async () => {
     await getRepository().deleteCalendar(calendar.id).catch(err => {
@@ -113,7 +112,7 @@
 >
   {#if calendar != EmptyCalendar}
     <TextInput bind:value={calendar.name} name="name" placeholder="Name" editable={editMode} />
-    <SelectInput bind:value={calendar.source} name="source" placeholder="Source" options={currentSources.map(x => ({ value: x.id, name: x.name }))} editable={editMode} />
+    <SelectInput bind:value={calendar.source} name="source" placeholder="Source" options={selectableSources} editable={editMode} />
     {#if editMode}
       <ColorInput bind:color={calendar.color} name="color" editable={editMode} />
     {/if}
