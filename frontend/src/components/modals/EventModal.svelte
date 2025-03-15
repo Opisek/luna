@@ -212,7 +212,9 @@
     {#if editMode}
       <ColorInput bind:color={event.color} name="color" editable={editMode} />
     {/if}
-    <TextInput bind:value={event.desc} name="desc" placeholder="Description" multiline={true} editable={editMode} />
+    {#if editMode || event.desc}
+      <TextInput bind:value={event.desc} name="desc" placeholder="Description" multiline={true} editable={editMode} />
+    {/if}
     {#if editMode}
         <CheckboxInput bind:value={event.date.allDay} name="all_day" description="All Day"/>
     {/if}

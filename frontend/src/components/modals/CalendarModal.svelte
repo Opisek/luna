@@ -116,6 +116,8 @@
     {#if editMode}
       <ColorInput bind:color={calendar.color} name="color" editable={editMode} />
     {/if}
-    <TextInput bind:value={calendar.desc} name="desc" placeholder="Description" multiline={true} editable={editMode} />
+    {#if editMode || calendar.desc}
+      <TextInput bind:value={calendar.desc} name="desc" placeholder="Description" multiline={true} editable={editMode} />
+    {/if}
   {/if}
 </EditableModal>
