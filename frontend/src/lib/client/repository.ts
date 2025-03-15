@@ -8,6 +8,7 @@ import { getMetadata } from "./metadata";
 import { queueNotification } from "./notifications";
 
 import { atLeastOnePromise, deepCopy } from "$lib/common/misc";
+import { SubscribeableArray } from "./reactivity";
 
 class Repository {
   //
@@ -21,14 +22,18 @@ class Repository {
   // Subscribeable Stores
   //
 
-  readonly sources = writable([] as SourceModel[]);
-  readonly calendars = writable([] as CalendarModel[]);
-  readonly events = writable([] as EventModel[]);
+  readonly sources: SubscribeableArray<SourceModel>;
+  readonly calendars: SubscribeableArray<CalendarModel>;
+  readonly events: SubscribeableArray<EventModel>;
 
   //
   // Constructor
   //
   constructor() {
+    this.sources = new SubscribeableArray();
+    this.calendars = new SubscribeableArray();
+    this.events = new SubscribeableArray();
+
     getMetadata().hiddenCalendars.subscribe(() => {
       this.compileEvents(this.eventsRangeStart, this.eventsRangeEnd);
     });

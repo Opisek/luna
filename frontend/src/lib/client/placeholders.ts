@@ -10,8 +10,7 @@ export const EmptySource: SourceModel = {
     username: '',
     password: '',
     token: '',
-  },
-  collapsed: false
+  }
 }
 
 export const AllChangesSource: SourceModelChanges = {

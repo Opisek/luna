@@ -2,61 +2,7 @@ import { browser } from "$app/environment";
 
 import { writable, type Writable } from "svelte/store";
 
-class SubscribeableSet<T> {
-  private internalSet: Set<T> | Map<T, number>;
-  private store: Writable<Set<T>>;
-
-  constructor(countable: boolean = false, initial: T[] = []) {
-    this.internalSet = countable ? new Map(initial.map(x => [x, 1])) : new Set(initial);
-    this.store = writable(new Set(initial));
-  }
-
-  has(value: T) {
-    return this.internalSet.has(value);
-  }
-
-  subscribe(callback: (value: Set<T>) => void) {
-    return this.store.subscribe(callback);
-  }
-
-  add(value: T) {
-    if (this.internalSet instanceof Map) {
-      const count = this.internalSet.get(value) || 0;
-      this.internalSet.set(value, count + 1);
-      if (count === 0) this.store.update(s => { s.add(value); return s; });
-    } else {
-      if (this.internalSet.has(value)) return;
-      this.internalSet.add(value);
-      this.store.set(this.internalSet);
-    }
-  }
-
-  delete(value: T) {
-    if (this.internalSet instanceof Map) {
-      const count = this.internalSet.get(value) || 0;
-      if (count === 1) {
-        this.internalSet.delete(value);
-        this.store.update(s => { s.delete(value); return s; });
-      } else {
-        this.internalSet.set(value, count - 1);
-      }
-    }
-    else {
-      if (!this.internalSet.has(value)) return;
-      this.internalSet.delete(value);
-      this.store.set(this.internalSet);
-    }
-  }
-
-  set(value: Set<T>) {
-    if (this.internalSet instanceof Map) {
-      this.internalSet = new Map(Array.from(value).map(x => [x, 1]));
-    } else {
-      this.internalSet = new Set(value);
-    }
-    this.store.set(value);
-  }
-}
+import { SubscribeableSet } from "./reactivity";
 
 class Metadata {
   //
