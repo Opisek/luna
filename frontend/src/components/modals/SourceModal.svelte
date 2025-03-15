@@ -101,7 +101,7 @@
         settings: !deepEquality(sourceDetailed.settings, originalSource.settings),
         auth: sourceDetailed.auth_type != originalSource.auth_type || !deepEquality(sourceDetailed.auth, originalSource.auth)
       }
-      await getRepository().editSource(sourceDetailed, changes).catch(err => {
+      await getRepository().editSource(await deepCopy(sourceDetailed), changes).catch(err => {
         cancelSource();
         throw new Error(`Could not edit source ${sourceDetailed.name}: ${err.message}`);
       });

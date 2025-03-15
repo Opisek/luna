@@ -367,6 +367,8 @@ class Repository {
     await fetchResponse(`/api/sources/${modifiedSource.id}`, { method: "PATCH", body: formData }).catch((err) => { throw err; });
     
     this.sourcesCache.value = this.sourcesCache.value?.map((source => source.id === modifiedSource.id ? modifiedSource : source)) || [ modifiedSource ];
+    const detailsCacheEntry = this.sourceDetailsCache.get(modifiedSource.id);
+    if (detailsCacheEntry) detailsCacheEntry.value = modifiedSource;
     this.compileSources();
 
     this.getCalendars(modifiedSource.id).then(async (cals) => {
