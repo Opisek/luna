@@ -1,7 +1,6 @@
 package queries
 
 import (
-	"context"
 	"fmt"
 	"luna-backend/types"
 )
@@ -12,7 +11,7 @@ func (q *Queries) GetPassword(id types.ID) (*types.PasswordEntry, error) {
 	entry := &types.PasswordEntry{}
 
 	err = q.Tx.QueryRow(
-		context.TODO(),
+		q.Context,
 		`
 		SELECT hash, salt, algorithm, parameters
 		FROM passwords
@@ -30,7 +29,7 @@ func (q *Queries) InsertPassword(userId types.ID, entry *types.PasswordEntry) er
 	var err error
 
 	_, err = q.Tx.Exec(
-		context.TODO(),
+		q.Context,
 		`
 		INSERT INTO passwords (userid, hash, salt, algorithm, parameters)
 		VALUES ($1, $2, $3, $4, $5);
@@ -48,7 +47,7 @@ func (q *Queries) UpdatePassword(userId types.ID, entry *types.PasswordEntry) er
 	var err error
 
 	_, err = q.Tx.Exec(
-		context.TODO(),
+		q.Context,
 		`
 		UPDATE passwords
 		SET hash = $1, salt = $2, algorithm = $3, parameters = $4

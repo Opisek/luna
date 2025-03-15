@@ -18,7 +18,6 @@ type exposedEvent struct {
 	Desc     string           `json:"desc"`
 	Color    *types.Color     `json:"color"`
 	Date     *types.EventDate `json:"date"`
-	//Settings primitives.EventSettings `json:"settings"` // TODO: REMOVE FROM PRODUCTION, TESTING ONLY
 }
 
 func GetEvents(c *gin.Context) {

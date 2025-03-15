@@ -1,4 +1,4 @@
-import { redirect, type Actions } from "@sveltejs/kit";
+import { fail, redirect, type Actions } from "@sveltejs/kit";
 
 import { COOKIE_MAX_AGE } from "$lib/server/constants";
 import { callApi } from "$lib/server/api.server";
@@ -39,7 +39,7 @@ export const actions = {
 
       redirect(302, getRedirectPage(new URL(request.url)));
     } else {
-      return await res.json();
+      return await res.json().catch(() => ({ error: `Error ${res.status}: ${res.statusText}` }));
     }
   }
 } satisfies Actions;

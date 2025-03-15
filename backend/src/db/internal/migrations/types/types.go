@@ -1,6 +1,7 @@
 package types
 
 import (
+	"context"
 	"luna-backend/common"
 	"luna-backend/db/internal/tables"
 
@@ -10,6 +11,7 @@ import (
 
 type MigrationQueries struct {
 	Tx           pgx.Tx
+	Context      context.Context
 	Logger       *logrus.Entry
 	CommonConfig *common.CommonConfig
 	Tables       *tables.Tables

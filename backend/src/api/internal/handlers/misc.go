@@ -26,7 +26,8 @@ func GetHealth(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 		tx.Commit(config.Logger)
 	} else {
-		// With the current setup, this is never even reached, because the middleware already aborts the request earlier
+		// With the current setup, this is never even reached, because the middleware already aborts the request earlier.
+		// Stil, in the future we might have some other checks in CheckHealth.
 		c.JSON(http.StatusInternalServerError, gin.H{"status": "error"})
 		tx.Rollback(config.Logger)
 	}

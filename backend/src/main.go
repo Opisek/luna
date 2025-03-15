@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"luna-backend/api"
 	"luna-backend/common"
@@ -48,11 +49,14 @@ func setupDb(commonConfig *common.CommonConfig, mainLogger *logrus.Entry, dbLogg
 	env := commonConfig.Env
 	db := db.NewDatabase(env.DB_HOST, env.DB_PORT, env.DB_USERNAME, env.DB_PASSWORD, env.DB_DATABASE, commonConfig, parsing.GetPrimitivesParser(), dbLogger)
 
-	tx, err := db.BeginTransaction()
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	tx, err := db.BeginTransaction(ctx)
 	if err != nil {
 		return nil, err
 	}
-	err = tx.Tables().InitalizeVersionTable()
+	err = tx.Tables().InitializeVersionTable()
 	if err != nil {
 		return nil, fmt.Errorf("could not initialize version table: %v", err)
 	}
@@ -86,7 +90,10 @@ func createTask(name string, task func(*db.Transaction, *logrus.Entry) error, db
 	return func() {
 		cronLogger.Infof("running cron task %v", name)
 
-		tx, err := db.BeginTransaction()
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+
+		tx, err := db.BeginTransaction(ctx)
 		defer tx.Rollback(cronLogger)
 		if err != nil {
 			cronLogger.Errorf("failure creating database transaction for cron task %v: %v", name, err)

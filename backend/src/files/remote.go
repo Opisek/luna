@@ -32,8 +32,8 @@ func (file *RemoteFile) SetId(id types.ID) {
 	panic("illegal operation")
 }
 
-func (file *RemoteFile) fetchContentFromRemote(q types.FileQueries) (io.Reader, error) {
-	content, err := net.FetchFile(file.url, file.auth)
+func (file *RemoteFile) fetchContentFromRemote(q types.DatabaseQueries) (io.Reader, error) {
+	content, err := net.FetchFile(file.url, file.auth, q.GetContext())
 	if err != nil {
 		return nil, fmt.Errorf("could not fetch remote file content: %w", err)
 	}
@@ -51,7 +51,7 @@ func (file *RemoteFile) fetchContentFromRemote(q types.FileQueries) (io.Reader, 
 	return &buf, nil
 }
 
-func (file *RemoteFile) fetchContentFromDatabase(q types.FileQueries) (io.Reader, *time.Time, error) {
+func (file *RemoteFile) fetchContentFromDatabase(q types.DatabaseQueries) (io.Reader, *time.Time, error) {
 	content, date, err := q.GetFilecache(file)
 	if err != nil {
 		return nil, nil, fmt.Errorf("could not get file content from database: %w", err)
@@ -59,7 +59,7 @@ func (file *RemoteFile) fetchContentFromDatabase(q types.FileQueries) (io.Reader
 	return content, date, nil
 }
 
-func (file *RemoteFile) GetContent(q types.FileQueries) (io.Reader, error) {
+func (file *RemoteFile) GetContent(q types.DatabaseQueries) (io.Reader, error) {
 	curTime := time.Now()
 
 	var err error
@@ -102,7 +102,7 @@ func (file *RemoteFile) GetContent(q types.FileQueries) (io.Reader, error) {
 	return bytes.NewReader(file.content), nil
 }
 
-func (file *RemoteFile) ForceFetchFromRemote(q types.FileQueries) error {
+func (file *RemoteFile) ForceFetchFromRemote(q types.DatabaseQueries) error {
 	_, err := file.fetchContentFromRemote(q)
 	return err
 }

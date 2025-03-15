@@ -1,7 +1,6 @@
 package versions
 
 import (
-	"context"
 	"fmt"
 	"luna-backend/common"
 	"luna-backend/db/internal/migrations/internal/registry"
@@ -12,7 +11,7 @@ func init() {
 	registry.RegisterMigration(common.Ver(0, 1, 0), func(q *types.MigrationQueries) error {
 		// Support for UUID and encryption
 		_, err := q.Tx.Exec(
-			context.TODO(),
+			q.Context,
 			`
 			CREATE EXTENSION IF NOT EXISTS pgcrypto;
 			`,
@@ -24,7 +23,7 @@ func init() {
 
 		// Sources enum
 		_, err = q.Tx.Exec(
-			context.TODO(),
+			q.Context,
 			`
 			CREATE TYPE SOURCE_TYPE_ENUM AS ENUM (
 				'caldav',
@@ -38,7 +37,7 @@ func init() {
 
 		// Auth enum
 		_, err = q.Tx.Exec(
-			context.TODO(),
+			q.Context,
 			`
 			CREATE TYPE AUTH_TYPE_ENUM AS ENUM (
 				'none',
@@ -52,7 +51,7 @@ func init() {
 		}
 
 		// Tables
-		err = q.Tables.InitalizeVersionTable()
+		err = q.Tables.InitializeVersionTable()
 		if err != nil {
 			return fmt.Errorf("could not initialize version table: %v", err)
 		}

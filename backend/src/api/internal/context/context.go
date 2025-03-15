@@ -1,6 +1,7 @@
 package context
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"luna-backend/api/internal/config"
@@ -10,6 +11,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
+
+func GetContext(c *gin.Context) context.Context {
+	return c.MustGet("context").(context.Context)
+}
 
 func GetConfig(c *gin.Context) *config.Api {
 	return c.MustGet("apiConfig").(*config.Api)

@@ -1,7 +1,6 @@
 package caldav
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"luna-backend/auth"
@@ -86,13 +85,13 @@ func (source *CaldavSource) getClient() (*caldav.Client, error) {
 	return source.settings.client, nil
 }
 
-func (source *CaldavSource) GetCalendars(_ types.DatabaseQueries) ([]primitives.Calendar, error) {
+func (source *CaldavSource) GetCalendars(q types.DatabaseQueries) ([]primitives.Calendar, error) {
 	client, err := source.getClient()
 	if err != nil {
 		return nil, err
 	}
 
-	cals, err := client.FindCalendars(context.TODO(), "")
+	cals, err := client.FindCalendars(q.GetContext(), "")
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +111,7 @@ func (source *CaldavSource) GetCalendars(_ types.DatabaseQueries) ([]primitives.
 	return result, nil
 }
 
-func (source *CaldavSource) GetCalendar(settings primitives.CalendarSettings, _ types.DatabaseQueries) (primitives.Calendar, error) {
+func (source *CaldavSource) GetCalendar(settings primitives.CalendarSettings, q types.DatabaseQueries) (primitives.Calendar, error) {
 	caldavSettings := settings.(*CaldavCalendarSettings)
 
 	client, err := source.getClient()
@@ -120,7 +119,7 @@ func (source *CaldavSource) GetCalendar(settings primitives.CalendarSettings, _ 
 		return nil, err
 	}
 
-	cals, err := client.FindCalendars(context.TODO(), caldavSettings.Url.Path)
+	cals, err := client.FindCalendars(q.GetContext(), caldavSettings.Url.Path)
 	if err != nil {
 		return nil, err
 	}

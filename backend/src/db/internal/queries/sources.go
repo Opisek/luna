@@ -1,7 +1,6 @@
 package queries
 
 import (
-	"context"
 	"fmt"
 	"luna-backend/auth"
 	"luna-backend/db/internal/parsing"
@@ -33,7 +32,7 @@ func (q *Queries) GetSource(userId types.ID, sourceId types.ID) (primitives.Sour
 	)
 
 	err = q.Tx.QueryRow(
-		context.TODO(),
+		q.Context,
 		query,
 		sourceId.UUID(),
 		userId.UUID(),
@@ -68,7 +67,7 @@ func (q *Queries) GetSourcesByUser(userId types.ID) ([]primitives.Source, error)
 	)
 
 	rows, err := q.Tx.Query(
-		context.TODO(),
+		q.Context,
 		query,
 		userId.UUID(),
 		decryptionKey,
@@ -98,7 +97,7 @@ func (q *Queries) GetSourceSettingsByType(sourceType string) ([][]byte, error) {
 	var err error
 
 	rows, err := q.Tx.Query(
-		context.TODO(),
+		q.Context,
 		`
 		SELECT settings
 		FROM sources
@@ -142,7 +141,7 @@ func (q *Queries) InsertSource(userId types.ID, source primitives.Source) (types
 	args := []any{userId.UUID(), source.GetName(), source.GetType(), source.GetSettings(), source.GetAuth().GetType(), marshalledAuth, encryptionKey}
 
 	var id uuid.UUID
-	err = q.Tx.QueryRow(context.TODO(), query, args...).Scan(&id)
+	err = q.Tx.QueryRow(q.Context, query, args...).Scan(&id)
 
 	if err != nil {
 		return types.EmptyId(), fmt.Errorf("could not insert source: %v", err)
@@ -192,7 +191,7 @@ func (q *Queries) UpdateSource(userId types.ID, sourceId types.ID, newName strin
 	`, strings.Join(changes, ", "), len(args)+1, len(args)+2)
 	args = append(args, userId.UUID(), sourceId.UUID())
 
-	_, err = q.Tx.Exec(context.TODO(), query, args...)
+	_, err = q.Tx.Exec(q.Context, query, args...)
 
 	if err != nil {
 		return fmt.Errorf("could not update source: %v", err)
@@ -203,7 +202,7 @@ func (q *Queries) UpdateSource(userId types.ID, sourceId types.ID, newName strin
 
 func (q *Queries) DeleteSource(userId types.ID, sourceId types.ID) (bool, error) {
 	tag, err := q.Tx.Exec(
-		context.TODO(),
+		q.Context,
 		`
 		DELETE FROM sources
 		WHERE userid = $1 AND id = $2;

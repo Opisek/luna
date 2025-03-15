@@ -1,8 +1,6 @@
 package tables
 
-import "context"
-
-func (q *Tables) InitalizeVersionTable() error {
+func (q *Tables) InitializeVersionTable() error {
 	// Keeps track of the current backend version as well as stores past
 	// versions in case some specific migration rules need to be followed
 
@@ -10,7 +8,7 @@ func (q *Tables) InitalizeVersionTable() error {
 	// id major minor patch extension installed
 
 	_, err := q.Tx.Exec(
-		context.TODO(),
+		q.Context,
 		`
 		CREATE TABLE IF NOT EXISTS version (
 			id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,

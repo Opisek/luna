@@ -2,7 +2,6 @@ package queries
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"io"
 	"luna-backend/types"
@@ -14,7 +13,7 @@ func (q *Queries) GetFilecache(file types.File) (io.Reader, *time.Time, error) {
 	var date time.Time
 
 	err := q.Tx.QueryRow(
-		context.TODO(),
+		q.Context,
 		`
 		SELECT file, date
 		FROM filecache
@@ -34,7 +33,7 @@ func (q *Queries) SetFilecache(file types.File, content io.Reader) error {
 	}
 
 	_, err = q.Tx.Exec(
-		context.TODO(),
+		q.Context,
 		`
 		INSERT INTO filecache (id, file, date)
 		VALUES ($1, $2, CURRENT_TIMESTAMP)
@@ -63,7 +62,7 @@ func (q *Queries) SetFilecacheWithoutId(file types.File, content io.Reader) (typ
 	`
 
 	var id types.ID
-	err = q.Tx.QueryRow(context.TODO(), query, buf).Scan(&id)
+	err = q.Tx.QueryRow(q.Context, query, buf).Scan(&id)
 	if err != nil {
 		return types.EmptyId(), fmt.Errorf("could not set filecache without id: %v", err)
 	}
@@ -75,7 +74,7 @@ func (q *Queries) SetFilecacheWithoutId(file types.File, content io.Reader) (typ
 
 func (q *Queries) DeleteFilecache(file types.File) error {
 	_, err := q.Tx.Exec(
-		context.TODO(),
+		q.Context,
 		`
 		DELETE FROM filecache
 		WHERE id = $1;

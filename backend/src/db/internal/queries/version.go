@@ -1,7 +1,6 @@
 package queries
 
 import (
-	"context"
 	"fmt"
 	"luna-backend/common"
 )
@@ -11,7 +10,7 @@ func (q *Queries) GetLatestVersion() (common.Version, error) {
 
 	var rowCount int
 	err = q.Tx.QueryRow(
-		context.TODO(),
+		q.Context,
 		`
 		SELECT COUNT(*)
 		FROM version;	
@@ -28,7 +27,7 @@ func (q *Queries) GetLatestVersion() (common.Version, error) {
 	var version common.Version
 
 	err = q.Tx.QueryRow(
-		context.TODO(),
+		q.Context,
 		`
 		SELECT major, minor, patch, extension
 		FROM version
@@ -46,7 +45,7 @@ func (q *Queries) GetLatestVersion() (common.Version, error) {
 func (q *Queries) UpdateVersion(version common.Version) error {
 	q.Logger.Warnf("updating version to %v", version.String())
 	_, err := q.Tx.Exec(
-		context.TODO(),
+		q.Context,
 		`
 		INSERT INTO version (major, minor, patch, extension, installed)
 		VALUES ($1, $2, $3, $4, NOW());

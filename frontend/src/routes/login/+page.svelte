@@ -7,7 +7,7 @@
   import TextInput from '../../components/forms/TextInput.svelte';
 
   import { beforeNavigate } from '$app/navigation';
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
 
   import { isValidPassword, isValidUsername, valid } from '$lib/client/validation';
   import { queueNotification } from '$lib/client/notifications';
@@ -23,6 +23,7 @@
   let alreadyShownError = $state(false);
   $effect(() => {
     ((form) => {
+      console.log(form, page.status);
       if (form?.error && !alreadyShownError) {
         alreadyShownError = true;
         queueNotification("failure", form.error);
@@ -34,7 +35,7 @@
     alreadyShownError = false;
   });
 
-  const redirect = $page.url.searchParams.get('redirect') || "/";
+  const redirect = $derived(page.url.searchParams.get('redirect') || "/");
 
   let usernameValidity: Validity = $state(valid);
   let passwordValidity: Validity = $state(valid);

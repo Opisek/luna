@@ -1,7 +1,6 @@
 package caldav
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"luna-backend/crypto"
@@ -112,7 +111,7 @@ func (calendar *CaldavCalendar) getEvents(query *caldav.CalendarQuery, q types.D
 		return nil, fmt.Errorf("could not get caldav client: %w", err)
 	}
 
-	events, err := client.QueryCalendar(context.TODO(), calendar.settings.Url.String(), query)
+	events, err := client.QueryCalendar(q.GetContext(), calendar.settings.Url.String(), query)
 	if err != nil {
 		return nil, fmt.Errorf("could not query calendar: %w", err)
 	}
@@ -157,7 +156,7 @@ func (calendar *CaldavCalendar) GetEvents(start time.Time, end time.Time, q type
 func (calendar *CaldavCalendar) GetEvent(settings primitives.EventSettings, q types.DatabaseQueries) (primitives.Event, error) {
 	caldavSettings := settings.(*CaldavEventSettings)
 
-	obj, err := calendar.client.GetCalendarObject(context.TODO(), caldavSettings.Url.Path)
+	obj, err := calendar.client.GetCalendarObject(q.GetContext(), caldavSettings.Url.Path)
 	if err != nil {
 		return nil, fmt.Errorf("could not get event: %w", err)
 	}
@@ -255,12 +254,12 @@ func (calendar *CaldavCalendar) AddEvent(name string, desc string, color *types.
 
 	path := fmt.Sprintf("%v%v.ics", calendar.settings.Url.Path, id.String())
 
-	_, err = calendar.client.PutCalendarObject(context.TODO(), path, cal)
+	_, err = calendar.client.PutCalendarObject(q.GetContext(), path, cal)
 	if err != nil {
 		return nil, fmt.Errorf("could not add event: %w", err)
 	}
 
-	obj, err := calendar.client.GetCalendarObject(context.TODO(), path)
+	obj, err := calendar.client.GetCalendarObject(q.GetContext(), path)
 	if err != nil {
 		return nil, fmt.Errorf("could not get finished event: %w", err)
 	}
@@ -284,12 +283,12 @@ func (calendar *CaldavCalendar) EditEvent(originalEvent primitives.Event, name s
 		return nil, fmt.Errorf("could not set ical properties: %w", err)
 	}
 
-	_, err = calendar.client.PutCalendarObject(context.TODO(), originalRawEvent.Path, cal)
+	_, err = calendar.client.PutCalendarObject(q.GetContext(), originalRawEvent.Path, cal)
 	if err != nil {
 		return nil, fmt.Errorf("could not update event: %w", err)
 	}
 
-	obj, err := calendar.client.GetCalendarObject(context.TODO(), originalRawEvent.Path)
+	obj, err := calendar.client.GetCalendarObject(q.GetContext(), originalRawEvent.Path)
 	if err != nil {
 		return nil, fmt.Errorf("could not get finished event: %w", err)
 	}
@@ -302,10 +301,10 @@ func (calendar *CaldavCalendar) EditEvent(originalEvent primitives.Event, name s
 	return finishedEvent, nil
 }
 
-func (calendar *CaldavCalendar) DeleteEvent(event primitives.Event, _ types.DatabaseQueries) error {
+func (calendar *CaldavCalendar) DeleteEvent(event primitives.Event, q types.DatabaseQueries) error {
 	settings := event.GetSettings().(*CaldavEventSettings)
 
-	err := calendar.client.RemoveAll(context.TODO(), settings.Url.Path)
+	err := calendar.client.RemoveAll(q.GetContext(), settings.Url.Path)
 	if err != nil {
 		return fmt.Errorf("could not delete event: %w", err)
 	}

@@ -1,7 +1,6 @@
 package queries
 
 import (
-	"context"
 	"fmt"
 	"luna-backend/db/internal/parsing"
 	"luna-backend/db/internal/util"
@@ -33,7 +32,7 @@ func (q *Queries) insertEvents(events []primitives.Event) error {
 
 	err := util.CopyAndUpdate(
 		q.Tx,
-		context.TODO(),
+		q.Context,
 		"events",
 		[]string{"id", "calendar", "color", "settings"},
 		[]string{"color", "settings"},
@@ -60,7 +59,7 @@ func (q *Queries) getEventEntries(events []primitives.Event) ([]*types.EventData
 	)
 
 	rows, err := q.Tx.Query(
-		context.TODO(),
+		q.Context,
 		query,
 		util.JoinIds(events, func(e primitives.Event) types.ID { return e.GetId() })...,
 	)
@@ -143,7 +142,7 @@ func (q *Queries) GetEvent(userId types.ID, eventId types.ID) (primitives.Event,
 	)
 
 	err = q.Tx.QueryRow(
-		context.TODO(),
+		q.Context,
 		query,
 		eventId.UUID(),
 		userId.UUID(),
@@ -158,7 +157,7 @@ func (q *Queries) GetEvent(userId types.ID, eventId types.ID) (primitives.Event,
 
 func (q *Queries) InsertEvent(event primitives.Event) error {
 	_, err := q.Tx.Exec(
-		context.TODO(),
+		q.Context,
 		`
 		INSERT INTO events (id, calendar, color, settings)
 		VALUES ($1, $2, $3, $4);
@@ -177,7 +176,7 @@ func (q *Queries) InsertEvent(event primitives.Event) error {
 
 func (q *Queries) UpdateEvent(event primitives.Event) error {
 	_, err := q.Tx.Exec(
-		context.TODO(),
+		q.Context,
 		`
 		UPDATE events
 		SET color = $2, settings = $3
@@ -196,7 +195,7 @@ func (q *Queries) UpdateEvent(event primitives.Event) error {
 
 func (q *Queries) DeleteEvent(userId types.ID, eventId types.ID) error {
 	_, err := q.Tx.Exec(
-		context.TODO(),
+		q.Context,
 		`
 		DELETE FROM events
 		WHERE id = $1

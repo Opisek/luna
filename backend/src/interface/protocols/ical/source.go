@@ -28,7 +28,7 @@ type IcalSourceSettings struct {
 	icalCalendar *ical.Calendar `json:"-"`
 }
 
-func (source *IcalSource) getIcalFile(q types.FileQueries) (*ical.Calendar, error) {
+func (source *IcalSource) getIcalFile(q types.DatabaseQueries) (*ical.Calendar, error) {
 	if source.settings.icalCalendar == nil {
 		content, err := source.settings.file.GetContent(q)
 		if err != nil {

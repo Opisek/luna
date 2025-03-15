@@ -7,7 +7,7 @@
   import TextInput from '../../components/forms/TextInput.svelte';
 
   import { beforeNavigate } from '$app/navigation';
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
 
   import { isValidEmail, isValidPassword, isValidRepeatPassword, isValidUsername, valid } from '$lib/client/validation';
   import { queueNotification } from '$lib/client/notifications';
@@ -34,7 +34,7 @@
     alreadyShownError = false;
   });
 
-  const redirect = $page.url.searchParams.get('redirect') || "/";
+  const redirect = $derived(page.url.searchParams.get('redirect') || "/");
 
   let password: string = $state("");
 

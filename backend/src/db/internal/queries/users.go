@@ -1,7 +1,6 @@
 package queries
 
 import (
-	"context"
 	"fmt"
 	"luna-backend/types"
 
@@ -18,7 +17,7 @@ func (q *Queries) AddUser(user *types.User) (types.ID, error) {
 	`
 
 	var id types.ID
-	err = q.Tx.QueryRow(context.TODO(), query, user.Username, user.Email, user.Admin).Scan(&id)
+	err = q.Tx.QueryRow(q.Context, query, user.Username, user.Email, user.Admin).Scan(&id)
 	if err != nil {
 		return types.EmptyId(), fmt.Errorf("could not add user: %v", err)
 	}
@@ -34,7 +33,7 @@ func (q *Queries) GetUserIdFromEmail(email string) (uuid.UUID, error) {
 	var id uuid.UUID
 
 	err = q.Tx.QueryRow(
-		context.TODO(),
+		q.Context,
 		`
 		SELECT id
 		FROM users
@@ -54,7 +53,7 @@ func (q *Queries) GetUserIdFromUsername(username string) (types.ID, error) {
 	var id uuid.UUID
 
 	err = q.Tx.QueryRow(
-		context.TODO(),
+		q.Context,
 		`
 		SELECT id
 		FROM users
@@ -74,7 +73,7 @@ func (q *Queries) IsAdmin(id int) (bool, error) {
 	var admin bool
 
 	err = q.Tx.QueryRow(
-		context.TODO(),
+		q.Context,
 		`
 		SELECT admin
 		FROM users
@@ -91,7 +90,7 @@ func (q *Queries) IsAdmin(id int) (bool, error) {
 
 func (q *Queries) AnyUsersExist() (bool, error) {
 	rows, err := q.Tx.Query(
-		context.TODO(),
+		q.Context,
 		`
 		SELECT *
 		FROM users

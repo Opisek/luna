@@ -1,7 +1,6 @@
 package tables
 
 import (
-	"context"
 	"fmt"
 )
 
@@ -10,7 +9,7 @@ func (q *Tables) InitializeCalendarsTable() error {
 	// Calendars table:
 	// id source color settings
 	_, err = q.Tx.Exec(
-		context.TODO(),
+		q.Context,
 		`
 		CREATE TABLE IF NOT EXISTS calendars (
 			id UUID PRIMARY KEY,

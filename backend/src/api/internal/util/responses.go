@@ -19,6 +19,7 @@ const (
 	ErrorTokenMissing
 	ErrorTokenInvalid
 	ErrorNotImplemented
+	ErrorTimeout
 	ErrorUnknown // TODO: all errors that use this cannot distinguish between types of errors; need to revamp error handling to know the source of error
 )
 
@@ -34,6 +35,7 @@ var errorResponses = []*errorResponse{
 	err(http.StatusUnauthorized, "Missing authorization token"),
 	err(http.StatusUnauthorized, "Invalid authorization token"),
 	err(http.StatusNotImplemented, "Not implemented"),
+	err(http.StatusRequestTimeout, "Timed out"),
 	err(http.StatusInternalServerError, "Unknown error"),
 }
 
@@ -78,4 +80,5 @@ func ErrorDetailed(c *gin.Context, code int, details string) {
 func Abort(c *gin.Context, code int) {
 	resp := errorResponses[code]
 	c.AbortWithStatusJSON(resp.code, gin.H{"error": resp.msg})
+	c.Abort()
 }

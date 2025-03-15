@@ -6,6 +6,7 @@ import (
 	"luna-backend/api/internal/handlers"
 	"luna-backend/common"
 	"luna-backend/db"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -21,16 +22,32 @@ func run(api *config.Api) {
 		c.Set("apiConfig", api)
 		c.Next()
 	})
-
-	// /api/*
 	rawEndpoints := router.Group("/api")
-	endpoints := rawEndpoints.Group("", handlers.TransactionMiddleware())
 
-	endpoints.POST("/login", handlers.Login)
-	endpoints.POST("/register", handlers.Register)
-	endpoints.GET("/version", handlers.GetVersion)
+	// /api/* (with no transactions)
+	noDatabaseEndpoints := rawEndpoints.Group("",
+		handlers.ContextMiddleware(3*time.Second),
+		gin.Recovery(),
+	)
+
+	noDatabaseEndpoints.GET("/version", handlers.GetVersion)
+
+	// /api/* (long-running authentication)
+	authenticationEndpoints := rawEndpoints.Group("",
+		handlers.ContextMiddleware(20*time.Second),
+		gin.Recovery(),
+		handlers.TransactionMiddleware(),
+	)
+
+	authenticationEndpoints.POST("/login", handlers.Login)
+	authenticationEndpoints.POST("/register", handlers.Register)
+
+	// /api/* the rest
+	endpoints := noDatabaseEndpoints.Group("", handlers.TransactionMiddleware())
+
 	endpoints.GET("/health", handlers.GetHealth)
 
+	// everything past here requires the user to be logged in
 	authenticatedEndpoints := endpoints.Group("", handlers.AuthMiddleware())
 
 	// /api/sources/*

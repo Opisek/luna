@@ -1,6 +1,7 @@
 package types
 
 import (
+	"context"
 	"io"
 	"time"
 )
@@ -32,6 +33,7 @@ type SourceDatabaseEntry struct {
 // Subset of database queries required for e.g. file caching
 // Required to avoid circular dependencies
 type DatabaseQueries interface {
+	GetContext() context.Context
 	GetFilecache(file File) (io.Reader, *time.Time, error)
 	SetFilecache(file File, content io.Reader) error
 	SetFilecacheWithoutId(file File, content io.Reader) (ID, error)

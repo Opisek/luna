@@ -1,12 +1,10 @@
 package tables
 
-import "context"
-
 func (q *Tables) InitializePasswordsTable() error {
 	// Auth table:
 	// id hash salt algorithm parameters
 	_, err := q.Tx.Exec(
-		context.TODO(),
+		q.Context,
 		`
 		CREATE TABLE IF NOT EXISTS passwords (
 			userid UUID REFERENCES users(id) ON DELETE CASCADE,

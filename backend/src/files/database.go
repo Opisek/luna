@@ -18,7 +18,7 @@ func NewDatabaseFile(id types.ID) *DatabaseFile {
 	return &DatabaseFile{id: id}
 }
 
-func NewDatabaseFileFromContent(content io.Reader, q types.FileQueries) (*DatabaseFile, error) {
+func NewDatabaseFileFromContent(content io.Reader, q types.DatabaseQueries) (*DatabaseFile, error) {
 	buf, err := io.ReadAll(content)
 	file := &DatabaseFile{content: buf}
 	if err != nil {
@@ -39,7 +39,7 @@ func (file *DatabaseFile) SetId(id types.ID) {
 	file.id = id
 }
 
-func (file *DatabaseFile) fetchContentFromDatabase(q types.FileQueries) (io.Reader, *time.Time, error) {
+func (file *DatabaseFile) fetchContentFromDatabase(q types.DatabaseQueries) (io.Reader, *time.Time, error) {
 	content, date, err := q.GetFilecache(file)
 	if err != nil {
 		return nil, nil, fmt.Errorf("could not get file content from database: %w", err)
@@ -47,7 +47,7 @@ func (file *DatabaseFile) fetchContentFromDatabase(q types.FileQueries) (io.Read
 	return content, date, nil
 }
 
-func (file *DatabaseFile) GetContent(q types.FileQueries) (io.Reader, error) {
+func (file *DatabaseFile) GetContent(q types.DatabaseQueries) (io.Reader, error) {
 	if file.content != nil {
 		return bytes.NewReader(file.content), nil
 	}

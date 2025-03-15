@@ -50,7 +50,7 @@ func (file *LocalFile) fetchContentFromFilesystem() (io.Reader, error) {
 	return bytes.NewReader(buf), nil
 }
 
-func (file *LocalFile) GetContent(q types.FileQueries) (io.Reader, error) {
+func (file *LocalFile) GetContent(q types.DatabaseQueries) (io.Reader, error) {
 	curTime := time.Now()
 
 	var err error

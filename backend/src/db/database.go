@@ -3,18 +3,17 @@ package db
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"luna-backend/common"
 	"luna-backend/db/internal/parsing"
 
-	"github.com/jackc/pgx"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/sirupsen/logrus"
 )
 
 type Database struct {
-	pgxConfig *pgx.ConnConfig
-	pool      *pgxpool.Pool
+	pool *pgxpool.Pool
 
 	commonConfig     *common.CommonConfig
 	primitivesParser parsing.PrimitivesParser
@@ -23,23 +22,17 @@ type Database struct {
 }
 
 func NewDatabase(host string, port uint16, username, password, database string, commonConfig *common.CommonConfig, primitivesParser parsing.PrimitivesParser, logger *logrus.Entry) *Database {
-	pgxConfig := &pgx.ConnConfig{
-		Host:     host,
-		Port:     port,
-		User:     username,
-		Password: password,
-		Database: database,
-	}
-
 	url := fmt.Sprintf("postgres://%s:%s@%s:%d/%s", username, password, host, port, database)
 
-	pool, err := pgxpool.New(context.Background(), url)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	pool, err := pgxpool.New(ctx, url)
 	if err != nil {
 		logger.Fatalf("could not create database pool: %v", err)
 	}
 
 	db := &Database{
-		pgxConfig:        pgxConfig,
 		pool:             pool,
 		commonConfig:     commonConfig,
 		primitivesParser: primitivesParser,

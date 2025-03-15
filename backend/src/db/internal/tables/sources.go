@@ -1,7 +1,6 @@
 package tables
 
 import (
-	"context"
 	"fmt"
 )
 
@@ -10,7 +9,7 @@ func (q *Tables) InitializeSourcesTable() error {
 	// Sources table:
 	// id user name type settings auth
 	_, err = q.Tx.Exec(
-		context.TODO(),
+		q.Context,
 		`
 		CREATE TABLE IF NOT EXISTS sources (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

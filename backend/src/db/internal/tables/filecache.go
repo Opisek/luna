@@ -1,7 +1,6 @@
 package tables
 
 import (
-	"context"
 	"fmt"
 )
 
@@ -10,7 +9,7 @@ func (q *Tables) InitializeFilecacheTable() error {
 	// Filecache table:
 	// id date file
 	_, err = q.Tx.Exec(
-		context.TODO(),
+		q.Context,
 		`
 		CREATE TABLE IF NOT EXISTS filecache (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

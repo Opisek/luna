@@ -1,7 +1,6 @@
 package queries
 
 import (
-	"context"
 	"fmt"
 	"luna-backend/db/internal/parsing"
 	"luna-backend/db/internal/util"
@@ -33,7 +32,7 @@ func (q *Queries) insertCalendars(cals []primitives.Calendar) error {
 
 	err := util.CopyAndUpdate(
 		q.Tx,
-		context.TODO(),
+		q.Context,
 		"calendars",
 		[]string{"id", "source", "color", "settings"},
 		[]string{"color", "settings"},
@@ -60,7 +59,7 @@ func (q *Queries) getCalendarEntries(cals []primitives.Calendar) ([]*types.Calen
 	)
 
 	rows, err := q.Tx.Query(
-		context.TODO(),
+		q.Context,
 		query,
 		util.JoinIds(cals, func(c primitives.Calendar) types.ID { return c.GetId() })...,
 	)
@@ -140,7 +139,7 @@ func (q *Queries) GetCalendar(userId types.ID, calendarId types.ID) (primitives.
 	)
 
 	err = q.Tx.QueryRow(
-		context.TODO(),
+		q.Context,
 		query,
 		calendarId.UUID(),
 		userId.UUID(),
@@ -155,7 +154,7 @@ func (q *Queries) GetCalendar(userId types.ID, calendarId types.ID) (primitives.
 
 func (q *Queries) InsertCalendar(calendar primitives.Calendar) error {
 	_, err := q.Tx.Exec(
-		context.TODO(),
+		q.Context,
 		`
 		INSERT INTO calendars (id, source, color, settings)
 		VALUES ($1, $2, $3, $4);
@@ -175,7 +174,7 @@ func (q *Queries) InsertCalendar(calendar primitives.Calendar) error {
 
 func (q *Queries) UpdateCalendar(cal primitives.Calendar) error {
 	_, err := q.Tx.Exec(
-		context.TODO(),
+		q.Context,
 		`
 		UPDATE calendars
 		SET color = $1, settings = $2
@@ -194,7 +193,7 @@ func (q *Queries) UpdateCalendar(cal primitives.Calendar) error {
 
 func (q *Queries) DeleteCalendar(userId types.ID, calendarId types.ID) error {
 	_, err := q.Tx.Exec(
-		context.TODO(),
+		q.Context,
 		`
 		DELETE FROM calendars
 		WHERE id = $1
