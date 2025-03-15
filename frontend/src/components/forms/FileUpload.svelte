@@ -127,7 +127,7 @@
 
   span.label {
     font-size: text.$fontSizeSmall;
-    margin-bottom: -2 * dimensions.$gapSmall;
+    margin-bottom: -(dimensions.$gapMiddle);
     padding-left: calc(dimensions.$gapSmall * (text.$fontSize / text.$fontSizeSmall));
   }
 
@@ -137,6 +137,7 @@
   }
 </style>
 
+<!-- TODO: use the Label component instead -->
 <span class="label">
     <Label name={name} ownPositioning={false}>{placeholder}</Label>
 {#if !validity?.valid && !empty}
