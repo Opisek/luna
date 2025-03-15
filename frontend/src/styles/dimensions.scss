@@ -1,32 +1,35 @@
+/* Multiplier */
+$multiplier: 1;
+
 /* Gaps */
-$gapTiny: 0.2em;
-$gapSmaller: 0.25em;
-$gapSmall: 0.5em;
-$gapMiddle: 0.75em;
-$gapLarge: 1em;
-$gapLarger: 2em;
+$gapTiny: 0.2em * $multiplier;
+$gapSmaller: 0.25em * $multiplier;
+$gapSmall: 0.5em * $multiplier;
+$gapMiddle: 0.75em * $multiplier;
+$gapLarge: 1em * $multiplier;
+$gapLarger: 2em * $multiplier;
 
 /* Border Radius */
-$borderRadiusSmall: .25em;
-$borderRadius: .5em;
-$borderRadiusLarge: 1em;
+$borderRadiusSmall: .25em * $multiplier;
+$borderRadius: .5em * $multiplier;
+$borderRadiusLarge: 1em * $multiplier;
 
 /* Navbar */
-$navbarHeight: 3em;
-$navbarHeightSmall: 2em;
+$navbarHeight: 3em * $multiplier;
+$navbarHeightSmall: 2em * $multiplier;
 
 /* Post Cards */
-$thumbnailWidth: 5em;
-$thumbnailWidthSmall: 3em;
+$thumbnailWidth: 5em * $multiplier;
+$thumbnailWidthSmall: 3em * $multiplier;
 
 /* Blur */
-$blur: 0.15em;
+$blur: 0.15em * $multiplier;
 
 /* Lines */
-$borderWidth: .1em;
-$underlineWidth: .15em;
-$barFocusIndicatorWidth: .3em;
+$borderWidth: .1em * $multiplier;
+$underlineWidth: .15em * $multiplier;
+$barFocusIndicatorWidth: .3em * $multiplier;
 
 /* Buttons */
-$buttonMinWidth: 5em;
-$buttonMinWidthCompact: 3em;
+$buttonMinWidth: 5em * $multiplier;
+$buttonMinWidthCompact: 3em * $multiplier

@@ -1,20 +1,22 @@
+@use "./dimensions.scss";
+
 /* Font family */
 $fontFamilyText: 'Karla', serif;
 $fontFamilyTime: 'Chivo Mono', monospace;
 
 /* Font size */
-$fontSizeSmaller: 0.6rem;
-$fontSizeSmall: 0.8rem;
-$fontSize: 1rem;
-$fontSizeLarge: 2rem;
+$fontSizeSmaller: 0.6rem * dimensions.$multiplier;
+$fontSizeSmall: 0.8rem * dimensions.$multiplier;
+$fontSize: 1rem * dimensions.$multiplier;
+$fontSizeLarge: 2rem * dimensions.$multiplier;
 
 /* Font weight */
-$fontWeightLight: 300;
-$fontWeight: 400;
-$fontWeightSemiBold: 600;
-$fontWeightBold: 800;
-$fontWeightEmphasis: 350;
-$fontWeightTitle: 700;
+$fontWeightLight: 300 * dimensions.$multiplier;
+$fontWeight: 400 * dimensions.$multiplier;
+$fontWeightSemiBold: 600 * dimensions.$multiplier;
+$fontWeightBold: 800 * dimensions.$multiplier;
+$fontWeightEmphasis: 350 * dimensions.$multiplier;
+$fontWeightTitle: 700 * dimensions.$multiplier;
 
 /* Line height */
 $lineHeightParagraph: $fontSize * 1.4;
