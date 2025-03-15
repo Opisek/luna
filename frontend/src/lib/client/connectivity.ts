@@ -3,11 +3,11 @@
 import { fetchJson } from "./net";
 
 export enum Reachability {
-  Unkown = 0,
-  None = 1,
-  Frontend = 2,
-  Backend = 3,
-  Database = 4
+  Unkown,
+  None,
+  Frontend,
+  Backend,
+  Database
 }
 
 class Connectivity {
