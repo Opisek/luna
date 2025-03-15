@@ -22,6 +22,7 @@
 
   div {
     padding: dimensions.$gapSmall;
+    margin: -(dimensions.$gapSmaller) 0;
   }
   div.editable {
     padding: dimensions.$gapSmaller;

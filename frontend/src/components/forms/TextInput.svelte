@@ -142,7 +142,7 @@
 
   span.label {
     font-size: text.$fontSizeSmall;
-    margin-bottom: -2 * dimensions.$gapSmall;
+    margin-bottom: calc(-#{dimensions.$gap});
     padding-left: calc(dimensions.$gapSmall * (text.$fontSize / text.$fontSizeSmall));
   }
 
