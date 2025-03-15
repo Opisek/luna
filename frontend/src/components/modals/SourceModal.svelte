@@ -39,7 +39,6 @@
       },
       auth_type: "none",
       auth: {},
-      collapsed: false
     };
 
     showCreateModalInternal();
@@ -203,5 +202,10 @@
         <TextInput bind:value={sourceDetailed.auth.token} name="auth_token" placeholder="Token" editable={editMode} password={true} />
       {/if}
     {/if}
+
+    <!-- TODO: show id debug prefence -->
+    <!--
+    <TextInput bind:value={source.id} name="id" placeholder="ID" editable={false} />
+    -->
   {/if}
 </EditableModal>

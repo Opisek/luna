@@ -119,5 +119,9 @@
     {#if editMode || calendar.desc}
       <TextInput bind:value={calendar.desc} name="desc" placeholder="Description" multiline={true} editable={editMode} />
     {/if}
+    <!-- TODO: show id debug prefence -->
+    <!--
+    <TextInput bind:value={source.id} name="id" placeholder="ID" editable={false} />
+    -->
   {/if}
 </EditableModal>

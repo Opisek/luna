@@ -224,5 +224,9 @@
     {#if showEndDate}
       <DateTimeInput bind:value={event.date.end} name="date_end" placeholder="End" editable={editMode} allDay={event.date.allDay} onChange={changeEnd}/>
     {/if}
+    <!-- TODO: show id debug prefence -->
+    <!--
+    <TextInput bind:value={event.id} name="id" placeholder="ID" editable={false} />
+    -->
   {/if}
 </EditableModal>
