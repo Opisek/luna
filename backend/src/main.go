@@ -7,9 +7,12 @@ import (
 	"luna-backend/db"
 	"luna-backend/interface/parsing"
 	"luna-backend/log"
+	"luna-backend/tasks"
 	"os"
+	"sync"
 	"time"
 
+	"github.com/robfig/cron/v3"
 	"github.com/sirupsen/logrus"
 )
 
@@ -79,6 +82,35 @@ func setupDb(commonConfig *common.CommonConfig, mainLogger *logrus.Entry, dbLogg
 	return db, tx.Commit(mainLogger)
 }
 
+func createTask(name string, task func(*db.Transaction, *logrus.Entry) error, db *db.Database, cronLogger *logrus.Entry) func() {
+	return func() {
+		cronLogger.Infof("running cron task %v", name)
+
+		tx, err := db.BeginTransaction()
+		defer tx.Rollback(cronLogger)
+		if err != nil {
+			cronLogger.Errorf("failure creating database transaction for cron task %v: %v", name, err)
+			return
+		}
+
+		err = task(tx, cronLogger.WithField("task", name))
+		if err != nil {
+			cronLogger.Errorf("failure running cron task %v: %v", name, err)
+			return
+		}
+
+		tx.Commit(cronLogger)
+	}
+}
+
+func startGoroutine(f func(), wg *sync.WaitGroup) {
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		f()
+	}()
+}
+
 func main() {
 	var err error
 
@@ -115,5 +147,15 @@ func main() {
 	apiLogger := logger.WithField("module", "api")
 	api := api.NewApi(db, commonConfig, apiLogger)
 	mainLogger.Infof("started luna-backend %s", commonConfig.Version.String())
-	api.Run()
+
+	// Scheduled tasks
+	cronLogger := logger.WithField("module", "cron")
+	c := cron.New()
+	c.AddFunc("*/30 * * * *", createTask("RefetchIcalFiles", tasks.RefetchIcalFiles, db, cronLogger))
+
+	// Wait for goroutines to finish
+	var wg sync.WaitGroup
+	startGoroutine(api.Run, &wg)
+	startGoroutine(c.Start, &wg)
+	wg.Wait()
 }

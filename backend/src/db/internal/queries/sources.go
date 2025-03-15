@@ -46,7 +46,7 @@ func (q *Queries) GetSource(userId types.ID, sourceId types.ID) (primitives.Sour
 	return scanner.GetSource()
 }
 
-func (q *Queries) GetSources(userId types.ID) ([]primitives.Source, error) {
+func (q *Queries) GetSourcesByUser(userId types.ID) ([]primitives.Source, error) {
 	var err error
 
 	decryptionKey, err := util.GetUserDecryptionKey(q.CommonConfig, userId)
@@ -89,6 +89,39 @@ func (q *Queries) GetSources(userId types.ID) ([]primitives.Source, error) {
 	}
 
 	return sources, nil
+}
+
+// This is only used to refetch iCal files cache periodically.
+// The information about file URL could be stored in another table instead,
+// so we don't have to query the more sensitive sources table.
+func (q *Queries) GetSourceSettingsByType(sourceType string) ([][]byte, error) {
+	var err error
+
+	rows, err := q.Tx.Query(
+		context.TODO(),
+		`
+		SELECT settings
+		FROM sources
+		WHERE type = $1;
+		`,
+		sourceType,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("could not get sources: %v", err)
+	}
+	defer rows.Close()
+
+	settings := [][]byte{}
+	for rows.Next() {
+		var setting []byte
+		err = rows.Scan(&setting)
+		if err != nil {
+			return nil, fmt.Errorf("could not scan setting: %v", err)
+		}
+		settings = append(settings, setting)
+	}
+
+	return settings, nil
 }
 
 func (q *Queries) InsertSource(userId types.ID, source primitives.Source) (types.ID, error) {

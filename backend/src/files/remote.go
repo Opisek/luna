@@ -101,3 +101,8 @@ func (file *RemoteFile) GetContent(q types.FileQueries) (io.Reader, error) {
 	}
 	return bytes.NewReader(file.content), nil
 }
+
+func (file *RemoteFile) ForceFetchFromRemote(q types.FileQueries) error {
+	_, err := file.fetchContentFromRemote(q)
+	return err
+}

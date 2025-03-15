@@ -34,7 +34,7 @@ type exposedDetailedSource struct {
 }
 
 func getSources(_ *config.Api, tx *db.Transaction, userId types.ID) ([]primitives.Source, error) {
-	srcs, err := tx.Queries().GetSources(userId)
+	srcs, err := tx.Queries().GetSourcesByUser(userId)
 	if err != nil {
 		return nil, fmt.Errorf("could not get sources: %v", err)
 	}

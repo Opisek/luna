@@ -97,7 +97,7 @@ func NewDatabaseIcalSource(name string, content io.Reader, q types.DatabaseQueri
 	return &IcalSource{
 		id:   types.EmptyId(), // Placeholder until the database assigns an ID
 		name: name,
-		auth: auth.NoAuth{},
+		auth: auth.NewNoAuth(),
 		settings: &IcalSourceSettings{
 			Location: "database",
 			FileId:   file.GetId(),
@@ -110,7 +110,7 @@ func NewLocalIcalSource(name string, path *types.Path) *IcalSource {
 	return &IcalSource{
 		id:   types.EmptyId(), // Placeholder until the database assigns an ID
 		name: name,
-		auth: auth.NoAuth{},
+		auth: auth.NewNoAuth(),
 		settings: &IcalSourceSettings{
 			Location: "local",
 			Path:     path,
