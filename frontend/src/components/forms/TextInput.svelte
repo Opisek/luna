@@ -138,6 +138,7 @@
     transform: translateY(-50%);
     right: calc(1.5 * dimensions.$gapSmaller);
     color: colors.$foregroundDim;
+    background-color: colors.$backgroundSecondary;
   }
 
   span.label {
