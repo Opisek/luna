@@ -16,7 +16,7 @@
     width: 100%;
     flex-direction: column;
     flex-wrap: nowrap;
-    gap: dimensions.$gap;
+    gap: dimensions.$gapLarge;
   }
 </style>
 

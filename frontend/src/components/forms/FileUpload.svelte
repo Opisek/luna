@@ -70,7 +70,7 @@
   div.wrapper {
     display: flex;
     flex-direction: column;
-    gap: dimensions.$gap;
+    gap: dimensions.$gapLarge;
     position: relative;
     border-radius: calc(dimensions.$borderRadius + 0.1em);
     overflow: hidden;

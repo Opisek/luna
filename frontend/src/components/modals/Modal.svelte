@@ -97,13 +97,13 @@
   }
   
   form {
-    padding: dimensions.$gap dimensions.$gapLarge dimensions.$gapLarge dimensions.$gapLarge;
+    padding: dimensions.$gapLarge dimensions.$gapLarger dimensions.$gapLarger dimensions.$gapLarger;
     border-radius: dimensions.$borderRadius;
     display: flex;
     width: 100%;
     flex-direction: column;
     flex-wrap: nowrap;
-    gap: dimensions.$gap;
+    gap: dimensions.$gapMiddle;
   }
 </style>
 

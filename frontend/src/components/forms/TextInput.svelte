@@ -104,7 +104,7 @@
   div.wrapper {
     display: flex;
     flex-direction: column;
-    gap: dimensions.$gap;
+    gap: dimensions.$gapLarge;
     position: relative;
     border-radius: calc(dimensions.$borderRadius + 0.1em);
     overflow: hidden;
@@ -142,7 +142,7 @@
 
   span.label {
     font-size: text.$fontSizeSmall;
-    margin-bottom: calc(-#{dimensions.$gap});
+    margin-bottom: calc(-#{dimensions.$gapMiddle});
     padding-left: calc(dimensions.$gapSmall * (text.$fontSize / text.$fontSizeSmall));
   }
 
@@ -153,6 +153,7 @@
 </style>
 
 {#if label || (!validity?.valid && !empty)}
+  <!-- TODO: use the Label component instead -->
   <span class="label">
     {#if label}
       <Label name={name} ownPositioning={false}>{placeholder}</Label>

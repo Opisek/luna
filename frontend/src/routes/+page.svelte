@@ -218,14 +218,14 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-    gap: dimensions.$gap;
+    gap: dimensions.$gapLarge;
     grid-area: main;
   }
   
   aside {
     display: flex;
     flex-direction: column;
-    gap: dimensions.$gap;
+    gap: dimensions.$gapLarge;
     min-width: 10em;
     width: 20vw;
     max-width: 20em;
@@ -236,7 +236,7 @@
     flex-grow: 1;
     display: flex;
     flex-direction: column;
-    gap: dimensions.$gap;
+    gap: dimensions.$gapLarge;
     overflow: auto;
     margin: -(dimensions.$gapSmall);
     padding: dimensions.$gapSmall;

@@ -54,7 +54,7 @@
   }
 
   div.box {
-    padding: dimensions.$gap;
+    padding: dimensions.$gapLarge;
     border-radius: dimensions.$borderRadius;
     cursor: pointer;
     position: relative;

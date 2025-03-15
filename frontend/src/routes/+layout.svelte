@@ -63,7 +63,7 @@
 
   :global(body) {
     margin: 0;
-    padding: dimensions.$gap;
+    padding: dimensions.$gapLarge;
     gap: dimensions.$gapSmall;
 
     height: 100vh;

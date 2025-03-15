@@ -26,7 +26,7 @@
   }
 
   .ownPositioning {
-    margin-bottom: calc(-#{dimensions.$gap});
+    margin-bottom: calc(-#{dimensions.$gapMiddle});
     padding-left: calc(dimensions.$gapSmall * (text.$fontSize / text.$fontSizeSmall));
   }
 </style>

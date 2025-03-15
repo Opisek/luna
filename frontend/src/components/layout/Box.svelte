@@ -16,12 +16,12 @@
     border-radius: dimensions.$borderRadius;
     max-width: 50vw;
     min-width: 30em;
-    padding: dimensions.$gap dimensions.$gapLarge dimensions.$gapLarge dimensions.$gapLarge;
+    padding: dimensions.$gapLarge dimensions.$gapLarger dimensions.$gapLarger dimensions.$gapLarger;
     border-radius: dimensions.$borderRadius;
     display: flex;
     flex-direction: column;
     flex-wrap: nowrap;
-    gap: dimensions.$gap;
+    gap: dimensions.$gapLarge;
     box-shadow: decorations.$boxShadow;
   }
 </style>

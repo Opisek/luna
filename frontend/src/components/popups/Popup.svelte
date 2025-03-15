@@ -83,7 +83,7 @@
 
   dialog {
     border: 0;
-    padding: dimensions.$gapSmall dimensions.$gap dimensions.$gap dimensions.$gap;
+    padding: dimensions.$gapSmall dimensions.$gapLarge dimensions.$gapLarge dimensions.$gapLarge;
     border-radius: dimensions.$borderRadius;
     max-width: 50vw;
     min-width: fit-content;
