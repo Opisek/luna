@@ -73,10 +73,13 @@
 
   afterNavigate(() => {
     getRangeFromStorage();
+    refresh(date);
   });
 
   beforeNavigate(() => {
     pageLoaded = false;
+    clearTimeout(spooledRefresh);
+    spooledRefresh = undefined; 
   });
 
   getRepository().getSources().catch(NoOp);
@@ -114,7 +117,7 @@
     localSources = newSources;
   });
 
-  let spooledRefresh: ReturnType<typeof setTimeout>;
+  let spooledRefresh: (ReturnType<typeof setTimeout> | undefined) = $state(undefined);
   function refresh(date: Date, force = false) {
     sessionStorage.setItem("selectedDate", date.toString());
 
