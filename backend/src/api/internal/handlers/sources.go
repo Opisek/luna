@@ -310,7 +310,9 @@ func PatchSource(c *gin.Context) {
 
 	var newSourceSettings primitives.SourceSettings = nil
 	if newType != "" {
-		newAuth = source.GetAuth()
+		if newAuth == nil {
+			newAuth = source.GetAuth()
+		}
 		newSource, err := parseSource(c, newName, newAuth, tx.Queries())
 		if err != nil {
 			apiConfig.Logger.Warnf("could not parse source: %v", err)
