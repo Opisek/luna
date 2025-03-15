@@ -125,7 +125,6 @@
       calendars = calendars.filter(x => {
         if (x.id === event.calendar) return true;
         const source = sources.find("id", x.source);
-        console.log(source);
         return source && source.type !== "ical";
       });
     } else {
