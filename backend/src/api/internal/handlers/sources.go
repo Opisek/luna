@@ -306,12 +306,11 @@ func PatchSource(c *gin.Context) {
 			util.ErrorDetailed(c, util.ErrorPayload, util.DetailAuth)
 			return
 		}
-	} else {
-		newAuth = source.GetAuth()
 	}
 
 	var newSourceSettings primitives.SourceSettings = nil
 	if newType != "" {
+		newAuth = source.GetAuth()
 		newSource, err := parseSource(c, newName, newAuth, tx.Queries())
 		if err != nil {
 			apiConfig.Logger.Warnf("could not parse source: %v", err)
@@ -321,7 +320,9 @@ func PatchSource(c *gin.Context) {
 		newSourceSettings = newSource.GetSettings()
 	}
 	if source.GetType() == "ical" {
-		err = source.Cleanup(tx.Queries())
+		if newType == "ical" {
+			err = source.Cleanup(tx.Queries())
+		}
 		if err != nil {
 			apiConfig.Logger.Errorf("error cleaning up source before editing: %v", err)
 			util.Error(c, util.ErrorDatabase)
