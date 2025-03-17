@@ -28,6 +28,10 @@ export function deepEquality<T>(a: T, b: T): boolean {
     if (isPrimitive(a) && isPrimitive(b))
         return a === b;
 
+    if (a instanceof Date || b instanceof Date) {
+        return JSON.stringify(a) === JSON.stringify(b);
+    }
+
     if (Object.keys(a as Object).length !== Object.keys(b as Object).length)
         return false;
 

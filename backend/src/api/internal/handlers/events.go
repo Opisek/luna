@@ -253,7 +253,13 @@ func PatchEvent(c *gin.Context) {
 
 	newEventDesc := c.PostForm("desc")
 
-	newEventColor, colErr := types.ParseColor(c.PostForm("color"))
+	var newEventColor *types.Color
+	var colErr error
+	if c.PostForm("color") == "" {
+		newEventColor = event.GetColor()
+	} else {
+		newEventColor, colErr = types.ParseColor(c.PostForm("color"))
+	}
 
 	eventDateAllDay := c.PostForm("date_all_day") == "true"
 
@@ -266,7 +272,7 @@ func PatchEvent(c *gin.Context) {
 	eventDateEnd, endErr := time.Parse(time.RFC3339, eventDateEndStr)
 	eventDateDuration, durationErr := time.ParseDuration(eventDateDurationStr)
 
-	if newEventName == "" && newEventDesc == event.GetDesc() && colErr != nil && startErr != nil && endErr != nil && durationErr != nil {
+	if newEventName == "" && newEventDesc == event.GetDesc() && (newEventColor == event.GetColor() || colErr != nil) && startErr != nil && endErr != nil && durationErr != nil {
 		u.Error(errors.New().Status(http.StatusBadRequest).
 			Append(errors.LvlPlain, "Nothing to change"))
 		return
