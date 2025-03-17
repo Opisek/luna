@@ -114,7 +114,7 @@ func (tx *Transaction) Tables() *tables.Tables {
 
 func (tx *Transaction) Migrations() *types.MigrationQueries {
 	if tx.migrations == nil {
-		tx.migrations = migrations.NewMigrationQueries(tx.tx, tx.db.logger, tx.db.commonConfig, tx.Tables())
+		tx.migrations = migrations.NewMigrationQueries(tx.tx, tx.context, tx.db.logger, tx.db.commonConfig, tx.Tables())
 	}
 	return tx.migrations
 }

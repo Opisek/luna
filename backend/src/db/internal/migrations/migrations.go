@@ -1,6 +1,7 @@
 package migrations
 
 import (
+	"context"
 	"luna-backend/common"
 	"luna-backend/db/internal/migrations/internal/registry"
 	_ "luna-backend/db/internal/migrations/internal/versions"
@@ -12,9 +13,10 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func NewMigrationQueries(tx pgx.Tx, logger *logrus.Entry, commonConfig *common.CommonConfig, tables *tables.Tables) *types.MigrationQueries {
+func NewMigrationQueries(tx pgx.Tx, context context.Context, logger *logrus.Entry, commonConfig *common.CommonConfig, tables *tables.Tables) *types.MigrationQueries {
 	return &types.MigrationQueries{
 		Tx:           tx,
+		Context:      context,
 		Logger:       logger,
 		CommonConfig: commonConfig,
 		Tables:       tables,
