@@ -2,24 +2,40 @@ package net
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"luna-backend/auth"
+	"luna-backend/errors"
 	"luna-backend/types"
 	"net/http"
 )
 
-func FetchFile(url *types.Url, auth auth.AuthMethod, ctx context.Context) (io.Reader, error) {
+func FetchFile(url *types.Url, auth auth.AuthMethod, ctx context.Context) (io.Reader, *errors.ErrorTrace) {
 	req, err := http.NewRequest("GET", url.String(), nil)
 	if err != nil {
-		return nil, fmt.Errorf("could not fetch resource: %v", err)
+		return nil, errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not create request").
+			Append(errors.LvlWordy, "Could not fetch resource from %v", url).
+			AltStr(errors.LvlPlain, "Could not fetch resource")
 	}
 
 	req = req.WithContext(ctx)
 
 	res, err := auth.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("could not fetch resource: %v", err)
+		return nil, errors.InterpretRemoteError(err, "file", "remote file").
+			Append(errors.LvlDebug, "Could not fulfill request").
+			Append(errors.LvlWordy, "Could not fetch resource from %v", url).
+			AltStr(errors.LvlPlain, "Could not fetch resource")
+	}
+
+	if res.StatusCode != http.StatusOK {
+		return nil, errors.New().Status(res.StatusCode).
+			Append(errors.LvlPlain, res.Status).
+			Append(errors.LvlWordy, "Error %v", res.StatusCode).
+			Append(errors.LvlDebug, "Server returned an error code").
+			Append(errors.LvlWordy, "Could not fetch resource from %v", url).
+			AltStr(errors.LvlPlain, "Could not fetch resource")
 	}
 
 	return res.Body, nil

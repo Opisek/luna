@@ -1,11 +1,16 @@
 package queries
 
 import (
-	"fmt"
+	"luna-backend/errors"
 	"luna-backend/types"
+	"net/http"
+
+	"github.com/jackc/pgx/v5"
 )
 
-func (q *Queries) GetPassword(id types.ID) (*types.PasswordEntry, error) {
+// Password errors are kept vague for security purposes.
+
+func (q *Queries) GetPassword(userId types.ID) (*types.PasswordEntry, *errors.ErrorTrace) {
 	var err error
 
 	entry := &types.PasswordEntry{}
@@ -16,16 +21,22 @@ func (q *Queries) GetPassword(id types.ID) (*types.PasswordEntry, error) {
 		SELECT hash, salt, algorithm, parameters
 		FROM passwords
 		WHERE userid = $1;
-		`, id.UUID(),
+		`, userId.UUID(),
 	).Scan(&entry.Hash, &entry.Salt, &entry.Algorithm, &entry.Parameters)
 
-	if err != nil {
-		return nil, fmt.Errorf("could not get password information of user %v: %v", id, err)
+	switch err {
+	case nil:
+		return entry, nil
+	case pgx.ErrNoRows:
+		fallthrough // for security reasons, we should not return overly detailed errors here
+	default:
+		return nil, errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not get password information for user %v", userId)
 	}
-	return entry, nil
 }
 
-func (q *Queries) InsertPassword(userId types.ID, entry *types.PasswordEntry) error {
+func (q *Queries) InsertPassword(userId types.ID, entry *types.PasswordEntry) *errors.ErrorTrace {
 	var err error
 
 	_, err = q.Tx.Exec(
@@ -38,12 +49,15 @@ func (q *Queries) InsertPassword(userId types.ID, entry *types.PasswordEntry) er
 	)
 
 	if err != nil {
-		return fmt.Errorf("could not insert password information of user %v: %v", userId, err)
+		return errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not insert password information for user %v", userId)
 	}
-	return err
+
+	return nil
 }
 
-func (q *Queries) UpdatePassword(userId types.ID, entry *types.PasswordEntry) error {
+func (q *Queries) UpdatePassword(userId types.ID, entry *types.PasswordEntry) *errors.ErrorTrace {
 	var err error
 
 	_, err = q.Tx.Exec(
@@ -57,8 +71,14 @@ func (q *Queries) UpdatePassword(userId types.ID, entry *types.PasswordEntry) er
 		userId.UUID(),
 	)
 
-	if err != nil {
-		return fmt.Errorf("could not update password information of user %v: %v", userId, err)
+	switch err {
+	case nil:
+		return nil
+	case pgx.ErrNoRows:
+		fallthrough // for security reasons, we should not return overly detailed errors here
+	default:
+		return errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not update password information for user %v", userId)
 	}
-	return err
 }

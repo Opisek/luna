@@ -2,13 +2,16 @@ package queries
 
 import (
 	"bytes"
-	"fmt"
 	"io"
+	"luna-backend/errors"
 	"luna-backend/types"
+	"net/http"
 	"time"
+
+	"github.com/jackc/pgx/v5"
 )
 
-func (q *Queries) GetFilecache(file types.File) (io.Reader, *time.Time, error) {
+func (q *Queries) GetFilecache(file types.File) (io.Reader, *time.Time, *errors.ErrorTrace) {
 	var content []byte
 	var date time.Time
 
@@ -22,14 +25,30 @@ func (q *Queries) GetFilecache(file types.File) (io.Reader, *time.Time, error) {
 		file.GetId().UUID(),
 	).Scan(&content, &date)
 
+	if err != nil {
+		switch err {
+		case pgx.ErrNoRows:
+			return nil, nil, errors.New().Status(http.StatusNotFound).
+				Append(errors.LvlPlain, "File not found")
+		default:
+			return nil, nil, errors.New().Status(http.StatusInternalServerError).
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlPlain, "Database error")
+		}
+
+	}
+
 	// TODO: read directly from the database instead of into an array first
-	return bytes.NewReader(content), &date, err
+	return bytes.NewReader(content), &date, nil
 }
 
-func (q *Queries) SetFilecache(file types.File, content io.Reader) error {
+func (q *Queries) SetFilecache(file types.File, content io.Reader) *errors.ErrorTrace {
 	buf, err := io.ReadAll(content)
 	if err != nil {
-		return err
+		return errors.New().Status(http.StatusInternalServerError).
+			Append(errors.LvlDebug, "Could not read from buffer").
+			Append(errors.LvlWordy, "Could not save file cache").
+			Append(errors.LvlPlain, "Database error")
 	}
 
 	_, err = q.Tx.Exec(
@@ -44,13 +63,19 @@ func (q *Queries) SetFilecache(file types.File, content io.Reader) error {
 		buf,
 	)
 
-	return err
+	return errors.New().Status(http.StatusInternalServerError).
+		AddErr(errors.LvlDebug, err).
+		Append(errors.LvlWordy, "Could not save file cache").
+		Append(errors.LvlPlain, "Database error")
 }
 
-func (q *Queries) SetFilecacheWithoutId(file types.File, content io.Reader) (types.ID, error) {
+func (q *Queries) SetFilecacheWithoutId(file types.File, content io.Reader) (types.ID, *errors.ErrorTrace) {
 	buf, err := io.ReadAll(content)
 	if err != nil {
-		return types.EmptyId(), err
+		return types.EmptyId(), errors.New().Status(http.StatusInternalServerError).
+			Append(errors.LvlDebug, "Could not read from buffer").
+			Append(errors.LvlWordy, "Could not save new file cache").
+			Append(errors.LvlPlain, "Database error")
 	}
 
 	query := `
@@ -64,15 +89,18 @@ func (q *Queries) SetFilecacheWithoutId(file types.File, content io.Reader) (typ
 	var id types.ID
 	err = q.Tx.QueryRow(q.Context, query, buf).Scan(&id)
 	if err != nil {
-		return types.EmptyId(), fmt.Errorf("could not set filecache without id: %v", err)
+		return types.EmptyId(), errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlWordy, "Could not save new file cache").
+			Append(errors.LvlPlain, "Database error")
 	}
 
 	file.SetId(id)
 
-	return id, err
+	return id, nil
 }
 
-func (q *Queries) DeleteFilecache(file types.File) error {
+func (q *Queries) DeleteFilecache(file types.File) *errors.ErrorTrace {
 	_, err := q.Tx.Exec(
 		q.Context,
 		`
@@ -82,5 +110,15 @@ func (q *Queries) DeleteFilecache(file types.File) error {
 		file.GetId().UUID(),
 	)
 
-	return err
+	switch err {
+	case nil:
+		return nil
+	case pgx.ErrNoRows:
+		return errors.New().Status(http.StatusNotFound).
+			Append(errors.LvlPlain, "File not found")
+	default:
+		return errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlPlain, "Database error")
+	}
 }

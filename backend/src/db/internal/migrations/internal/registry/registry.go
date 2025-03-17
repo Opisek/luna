@@ -3,9 +3,10 @@ package registry
 import (
 	"luna-backend/common"
 	"luna-backend/db/internal/migrations/types"
+	"luna-backend/errors"
 )
 
-type MigrationFunc func(*types.MigrationQueries) error
+type MigrationFunc func(*types.MigrationQueries) *errors.ErrorTrace
 
 type Migration struct {
 	Ver common.Version

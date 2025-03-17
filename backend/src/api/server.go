@@ -2,8 +2,9 @@ package api
 
 import (
 	"fmt"
-	"luna-backend/api/internal/config"
+	middleware "luna-backend/api/internal"
 	"luna-backend/api/internal/handlers"
+	"luna-backend/api/internal/util"
 	"luna-backend/common"
 	"luna-backend/db"
 	"time"
@@ -12,43 +13,32 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func NewApi(db *db.Database, commonConfig *common.CommonConfig, logger *logrus.Entry) *config.Api {
-	return config.NewApi(db, commonConfig, logger, run)
+func NewApi(db *db.Database, commonConfig *common.CommonConfig, logger *logrus.Entry) *util.Api {
+	return util.NewApi(db, commonConfig, logger, run)
 }
 
-func run(api *config.Api) {
+func run(api *util.Api) {
 	router := gin.Default()
-	router.Use(func(c *gin.Context) {
-		c.Set("apiConfig", api)
-		c.Next()
-	})
 	rawEndpoints := router.Group("/api")
 
 	// /api/* (with no transactions)
-	noDatabaseEndpoints := rawEndpoints.Group("",
-		handlers.ContextMiddleware(3*time.Second),
-		gin.Recovery(),
-	)
+	noDatabaseEndpoints := rawEndpoints.Group("", middleware.RequestSetup(3*time.Second, api.Db, false, api.CommonConfig, api.Logger))
 
 	noDatabaseEndpoints.GET("/version", handlers.GetVersion)
 
 	// /api/* (long-running authentication)
-	authenticationEndpoints := rawEndpoints.Group("",
-		handlers.ContextMiddleware(20*time.Second),
-		gin.Recovery(),
-		handlers.TransactionMiddleware(),
-	)
+	authenticationEndpoints := rawEndpoints.Group("", middleware.RequestSetup(30*time.Second, api.Db, true, api.CommonConfig, api.Logger))
 
 	authenticationEndpoints.POST("/login", handlers.Login)
 	authenticationEndpoints.POST("/register", handlers.Register)
 
 	// /api/* the rest
-	endpoints := noDatabaseEndpoints.Group("", handlers.TransactionMiddleware())
+	endpoints := rawEndpoints.Group("", middleware.RequestSetup(3*time.Second, api.Db, true, api.CommonConfig, api.Logger))
 
 	endpoints.GET("/health", handlers.GetHealth)
 
 	// everything past here requires the user to be logged in
-	authenticatedEndpoints := endpoints.Group("", handlers.AuthMiddleware())
+	authenticatedEndpoints := endpoints.Group("", middleware.RequestAuth())
 
 	// /api/sources/*
 	sourcesEndpoints := authenticatedEndpoints.Group("/sources")

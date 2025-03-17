@@ -1,14 +1,14 @@
 package versions
 
 import (
-	"fmt"
 	"luna-backend/common"
 	"luna-backend/db/internal/migrations/internal/registry"
 	"luna-backend/db/internal/migrations/types"
+	"luna-backend/errors"
 )
 
 func init() {
-	registry.RegisterMigration(common.Ver(0, 1, 0), func(q *types.MigrationQueries) error {
+	registry.RegisterMigration(common.Ver(0, 1, 0), func(q *types.MigrationQueries) *errors.ErrorTrace {
 		// Support for UUID and encryption
 		_, err := q.Tx.Exec(
 			q.Context,
@@ -18,7 +18,9 @@ func init() {
 		)
 
 		if err != nil {
-			return fmt.Errorf("could not create extension pgcrypto: %v", err)
+			return errors.New().
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlDebug, "Could not create extension pgcrypto")
 		}
 
 		// Sources enum
@@ -32,7 +34,9 @@ func init() {
 			`,
 		)
 		if err != nil {
-			return fmt.Errorf("could not create SOURCE_TYPE enum: %v", err)
+			return errors.New().
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlDebug, "Could not create SOURCE_TYPE enum")
 		}
 
 		// Auth enum
@@ -47,43 +51,59 @@ func init() {
 			`,
 		)
 		if err != nil {
-			return fmt.Errorf("could not create AUTH_TYPE enum: %v", err)
+			return errors.New().
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlDebug, "Could not create AUTH_TYPE enum")
 		}
 
 		// Tables
 		err = q.Tables.InitializeVersionTable()
 		if err != nil {
-			return fmt.Errorf("could not initialize version table: %v", err)
+			return errors.New().
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlDebug, "Could not initialize version table")
 		}
 
 		err = q.Tables.InitializeUsersTable()
 		if err != nil {
-			return fmt.Errorf("could not initialize users table: %v", err)
+			return errors.New().
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlDebug, "Could not initialize users table")
 		}
 
 		err = q.Tables.InitializePasswordsTable()
 		if err != nil {
-			return fmt.Errorf("could not initialize passwords table: %v", err)
+			return errors.New().
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlDebug, "Could not initialize passwords table")
 		}
 
 		err = q.Tables.InitializeSourcesTable()
 		if err != nil {
-			return fmt.Errorf("could not initialize sources table: %v", err)
+			return errors.New().
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlDebug, "Could not initialize sources table")
 		}
 
 		err = q.Tables.InitializeCalendarsTable()
 		if err != nil {
-			return fmt.Errorf("could not initialize calendars table: %v", err)
+			return errors.New().
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlDebug, "Could not initialize calendars table")
 		}
 
 		err = q.Tables.InitializeEventsTable()
 		if err != nil {
-			return fmt.Errorf("could not initialize events table: %v", err)
+			return errors.New().
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlDebug, "Could not initialize events table")
 		}
 
 		err = q.Tables.InitializeFilecacheTable()
 		if err != nil {
-			return fmt.Errorf("could not initialize filecache table: %v", err)
+			return errors.New().
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlDebug, "Could not initialize filecache table")
 		}
 
 		return nil

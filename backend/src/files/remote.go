@@ -2,13 +2,14 @@ package files
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"luna-backend/auth"
 	"luna-backend/common"
 	"luna-backend/crypto"
+	"luna-backend/errors"
 	"luna-backend/net"
 	"luna-backend/types"
+	"net/http"
 	"time"
 )
 
@@ -32,10 +33,12 @@ func (file *RemoteFile) SetId(id types.ID) {
 	panic("illegal operation")
 }
 
-func (file *RemoteFile) fetchContentFromRemote(q types.DatabaseQueries) (io.Reader, error) {
+func (file *RemoteFile) fetchContentFromRemote(q types.DatabaseQueries) (io.Reader, *errors.ErrorTrace) {
 	content, err := net.FetchFile(file.url, file.auth, q.GetContext())
 	if err != nil {
-		return nil, fmt.Errorf("could not fetch remote file content: %w", err)
+		return nil, err.
+			Append(errors.LvlDebug, "Could not read from remote").
+			Append(errors.LvlPlain, "Could not read contents of file")
 	}
 
 	// TODO: don't use local buffer, instead run the database query in a
@@ -51,18 +54,20 @@ func (file *RemoteFile) fetchContentFromRemote(q types.DatabaseQueries) (io.Read
 	return &buf, nil
 }
 
-func (file *RemoteFile) fetchContentFromDatabase(q types.DatabaseQueries) (io.Reader, *time.Time, error) {
+func (file *RemoteFile) fetchContentFromDatabase(q types.DatabaseQueries) (io.Reader, *time.Time, *errors.ErrorTrace) {
 	content, date, err := q.GetFilecache(file)
 	if err != nil {
-		return nil, nil, fmt.Errorf("could not get file content from database: %w", err)
+		return nil, nil, err.
+			Append(errors.LvlDebug, "Could not get file %v from the database", file.GetId()).
+			AltStr(errors.LvlPlain, "Could not get file from the database")
 	}
 	return content, date, nil
 }
 
-func (file *RemoteFile) GetContent(q types.DatabaseQueries) (io.Reader, error) {
+func (file *RemoteFile) GetContent(q types.DatabaseQueries) (io.Reader, *errors.ErrorTrace) {
 	curTime := time.Now()
 
-	var err error
+	var tr *errors.ErrorTrace
 	var reader io.Reader
 
 	// Try to get from the database first
@@ -78,31 +83,37 @@ func (file *RemoteFile) GetContent(q types.DatabaseQueries) (io.Reader, error) {
 		deltaTime := curTime.Sub(*file.date)
 
 		if deltaTime >= common.LifetimeCacheSoft {
-			reader, err = file.fetchContentFromRemote(q)
+			reader, tr = file.fetchContentFromRemote(q)
 
-			if err == nil {
+			if tr == nil {
 				file.date = &curTime
 			} else if deltaTime >= common.LifetimeCacheHard {
-				return nil, fmt.Errorf("could not get file content: %w", err)
+				return nil, tr
 			}
 		}
 	} else {
-		reader, err = file.fetchContentFromRemote(q)
-		if err != nil {
-			return nil, fmt.Errorf("could not get file content: %w", err)
+		reader, tr = file.fetchContentFromRemote(q)
+		if tr != nil {
+			return nil, tr
 		}
 		file.date = &curTime
 	}
 
 	// TODO: figure out a proper way to use a reader without ending up saving the whole content to an array in the process
+	var err error
 	file.content, err = io.ReadAll(reader)
-	if err != nil {
-		return nil, fmt.Errorf("could not read file content: %w", err)
+	if tr != nil {
+		return nil, errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not read from buffer").
+			Append(errors.LvlDebug, "Could not read contents of file %v at %v", file.GetId(), file.url).
+			AltStr(errors.LvlWordy, "Could not read contents of file at %v", file.url).
+			AltStr(errors.LvlPlain, "Could not read contents of file")
 	}
 	return bytes.NewReader(file.content), nil
 }
 
-func (file *RemoteFile) ForceFetchFromRemote(q types.DatabaseQueries) error {
+func (file *RemoteFile) ForceFetchFromRemote(q types.DatabaseQueries) *errors.ErrorTrace {
 	_, err := file.fetchContentFromRemote(q)
 	return err
 }

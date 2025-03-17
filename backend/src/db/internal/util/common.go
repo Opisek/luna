@@ -2,24 +2,31 @@ package util
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"luna-backend/crypto"
+	"luna-backend/errors"
+	"net/http"
 	"strings"
 
 	"github.com/jackc/pgx/v5"
 )
 
-func CopyAndUpdate(tx pgx.Tx, context context.Context, tableName string, columnNames []string, updateColumns []string, rows [][]any) error {
-	randomNumber, err := crypto.GenerateRandomNumber()
-	if err != nil {
-		return fmt.Errorf("could not copy into table %v: %v", tableName, err)
+func CopyAndUpdate(tx pgx.Tx, context context.Context, tableName string, columnNames []string, updateColumns []string, rows [][]any) *errors.ErrorTrace {
+	randomNumber, tr := crypto.GenerateRandomNumber()
+	if tr != nil {
+		return tr.
+			Append(errors.LvlDebug, "Could not copy into table %v", tableName).
+			Append(errors.LvlPlain, "Database error")
 	}
 
 	if !isSafe(tableName) {
-		return errors.New("could not copy into table: table name contains illegal substrings")
+		// server error, because we never let the user decide the table name in the first place
+		return errors.New().Status(http.StatusInternalServerError).
+			Append(errors.LvlDebug, "Table name %v failed vaildation", tableName).
+			Append(errors.LvlDebug, "Could not copy into table %v", tableName).
+			Append(errors.LvlPlain, "Database error")
 	}
-	tpmTableName := fmt.Sprintf("temp_%v_%v", tableName, randomNumber)
+	tmpTableName := fmt.Sprintf("temp_%v_%v", tableName, randomNumber)
 
 	query := fmt.Sprintf(
 		`
@@ -27,26 +34,34 @@ func CopyAndUpdate(tx pgx.Tx, context context.Context, tableName string, columnN
 			LIKE %s INCLUDING ALL	
 		)	ON COMMIT DELETE ROWS;
 		`,
-		tpmTableName,
+		tmpTableName,
 		tableName,
 	)
 
-	_, err = tx.Exec(
+	_, err := tx.Exec(
 		context,
 		query,
 	)
 	if err != nil {
-		return fmt.Errorf("could not copy into table %v: could not create temporary table %v: %v", tableName, tpmTableName, err)
+		return errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not create temporary table %v", tmpTableName).
+			Append(errors.LvlDebug, "Could not copy into table %v", tableName).
+			Append(errors.LvlPlain, "Database error")
 	}
 
 	_, err = tx.CopyFrom(
 		context,
-		pgx.Identifier{tpmTableName},
+		pgx.Identifier{tmpTableName},
 		columnNames,
 		pgx.CopyFromRows(rows),
 	)
 	if err != nil {
-		return fmt.Errorf("could not copy into table %v: could not copy into temporary table %v: %v", tableName, tpmTableName, err)
+		return errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not copy into temporary table %v", tmpTableName).
+			Append(errors.LvlDebug, "Could not copy into table %v", tableName).
+			Append(errors.LvlPlain, "Database error")
 	}
 
 	for i, column := range updateColumns {
@@ -64,7 +79,7 @@ func CopyAndUpdate(tx pgx.Tx, context context.Context, tableName string, columnN
 			SET %s;
 		`,
 		tableName,
-		tpmTableName,
+		tmpTableName,
 		updateString,
 	)
 
@@ -73,7 +88,11 @@ func CopyAndUpdate(tx pgx.Tx, context context.Context, tableName string, columnN
 		query,
 	)
 	if err != nil {
-		return fmt.Errorf("could not copy into table %v: could not update with values from temporary table %v: %v", tableName, tpmTableName, err)
+		return errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not update with values from temporary table %v", tmpTableName).
+			Append(errors.LvlDebug, "Could not copy into table %v", tableName).
+			Append(errors.LvlPlain, "Database error")
 	}
 
 	return nil

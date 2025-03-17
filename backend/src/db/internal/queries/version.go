@@ -1,11 +1,12 @@
 package queries
 
 import (
-	"fmt"
 	"luna-backend/common"
+	"luna-backend/errors"
+	"net/http"
 )
 
-func (q *Queries) GetLatestVersion() (common.Version, error) {
+func (q *Queries) GetLatestVersion() (common.Version, *errors.ErrorTrace) {
 	var err error
 
 	var rowCount int
@@ -17,7 +18,10 @@ func (q *Queries) GetLatestVersion() (common.Version, error) {
 		`,
 	).Scan(&rowCount)
 	if err != nil {
-		return common.Version{}, fmt.Errorf("could not get latest version: %v", err)
+		return common.Version{}, errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlWordy, "Could not check saved versions").
+			Append(errors.LvlPlain, "Database error")
 	}
 
 	if rowCount == 0 {
@@ -36,13 +40,16 @@ func (q *Queries) GetLatestVersion() (common.Version, error) {
 		`,
 	).Scan(&version.Major, &version.Minor, &version.Patch, &version.Extension)
 	if err != nil {
-		return common.EmptyVersion(), fmt.Errorf("could not get latest version: %v", err)
+		return common.EmptyVersion(), errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlWordy, "Could not get last used version").
+			Append(errors.LvlPlain, "Database error")
 	}
 
 	return version, nil
 }
 
-func (q *Queries) UpdateVersion(version common.Version) error {
+func (q *Queries) UpdateVersion(version common.Version) *errors.ErrorTrace {
 	q.Logger.Warnf("updating version to %v", version.String())
 	_, err := q.Tx.Exec(
 		q.Context,
@@ -56,7 +63,10 @@ func (q *Queries) UpdateVersion(version common.Version) error {
 		version.Extension,
 	)
 	if err != nil {
-		return fmt.Errorf("could not update version: %v", err)
+		return errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlWordy, "Could not update used version").
+			Append(errors.LvlPlain, "Database error")
 	}
 
 	return nil

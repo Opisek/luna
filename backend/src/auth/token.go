@@ -1,10 +1,11 @@
 package auth
 
 import (
-	"fmt"
 	"luna-backend/common"
 	"luna-backend/crypto"
+	"luna-backend/errors"
 	"luna-backend/types"
+	"net/http"
 
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -14,31 +15,42 @@ type JsonWebToken struct {
 	jwt.RegisteredClaims
 }
 
-func NewToken(commonConfig *common.CommonConfig, userId types.ID) (string, error) {
+func NewToken(commonConfig *common.CommonConfig, userId types.ID) (string, *errors.ErrorTrace) {
 	token := JsonWebToken{UserId: userId}
 
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS512, token)
 
-	key, err := crypto.GetSymmetricKey(commonConfig, "token")
-	if err != nil {
-		return "", fmt.Errorf("could not get token key: %v", err)
+	key, tr := crypto.GetSymmetricKey(commonConfig, "token")
+	if tr != nil {
+		return "", tr
 	}
-	return jwtToken.SignedString(key)
+
+	signedToken, err := jwtToken.SignedString(key)
+	if err != nil {
+		return "", errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlWordy, "Could not sign token")
+	}
+
+	return signedToken, nil
 }
 
-func ParseToken(commonConfig *common.CommonConfig, tokenString string) (*JsonWebToken, error) {
+func ParseToken(commonConfig *common.CommonConfig, tokenString string) (*JsonWebToken, *errors.ErrorTrace) {
 	token := &JsonWebToken{}
 
 	_, err := jwt.ParseWithClaims(tokenString, token, func(token *jwt.Token) (interface{}, error) {
-		key, err := crypto.GetSymmetricKey(commonConfig, "token")
-		if err != nil {
-			return nil, fmt.Errorf("could not get token key: %v", err)
+		key, tr := crypto.GetSymmetricKey(commonConfig, "token")
+		if tr != nil {
+			return nil, tr.SerializeError(commonConfig.DetailLevel)
 		}
 		return key, nil
 	})
+
 	if err != nil {
-		return nil, fmt.Errorf("could not parse token: %v", err)
+		return nil, errors.New().Status(http.StatusUnauthorized).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not parse token")
 	}
 
-	return token, err
+	return token, nil
 }

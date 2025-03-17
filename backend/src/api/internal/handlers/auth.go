@@ -1,90 +1,112 @@
 package handlers
 
 import (
-	"fmt"
-	"luna-backend/api/internal/context"
 	"luna-backend/api/internal/util"
 	"luna-backend/auth"
+	"luna-backend/errors"
 	"luna-backend/types"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
+// Error messages are intentionally kept vague in lower verbosity levels,
+// because detailed error messages about authenticatino checks might pose a
+// security risk.
+
 func Login(c *gin.Context) {
 	// Parsing
-	apiConfig := context.GetConfig(c)
-	tx := context.GetTransaction(c)
-	defer tx.Rollback(apiConfig.Logger)
+	u := util.GetUtil(c)
 
 	credentials := auth.BasicAuth{}
 	if err := c.ShouldBind(&credentials); err != nil {
-		apiConfig.Logger.Warn(err)
-		util.Error(c, util.ErrorPayload)
+		u.Error(errors.New().Status(http.StatusBadRequest).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not parse credentials").
+			Append(errors.LvlWordy, "Malformed request").
+			Append(errors.LvlBroad, "Could not log in"),
+		)
 		return
 	}
-	topErr := fmt.Errorf("failed to log in with credentials %v, %v", credentials.Username, credentials.Password)
 
-	if util.IsValidUsername(credentials.Username) != nil || util.IsValidPassword(credentials.Password) != nil {
-		apiConfig.Logger.Warnf("%v: user input failed validation", topErr)
-		util.Error(c, util.ErrorPayload)
+	usernameErr := util.IsValidUsername(credentials.Username)
+	passwordErr := util.IsValidPassword(credentials.Password)
+	if usernameErr != nil || passwordErr != nil {
+		u.Error(errors.New().Status(http.StatusBadRequest).
+			AddErr(errors.LvlDebug, usernameErr).AndErr(passwordErr).
+			Append(errors.LvlDebug, "Input did not pass validation").
+			Append(errors.LvlWordy, "Malformed request").
+			Append(errors.LvlBroad, "Could not log in"),
+		)
 		return
 	}
 
 	// Check if the user exists
-	userId, err := tx.Queries().GetUserIdFromUsername(credentials.Username)
+	userId, err := u.Tx.Queries().GetUserIdFromUsername(credentials.Username)
 	if err != nil {
-		apiConfig.Logger.Warnf("%v: could not get user id for user %v: %v", topErr, credentials.Username, err)
-		util.Error(c, util.ErrorInvalidCredentials)
+		u.Error(err.Status(http.StatusUnauthorized).
+			Append(errors.LvlDebug, "Could not find ID for user %v", credentials.Username).
+			Append(errors.LvlPlain, "Invalid credentials").
+			Append(errors.LvlBroad, "Could not log in"),
+		)
 		return
 	}
 
 	// Get the user's password
-	savedPassword, err := tx.Queries().GetPassword(userId)
+	savedPassword, err := u.Tx.Queries().GetPassword(userId)
 	if err != nil {
-		apiConfig.Logger.Errorf("%v: could not get password for user %v: %v", topErr, credentials.Username, err)
-		util.Error(c, util.ErrorInvalidCredentials)
+		u.Error(err.Status(http.StatusUnauthorized).
+			Append(errors.LvlDebug, "Could not get password for user %v", userId.String()).
+			Append(errors.LvlPlain, "Invalid credentials").
+			Append(errors.LvlBroad, "Could not log in"),
+		)
 		return
 	}
 
 	// Verify the password
 	if !auth.VerifyPassword(credentials.Password, savedPassword) {
-		apiConfig.Logger.Warnf("%v: passwords do not match", topErr)
-		util.Error(c, util.ErrorInvalidCredentials)
+		u.Error(errors.New().Status(http.StatusUnauthorized).
+			Append(errors.LvlDebug, "Wrong password").
+			Append(errors.LvlPlain, "Invalid credentials").
+			Append(errors.LvlBroad, "Could not log in"),
+		)
 		return
 	}
 
 	// Silently update the user's password to a newer algorithm if applicable
 	if !auth.PasswordStillSecure(savedPassword) {
-		apiConfig.Logger.Infof("updating password %v for user to newer algorithm", credentials.Username)
+		u.Logger.Infof("updating password %v for user to newer algorithm", credentials.Username)
 		newPassword, err := auth.SecurePassword(credentials.Password)
 		if err != nil {
-			apiConfig.Logger.Errorf("%v: could not hash password: %v", topErr, err)
-			util.Error(c, util.ErrorInternal)
+			u.Error(err.
+				Append(errors.LvlDebug, "Could not rehash password").
+				Append(errors.LvlWordy, "Internal server error").
+				Append(errors.LvlBroad, "Could not log in"),
+			)
 			return
 		}
-		err = tx.Queries().UpdatePassword(userId, newPassword)
+		err = u.Tx.Queries().UpdatePassword(userId, newPassword)
 		if err != nil {
-			apiConfig.Logger.Errorf("%v: could not update password: %v", topErr, err)
-			util.Error(c, util.ErrorDatabase)
+			u.Error(err.
+				Append(errors.LvlDebug, "Could not update password").
+				Append(errors.LvlWordy, "Database error").
+				Append(errors.LvlBroad, "Could not log in"),
+			)
 			return
 		}
 	}
 
 	// Generate the token
-	token, err := auth.NewToken(apiConfig.CommonConfig, userId)
+	token, err := auth.NewToken(u.Config, userId)
 	if err != nil {
-		apiConfig.Logger.Errorf("%v: could not generate token: %v", topErr, err)
-		util.Error(c, util.ErrorInternal)
+		u.Error(err.
+			Append(errors.LvlWordy, "Could not generate token").
+			Append(errors.LvlBroad, "Could not log in"),
+		)
 		return
 	}
 
-	if tx.Commit(apiConfig.Logger) != nil {
-		util.Error(c, util.ErrorDatabase)
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"token": token})
+	u.Success(&gin.H{"token": token})
 }
 
 type registerPayload struct {
@@ -96,28 +118,38 @@ type registerPayload struct {
 // TODO: check if registration is enabled on this instance otherwise we will
 // TODO: have some kind of invite tokens that we will have to verify
 func Register(c *gin.Context) {
-	apiConfig := context.GetConfig(c)
-	tx := context.GetTransaction(c)
-	defer tx.Rollback(apiConfig.Logger)
+	u := util.GetUtil(c)
 
 	payload := registerPayload{}
 	if err := c.ShouldBind(&payload); err != nil {
-		apiConfig.Logger.Warn(err)
-		util.Error(c, util.ErrorPayload)
-		return
-	}
-	topErr := fmt.Errorf("failed to register user %v", payload.Username)
-
-	if util.IsValidUsername(payload.Username) != nil || util.IsValidPassword(payload.Password) != nil || util.IsValidEmail(payload.Email) != nil {
-		apiConfig.Logger.Warnf("%v: user input failed validation", topErr)
-		util.Error(c, util.ErrorPayload)
-		return
+		u.Error(errors.New().Status(http.StatusBadRequest).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not parse payload").
+			Append(errors.LvlWordy, "Malformed request").
+			Append(errors.LvlBroad, "Could not register"),
+		)
 	}
 
-	usersExist, err := tx.Queries().AnyUsersExist()
+	usernameErr := util.IsValidUsername(payload.Username)
+	passwordErr := util.IsValidPassword(payload.Password)
+	emailErr := util.IsValidEmail(payload.Email)
+	if usernameErr != nil && passwordErr != nil && emailErr != nil {
+		u.Error(errors.New().Status(http.StatusBadRequest).
+			AddErr(errors.LvlDebug, usernameErr).AndErr(passwordErr).AndErr(emailErr).
+			Append(errors.LvlDebug, "Input did not pass validation").
+			Append(errors.LvlWordy, "Malformed request").
+			Append(errors.LvlPlain, "Could not register"),
+		)
+		return
+	}
+
+	usersExist, err := u.Tx.Queries().AnyUsersExist()
 	if err != nil {
-		apiConfig.Logger.Errorf("%v: could not check if users exist: %v", topErr, err)
-		util.Error(c, util.ErrorDatabase)
+		u.Error(err.
+			Append(errors.LvlDebug, "Could not check if any users exist").
+			Append(errors.LvlWordy, "Database error").
+			Append(errors.LvlBroad, "Could not register"),
+		)
 		return
 	}
 
@@ -127,39 +159,42 @@ func Register(c *gin.Context) {
 		Admin:    !usersExist,
 	}
 
-	userId, err := tx.Queries().AddUser(user)
+	userId, err := u.Tx.Queries().AddUser(user)
 	if err != nil {
-		apiConfig.Logger.Errorf("%v: could not add user: %v", topErr, err)
-		util.Error(c, util.ErrorDatabase)
+		u.Error(err.
+			Append(errors.LvlBroad, "Could not register"),
+		)
 		return
 	}
 
 	securedPassword, err := auth.SecurePassword(payload.Password)
 	if err != nil {
-		apiConfig.Logger.Errorf("%v: could not hash password: %v", topErr, err)
-		util.Error(c, util.ErrorInternal)
+		u.Error(err.
+			Append(errors.LvlDebug, "Could not hash password").
+			Append(errors.LvlWordy, "Internal server error").
+			Append(errors.LvlBroad, "Could not register"),
+		)
 		return
 	}
 
-	err = tx.Queries().InsertPassword(user.Id, securedPassword)
+	err = u.Tx.Queries().InsertPassword(user.Id, securedPassword)
 	if err != nil {
-		apiConfig.Logger.Errorf("%v: could not insert password: %v", topErr, err)
-		util.Error(c, util.ErrorDatabase)
+		u.Error(err.
+			Append(errors.LvlDebug, "Could not insert password").
+			Append(errors.LvlWordy, "Internal server error").
+			Append(errors.LvlBroad, "Could not register"),
+		)
 		return
 	}
 
 	// Generate the token
-	token, err := auth.NewToken(apiConfig.CommonConfig, userId)
+	token, err := auth.NewToken(u.Config, userId)
 	if err != nil {
-		apiConfig.Logger.Errorf("%v: could not generate token: %v", topErr, err)
-		util.Error(c, util.ErrorInternal)
-		return
+		u.Error(err.
+			Append(errors.LvlWordy, "Could not generate token").
+			Append(errors.LvlBroad, "Could not log in"),
+		)
 	}
 
-	if tx.Commit(apiConfig.Logger) != nil {
-		util.Error(c, util.ErrorDatabase)
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"token": token})
+	u.Success(&gin.H{"token": token})
 }

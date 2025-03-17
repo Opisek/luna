@@ -2,11 +2,12 @@ package ical
 
 import (
 	"encoding/json"
-	"fmt"
 	"luna-backend/crypto"
+	"luna-backend/errors"
 	"luna-backend/interface/primitives"
 	common "luna-backend/interface/protocols/internal"
 	"luna-backend/types"
+	"net/http"
 	"time"
 
 	"github.com/emersion/go-ical"
@@ -24,7 +25,7 @@ type IcalCalendar struct {
 type IcalCalendarSettings struct {
 }
 
-func (source *IcalSource) calendarFromIcal(rawCalendar *ical.Calendar) (*IcalCalendar, error) {
+func (source *IcalSource) calendarFromIcal(rawCalendar *ical.Calendar) (*IcalCalendar, *errors.ErrorTrace) {
 	name := rawCalendar.Props.Get(ical.PropName)
 	if name == nil {
 		name = rawCalendar.Props.Get("X-WR-CALNAME")
@@ -112,7 +113,7 @@ func (calendar *IcalCalendar) SetColor(color *types.Color) {
 	calendar.color = color
 }
 
-func (calendar *IcalCalendar) GetEvents(start time.Time, end time.Time, q types.DatabaseQueries) ([]primitives.Event, error) {
+func (calendar *IcalCalendar) GetEvents(start time.Time, end time.Time, q types.DatabaseQueries) ([]primitives.Event, *errors.ErrorTrace) {
 	res := make([]primitives.Event, len(calendar.icalCalendar.Children))
 
 	count := 0
@@ -123,7 +124,11 @@ func (calendar *IcalCalendar) GetEvents(start time.Time, end time.Time, q types.
 
 		event, err := calendar.eventFromIcal(&comp.Props)
 		if err != nil {
-			return nil, err
+			return nil, err.
+				Append(errors.LvlDebug, "Could not parse event from calendar %v (%v)", calendar.GetName(), calendar.GetId()).
+				AltStr(errors.LvlWordy, "Could not parse event from calendar %v", calendar.GetId()).
+				Append(errors.LvlDebug, "Could not get events from calendar %v (%v)", calendar.GetName(), calendar.GetId()).
+				AltStr(errors.LvlPlain, "Could not get events from calendar %v", calendar.GetName())
 		}
 
 		if !event.GetDate().Recurrence().Repeats() && (event.GetDate().Start().Before(start) || event.GetDate().End().After(end)) {
@@ -136,7 +141,7 @@ func (calendar *IcalCalendar) GetEvents(start time.Time, end time.Time, q types.
 	return res[:count], nil
 }
 
-func (calendar *IcalCalendar) GetEvent(settings primitives.EventSettings, q types.DatabaseQueries) (primitives.Event, error) {
+func (calendar *IcalCalendar) GetEvent(settings primitives.EventSettings, q types.DatabaseQueries) (primitives.Event, *errors.ErrorTrace) {
 	icalSettings := settings.(*IcalEventSettings)
 	targetUid := icalSettings.Uid
 
@@ -147,7 +152,11 @@ func (calendar *IcalCalendar) GetEvent(settings primitives.EventSettings, q type
 
 		event, err := calendar.eventFromIcal(&comp.Props)
 		if err != nil {
-			return nil, err
+			return nil, err.
+				Append(errors.LvlDebug, "Could not parse event %v in calendar %v (%v)", icalSettings.Uid, calendar.GetName(), calendar.GetId()).
+				AltStr(errors.LvlWordy, "Could not parse event %v in calendar %v", icalSettings.Uid, calendar.GetName()).
+				Append(errors.LvlDebug, "Could not get event in calendar %v (%v)", calendar.GetName(), calendar.GetId()).
+				AltStr(errors.LvlPlain, "Could not get event in calendar %v", calendar.GetName())
 		}
 
 		if event.GetSettings().(*IcalEventSettings).Uid == targetUid {
@@ -155,19 +164,21 @@ func (calendar *IcalCalendar) GetEvent(settings primitives.EventSettings, q type
 		}
 	}
 
-	return nil, fmt.Errorf("event not found")
+	return nil, errors.New().Status(http.StatusNotFound).
+		Append(errors.LvlWordy, "Event %v not found", icalSettings.Uid).
+		AltStr(errors.LvlPlain, "Event not found")
 }
 
 /* Ical calendar is read-only */
 
-func (calendar *IcalCalendar) AddEvent(name string, desc string, color *types.Color, date *types.EventDate, q types.DatabaseQueries) (primitives.Event, error) {
-	return nil, fmt.Errorf("not supported")
+func (calendar *IcalCalendar) AddEvent(name string, desc string, color *types.Color, date *types.EventDate, q types.DatabaseQueries) (primitives.Event, *errors.ErrorTrace) {
+	return nil, errors.New().Status(http.StatusMethodNotAllowed)
 }
 
-func (calendar *IcalCalendar) EditEvent(originalEvent primitives.Event, name string, desc string, color *types.Color, date *types.EventDate, q types.DatabaseQueries) (primitives.Event, error) {
-	return nil, fmt.Errorf("not supported")
+func (calendar *IcalCalendar) EditEvent(originalEvent primitives.Event, name string, desc string, color *types.Color, date *types.EventDate, q types.DatabaseQueries) (primitives.Event, *errors.ErrorTrace) {
+	return nil, errors.New().Status(http.StatusMethodNotAllowed)
 }
 
-func (calendar *IcalCalendar) DeleteEvent(event primitives.Event, q types.DatabaseQueries) error {
-	return fmt.Errorf("not supported")
+func (calendar *IcalCalendar) DeleteEvent(event primitives.Event, q types.DatabaseQueries) *errors.ErrorTrace {
+	return errors.New().Status(http.StatusMethodNotAllowed)
 }

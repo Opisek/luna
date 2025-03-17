@@ -2,6 +2,7 @@ package parsing
 
 import (
 	"fmt"
+	"luna-backend/errors"
 	"luna-backend/interface/primitives"
 	"luna-backend/types"
 	"reflect"
@@ -109,28 +110,24 @@ func (s *PgxScanner) GetEventEntry() *types.EventDatabaseEntry {
 	return s.event
 }
 
-func (s *PgxScanner) GetSource() (primitives.Source, error) {
-	source, err := s.primitivesParser.ParseSource(s.source)
-	if err != nil {
-		return nil, fmt.Errorf("could not get source: %v", err)
-	}
-	return source, nil
+func (s *PgxScanner) GetSource() (primitives.Source, *errors.ErrorTrace) {
+	return s.primitivesParser.ParseSource(s.source)
 }
 
-func (s *PgxScanner) GetCalendar() (primitives.Calendar, error) {
+func (s *PgxScanner) GetCalendar() (primitives.Calendar, *errors.ErrorTrace) {
 	source, err := s.GetSource()
 	if err != nil {
-		return nil, fmt.Errorf("could not get calendar: %v", err)
+		return nil, err
 	}
 
 	settings, err := s.primitivesParser.ParseCalendarSettings(source.GetType(), s.calendar.Settings)
 	if err != nil {
-		return nil, fmt.Errorf("could not get calendar:  %v", err)
+		return nil, err
 	}
 
 	calendar, err := source.GetCalendar(settings, s.queries)
 	if err != nil {
-		return nil, fmt.Errorf("could not get calendar: %v", err)
+		return nil, err
 	}
 
 	if calendar.GetColor() == nil {
@@ -140,20 +137,20 @@ func (s *PgxScanner) GetCalendar() (primitives.Calendar, error) {
 	return calendar, nil
 }
 
-func (s *PgxScanner) GetEvent() (primitives.Event, error) {
+func (s *PgxScanner) GetEvent() (primitives.Event, *errors.ErrorTrace) {
 	calendar, err := s.GetCalendar()
 	if err != nil {
-		return nil, fmt.Errorf("could not parse event: %v", err)
+		return nil, err
 	}
 
 	settings, err := s.primitivesParser.ParseEventSettings(calendar.GetSource().GetType(), s.event.Settings)
 	if err != nil {
-		return nil, fmt.Errorf("could not parse event: %v", err)
+		return nil, err
 	}
 
 	event, err := calendar.GetEvent(settings, s.queries)
 	if err != nil {
-		return nil, fmt.Errorf("could not parse event: %v", err)
+		return nil, err
 	}
 
 	if event.GetColor() == nil {

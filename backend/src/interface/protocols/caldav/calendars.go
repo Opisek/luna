@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"luna-backend/crypto"
+	"luna-backend/errors"
 	"luna-backend/interface/primitives"
 	common "luna-backend/interface/protocols/internal"
 	"luna-backend/types"
+	"net/http"
 	"time"
 
 	"github.com/emersion/go-ical"
@@ -27,10 +29,13 @@ type CaldavCalendarSettings struct {
 	rawCalendar caldav.Calendar `json:"-"`
 }
 
-func (source *CaldavSource) calendarFromCaldav(rawCalendar caldav.Calendar) (*CaldavCalendar, error) {
+func (source *CaldavSource) calendarFromCaldav(rawCalendar caldav.Calendar) (*CaldavCalendar, *errors.ErrorTrace) {
 	url, err := types.NewUrl(rawCalendar.Path)
 	if err != nil {
-		return nil, fmt.Errorf("could not parse calendar URL %v: %w", rawCalendar.Path, err)
+		return nil, errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not parse URL %v", rawCalendar.Path).
+			Append(errors.LvlWordy, "Could not parse calendar")
 	}
 
 	settings := &CaldavCalendarSettings{
@@ -94,10 +99,12 @@ func (calendar *CaldavCalendar) SetColor(color *types.Color) {
 	calendar.color = color
 }
 
-func (calendar *CaldavCalendar) convertEvent(event *caldav.CalendarObject, q types.DatabaseQueries) (primitives.Event, error) {
+func (calendar *CaldavCalendar) convertEvent(event *caldav.CalendarObject, q types.DatabaseQueries) (primitives.Event, *errors.ErrorTrace) {
 	convertedEvent, err := calendar.eventFromCaldav(event, q)
 	if err != nil {
-		return nil, fmt.Errorf("could not convert event %v: %w", event.Path, err)
+		return nil, err.
+			Append(errors.LvlDebug, "Could not convert calendar %v", event.Path).
+			AltStr(errors.LvlWordy, "Could not convert calendar")
 	}
 
 	castedEvent := (primitives.Event)(convertedEvent)
@@ -105,29 +112,32 @@ func (calendar *CaldavCalendar) convertEvent(event *caldav.CalendarObject, q typ
 	return castedEvent, nil
 }
 
-func (calendar *CaldavCalendar) getEvents(query *caldav.CalendarQuery, q types.DatabaseQueries) ([]primitives.Event, error) {
-	client, err := calendar.source.getClient()
-	if err != nil {
-		return nil, fmt.Errorf("could not get caldav client: %w", err)
+func (calendar *CaldavCalendar) getEvents(query *caldav.CalendarQuery, q types.DatabaseQueries) ([]primitives.Event, *errors.ErrorTrace) {
+	client, tr := calendar.source.getClient()
+	if tr != nil {
+		return nil, tr.
+			Append(errors.LvlBroad, "Could not get events")
 	}
 
 	events, err := client.QueryCalendar(q.GetContext(), calendar.settings.Url.String(), query)
 	if err != nil {
-		return nil, fmt.Errorf("could not query calendar: %w", err)
+		return nil, errors.InterpretRemoteError(err, "calendar", "CalDAV calendar").
+			Append(errors.LvlBroad, "Could not get events")
 	}
 
 	convertedEvents := make([]primitives.Event, len(events))
 	for i, event := range events {
-		convertedEvents[i], err = calendar.convertEvent(&event, q)
-		if err != nil {
-			return nil, err
+		convertedEvents[i], tr = calendar.convertEvent(&event, q)
+		if tr != nil {
+			return nil, tr.
+				Append(errors.LvlBroad, "Could not get events")
 		}
 	}
 
 	return convertedEvents, nil
 }
 
-func (calendar *CaldavCalendar) GetEvents(start time.Time, end time.Time, q types.DatabaseQueries) ([]primitives.Event, error) {
+func (calendar *CaldavCalendar) GetEvents(start time.Time, end time.Time, q types.DatabaseQueries) ([]primitives.Event, *errors.ErrorTrace) {
 	return calendar.getEvents(&caldav.CalendarQuery{
 		CompRequest: caldav.CalendarCompRequest{
 			Name: "VCALENDAR",
@@ -153,23 +163,25 @@ func (calendar *CaldavCalendar) GetEvents(start time.Time, end time.Time, q type
 	}, q)
 }
 
-func (calendar *CaldavCalendar) GetEvent(settings primitives.EventSettings, q types.DatabaseQueries) (primitives.Event, error) {
+func (calendar *CaldavCalendar) GetEvent(settings primitives.EventSettings, q types.DatabaseQueries) (primitives.Event, *errors.ErrorTrace) {
 	caldavSettings := settings.(*CaldavEventSettings)
 
 	obj, err := calendar.client.GetCalendarObject(q.GetContext(), caldavSettings.Url.Path)
 	if err != nil {
-		return nil, fmt.Errorf("could not get event: %w", err)
+		return nil, errors.InterpretRemoteError(err, "calendar", "CalDAV calendar").
+			Append(errors.LvlBroad, "Could not get event")
 	}
 
-	cal, err := calendar.convertEvent(obj, q)
-	if err != nil {
-		return nil, fmt.Errorf("could not get event: %w", err)
+	cal, tr := calendar.convertEvent(obj, q)
+	if tr != nil {
+		return nil, tr.
+			Append(errors.LvlBroad, "Could not get event")
 	}
 
 	return cal, nil
 }
 
-func setEventProps(cal *ical.Calendar, id string, name string, desc string, color *types.Color, date *types.EventDate) error {
+func setEventProps(cal *ical.Calendar, id string, name string, desc string, color *types.Color, date *types.EventDate) *errors.ErrorTrace {
 	var event *ical.Event = nil
 	for _, child := range cal.Children {
 		if child.Name == "VEVENT" {
@@ -222,7 +234,8 @@ func setEventProps(cal *ical.Calendar, id string, name string, desc string, colo
 	}
 	if date.SpecifyDuration() {
 		// TODO: figure this out
-		return fmt.Errorf("not implemented")
+
+		return errors.New().Status(http.StatusNotImplemented)
 		//event.Props.SetText(ical.PropDuration, *date.Duration())
 	} else {
 		if date.AllDay() {
@@ -243,70 +256,88 @@ func setEventProps(cal *ical.Calendar, id string, name string, desc string, colo
 	return nil
 }
 
-func (calendar *CaldavCalendar) AddEvent(name string, desc string, color *types.Color, date *types.EventDate, q types.DatabaseQueries) (primitives.Event, error) {
+func (calendar *CaldavCalendar) AddEvent(name string, desc string, color *types.Color, date *types.EventDate, q types.DatabaseQueries) (primitives.Event, *errors.ErrorTrace) {
 	id := types.RandomId()
 	cal := ical.NewCalendar()
 
-	err := setEventProps(cal, id.String(), name, desc, color, date)
-	if err != nil {
-		return nil, fmt.Errorf("could not set ical properties: %w", err)
+	tr := setEventProps(cal, id.String(), name, desc, color, date)
+	if tr != nil {
+		return nil, tr.Status(http.StatusBadRequest).
+			Append(errors.LvlWordy, "Could not set iCal properties").
+			AltStr(errors.LvlPlain, "Malformed settings").
+			Append(errors.LvlBroad, "Could not add event")
 	}
 
 	path := fmt.Sprintf("%v%v.ics", calendar.settings.Url.Path, id.String())
 
-	_, err = calendar.client.PutCalendarObject(q.GetContext(), path, cal)
+	_, err := calendar.client.PutCalendarObject(q.GetContext(), path, cal)
 	if err != nil {
-		return nil, fmt.Errorf("could not add event: %w", err)
+		return nil, errors.InterpretRemoteError(err, "calendar", "CalDAV calendar").
+			Append(errors.LvlBroad, "Could not add event")
 	}
 
 	obj, err := calendar.client.GetCalendarObject(q.GetContext(), path)
 	if err != nil {
-		return nil, fmt.Errorf("could not get finished event: %w", err)
+		return nil, errors.InterpretRemoteError(err, "calendar", "CalDAV calendar").
+			Append(errors.LvlWordy, "Could not get finished event").
+			Append(errors.LvlBroad, "Could not add event")
 	}
 
-	finishedEvent, err := calendar.eventFromCaldav(obj, q)
-	if err != nil {
-		return nil, fmt.Errorf("could not parse finished event: %w", err)
+	finishedEvent, tr := calendar.eventFromCaldav(obj, q)
+	if tr != nil {
+		return nil, tr.
+			Append(errors.LvlWordy, "Could not parse finished event").
+			Append(errors.LvlBroad, "Could not add event")
 	}
 
 	return finishedEvent, nil
 }
 
-func (calendar *CaldavCalendar) EditEvent(originalEvent primitives.Event, name string, desc string, color *types.Color, date *types.EventDate, q types.DatabaseQueries) (primitives.Event, error) {
+func (calendar *CaldavCalendar) EditEvent(originalEvent primitives.Event, name string, desc string, color *types.Color, date *types.EventDate, q types.DatabaseQueries) (primitives.Event, *errors.ErrorTrace) {
 	originalCaldavEvent := originalEvent.(*CaldavEvent)
 	uid := originalCaldavEvent.GetSettings().(*CaldavEventSettings).Uid
 	originalRawEvent := originalCaldavEvent.settings.rawEvent
 	cal := originalRawEvent.Data
 
-	err := setEventProps(cal, uid, name, desc, color, date)
-	if err != nil {
-		return nil, fmt.Errorf("could not set ical properties: %w", err)
+	tr := setEventProps(cal, uid, name, desc, color, date)
+	if tr != nil {
+		return nil, tr.Status(http.StatusBadRequest).
+			Append(errors.LvlWordy, "Could not set iCal properties").
+			AltStr(errors.LvlPlain, "Malformed settings").
+			Append(errors.LvlBroad, "Could not add event")
 	}
 
-	_, err = calendar.client.PutCalendarObject(q.GetContext(), originalRawEvent.Path, cal)
+	_, err := calendar.client.PutCalendarObject(q.GetContext(), originalRawEvent.Path, cal)
 	if err != nil {
-		return nil, fmt.Errorf("could not update event: %w", err)
+		return nil, errors.InterpretRemoteError(err, "calendar", "CalDAV calendar").
+			Append(errors.LvlWordy, "Could not edit event").
+			AltStr(errors.LvlBroad, "Could not edit event")
 	}
 
 	obj, err := calendar.client.GetCalendarObject(q.GetContext(), originalRawEvent.Path)
 	if err != nil {
-		return nil, fmt.Errorf("could not get finished event: %w", err)
+		return nil, errors.InterpretRemoteError(err, "calendar", "CalDAV calendar").
+			Append(errors.LvlWordy, "Could not get finished event").
+			Append(errors.LvlBroad, "Could not add event")
 	}
 
-	finishedEvent, err := calendar.eventFromCaldav(obj, q)
-	if err != nil {
-		return nil, fmt.Errorf("could not parse finished event: %w", err)
+	finishedEvent, tr := calendar.eventFromCaldav(obj, q)
+	if tr != nil {
+		return nil, tr.
+			Append(errors.LvlWordy, "Could not parse finished event").
+			Append(errors.LvlBroad, "Could not add event")
 	}
 
 	return finishedEvent, nil
 }
 
-func (calendar *CaldavCalendar) DeleteEvent(event primitives.Event, q types.DatabaseQueries) error {
+func (calendar *CaldavCalendar) DeleteEvent(event primitives.Event, q types.DatabaseQueries) *errors.ErrorTrace {
 	settings := event.GetSettings().(*CaldavEventSettings)
 
 	err := calendar.client.RemoveAll(q.GetContext(), settings.Url.Path)
 	if err != nil {
-		return fmt.Errorf("could not delete event: %w", err)
+		return errors.InterpretRemoteError(err, "calendar", "CalDAV calendar").
+			Append(errors.LvlBroad, "Could not delete event")
 	}
 
 	return nil

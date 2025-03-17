@@ -1,8 +1,9 @@
 package primitives
 
 import (
-	"fmt"
+	"luna-backend/errors"
 	"luna-backend/types"
+	"net/http"
 	"time"
 
 	"github.com/teambition/rrule-go"
@@ -24,7 +25,7 @@ type EventSettings interface {
 	Bytes() []byte
 }
 
-func ExpandRecurrence(event Event, start *time.Time, end *time.Time) ([]Event, error) {
+func ExpandRecurrence(event Event, start *time.Time, end *time.Time) ([]Event, *errors.ErrorTrace) {
 	if !event.GetDate().Recurrence().Repeats() {
 		return []Event{event}, nil
 	}
@@ -32,7 +33,10 @@ func ExpandRecurrence(event Event, start *time.Time, end *time.Time) ([]Event, e
 	r, err := rrule.NewRRule(*event.GetDate().Recurrence().Rule())
 	r.DTStart(*event.GetDate().Start())
 	if err != nil {
-		return nil, fmt.Errorf("could not create rrule: %v", err)
+		return nil, errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not create RRULE for %v", event.GetId()).
+			Append(errors.LvlWordy, "Could not expand event recurrence for %v", event.GetName())
 	}
 
 	timeSlices := r.Between(*start, *end, true)

@@ -2,11 +2,12 @@ package ical
 
 import (
 	"encoding/json"
-	"fmt"
 	"luna-backend/crypto"
+	"luna-backend/errors"
 	"luna-backend/interface/primitives"
 	common "luna-backend/interface/protocols/internal"
 	"luna-backend/types"
+	"net/http"
 
 	"github.com/emersion/go-ical"
 )
@@ -25,10 +26,12 @@ type IcalEventSettings struct {
 	//rawEvent *ical.Event `json:"-"`
 }
 
-func (calendar *IcalCalendar) eventFromIcal(props *ical.Props) (*IcalEvent, error) {
+func (calendar *IcalCalendar) eventFromIcal(props *ical.Props) (*IcalEvent, *errors.ErrorTrace) {
 	parsedProps, _, err := common.ParseIcalEvent(props)
 	if err != nil {
-		return nil, fmt.Errorf("could not parse ical event: %w", err)
+		return nil, errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlWordy, "Could not parse iCal event")
 	}
 
 	event := &IcalEvent{

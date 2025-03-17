@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"luna-backend/api/internal/context"
 	"luna-backend/api/internal/util"
+	"luna-backend/errors"
 	"luna-backend/types"
 	"net/http"
 
@@ -15,44 +15,37 @@ type exposedCalendar struct {
 	Name   string       `json:"name"`
 	Desc   string       `json:"desc"`
 	Color  *types.Color `json:"color"`
-	//Settings primitives.CalendarSettings `json:"settings"` // TODO: REMOVE FROM PRODUCTION, TESTING ONLY
 }
 
 func GetCalendars(c *gin.Context) {
-	// Get config
-	config := context.GetConfig(c)
-	userId := context.GetUserId(c)
-	sourceId, err := context.GetId(c, "source")
+	u := util.GetUtil(c)
+
+	userId := util.GetUserId(c)
+
+	sourceId, err := util.GetId(c, "source")
 	if err != nil {
-		config.Logger.Errorf("could not get source id: %v", err)
-		util.Error(c, util.ErrorMalformedID)
+		u.Error(err)
 		return
 	}
 
-	tx := context.GetTransaction(c)
-	defer tx.Rollback(config.Logger)
-
 	// Get the specified source
-	source, err := tx.Queries().GetSource(userId, sourceId)
+	source, err := u.Tx.Queries().GetSource(userId, sourceId)
 	if err != nil {
-		config.Logger.Errorf("could not get calendars: %v", err)
-		util.Error(c, util.ErrorDatabase)
+		u.Error(err)
 		return
 	}
 
 	// Get the associated calendars
-	calsFromSource, err := source.GetCalendars(tx.Queries())
+	calsFromSource, err := source.GetCalendars(u.Tx.Queries())
 
 	if err != nil {
-		config.Logger.Errorf("could not fetch calendars from source %v: %v", source.GetName(), err)
-		util.Error(c, util.ErrorUnknown)
+		u.Error(err)
 		return
 	}
 
-	cals, err := tx.Queries().ReconcileCalendars(calsFromSource)
+	cals, err := u.Tx.Queries().ReconcileCalendars(calsFromSource)
 	if err != nil {
-		config.Logger.Errorf("could not reconcile calendars: %v", err)
-		util.Error(c, util.ErrorDatabase)
+		u.Error(err)
 		return
 	}
 
@@ -69,32 +62,24 @@ func GetCalendars(c *gin.Context) {
 		}
 	}
 
-	if tx.Commit(config.Logger) != nil {
-		util.Error(c, util.ErrorDatabase)
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"calendars": convertedCals})
+	u.Success(&gin.H{"calendars": convertedCals})
 }
 
 func GetCalendar(c *gin.Context) {
-	apiConfig := context.GetConfig(c)
-	calendarId, err := context.GetId(c, "calendar")
+	u := util.GetUtil(c)
+
+	userId := util.GetUserId(c)
+
+	calendarId, err := util.GetId(c, "calendar")
 	if err != nil {
-		apiConfig.Logger.Errorf("could not get calendar id: %v", err)
-		util.Error(c, util.ErrorMalformedID)
+		u.Error(err)
 		return
 	}
 
-	userId := context.GetUserId(c)
-	tx := context.GetTransaction(c)
-	defer tx.Rollback(apiConfig.Logger)
-
 	// Get calendar
-	cal, err := tx.Queries().GetCalendar(userId, calendarId)
+	cal, err := u.Tx.Queries().GetCalendar(userId, calendarId)
 	if err != nil {
-		apiConfig.Logger.Errorf("could not get calendar: %v", err)
-		util.Error(c, util.ErrorDatabase)
+		u.Error(err)
 		return
 	}
 
@@ -108,87 +93,70 @@ func GetCalendar(c *gin.Context) {
 		//Settings: cal.GetSettings(),
 	}
 
-	if tx.Commit(apiConfig.Logger) != nil {
-		util.Error(c, util.ErrorDatabase)
-		return
-	}
-
-	c.JSON(http.StatusOK, convertedCal)
+	u.Success(&gin.H{"calendar": convertedCal})
 }
 
 func PutCalendar(c *gin.Context) {
-	apiConfig := context.GetConfig(c)
-	userId := context.GetUserId(c)
-	tx := context.GetTransaction(c)
-	defer tx.Rollback(apiConfig.Logger)
+	u := util.GetUtil(c)
 
-	sourceId, err := context.GetId(c, "source")
-	if err != nil {
-		apiConfig.Logger.Warn("missing or malformed source id")
-		util.ErrorDetailed(c, util.ErrorPayload, util.DetailId)
+	userId := util.GetUserId(c)
+
+	sourceId, tr := util.GetId(c, "source")
+	if tr != nil {
+		u.Error(tr)
 		return
 	}
 
-	source, err := tx.Queries().GetSource(userId, sourceId)
-	if err != nil {
-		apiConfig.Logger.Errorf("could not get source: %v", err)
-		util.Error(c, util.ErrorDatabase)
+	source, tr := u.Tx.Queries().GetSource(userId, sourceId)
+	if tr != nil {
+		u.Error(tr)
 		return
 	}
 
 	calName := c.PostForm("name")
 	if calName == "" {
-		apiConfig.Logger.Warn("missing calendar name")
-		util.ErrorDetailed(c, util.ErrorPayload, util.DetailName)
+		u.Error(errors.New().Status(http.StatusBadRequest).
+			Append(errors.LvlWordy, "Missing calendar name"))
 		return
 	}
 
 	calColor, err := types.ParseColor(c.PostForm("color"))
 	if err != nil {
-		apiConfig.Logger.Warn("missing or malformed color")
-		util.ErrorDetailed(c, util.ErrorPayload, util.DetailColor)
+		u.Error(errors.New().Status(http.StatusBadRequest).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlWordy, "Missing or malformed color"))
 		return
 	}
 
-	cal, err := source.AddCalendar(calName, calColor, tx.Queries())
-	if err != nil {
-		apiConfig.Logger.Errorf("could not add calendar: %v", err)
-		util.Error(c, util.ErrorUnknown)
+	cal, tr := source.AddCalendar(calName, calColor, u.Tx.Queries())
+	if tr != nil {
+		u.Error(tr)
 		return
 	}
 
-	err = tx.Queries().InsertCalendar(cal)
-	if err != nil {
-		apiConfig.Logger.Errorf("could not insert calendar: %v", err)
-		util.Error(c, util.ErrorDatabase)
+	tr = u.Tx.Queries().InsertCalendar(cal)
+	if tr != nil {
+		u.Error(tr)
 		return
 	}
 
-	if tx.Commit(apiConfig.Logger) != nil {
-		util.Error(c, util.ErrorDatabase)
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"id": cal.GetId().String()})
+	u.Success(&gin.H{"id": cal.GetId().String()})
 }
 
 func PatchCalendar(c *gin.Context) {
-	apiConfig := context.GetConfig(c)
-	userId := context.GetUserId(c)
-	tx := context.GetTransaction(c)
-	defer tx.Rollback(apiConfig.Logger)
+	u := util.GetUtil(c)
 
-	calendarId, err := context.GetId(c, "calendar")
+	userId := util.GetUserId(c)
+
+	calendarId, err := util.GetId(c, "calendar")
 	if err != nil {
-		apiConfig.Logger.Warn("missing or malformed calendar id")
-		util.ErrorDetailed(c, util.ErrorPayload, util.DetailId)
+		u.Error(err)
 		return
 	}
 
-	calendar, err := tx.Queries().GetCalendar(userId, calendarId)
+	calendar, err := u.Tx.Queries().GetCalendar(userId, calendarId)
 	if err != nil {
-		apiConfig.Logger.Errorf("could not get calendar: %v", err)
-		util.Error(c, util.ErrorDatabase)
+		u.Error(err)
 		return
 	}
 
@@ -197,8 +165,8 @@ func PatchCalendar(c *gin.Context) {
 	newCalColor, colErr := types.ParseColor(c.PostForm("color"))
 
 	if newCalName == "" && colErr != nil {
-		apiConfig.Logger.Warn("no values to change")
-		util.ErrorDetailed(c, util.ErrorPayload, util.DetailFields)
+		u.Error(errors.New().Status(http.StatusBadRequest).
+			Append(errors.LvlWordy, "Nothing to change"))
 		return
 	}
 
@@ -210,66 +178,49 @@ func PatchCalendar(c *gin.Context) {
 		newCalColor = calendar.GetColor()
 	}
 
-	newCal, err := calendar.GetSource().EditCalendar(calendar, newCalName, newCalColor, tx.Queries())
+	newCal, err := calendar.GetSource().EditCalendar(calendar, newCalName, newCalColor, u.Tx.Queries())
 	if err != nil {
-		apiConfig.Logger.Errorf("could not edit calendar: %v", err)
-		util.Error(c, util.ErrorUnknown)
+		u.Error(err)
 		return
 	}
 
-	err = tx.Queries().UpdateCalendar(newCal)
+	err = u.Tx.Queries().UpdateCalendar(newCal)
 	if err != nil {
-		apiConfig.Logger.Errorf("could not update calendar: %v", err)
-		util.Error(c, util.ErrorDatabase)
+		u.Error(err)
 		return
 	}
 
-	if tx.Commit(apiConfig.Logger) != nil {
-		util.Error(c, util.ErrorDatabase)
-		return
-	}
-
-	util.Success(c)
+	u.Success(nil)
 }
 
 func DeleteCalendar(c *gin.Context) {
-	apiConfig := context.GetConfig(c)
-	calendarId, err := context.GetId(c, "calendar")
+	u := util.GetUtil(c)
+
+	userId := util.GetUserId(c)
+
+	calendarId, err := util.GetId(c, "calendar")
 	if err != nil {
-		apiConfig.Logger.Errorf("could not get calendar id: %v", err)
-		util.Error(c, util.ErrorMalformedID)
+		u.Error(err)
 		return
 	}
 
-	userId := context.GetUserId(c)
-	tx := context.GetTransaction(c)
-	defer tx.Rollback(apiConfig.Logger)
-
-	calendar, err := tx.Queries().GetCalendar(userId, calendarId)
+	calendar, err := u.Tx.Queries().GetCalendar(userId, calendarId)
 	if err != nil {
-		apiConfig.Logger.Errorf("could not get calendar: %v", err)
-		util.Error(c, util.ErrorDatabase)
+		u.Error(err)
 		return
 	}
 
-	err = calendar.GetSource().DeleteCalendar(calendar, tx.Queries())
+	err = calendar.GetSource().DeleteCalendar(calendar, u.Tx.Queries())
 	if err != nil {
-		apiConfig.Logger.Errorf("could not delete calendar: %v", err)
-		util.Error(c, util.ErrorUnknown)
+		u.Error(err)
 		return
 	}
 
-	err = tx.Queries().DeleteCalendar(userId, calendarId)
+	err = u.Tx.Queries().DeleteCalendar(userId, calendarId)
 	if err != nil {
-		apiConfig.Logger.Errorf("could not delete calendar: %v", err)
-		util.Error(c, util.ErrorDatabase)
+		u.Error(err)
 		return
 	}
 
-	if tx.Commit(apiConfig.Logger) != nil {
-		util.Error(c, util.ErrorDatabase)
-		return
-	}
-
-	util.Success(c)
+	u.Success(nil)
 }

@@ -2,11 +2,12 @@ package db
 
 import (
 	"context"
-	"fmt"
 	"luna-backend/db/internal/migrations"
 	"luna-backend/db/internal/migrations/types"
 	"luna-backend/db/internal/queries"
 	"luna-backend/db/internal/tables"
+	"luna-backend/errors"
+	"net/http"
 	"strings"
 
 	"github.com/jackc/pgx/v5"
@@ -23,11 +24,18 @@ type Transaction struct {
 	migrations *types.MigrationQueries
 }
 
-func (db *Database) BeginTransaction(ctx context.Context) (*Transaction, error) {
+func (db *Database) BeginTransaction(ctx context.Context) (*Transaction, *errors.ErrorTrace) {
 	tx, err := db.pool.Begin(ctx)
 
-	if err != nil {
-		return nil, fmt.Errorf("could not begin transaction: %v", err)
+	switch err {
+	case nil:
+		break
+	// TODO: determine error for when database is down
+	default:
+		return nil, errors.New().Status(http.StatusServiceUnavailable).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlWordy, "Could not begin transaction").
+			AltStr(errors.LvlPlain, "Database error")
 	}
 
 	transaction := &Transaction{
@@ -39,25 +47,27 @@ func (db *Database) BeginTransaction(ctx context.Context) (*Transaction, error) 
 	return transaction, nil
 }
 
-func (tx *Transaction) Commit(logger *logrus.Entry) error {
+func (tx *Transaction) Commit(logger *logrus.Entry) *errors.ErrorTrace {
 	err := tx.tx.Commit(tx.context)
 
 	if err != nil {
-		err := fmt.Errorf("could not commit transaction: %v", err)
-		logger.Error(err)
-		return err
+		return errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlWordy, "Could not commit transaction").
+			AltStr(errors.LvlPlain, "Database error")
 	}
 
 	return nil
 }
 
-func (tx *Transaction) Rollback(logger *logrus.Entry) error {
+func (tx *Transaction) Rollback(logger *logrus.Entry) *errors.ErrorTrace {
 	err := tx.tx.Rollback(tx.context)
 
 	if err != nil && err != pgx.ErrTxClosed && !strings.Contains(err.Error(), context.DeadlineExceeded.Error()) {
-		err := fmt.Errorf("could not rollback transaction: %w", err)
-		logger.Error(err)
-		return err
+		return errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlWordy, "Could not rollback transaction").
+			AltStr(errors.LvlPlain, "Database error")
 	}
 
 	return nil

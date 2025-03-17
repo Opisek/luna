@@ -1,15 +1,11 @@
 package handlers
 
 import (
-	"errors"
-	"fmt"
 	"net/http"
 
-	"luna-backend/api/internal/config"
-	"luna-backend/api/internal/context"
 	"luna-backend/api/internal/util"
 	"luna-backend/auth"
-	"luna-backend/db"
+	"luna-backend/errors"
 	"luna-backend/interface/primitives"
 	"luna-backend/interface/protocols/caldav"
 	"luna-backend/interface/protocols/ical"
@@ -33,24 +29,22 @@ type exposedDetailedSource struct {
 	Auth     interface{} `json:"auth"`
 }
 
-func getSources(_ *config.Api, tx *db.Transaction, userId types.ID) ([]primitives.Source, error) {
-	srcs, err := tx.Queries().GetSourcesByUser(userId)
+func getSources(u *util.HandlerUtility, userId types.ID) ([]primitives.Source, *errors.ErrorTrace) {
+	srcs, err := u.Tx.Queries().GetSourcesByUser(userId)
 	if err != nil {
-		return nil, fmt.Errorf("could not get sources: %v", err)
+		return nil, err
 	}
 	return srcs, nil
 }
 
 func GetSources(c *gin.Context) {
-	apiConfig := context.GetConfig(c)
-	userId := context.GetUserId(c)
-	tx := context.GetTransaction(c)
-	defer tx.Rollback(apiConfig.Logger)
+	u := util.GetUtil(c)
 
-	sources, err := getSources(apiConfig, tx, userId)
+	userId := util.GetUserId(c)
+
+	sources, err := getSources(u, userId)
 	if err != nil {
-		apiConfig.Logger.Error(err)
-		util.Error(c, util.ErrorDatabase)
+		u.Error(err)
 		return
 	}
 
@@ -63,31 +57,23 @@ func GetSources(c *gin.Context) {
 		}
 	}
 
-	if tx.Commit(apiConfig.Logger) != nil {
-		util.Error(c, util.ErrorDatabase)
-		return
-	}
-
-	c.JSON(http.StatusOK, exposedSources)
+	u.Success(&gin.H{"sources": exposedSources})
 }
 
 func GetSource(c *gin.Context) {
-	apiConfig := context.GetConfig(c)
-	sourceId, err := context.GetId(c, "source")
+	u := util.GetUtil(c)
+
+	sourceId, err := util.GetId(c, "source")
 	if err != nil {
-		apiConfig.Logger.Errorf("could not get source id: %v", err)
-		util.Error(c, util.ErrorMalformedID)
+		u.Error(err)
 		return
 	}
 
-	userId := context.GetUserId(c)
-	tx := context.GetTransaction(c)
-	defer tx.Rollback(apiConfig.Logger)
+	userId := util.GetUserId(c)
 
-	source, err := tx.Queries().GetSource(userId, sourceId)
+	source, err := u.Tx.Queries().GetSource(userId, sourceId)
 	if err != nil {
-		apiConfig.Logger.Errorf("could not get source: %v", err)
-		util.Error(c, util.ErrorDatabase)
+		u.Error(err)
 		return
 	}
 
@@ -100,15 +86,10 @@ func GetSource(c *gin.Context) {
 		Auth:     source.GetAuth(),
 	}
 
-	if tx.Commit(apiConfig.Logger) != nil {
-		util.Error(c, util.ErrorDatabase)
-		return
-	}
-
-	c.JSON(http.StatusOK, exposedSource)
+	u.Success(&gin.H{"source": exposedSource})
 }
 
-func parseAuthMethod(c *gin.Context) (auth.AuthMethod, error) {
+func parseAuthMethod(c *gin.Context) (auth.AuthMethod, *errors.ErrorTrace) {
 	var sourceAuth auth.AuthMethod
 
 	authType := c.PostForm("auth_type")
@@ -119,27 +100,31 @@ func parseAuthMethod(c *gin.Context) (auth.AuthMethod, error) {
 		username := c.PostForm("auth_username")
 		password := c.PostForm("auth_password")
 		if username == "" || password == "" {
-			return nil, errors.New("missing username or password")
+			return nil, errors.New().Status(http.StatusBadRequest).
+				Append(errors.LvlPlain, "Missing username or password")
 		}
 
 		sourceAuth = auth.NewBasicAuth(username, password)
 	case types.AuthBearer:
 		token := c.PostForm("auth_token")
 		if token == "" {
-			return nil, errors.New("missing token")
+			return nil, errors.New().Status(http.StatusBadRequest).
+				Append(errors.LvlPlain, "Missing token")
 		}
 
 		sourceAuth = auth.NewBearerAuth(token)
 	case "":
-		return nil, errors.New("missing auth type")
+		return nil, errors.New().Status(http.StatusBadRequest).
+			Append(errors.LvlPlain, "Missing authentication type")
 	default:
-		return nil, errors.New("invalid auth type")
+		return nil, errors.New().Status(http.StatusBadRequest).
+			Append(errors.LvlPlain, "Unknown authentication type: %v", authType)
 	}
 
 	return sourceAuth, nil
 }
 
-func parseSource(c *gin.Context, sourceName string, sourceAuth auth.AuthMethod, q types.DatabaseQueries) (primitives.Source, error) {
+func parseSource(c *gin.Context, sourceName string, sourceAuth auth.AuthMethod, q types.DatabaseQueries) (primitives.Source, *errors.ErrorTrace) {
 	var source primitives.Source
 
 	sourceType := c.PostForm("type")
@@ -147,154 +132,162 @@ func parseSource(c *gin.Context, sourceName string, sourceAuth auth.AuthMethod, 
 	case types.SourceCaldav:
 		rawUrl := c.PostForm("url")
 		if rawUrl == "" {
-			return nil, errors.New("missing caldav url")
+			return nil, errors.New().Status(http.StatusBadRequest).
+				Append(errors.LvlPlain, "Missing CalDAV url")
 		}
 		if util.IsValidUrl(rawUrl) != nil {
-			return nil, errors.New("invalid caldav url")
+			return nil, errors.New().Status(http.StatusBadRequest).
+				Append(errors.LvlPlain, "Invalid CalDAV url")
 		}
 		sourceUrl, err := types.NewUrl(rawUrl)
 		if err != nil {
-			return nil, errors.New("invalid caldav url")
+			return nil, errors.New().Status(http.StatusBadRequest).
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlPlain, "Invalid CalDAV url")
 		}
 
 		source = caldav.NewCaldavSource(sourceName, sourceUrl, sourceAuth)
 	case types.SourceIcal:
 		locationType := c.PostForm("location")
 		if locationType == "" {
-			return nil, errors.New("missing ical location")
+			return nil, errors.New().Status(http.StatusBadRequest).
+				Append(errors.LvlPlain, "Missing iCal location")
 		}
 
 		switch locationType {
 		case "remote":
 			rawUrl := c.PostForm("url")
 			if rawUrl == "" {
-				return nil, errors.New("missing ical url")
+				return nil, errors.New().Status(http.StatusBadRequest).
+					Append(errors.LvlPlain, "Missing iCal url")
 			}
 			if util.IsValidUrl(rawUrl) != nil {
-				return nil, errors.New("invalid ical url")
+				return nil, errors.New().Status(http.StatusBadRequest).
+					Append(errors.LvlPlain, "Invalid iCal url")
 			}
 			sourceUrl, err := types.NewUrl(rawUrl)
 			if err != nil {
-				return nil, errors.New("invalid ical url")
+				return nil, errors.New().Status(http.StatusBadRequest).
+					AddErr(errors.LvlDebug, err).
+					Append(errors.LvlPlain, "Invalid iCal url")
 			}
 			source = ical.NewRemoteIcalSource(sourceName, sourceUrl, sourceAuth)
 		case "local":
 			if sourceAuth.GetType() != types.AuthNone {
-				return nil, errors.New("local ical sources cannot have auth")
+				return nil, errors.New().Status(http.StatusBadRequest).
+					Append(errors.LvlPlain, "Local iCal sources do not support authentication")
 			}
 			rawPath := c.PostForm("path")
 			if rawPath == "" {
-				return nil, errors.New("missing ical path")
+				return nil, errors.New().Status(http.StatusBadRequest).
+					Append(errors.LvlPlain, "Missing iCal path")
 			}
 			sourcePath, err := types.NewPath(rawPath)
 			if err != nil {
-				return nil, errors.New("invalid ical path")
+				return nil, errors.New().Status(http.StatusBadRequest).
+					AddErr(errors.LvlDebug, err).
+					Append(errors.LvlPlain, "Invalid iCal path")
 			}
 			source = ical.NewLocalIcalSource(sourceName, sourcePath)
 		case "database":
 			if sourceAuth.GetType() != types.AuthNone {
-				return nil, errors.New("database ical sources cannot have auth")
+				return nil, errors.New().Status(http.StatusBadRequest).
+					Append(errors.LvlPlain, "Database iCal sources do not support authentication")
 			}
 
 			fileHeader, err := c.FormFile("file")
 			if err != nil || fileHeader == nil {
-				return nil, fmt.Errorf("missing or errornous ical file: %w", err)
+				return nil, errors.New().Status(http.StatusBadRequest).
+					AddErr(errors.LvlDebug, err).
+					Append(errors.LvlPlain, "Missing or corrupted iCal file")
 			}
 			if fileHeader.Size > 50*1000*1000 {
-				return nil, errors.New("ical file too large")
+				return nil, errors.New().Status(http.StatusInsufficientStorage).
+					Append(errors.LvlPlain, "iCal file too large")
 			}
 
 			file, err := fileHeader.Open()
 			if err != nil {
-				return nil, fmt.Errorf("could not open ical file: %w", err)
+				return nil, errors.New().Status(http.StatusInternalServerError).
+					AddErr(errors.LvlDebug, err).
+					Append(errors.LvlPlain, "Could not open iCal file")
 			}
 
-			source, err = ical.NewDatabaseIcalSource(sourceName, file, q)
-			if err != nil {
-				return nil, fmt.Errorf("could not create database ical source: %w", err)
+			var tr *errors.ErrorTrace
+			source, tr = ical.NewDatabaseIcalSource(sourceName, file, q)
+			if tr != nil {
+				return nil, tr
 			}
 		}
 
 	case "":
-		return nil, errors.New("invalid source type")
+		return nil, errors.New().Status(http.StatusBadRequest).
+			Append(errors.LvlPlain, "Missing source type")
 	default:
-		return nil, errors.New("missing source type")
+		return nil, errors.New().Status(http.StatusBadRequest).
+			Append(errors.LvlPlain, "Unknown source type: %v", sourceType)
 	}
 
 	return source, nil
 }
 
 func PutSource(c *gin.Context) {
-	apiConfig := context.GetConfig(c)
-	userId := context.GetUserId(c)
-	tx := context.GetTransaction(c)
-	defer tx.Rollback(apiConfig.Logger)
+	u := util.GetUtil(c)
+
+	userId := util.GetUserId(c)
 
 	sourceName := c.PostForm("name")
 	if sourceName == "" {
-		apiConfig.Logger.Warn("missing name")
-		util.ErrorDetailed(c, util.ErrorPayload, util.DetailName)
+		u.Error(errors.New().Status(http.StatusBadRequest).
+			Append(errors.LvlPlain, "Missing name"))
 		return
 	}
 
 	sourceAuth, err := parseAuthMethod(c)
 	if err != nil {
-		apiConfig.Logger.Warnf("could not parse auth: %v", err)
-		util.ErrorDetailed(c, util.ErrorPayload, util.DetailAuth)
+		u.Error(err)
 		return
 	}
 
-	source, err := parseSource(c, sourceName, sourceAuth, tx.Queries())
+	source, err := parseSource(c, sourceName, sourceAuth, u.Tx.Queries())
 	if err != nil {
-		apiConfig.Logger.Warnf("could not parse source: %v", err)
-		util.ErrorDetailed(c, util.ErrorPayload, util.DetailSource)
+		u.Error(err)
 		return
 	}
 
-	id, err := tx.Queries().InsertSource(userId, source)
+	id, err := u.Tx.Queries().InsertSource(userId, source)
 	if err != nil {
-		apiConfig.Logger.Errorf("could not insert source %v for user %v: %v", source.GetId().String(), userId.String(), err)
-		util.Error(c, util.ErrorDatabase)
+		u.Error(err)
 		return
 	}
 
-	if tx.Commit(apiConfig.Logger) != nil {
-		util.Error(c, util.ErrorDatabase)
-		return
-	}
-
-	c.JSON(http.StatusCreated, gin.H{"id": id.String()})
+	u.Success(&gin.H{"id": id.String()})
 }
 
 func PatchSource(c *gin.Context) {
-	var err error
+	u := util.GetUtil(c)
 
-	apiConfig := context.GetConfig(c)
-	sourceId, err := context.GetId(c, "source")
+	userId := util.GetUserId(c)
+
+	sourceId, err := util.GetId(c, "source")
 	if err != nil {
-		apiConfig.Logger.Errorf("could not get source id: %v", err)
-		util.Error(c, util.ErrorMalformedID)
+		u.Error(err)
 		return
 	}
-
-	userId := context.GetUserId(c)
-	tx := context.GetTransaction(c)
-	defer tx.Rollback(apiConfig.Logger)
 
 	newName := c.PostForm("name")
 	newType := c.PostForm("type")
 	newAuthType := c.PostForm("auth_type")
 
 	if newName == "" && newType == "" && newAuthType == "" {
-		apiConfig.Logger.Warn("no values to change")
-		util.ErrorDetailed(c, util.ErrorPayload, util.DetailFields)
+		u.Error(errors.New().Status(http.StatusBadRequest).
+			Append(errors.LvlPlain, "Nothing to change"))
 		return
 	}
 
-	source, err := tx.Queries().GetSource(userId, sourceId)
+	source, err := u.Tx.Queries().GetSource(userId, sourceId)
 	if err != nil {
-		apiConfig.Logger.Errorf("could not get source: %v", err)
-		util.Error(c, util.ErrorDatabase)
+		u.Error(err)
 		return
 	}
 
@@ -302,8 +295,7 @@ func PatchSource(c *gin.Context) {
 	if newAuthType != "" {
 		newAuth, err = parseAuthMethod(c)
 		if err != nil {
-			apiConfig.Logger.Warnf("could not parse auth: %v", err)
-			util.ErrorDetailed(c, util.ErrorPayload, util.DetailAuth)
+			u.Error(err)
 			return
 		}
 	}
@@ -313,78 +305,65 @@ func PatchSource(c *gin.Context) {
 		if newAuth == nil {
 			newAuth = source.GetAuth()
 		}
-		newSource, err := parseSource(c, newName, newAuth, tx.Queries())
+		newSource, err := parseSource(c, newName, newAuth, u.Tx.Queries())
 		if err != nil {
-			apiConfig.Logger.Warnf("could not parse source: %v", err)
-			util.ErrorDetailed(c, util.ErrorPayload, util.DetailSource)
+			u.Error(err)
 			return
 		}
 		newSourceSettings = newSource.GetSettings()
 	}
 	if source.GetType() == "ical" {
 		if newType == "ical" {
-			err = source.Cleanup(tx.Queries())
+			err = source.Cleanup(u.Tx.Queries())
 		}
 		if err != nil {
-			apiConfig.Logger.Errorf("error cleaning up source before editing: %v", err)
-			util.Error(c, util.ErrorDatabase)
+			u.Error(err.
+				Append(errors.LvlWordy, "Could not clean up source before editing"))
 			return
 		}
 	}
 
-	err = tx.Queries().UpdateSource(userId, sourceId, newName, newAuth, newType, newSourceSettings)
+	err = u.Tx.Queries().UpdateSource(userId, sourceId, newName, newAuth, newType, newSourceSettings)
 	if err != nil {
-		apiConfig.Logger.Errorf("could not update source: %v", err)
-		util.Error(c, util.ErrorDatabase)
+		u.Error(err)
 		return
 	}
 
-	if tx.Commit(apiConfig.Logger) != nil {
-		util.Error(c, util.ErrorDatabase)
-		return
-	}
-
-	util.Success(c)
+	u.Success(nil)
 }
 
 func DeleteSource(c *gin.Context) {
-	apiConfig := context.GetConfig(c)
-	sourceId, err := context.GetId(c, "source")
+	u := util.GetUtil(c)
+
+	userId := util.GetUserId(c)
+
+	sourceId, err := util.GetId(c, "source")
 	if err != nil {
-		apiConfig.Logger.Errorf("could not get source id: %v", err)
-		util.Error(c, util.ErrorMalformedID)
+		u.Error(err)
 		return
 	}
 
-	userId := context.GetUserId(c)
-	tx := context.GetTransaction(c)
-	defer tx.Rollback(apiConfig.Logger)
-
-	source, err := tx.Queries().GetSource(userId, sourceId)
+	source, err := u.Tx.Queries().GetSource(userId, sourceId)
 	if err != nil {
-		apiConfig.Logger.Warnf("could not get source: %v", err)
+		u.Warn(err)
 	} else {
-		err = source.Cleanup(tx.Queries())
+		err = source.Cleanup(u.Tx.Queries())
 		if err != nil {
-			apiConfig.Logger.Warnf("error cleaning up after source: %v", err)
+			u.Warn(err.
+				Append(errors.LvlWordy, "Could not clean up source before deleting"))
 		}
 	}
 
-	deleted, err := tx.Queries().DeleteSource(userId, sourceId)
+	deleted, err := u.Tx.Queries().DeleteSource(userId, sourceId)
 	if err != nil {
-		apiConfig.Logger.Errorf("could not delete source: %v", err)
-		util.Error(c, util.ErrorDatabase)
-		return
-	}
-
-	if tx.Commit(apiConfig.Logger) != nil {
-		util.Error(c, util.ErrorDatabase)
+		u.Error(err)
 		return
 	}
 
 	if deleted {
-		util.Success(c)
+		u.Success(nil)
 	} else {
-		util.Error(c, util.ErrorSourceNotFound)
+		u.Error(errors.New().Status(http.StatusNotFound).
+			Append(errors.LvlPlain, "Source not found"))
 	}
 }

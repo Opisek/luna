@@ -5,17 +5,22 @@ import (
 	"luna-backend/auth"
 	"luna-backend/db/internal/parsing"
 	"luna-backend/db/internal/util"
+	"luna-backend/errors"
 	"luna-backend/interface/primitives"
 	"luna-backend/types"
+	"net/http"
 	"strings"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 )
 
-func (q *Queries) GetSource(userId types.ID, sourceId types.ID) (primitives.Source, error) {
-	decryptionKey, err := util.GetUserDecryptionKey(q.CommonConfig, userId)
-	if err != nil {
-		return nil, fmt.Errorf("could not get user decryption key: %v", err)
+func (q *Queries) GetSource(userId types.ID, sourceId types.ID) (primitives.Source, *errors.ErrorTrace) {
+	decryptionKey, tr := util.GetUserDecryptionKey(q.CommonConfig, userId)
+	if tr != nil {
+		return nil, tr.
+			Append(errors.LvlDebug, "Could not get source %v", sourceId).
+			AltStr(errors.LvlBroad, "Could not get source")
 	}
 
 	scanner := parsing.NewPgxScanner(q.PrimitivesParser, q)
@@ -31,26 +36,46 @@ func (q *Queries) GetSource(userId types.ID, sourceId types.ID) (primitives.Sour
 		cols,
 	)
 
-	err = q.Tx.QueryRow(
+	err := q.Tx.QueryRow(
 		q.Context,
 		query,
 		sourceId.UUID(),
 		userId.UUID(),
 		decryptionKey,
 	).Scan(params...)
-	if err != nil {
-		return nil, fmt.Errorf("could not get source: %v", err)
+
+	switch err {
+	case nil:
+		break
+	case pgx.ErrNoRows:
+		return nil, errors.New().Status(http.StatusNotFound).
+			Append(errors.LvlDebug, "Source %v for user %v not found", sourceId, userId).
+			AltStr(errors.LvlPlain, "Source not found").
+			AltStr(errors.LvlBroad, "Could not get source")
+	default:
+		return nil, errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not get source %v for user %v", sourceId, userId).
+			AltStr(errors.LvlBroad, "Could not get source")
 	}
 
-	return scanner.GetSource()
+	source, tr := scanner.GetSource()
+	if tr != nil {
+		return nil, tr.
+			Append(errors.LvlDebug, "Could not parse aource %v for user %v", sourceId, userId).
+			AltStr(errors.LvlWordy, "Could not parse source").
+			AltStr(errors.LvlBroad, "Could not get source")
+	}
+
+	return source, nil
+
 }
 
-func (q *Queries) GetSourcesByUser(userId types.ID) ([]primitives.Source, error) {
-	var err error
-
-	decryptionKey, err := util.GetUserDecryptionKey(q.CommonConfig, userId)
-	if err != nil {
-		return nil, fmt.Errorf("could not get user decryption key: %v", err)
+func (q *Queries) GetSourcesByUser(userId types.ID) ([]primitives.Source, *errors.ErrorTrace) {
+	decryptionKey, tr := util.GetUserDecryptionKey(q.CommonConfig, userId)
+	if tr != nil {
+		return nil, tr.
+			Append(errors.LvlBroad, "Could not get sources")
 	}
 
 	scanner := parsing.NewPgxScanner(q.PrimitivesParser, q)
@@ -72,8 +97,19 @@ func (q *Queries) GetSourcesByUser(userId types.ID) ([]primitives.Source, error)
 		userId.UUID(),
 		decryptionKey,
 	)
-	if err != nil {
-		return nil, fmt.Errorf("could not get sources: %v", err)
+	switch err {
+	case nil:
+		break
+	case pgx.ErrNoRows: // I don't think this is actually possible
+		return nil, errors.New().Status(http.StatusNotFound).
+			Append(errors.LvlDebug, "Sources for user %v not found", userId).
+			AltStr(errors.LvlPlain, "Sources not found").
+			AltStr(errors.LvlBroad, "Could not get sources")
+	default:
+		return nil, errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not get sources for user %v", userId).
+			AltStr(errors.LvlBroad, "Could not get sources")
 	}
 	defer rows.Close()
 
@@ -82,7 +118,10 @@ func (q *Queries) GetSourcesByUser(userId types.ID) ([]primitives.Source, error)
 		rows.Scan(params...) // TODO: we might have to "reset" the scanner each time due to pass by reference
 		source, err := scanner.GetSource()
 		if err != nil {
-			return nil, fmt.Errorf("could not parse source: %v", err)
+			return nil, err.
+				Append(errors.LvlDebug, "Could not parse sources for user %v", userId).
+				AltStr(errors.LvlWordy, "Could not parse sources").
+				AltStr(errors.LvlBroad, "Could not get sources")
 		}
 		sources = append(sources, source)
 	}
@@ -93,7 +132,7 @@ func (q *Queries) GetSourcesByUser(userId types.ID) ([]primitives.Source, error)
 // This is only used to refetch iCal files cache periodically.
 // The information about file URL could be stored in another table instead,
 // so we don't have to query the more sensitive sources table.
-func (q *Queries) GetSourceSettingsByType(sourceType string) ([][]byte, error) {
+func (q *Queries) GetSourceSettingsByType(sourceType string) ([][]byte, *errors.ErrorTrace) {
 	var err error
 
 	rows, err := q.Tx.Query(
@@ -105,8 +144,19 @@ func (q *Queries) GetSourceSettingsByType(sourceType string) ([][]byte, error) {
 		`,
 		sourceType,
 	)
-	if err != nil {
-		return nil, fmt.Errorf("could not get sources: %v", err)
+	switch err {
+	case nil:
+		break
+	case pgx.ErrNoRows: // I don't think this is actually possible
+		return nil, errors.New().Status(http.StatusNotFound).
+			Append(errors.LvlDebug, "Sources of type %v not found", sourceType).
+			AltStr(errors.LvlPlain, "Sources not found").
+			AltStr(errors.LvlBroad, "Could not get sources")
+	default:
+		return nil, errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not get sources of type %v", sourceType).
+			AltStr(errors.LvlBroad, "Could not get sources")
 	}
 	defer rows.Close()
 
@@ -115,7 +165,9 @@ func (q *Queries) GetSourceSettingsByType(sourceType string) ([][]byte, error) {
 		var setting []byte
 		err = rows.Scan(&setting)
 		if err != nil {
-			return nil, fmt.Errorf("could not scan setting: %v", err)
+			return nil, errors.New().Status(http.StatusInternalServerError).
+				AddErr(errors.LvlDebug, err).
+				AltStr(errors.LvlBroad, "Could not get sources")
 		}
 		settings = append(settings, setting)
 	}
@@ -123,10 +175,14 @@ func (q *Queries) GetSourceSettingsByType(sourceType string) ([][]byte, error) {
 	return settings, nil
 }
 
-func (q *Queries) InsertSource(userId types.ID, source primitives.Source) (types.ID, error) {
-	encryptionKey, err := util.GetUserEncryptionKey(q.CommonConfig, userId)
-	if err != nil {
-		return types.EmptyId(), fmt.Errorf("could not get user encryption key: %v", err)
+func (q *Queries) InsertSource(userId types.ID, source primitives.Source) (types.ID, *errors.ErrorTrace) {
+	encryptionKey, tr := util.GetUserEncryptionKey(q.CommonConfig, userId)
+	if tr != nil {
+		return types.EmptyId(), tr.
+			Append(errors.LvlDebug, "Could not insert source %v for user %v", source.GetName(), userId).
+			AltStr(errors.LvlWordy, "Could not insert source %v", source.GetName()).
+			AltStr(errors.LvlPlain, "Could not add source %v", source.GetName()).
+			AltStr(errors.LvlBroad, "Could not add source")
 	}
 
 	query := `
@@ -136,7 +192,13 @@ func (q *Queries) InsertSource(userId types.ID, source primitives.Source) (types
 	`
 	marshalledAuth, err := source.GetAuth().String()
 	if err != nil {
-		return types.EmptyId(), fmt.Errorf("could not marshal auth: %v", err)
+		return types.EmptyId(), errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not marshal authentication").
+			Append(errors.LvlDebug, "Could not insert source %v for user %v", source.GetName(), userId).
+			AltStr(errors.LvlWordy, "Could not insert source %v", source.GetName()).
+			AltStr(errors.LvlPlain, "Could not add source %v", source.GetName()).
+			AltStr(errors.LvlBroad, "Could not add source")
 	}
 	args := []any{userId.UUID(), source.GetName(), source.GetType(), source.GetSettings(), source.GetAuth().GetType(), marshalledAuth, encryptionKey}
 
@@ -144,16 +206,24 @@ func (q *Queries) InsertSource(userId types.ID, source primitives.Source) (types
 	err = q.Tx.QueryRow(q.Context, query, args...).Scan(&id)
 
 	if err != nil {
-		return types.EmptyId(), fmt.Errorf("could not insert source: %v", err)
+		return types.EmptyId(), errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not insert source %v for user %v", source.GetName(), userId).
+			AltStr(errors.LvlWordy, "Could not insert source %v", source.GetName()).
+			AltStr(errors.LvlPlain, "Could not add source %v", source.GetName()).
+			AltStr(errors.LvlBroad, "Could not add source")
 	}
 
 	return types.IdFromUuid(id), nil
 }
 
-func (q *Queries) UpdateSource(userId types.ID, sourceId types.ID, newName string, newAuth auth.AuthMethod, newSourceType string, newSourceSettings primitives.SourceSettings) error {
-	encryptionKey, err := util.GetUserEncryptionKey(q.CommonConfig, userId)
-	if err != nil {
-		return fmt.Errorf("could not get user encryption key: %v", err)
+func (q *Queries) UpdateSource(userId types.ID, sourceId types.ID, newName string, newAuth auth.AuthMethod, newSourceType string, newSourceSettings primitives.SourceSettings) *errors.ErrorTrace {
+	encryptionKey, tr := util.GetUserEncryptionKey(q.CommonConfig, userId)
+	if tr != nil {
+		return tr.
+			Append(errors.LvlDebug, "Could not update source %v", sourceId).
+			AltStr(errors.LvlWordy, "Could not update source").
+			AltStr(errors.LvlBroad, "Could not edit source")
 	}
 
 	changes := []string{}
@@ -175,13 +245,20 @@ func (q *Queries) UpdateSource(userId types.ID, sourceId types.ID, newName strin
 		)
 		marshalledAuth, err := newAuth.String()
 		if err != nil {
-			return fmt.Errorf("could not marshal auth: %v", err)
+			return errors.New().Status(http.StatusInternalServerError).
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlDebug, "Could not marshal authentication").
+				Append(errors.LvlDebug, "Could not update source %v", sourceId).
+				AltStr(errors.LvlWordy, "Could not update source").
+				AltStr(errors.LvlBroad, "Could not edit source")
 		}
 		args = append(args, newAuth.GetType(), marshalledAuth, encryptionKey)
 	}
 
 	if len(changes) == 0 {
-		return fmt.Errorf("no changes to update")
+		return errors.New().Status(http.StatusBadRequest).
+			Append(errors.LvlWordy, "Nothing to update").
+			AltStr(errors.LvlPlain, "Nothing to change")
 	}
 
 	query := fmt.Sprintf(`
@@ -191,16 +268,28 @@ func (q *Queries) UpdateSource(userId types.ID, sourceId types.ID, newName strin
 	`, strings.Join(changes, ", "), len(args)+1, len(args)+2)
 	args = append(args, userId.UUID(), sourceId.UUID())
 
-	_, err = q.Tx.Exec(q.Context, query, args...)
+	_, err := q.Tx.Exec(q.Context, query, args...)
 
-	if err != nil {
-		return fmt.Errorf("could not update source: %v", err)
+	switch err {
+	case nil:
+		return nil
+	case pgx.ErrNoRows:
+		return errors.New().Status(http.StatusNotFound).
+			Append(errors.LvlDebug, "Source %v not found", sourceId).
+			AltStr(errors.LvlPlain, "Source not found").
+			Append(errors.LvlDebug, "Could not update source %v", sourceId).
+			Append(errors.LvlWordy, "Could not update source").
+			Append(errors.LvlPlain, "Could not edit source")
+	default:
+		return errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not update source %v", sourceId).
+			Append(errors.LvlWordy, "Could not update source").
+			Append(errors.LvlPlain, "Could not edit source")
 	}
-
-	return nil
 }
 
-func (q *Queries) DeleteSource(userId types.ID, sourceId types.ID) (bool, error) {
+func (q *Queries) DeleteSource(userId types.ID, sourceId types.ID) (bool, *errors.ErrorTrace) {
 	tag, err := q.Tx.Exec(
 		q.Context,
 		`
@@ -210,8 +299,20 @@ func (q *Queries) DeleteSource(userId types.ID, sourceId types.ID) (bool, error)
 		userId.UUID(),
 		sourceId,
 	)
-	if err != nil {
-		return false, fmt.Errorf("could not delete source: %v", err)
+
+	switch err {
+	case nil:
+		return tag.RowsAffected() != 0, nil
+	case pgx.ErrNoRows:
+		return false, errors.New().Status(http.StatusNotFound).
+			Append(errors.LvlDebug, "Source %v not found", sourceId).
+			AltStr(errors.LvlPlain, "Source not found").
+			Append(errors.LvlDebug, "Could not delete source %v", sourceId).
+			AltStr(errors.LvlBroad, "Could not delete source")
+	default:
+		return false, errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not delete source %v", sourceId).
+			AltStr(errors.LvlBroad, "Could not delete source")
 	}
-	return tag.RowsAffected() != 0, nil
 }

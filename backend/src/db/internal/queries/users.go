@@ -1,13 +1,16 @@
 package queries
 
 import (
-	"fmt"
+	"luna-backend/errors"
 	"luna-backend/types"
+	"net/http"
 
 	"github.com/google/uuid"
 )
 
-func (q *Queries) AddUser(user *types.User) (types.ID, error) {
+// As with password-related queries, user management errors are kept vague on purpose.
+
+func (q *Queries) AddUser(user *types.User) (types.ID, *errors.ErrorTrace) {
 	var err error
 
 	query := `
@@ -18,16 +21,19 @@ func (q *Queries) AddUser(user *types.User) (types.ID, error) {
 
 	var id types.ID
 	err = q.Tx.QueryRow(q.Context, query, user.Username, user.Email, user.Admin).Scan(&id)
+
 	if err != nil {
-		return types.EmptyId(), fmt.Errorf("could not add user: %v", err)
+		return types.EmptyId(), errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not add user")
 	}
 
 	user.Id = id
 
-	return id, err
+	return id, nil
 }
 
-func (q *Queries) GetUserIdFromEmail(email string) (uuid.UUID, error) {
+func (q *Queries) GetUserIdFromEmail(email string) (types.ID, *errors.ErrorTrace) {
 	var err error
 
 	var id uuid.UUID
@@ -41,13 +47,17 @@ func (q *Queries) GetUserIdFromEmail(email string) (uuid.UUID, error) {
 		`,
 		email,
 	).Scan(&id)
+
 	if err != nil {
-		return uuid.Nil, fmt.Errorf("could not get user id by email %v: %v", email, err)
+		return types.EmptyId(), errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not get user with email %v", email)
 	}
-	return id, err
+
+	return types.IdFromUuid(id), nil
 }
 
-func (q *Queries) GetUserIdFromUsername(username string) (types.ID, error) {
+func (q *Queries) GetUserIdFromUsername(username string) (types.ID, *errors.ErrorTrace) {
 	var err error
 
 	var id uuid.UUID
@@ -61,13 +71,16 @@ func (q *Queries) GetUserIdFromUsername(username string) (types.ID, error) {
 		`,
 		username,
 	).Scan(&id)
+
 	if err != nil {
-		return types.EmptyId(), fmt.Errorf("could not get user id by username %v: %v", username, err)
+		return types.EmptyId(), errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not get user with username %v", username)
 	}
-	return types.IdFromUuid(id), err
+	return types.IdFromUuid(id), nil
 }
 
-func (q *Queries) IsAdmin(id int) (bool, error) {
+func (q *Queries) IsAdmin(userId int) (bool, *errors.ErrorTrace) {
 	var err error
 
 	var admin bool
@@ -79,16 +92,19 @@ func (q *Queries) IsAdmin(id int) (bool, error) {
 		FROM users
 		WHERE id = $1;
 		`,
-		id,
+		userId,
 	).Scan(&admin)
 
 	if err != nil {
-		return false, fmt.Errorf("could not get admin status of user %v: %v", id, err)
+		return false, errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not check admin status of user %v", userId)
 	}
-	return admin, err
+
+	return admin, nil
 }
 
-func (q *Queries) AnyUsersExist() (bool, error) {
+func (q *Queries) AnyUsersExist() (bool, *errors.ErrorTrace) {
 	rows, err := q.Tx.Query(
 		q.Context,
 		`
@@ -99,7 +115,9 @@ func (q *Queries) AnyUsersExist() (bool, error) {
 	)
 
 	if err != nil {
-		return false, fmt.Errorf("could not check if any users exist: %v", err)
+		return false, errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not check the presence of any users")
 	}
 
 	exists := rows.Next()

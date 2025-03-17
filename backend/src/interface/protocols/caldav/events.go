@@ -2,11 +2,12 @@ package caldav
 
 import (
 	"encoding/json"
-	"fmt"
 	"luna-backend/crypto"
+	"luna-backend/errors"
 	"luna-backend/interface/primitives"
 	common "luna-backend/interface/protocols/internal"
 	"luna-backend/types"
+	"net/http"
 
 	"github.com/emersion/go-webdav/caldav"
 )
@@ -26,7 +27,7 @@ type CaldavEventSettings struct {
 	rawEvent *caldav.CalendarObject `json:"-"`
 }
 
-func (calendar *CaldavCalendar) eventFromCaldav(obj *caldav.CalendarObject, q types.DatabaseQueries) (*CaldavEvent, error) {
+func (calendar *CaldavCalendar) eventFromCaldav(obj *caldav.CalendarObject, q types.DatabaseQueries) (*CaldavEvent, *errors.ErrorTrace) {
 	eventIndex := -1
 	for i, child := range obj.Data.Children {
 		if child.Name == "VEVENT" {
@@ -35,17 +36,22 @@ func (calendar *CaldavCalendar) eventFromCaldav(obj *caldav.CalendarObject, q ty
 		}
 	}
 	if eventIndex == -1 {
-		return nil, fmt.Errorf("could not find VEVENT in calendar object %v", obj.Path)
+		return nil, errors.New().Status(http.StatusInternalServerError).
+			Append(errors.LvlDebug, "could not find VEVENT in calendar object %v", obj.Path)
 	}
 
 	parsedProps, mustUpdate, err := common.ParseIcalEvent(&obj.Data.Children[eventIndex].Props)
 	if err != nil {
-		return nil, fmt.Errorf("could not parse ical event: %w", err)
+		return nil, errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not parse iCal event")
 	}
 
 	url, err := types.NewUrl(obj.Path)
 	if err != nil {
-		return nil, fmt.Errorf("could not parse event URL %v: %w", obj.Path, err)
+		return nil, errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not parse event URL")
 	}
 
 	event := &CaldavEvent{

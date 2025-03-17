@@ -6,6 +6,7 @@ import (
 	"luna-backend/api"
 	"luna-backend/common"
 	"luna-backend/db"
+	"luna-backend/errors"
 	"luna-backend/interface/parsing"
 	"luna-backend/log"
 	"luna-backend/tasks"
@@ -24,69 +25,81 @@ func setupDirs(env *common.Environmental) error {
 	return fmt.Errorf("could not create %v directory: %v", env.GetKeysPath(), err)
 }
 
-func setupConfig() (*logrus.Logger, *logrus.Entry, *common.CommonConfig, error) {
+func setupConfig() (*logrus.Logger, *logrus.Entry, *common.CommonConfig, *errors.ErrorTrace) {
 	var err error
 	logger := log.NewLogger()
 	mainLogger := logger.WithField("module", "main")
 
 	env, err := common.ParseEnvironmental(mainLogger)
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf("could not parse environmental variables: %v", err)
+		return nil, nil, nil, errors.New().
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not parse environmental variables")
 	}
 
 	commonConfig := &common.CommonConfig{
-		Env: &env,
+		Env:         &env,
+		DetailLevel: errors.LvlPlain, // TODO: configurable errors verbosity
 	}
 	commonConfig.Version, err = common.ParseVersion(version)
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf("malformed binary version \"%v\": %v", version, err)
+		return nil, nil, nil, errors.New().
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not parse binary version %v", version)
 	}
 
 	return logger, mainLogger, commonConfig, nil
 }
 
-func setupDb(commonConfig *common.CommonConfig, mainLogger *logrus.Entry, dbLogger *logrus.Entry) (*db.Database, error) {
+func setupDb(commonConfig *common.CommonConfig, mainLogger *logrus.Entry, dbLogger *logrus.Entry) (*db.Database, *errors.ErrorTrace) {
 	env := commonConfig.Env
 	db := db.NewDatabase(env.DB_HOST, env.DB_PORT, env.DB_USERNAME, env.DB_PASSWORD, env.DB_DATABASE, commonConfig, parsing.GetPrimitivesParser(), dbLogger)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	tx, err := db.BeginTransaction(ctx)
-	if err != nil {
-		return nil, err
+	tx, tr := db.BeginTransaction(ctx)
+	if tr != nil {
+		return nil, tr
 	}
-	err = tx.Tables().InitializeVersionTable()
+	defer func() {
+		rollbackErr := tx.Rollback(mainLogger)
+		if rollbackErr != nil {
+			mainLogger.Error(rollbackErr.Serialize(errors.LvlDebug))
+		}
+	}()
+
+	err := tx.Tables().InitializeVersionTable()
 	if err != nil {
-		return nil, fmt.Errorf("could not initialize version table: %v", err)
+		return nil, errors.New().
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not initialize version table")
 	}
-	latestUsedVersion, err := tx.Queries().GetLatestVersion()
-	if err != nil {
-		tx.Rollback(mainLogger)
-		return nil, err
+	latestUsedVersion, tr := tx.Queries().GetLatestVersion()
+	if tr != nil {
+		return nil, tr
 	}
 	if latestUsedVersion.IsGreaterThan(&commonConfig.Version) {
-		err := fmt.Errorf("downgrades are not supported: database version %v is greater than binary version %v", latestUsedVersion.String(), commonConfig.Version.String())
-		tx.Rollback(mainLogger)
-		return nil, err
+		tr := errors.New().
+			Append(errors.LvlDebug, "Database version %v is greater than binary version %v", latestUsedVersion.String(), commonConfig.Version.String()).
+			Append(errors.LvlDebug, "Downgrades are not supported")
+		return nil, tr
 	}
-	err = tx.Migrations().RunMigrations(&latestUsedVersion)
-	if err != nil {
-		err = fmt.Errorf("could not run migrations: %v", err)
-		tx.Rollback(mainLogger)
-		return nil, err
+	tr = tx.Migrations().RunMigrations(&latestUsedVersion)
+	if tr != nil {
+		return nil, tr
 	}
 	if !latestUsedVersion.IsEqualTo(&commonConfig.Version) {
-		err = tx.Queries().UpdateVersion(commonConfig.Version)
-		if err != nil {
-			tx.Rollback(mainLogger)
-			return nil, err
+		tr = tx.Queries().UpdateVersion(commonConfig.Version)
+		if tr != nil {
+			return nil, tr
 		}
 	}
+
 	return db, tx.Commit(mainLogger)
 }
 
-func createTask(name string, task func(*db.Transaction, *logrus.Entry) error, db *db.Database, cronLogger *logrus.Entry) func() {
+func createTask(name string, task func(*db.Transaction, *logrus.Entry) *errors.ErrorTrace, db *db.Database, cronLogger *logrus.Entry) func() {
 	return func() {
 		cronLogger.Infof("running cron task %v", name)
 
@@ -119,12 +132,10 @@ func startGoroutine(f func(), wg *sync.WaitGroup) {
 }
 
 func main() {
-	var err error
-
 	// Config
 	logger, mainLogger, commonConfig, err := setupConfig()
 	if err != nil {
-		mainLogger.Errorf("could not set up config: %v", err)
+		mainLogger.Errorf("could not set up config: %v", err.Serialize(errors.LvlDebug))
 		os.Exit(1)
 	}
 
@@ -141,12 +152,12 @@ func main() {
 			dbReady = true
 			break
 		}
-		mainLogger.Warnf("could not set up database: %v", err)
+		mainLogger.Warnf("could not set up database: %v", err.Serialize(errors.LvlDebug))
 		mainLogger.Warn("retrying in 5 seconds...")
 		time.Sleep(5 * time.Second)
 	}
 	if !dbReady {
-		mainLogger.Errorf("could not set up database after 5 attempts: %v", err)
+		mainLogger.Errorf("could not set up database after 5 attempts: %v", err.Serialize(errors.LvlDebug))
 		os.Exit(1)
 	}
 

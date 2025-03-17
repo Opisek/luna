@@ -1,34 +1,32 @@
 package handlers
 
 import (
-	"luna-backend/api/internal/context"
 	"luna-backend/api/internal/util"
+	"luna-backend/errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
 func NotImplemented(c *gin.Context) {
-	util.Error(c, util.ErrorNotImplemented)
+	u := util.GetUtil(c)
+	u.Error(errors.New().Status(http.StatusNotImplemented))
 }
 
 func GetVersion(c *gin.Context) {
-	apiConfig := context.GetConfig(c)
-	c.JSON(http.StatusOK, gin.H{"version": apiConfig.CommonConfig.Version.String()})
+	u := util.GetUtil(c)
+	u.Success(&gin.H{"version": u.Config.Version.String()})
 }
 
 func GetHealth(c *gin.Context) {
-	config := context.GetConfig(c)
-	tx := context.GetTransaction(c)
+	u := util.GetUtil(c)
 
-	err := tx.Queries().CheckHealth()
+	err := u.Tx.Queries().CheckHealth()
 	if err == nil {
-		c.JSON(http.StatusOK, gin.H{"status": "ok"})
-		tx.Commit(config.Logger)
+		u.Success(&gin.H{"status": "ok"})
 	} else {
 		// With the current setup, this is never even reached, because the middleware already aborts the request earlier.
 		// Stil, in the future we might have some other checks in CheckHealth.
-		c.JSON(http.StatusInternalServerError, gin.H{"status": "error"})
-		tx.Rollback(config.Logger)
+		u.ResponseWithStatus(http.StatusInternalServerError, &gin.H{"status": "error"})
 	}
 }

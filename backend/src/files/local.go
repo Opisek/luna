@@ -6,7 +6,9 @@ import (
 	"io"
 	"luna-backend/common"
 	"luna-backend/crypto"
+	"luna-backend/errors"
 	"luna-backend/types"
+	"net/http"
 	"os"
 	"time"
 )
@@ -30,10 +32,14 @@ func (file *LocalFile) SetId(id types.ID) {
 	panic("illegal operation")
 }
 
-func (file *LocalFile) fetchContentFromFilesystem() (io.Reader, error) {
+func (file *LocalFile) fetchContentFromFilesystem() (io.Reader, *errors.ErrorTrace) {
 	fd, err := os.Open(file.path.String())
 	if err != nil {
-		return nil, fmt.Errorf("could not open file: %w", err)
+		return nil, errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not open file %v at %v", file.GetId(), file.path).
+			AltStr(errors.LvlWordy, "Could not open file at %v", file.path).
+			AltStr(errors.LvlPlain, "Could not open file")
 	}
 
 	defer func() {
@@ -44,22 +50,27 @@ func (file *LocalFile) fetchContentFromFilesystem() (io.Reader, error) {
 
 	buf, err := io.ReadAll(fd)
 	if err != nil {
-		return nil, fmt.Errorf("could not read file: %w", err)
+		return nil, errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not read from filesystem").
+			Append(errors.LvlDebug, "Could not read contents of file %v at %v", file.GetId(), file.path).
+			AltStr(errors.LvlWordy, "Could not read contents of file at %v", file.path).
+			AltStr(errors.LvlPlain, "Could not read contents of file")
 	}
 
 	return bytes.NewReader(buf), nil
 }
 
-func (file *LocalFile) GetContent(q types.DatabaseQueries) (io.Reader, error) {
+func (file *LocalFile) GetContent(q types.DatabaseQueries) (io.Reader, *errors.ErrorTrace) {
 	curTime := time.Now()
 
-	var err error
+	var tr *errors.ErrorTrace
 	var reader io.Reader
 
 	if file.content == nil {
-		reader, err = file.fetchContentFromFilesystem()
-		if err != nil {
-			return nil, fmt.Errorf("could not get file content: %w", err)
+		reader, tr = file.fetchContentFromFilesystem()
+		if tr != nil {
+			return nil, tr
 		}
 		file.date = &curTime
 	}
@@ -70,19 +81,25 @@ func (file *LocalFile) GetContent(q types.DatabaseQueries) (io.Reader, error) {
 	deltaTime := curTime.Sub(*file.date)
 
 	if deltaTime >= common.LifetimeCacheSoft {
-		reader, err = file.fetchContentFromFilesystem()
+		reader, tr = file.fetchContentFromFilesystem()
 
-		if err == nil {
+		if tr == nil {
 			file.date = &curTime
 		} else if deltaTime >= common.LifetimeCacheHard {
-			return nil, fmt.Errorf("could not get file content: %w", err)
+			return nil, tr
 		}
 	}
 
 	// TODO: figure out a proper way to use a reader without ending up saving the whole content to an array in the process
+	var err error
 	file.content, err = io.ReadAll(reader)
-	if err != nil {
-		return nil, fmt.Errorf("could not read file content: %w", err)
+	if tr != nil {
+		return nil, errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not read from buffer").
+			Append(errors.LvlDebug, "Could not read contents of file %v at %v", file.GetId(), file.path).
+			AltStr(errors.LvlWordy, "Could not read contents of file at %v", file.path).
+			AltStr(errors.LvlPlain, "Could not read contents of file")
 	}
 	return bytes.NewReader(file.content), nil
 }

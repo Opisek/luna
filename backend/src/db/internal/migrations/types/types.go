@@ -4,6 +4,7 @@ import (
 	"context"
 	"luna-backend/common"
 	"luna-backend/db/internal/tables"
+	"luna-backend/errors"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/sirupsen/logrus"
@@ -15,9 +16,9 @@ type MigrationQueries struct {
 	Logger       *logrus.Entry
 	CommonConfig *common.CommonConfig
 	Tables       *tables.Tables
-	Runner       func(*MigrationQueries, *common.Version) error
+	Runner       func(*MigrationQueries, *common.Version) *errors.ErrorTrace
 }
 
-func (q *MigrationQueries) RunMigrations(lastVersion *common.Version) error {
+func (q *MigrationQueries) RunMigrations(lastVersion *common.Version) *errors.ErrorTrace {
 	return q.Runner(q, lastVersion)
 }

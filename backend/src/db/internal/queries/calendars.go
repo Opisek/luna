@@ -4,11 +4,15 @@ import (
 	"fmt"
 	"luna-backend/db/internal/parsing"
 	"luna-backend/db/internal/util"
+	"luna-backend/errors"
 	"luna-backend/interface/primitives"
 	"luna-backend/types"
+	"net/http"
+
+	"github.com/jackc/pgx/v5"
 )
 
-func (q *Queries) insertCalendars(cals []primitives.Calendar) error {
+func (q *Queries) insertCalendars(cals []primitives.Calendar) *errors.ErrorTrace {
 	rows := [][]any{}
 
 	for _, cal := range cals {
@@ -40,13 +44,14 @@ func (q *Queries) insertCalendars(cals []primitives.Calendar) error {
 	)
 
 	if err != nil {
-		return fmt.Errorf("could not insert calendars into database: %v", err)
+		return err.
+			Append(errors.LvlWordy, "Could not insert calendars")
 	}
 
 	return nil
 }
 
-func (q *Queries) getCalendarEntries(cals []primitives.Calendar) ([]*types.CalendarDatabaseEntry, error) {
+func (q *Queries) getCalendarEntries(cals []primitives.Calendar) ([]*types.CalendarDatabaseEntry, *errors.ErrorTrace) {
 	query := fmt.Sprintf(
 		`
 		SELECT id, source, color, settings
@@ -64,7 +69,9 @@ func (q *Queries) getCalendarEntries(cals []primitives.Calendar) ([]*types.Calen
 		util.JoinIds(cals, func(c primitives.Calendar) types.ID { return c.GetId() })...,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("could not get calendars from database: %v", err)
+		return nil, errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlWordy, "Could not get calendars from the database")
 	}
 	defer rows.Close()
 
@@ -74,7 +81,9 @@ func (q *Queries) getCalendarEntries(cals []primitives.Calendar) ([]*types.Calen
 
 		err := rows.Scan(&entry.Id, &entry.Source, &entry.Color, &entry.Settings)
 		if err != nil {
-			return nil, fmt.Errorf("could not scan calendar row: %v", err)
+			return nil, errors.New().Status(http.StatusInternalServerError).
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlWordy, "Could not scan calendar row")
 		}
 
 		entries = append(entries, entry)
@@ -83,7 +92,7 @@ func (q *Queries) getCalendarEntries(cals []primitives.Calendar) ([]*types.Calen
 	return entries, nil
 }
 
-func (q *Queries) ReconcileCalendars(cals []primitives.Calendar) ([]primitives.Calendar, error) {
+func (q *Queries) ReconcileCalendars(cals []primitives.Calendar) ([]primitives.Calendar, *errors.ErrorTrace) {
 	if len(cals) == 0 {
 		return cals, nil
 	}
@@ -95,7 +104,9 @@ func (q *Queries) ReconcileCalendars(cals []primitives.Calendar) ([]primitives.C
 
 	dbCals, err := q.getCalendarEntries(cals)
 	if err != nil {
-		return nil, fmt.Errorf("could not get cached calendars: %v", err)
+		return nil, err.
+			Append(errors.LvlWordy, "Could not get cached events").
+			Append(errors.LvlPlain, "Database error")
 	}
 
 	for _, dbCal := range dbCals {
@@ -109,18 +120,20 @@ func (q *Queries) ReconcileCalendars(cals []primitives.Calendar) ([]primitives.C
 
 	err = q.insertCalendars(cals)
 	if err != nil {
-		return nil, fmt.Errorf("could not cache calendars: %v", err)
+		return nil, err.
+			Append(errors.LvlWordy, "Could not cache events").
+			Append(errors.LvlPlain, "Database error")
 	}
 
 	return cals, nil
 }
 
-func (q *Queries) GetCalendar(userId types.ID, calendarId types.ID) (primitives.Calendar, error) {
-	var err error
-
-	decryptionKey, err := util.GetUserDecryptionKey(q.CommonConfig, userId)
-	if err != nil {
-		return nil, fmt.Errorf("could not get user decryption key: %v", err)
+func (q *Queries) GetCalendar(userId types.ID, calendarId types.ID) (primitives.Calendar, *errors.ErrorTrace) {
+	decryptionKey, tr := util.GetUserDecryptionKey(q.CommonConfig, userId)
+	if tr != nil {
+		return nil, tr.
+			Append(errors.LvlDebug, "Could not get calendar %v", calendarId).
+			AltStr(errors.LvlBroad, "Could not get calendar")
 	}
 
 	scanner := parsing.NewPgxScanner(q.PrimitivesParser, q)
@@ -138,21 +151,41 @@ func (q *Queries) GetCalendar(userId types.ID, calendarId types.ID) (primitives.
 		cols,
 	)
 
-	err = q.Tx.QueryRow(
+	err := q.Tx.QueryRow(
 		q.Context,
 		query,
 		calendarId.UUID(),
 		userId.UUID(),
 		decryptionKey,
 	).Scan(params...)
-	if err != nil {
-		return nil, fmt.Errorf("could not get calendar: %v", err)
+
+	switch err {
+	case nil:
+		break
+	case pgx.ErrNoRows:
+		return nil, errors.New().Status(http.StatusNotFound).
+			Append(errors.LvlDebug, "Calendar %v for user %v not found", calendarId, userId).
+			AltStr(errors.LvlPlain, "Calendar not found").
+			AltStr(errors.LvlBroad, "Could not get event")
+	default:
+		return nil, errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not get calendar %v for user %v", calendarId, userId).
+			AltStr(errors.LvlBroad, "Could not get calendar")
 	}
 
-	return scanner.GetCalendar()
+	event, tr := scanner.GetCalendar()
+	if tr != nil {
+		return nil, tr.
+			Append(errors.LvlDebug, "Could not parse calendar %v for user %v", calendarId, userId).
+			AltStr(errors.LvlWordy, "Could not parse calendar").
+			AltStr(errors.LvlBroad, "Could not get calendar")
+	}
+
+	return event, nil
 }
 
-func (q *Queries) InsertCalendar(calendar primitives.Calendar) error {
+func (q *Queries) InsertCalendar(calendar primitives.Calendar) *errors.ErrorTrace {
 	_, err := q.Tx.Exec(
 		q.Context,
 		`
@@ -166,13 +199,16 @@ func (q *Queries) InsertCalendar(calendar primitives.Calendar) error {
 	)
 
 	if err != nil {
-		return fmt.Errorf("could not insert calendar %v: %v", calendar.GetId().String(), err)
+		return errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlWordy, "Could not insert calendar %v", calendar.GetName()).
+			AltStr(errors.LvlBroad, "Could not add calendar")
 	}
 
 	return nil
 }
 
-func (q *Queries) UpdateCalendar(cal primitives.Calendar) error {
+func (q *Queries) UpdateCalendar(cal primitives.Calendar) *errors.ErrorTrace {
 	_, err := q.Tx.Exec(
 		q.Context,
 		`
@@ -184,14 +220,25 @@ func (q *Queries) UpdateCalendar(cal primitives.Calendar) error {
 		cal.GetId(),
 	)
 
-	if err != nil {
-		return fmt.Errorf("could not update calendar %v: %v", cal.GetId().String(), err)
+	switch err {
+	case nil:
+		return nil
+	case pgx.ErrNoRows:
+		return errors.New().Status(http.StatusNotFound).
+			Append(errors.LvlDebug, "Calendar %v not found", cal.GetId()).
+			AltStr(errors.LvlPlain, "Calendar not found").
+			Append(errors.LvlPlain, "Could not update calendar %v", cal.GetName()).
+			AltStr(errors.LvlBroad, "Could not edit calendar")
+	default:
+		return errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not update calendar %v", cal.GetId()).
+			Append(errors.LvlPlain, "Could not update calendar %v", cal.GetName()).
+			AltStr(errors.LvlBroad, "Could not edit calendar")
 	}
-
-	return nil
 }
 
-func (q *Queries) DeleteCalendar(userId types.ID, calendarId types.ID) error {
+func (q *Queries) DeleteCalendar(userId types.ID, calendarId types.ID) *errors.ErrorTrace {
 	_, err := q.Tx.Exec(
 		q.Context,
 		`
@@ -207,9 +254,19 @@ func (q *Queries) DeleteCalendar(userId types.ID, calendarId types.ID) error {
 		userId.UUID(),
 	)
 
-	if err != nil {
-		return fmt.Errorf("could not delete calendar %v: %v", calendarId.String(), err)
+	switch err {
+	case nil:
+		return nil
+	case pgx.ErrNoRows:
+		return errors.New().Status(http.StatusNotFound).
+			Append(errors.LvlDebug, "Calendar %v for user %v not found", calendarId, userId).
+			AltStr(errors.LvlPlain, "Calendar not found").
+			Append(errors.LvlDebug, "Could not delete calendar %v", calendarId).
+			AltStr(errors.LvlBroad, "Could not delete calendar")
+	default:
+		return errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not delete calendar %v", calendarId).
+			AltStr(errors.LvlBroad, "Could not delete calendar")
 	}
-
-	return nil
 }

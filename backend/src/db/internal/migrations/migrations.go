@@ -1,12 +1,12 @@
 package migrations
 
 import (
-	"fmt"
 	"luna-backend/common"
 	"luna-backend/db/internal/migrations/internal/registry"
 	_ "luna-backend/db/internal/migrations/internal/versions"
 	"luna-backend/db/internal/migrations/types"
 	"luna-backend/db/internal/tables"
+	"luna-backend/errors"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/sirupsen/logrus"
@@ -22,7 +22,7 @@ func NewMigrationQueries(tx pgx.Tx, logger *logrus.Entry, commonConfig *common.C
 	}
 }
 
-func runMigrations(q *types.MigrationQueries, lastVersion *common.Version) error {
+func runMigrations(q *types.MigrationQueries, lastVersion *common.Version) *errors.ErrorTrace {
 
 	migrations := registry.GetMigrations(*lastVersion)
 
@@ -30,7 +30,8 @@ func runMigrations(q *types.MigrationQueries, lastVersion *common.Version) error
 		q.Logger.Infof("running migration %s", migration.Ver.String())
 		err := migration.Fun(q)
 		if err != nil {
-			return fmt.Errorf("error running migration for %s: %v", migration.Ver.String(), err)
+			return err.
+				Append(errors.LvlDebug, "Error running migration for %s", migration.Ver.String())
 		}
 	}
 

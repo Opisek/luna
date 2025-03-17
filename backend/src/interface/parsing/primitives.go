@@ -2,12 +2,13 @@ package parsing
 
 import (
 	"encoding/json"
-	"fmt"
 	"luna-backend/auth"
+	"luna-backend/errors"
 	"luna-backend/interface/primitives"
 	"luna-backend/interface/protocols/caldav"
 	"luna-backend/interface/protocols/ical"
 	"luna-backend/types"
+	"net/http"
 )
 
 type PrimitivesParser struct{}
@@ -16,7 +17,7 @@ func GetPrimitivesParser() PrimitivesParser {
 	return PrimitivesParser{}
 }
 
-func (PrimitivesParser) ParseSource(entry *types.SourceDatabaseEntry) (primitives.Source, error) {
+func (PrimitivesParser) ParseSource(entry *types.SourceDatabaseEntry) (primitives.Source, *errors.ErrorTrace) {
 	var err error
 
 	var authMethod auth.AuthMethod
@@ -27,18 +28,25 @@ func (PrimitivesParser) ParseSource(entry *types.SourceDatabaseEntry) (primitive
 		basicAuth := &auth.BasicAuth{}
 		err = json.Unmarshal([]byte(entry.Auth), basicAuth)
 		if err != nil {
-			return nil, fmt.Errorf("could not unmarshal basic auth: %v", err)
+			return nil, errors.New().Status(http.StatusInternalServerError).
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlDebug, "Could not unmarshal basic authentication").
+				Append(errors.LvlWordy, "Could not unmarshal authentication")
 		}
 		authMethod = basicAuth
 	case types.AuthBearer:
 		bearerAuth := &auth.BearerAuth{}
 		err = json.Unmarshal([]byte(entry.Auth), bearerAuth)
 		if err != nil {
-			return nil, fmt.Errorf("could not unmarshal bearer auth: %v", err)
+			return nil, errors.New().Status(http.StatusInternalServerError).
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlDebug, "Could not unmarshal bearer authentication").
+				Append(errors.LvlWordy, "Could not unmarshal authentication")
 		}
 		authMethod = bearerAuth
 	default:
-		return nil, fmt.Errorf("unknown auth type: %v", entry.Auth)
+		return nil, errors.New().Status(http.StatusInternalServerError).
+			Append(errors.LvlPlain, "Unknown authentication type: %v", entry.Auth)
 	}
 
 	switch entry.Type {
@@ -46,7 +54,10 @@ func (PrimitivesParser) ParseSource(entry *types.SourceDatabaseEntry) (primitive
 		settings := &caldav.CaldavSourceSettings{}
 		err = json.Unmarshal(entry.Settings, settings)
 		if err != nil {
-			return nil, fmt.Errorf("could not unmarshal caldav settings: %v", err)
+			return nil, errors.New().Status(http.StatusInternalServerError).
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlDebug, "Could not unmarshal CalDAV settings").
+				Append(errors.LvlWordy, "Could not unmarshal settings")
 		}
 		caldavSource := caldav.PackCaldavSource(
 			entry.Id,
@@ -59,61 +70,79 @@ func (PrimitivesParser) ParseSource(entry *types.SourceDatabaseEntry) (primitive
 		settings := &ical.IcalSourceSettings{}
 		err = json.Unmarshal(entry.Settings, settings)
 		if err != nil {
-			return nil, fmt.Errorf("could not unmarshal ical settings: %v", err)
+			return nil, errors.New().Status(http.StatusInternalServerError).
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlDebug, "Could not unmarshal iCal settings").
+				Append(errors.LvlWordy, "Could not unmarshal settings")
 		}
-		icalSource, err := ical.PackIcalSource(
+		icalSource, tr := ical.PackIcalSource(
 			entry.Id,
 			entry.Name,
 			settings,
 			authMethod,
 		)
-		if err != nil {
-			return nil, fmt.Errorf("could not pack ical source: %v", err)
+		if tr != nil {
+			return nil, tr
 		}
 		return icalSource, nil
 	default:
-		return nil, fmt.Errorf("unknown source type: %v", entry.Type)
+		return nil, errors.New().Status(http.StatusInternalServerError).
+			Append(errors.LvlWordy, "Unknown source type: %v", entry.Type)
 	}
 }
 
-func (PrimitivesParser) ParseCalendarSettings(sourceType string, settings []byte) (primitives.CalendarSettings, error) {
+func (PrimitivesParser) ParseCalendarSettings(sourceType string, settings []byte) (primitives.CalendarSettings, *errors.ErrorTrace) {
 	switch sourceType {
 	case types.SourceCaldav:
 		parsedSettings := &caldav.CaldavCalendarSettings{}
 		err := json.Unmarshal(settings, parsedSettings)
 		if err != nil {
-			return nil, fmt.Errorf("could not unmarshal caldav settings: %v", err)
+			return nil, errors.New().Status(http.StatusInternalServerError).
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlDebug, "Could not unmarshal CalDAV settings").
+				Append(errors.LvlWordy, "Could not unmarshal settings")
 		}
 		return parsedSettings, nil
 	case types.SourceIcal:
 		parsedSettings := &ical.IcalCalendarSettings{}
 		err := json.Unmarshal(settings, parsedSettings)
 		if err != nil {
-			return nil, fmt.Errorf("could not unmarshal ical settings: %v", err)
+			return nil, errors.New().Status(http.StatusInternalServerError).
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlDebug, "Could not unmarshal iCal settings").
+				Append(errors.LvlWordy, "Could not unmarshal settings")
 		}
 		return parsedSettings, nil
 	default:
-		return nil, fmt.Errorf("unknown source type %v", sourceType)
+		return nil, errors.New().Status(http.StatusInternalServerError).
+			Append(errors.LvlWordy, "Unknown source type: %v", sourceType)
 	}
 }
 
-func (PrimitivesParser) ParseEventSettings(sourceType string, settings []byte) (primitives.EventSettings, error) {
+func (PrimitivesParser) ParseEventSettings(sourceType string, settings []byte) (primitives.EventSettings, *errors.ErrorTrace) {
 	switch sourceType {
 	case types.SourceCaldav:
 		parsedSettings := &caldav.CaldavEventSettings{}
 		err := json.Unmarshal(settings, parsedSettings)
 		if err != nil {
-			return nil, fmt.Errorf("could not unmarshal caldav settings: %v", err)
+			return nil, errors.New().Status(http.StatusInternalServerError).
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlDebug, "Could not unmarshal CalDAV settings").
+				Append(errors.LvlWordy, "Could not unmarshal settings")
 		}
 		return parsedSettings, nil
 	case types.SourceIcal:
 		parsedSettings := &ical.IcalEventSettings{}
 		err := json.Unmarshal(settings, parsedSettings)
 		if err != nil {
-			return nil, fmt.Errorf("could not unmarshal ical settings: %v", err)
+			return nil, errors.New().Status(http.StatusInternalServerError).
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlDebug, "Could not unmarshal iCal settings").
+				Append(errors.LvlWordy, "Could not unmarshal settings")
 		}
 		return parsedSettings, nil
 	default:
-		return nil, fmt.Errorf("unknown source type %v", sourceType)
+		return nil, errors.New().Status(http.StatusInternalServerError).
+			Append(errors.LvlWordy, "Unknown source type: %v", sourceType)
 	}
 }

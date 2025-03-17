@@ -295,11 +295,11 @@ class Repository {
 
     const stopLoading = getMetadata().startLoading();
 
-    const fetchedSources: SourceModel[] = await fetchJson("/api/sources").catch((err) => {
+    const fetchedSources: SourceModel[] = (await fetchJson("/api/sources").catch((err) => {
       throw err;
     }).finally(() => {
       stopLoading();
-    });
+    })).sources;
 
     this.sourcesCache.date = Date.now(),
     this.sourcesCache.value = fetchedSources;
@@ -316,7 +316,7 @@ class Repository {
       if (cached) return Promise.resolve(cached);
     }
 
-    const fetched: SourceModel = await fetchJson(`/api/sources/${id}`).catch((err) => { throw err; });
+    const fetched: SourceModel = (await fetchJson(`/api/sources/${id}`).catch((err) => { throw err; })).source;
 
     this.sourceDetailsCache.set(id, {
       date: Date.now(),

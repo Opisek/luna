@@ -4,11 +4,15 @@ import (
 	"fmt"
 	"luna-backend/db/internal/parsing"
 	"luna-backend/db/internal/util"
+	"luna-backend/errors"
 	"luna-backend/interface/primitives"
 	"luna-backend/types"
+	"net/http"
+
+	"github.com/jackc/pgx/v5"
 )
 
-func (q *Queries) insertEvents(events []primitives.Event) error {
+func (q *Queries) insertEvents(events []primitives.Event) *errors.ErrorTrace {
 	rows := [][]any{}
 
 	for _, event := range events {
@@ -40,13 +44,14 @@ func (q *Queries) insertEvents(events []primitives.Event) error {
 	)
 
 	if err != nil {
-		return fmt.Errorf("could not insert events into database: %v", err)
+		return err.
+			Append(errors.LvlWordy, "Could not insert events")
 	}
 
 	return nil
 }
 
-func (q *Queries) getEventEntries(events []primitives.Event) ([]*types.EventDatabaseEntry, error) {
+func (q *Queries) getEventEntries(events []primitives.Event) ([]*types.EventDatabaseEntry, *errors.ErrorTrace) {
 	query := fmt.Sprintf(
 		`
 		SELECT id, calendar, color, settings
@@ -63,11 +68,11 @@ func (q *Queries) getEventEntries(events []primitives.Event) ([]*types.EventData
 		query,
 		util.JoinIds(events, func(e primitives.Event) types.ID { return e.GetId() })...,
 	)
-
 	if err != nil {
-		return nil, fmt.Errorf("could not get calendars from database: %v", err)
+		return nil, errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlWordy, "Could not get events from the database")
 	}
-
 	defer rows.Close()
 
 	entries := []*types.EventDatabaseEntry{}
@@ -76,7 +81,9 @@ func (q *Queries) getEventEntries(events []primitives.Event) ([]*types.EventData
 
 		err := rows.Scan(&entry.Id, &entry.Calendar, &entry.Color, &entry.Settings)
 		if err != nil {
-			return nil, fmt.Errorf("could not scan calendar row: %v", err)
+			return nil, errors.New().Status(http.StatusInternalServerError).
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlWordy, "Could not scan event row")
 		}
 
 		entries = append(entries, entry)
@@ -85,7 +92,7 @@ func (q *Queries) getEventEntries(events []primitives.Event) ([]*types.EventData
 	return entries, nil
 }
 
-func (q *Queries) ReconcileEvents(events []primitives.Event) ([]primitives.Event, error) {
+func (q *Queries) ReconcileEvents(events []primitives.Event) ([]primitives.Event, *errors.ErrorTrace) {
 	if len(events) == 0 {
 		return events, nil
 	}
@@ -97,32 +104,35 @@ func (q *Queries) ReconcileEvents(events []primitives.Event) ([]primitives.Event
 
 	dbEvents, err := q.getEventEntries(events)
 	if err != nil {
-		return nil, fmt.Errorf("could not get cached events: %v", err)
+		return nil, err.
+			Append(errors.LvlWordy, "Could not get cached events").
+			Append(errors.LvlPlain, "Database error")
 	}
 
 	for _, dbEvent := range dbEvents {
 		if event, ok := eventMap[dbEvent.Id]; ok {
 			if event.GetColor() == nil {
 				event.SetColor(types.ColorFromBytes(dbEvent.Color))
-				// TODO: if dbCal.Color == nil, either return some default color, or generate a deterministic random one (e.g. calendar id hash -> hue)
 			}
 		}
 	}
 
 	err = q.insertEvents(events)
 	if err != nil {
-		return nil, fmt.Errorf("could not cache events: %v", err)
+		return nil, err.
+			Append(errors.LvlWordy, "Could not cache events").
+			Append(errors.LvlPlain, "Database error")
 	}
 
 	return events, nil
 }
 
-func (q *Queries) GetEvent(userId types.ID, eventId types.ID) (primitives.Event, error) {
-	var err error
-
-	decryptionKey, err := util.GetUserDecryptionKey(q.CommonConfig, userId)
-	if err != nil {
-		return nil, fmt.Errorf("could not get user decryption key: %v", err)
+func (q *Queries) GetEvent(userId types.ID, eventId types.ID) (primitives.Event, *errors.ErrorTrace) {
+	decryptionKey, tr := util.GetUserDecryptionKey(q.CommonConfig, userId)
+	if tr != nil {
+		return nil, tr.
+			Append(errors.LvlDebug, "Could not get event %v", eventId).
+			AltStr(errors.LvlBroad, "Could not get event")
 	}
 
 	scanner := parsing.NewPgxScanner(q.PrimitivesParser, q)
@@ -141,21 +151,41 @@ func (q *Queries) GetEvent(userId types.ID, eventId types.ID) (primitives.Event,
 		cols,
 	)
 
-	err = q.Tx.QueryRow(
+	err := q.Tx.QueryRow(
 		q.Context,
 		query,
 		eventId.UUID(),
 		userId.UUID(),
 		decryptionKey,
 	).Scan(params...)
-	if err != nil {
-		return nil, fmt.Errorf("could not get event: %v", err)
+
+	switch err {
+	case nil:
+		break
+	case pgx.ErrNoRows:
+		return nil, errors.New().Status(http.StatusNotFound).
+			Append(errors.LvlDebug, "Event %v for user %v not found", eventId, userId).
+			AltStr(errors.LvlPlain, "Event not found").
+			AltStr(errors.LvlBroad, "Could not get event")
+	default:
+		return nil, errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not get event %v for user %v", eventId, userId).
+			AltStr(errors.LvlBroad, "Could not get event")
 	}
 
-	return scanner.GetEvent()
+	event, tr := scanner.GetEvent()
+	if tr != nil {
+		return nil, tr.
+			Append(errors.LvlDebug, "Could not parse event %v for user %v", eventId, userId).
+			AltStr(errors.LvlWordy, "Could not parse event").
+			AltStr(errors.LvlBroad, "Could not get event")
+	}
+
+	return event, nil
 }
 
-func (q *Queries) InsertEvent(event primitives.Event) error {
+func (q *Queries) InsertEvent(event primitives.Event) *errors.ErrorTrace {
 	_, err := q.Tx.Exec(
 		q.Context,
 		`
@@ -167,14 +197,18 @@ func (q *Queries) InsertEvent(event primitives.Event) error {
 		event.GetColor().Bytes(),
 		event.GetSettings().Bytes(),
 	)
+
 	if err != nil {
-		return fmt.Errorf("could not insert event into database: %v", err)
+		return errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlWordy, "Could not insert event %v", event.GetName()).
+			AltStr(errors.LvlBroad, "Could not add event")
 	}
 
 	return nil
 }
 
-func (q *Queries) UpdateEvent(event primitives.Event) error {
+func (q *Queries) UpdateEvent(event primitives.Event) *errors.ErrorTrace {
 	_, err := q.Tx.Exec(
 		q.Context,
 		`
@@ -186,14 +220,26 @@ func (q *Queries) UpdateEvent(event primitives.Event) error {
 		event.GetColor().Bytes(),
 		event.GetSettings().Bytes(),
 	)
-	if err != nil {
-		return fmt.Errorf("could not update event in database: %v", err)
-	}
 
-	return nil
+	switch err {
+	case nil:
+		return nil
+	case pgx.ErrNoRows:
+		return errors.New().Status(http.StatusNotFound).
+			Append(errors.LvlDebug, "Event %v not found", event.GetId()).
+			AltStr(errors.LvlPlain, "Event not found").
+			Append(errors.LvlPlain, "Could not update event %v", event.GetName()).
+			AltStr(errors.LvlBroad, "Could not edit event")
+	default:
+		return errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not update event %v", event.GetId()).
+			Append(errors.LvlPlain, "Could not update event %v", event.GetName()).
+			AltStr(errors.LvlBroad, "Could not edit event")
+	}
 }
 
-func (q *Queries) DeleteEvent(userId types.ID, eventId types.ID) error {
+func (q *Queries) DeleteEvent(userId types.ID, eventId types.ID) *errors.ErrorTrace {
 	_, err := q.Tx.Exec(
 		q.Context,
 		`
@@ -209,9 +255,20 @@ func (q *Queries) DeleteEvent(userId types.ID, eventId types.ID) error {
 		eventId.UUID(),
 		userId.UUID(),
 	)
-	if err != nil {
-		return fmt.Errorf("could not delete event from database: %v", err)
-	}
 
-	return nil
+	switch err {
+	case nil:
+		return nil
+	case pgx.ErrNoRows:
+		return errors.New().Status(http.StatusNotFound).
+			Append(errors.LvlDebug, "Event %v for user %v not found", eventId, userId).
+			AltStr(errors.LvlPlain, "Event not found").
+			Append(errors.LvlDebug, "Could not delete event %v", eventId).
+			AltStr(errors.LvlBroad, "Could not delete event")
+	default:
+		return errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not delete event %v", eventId).
+			AltStr(errors.LvlBroad, "Could not delete event")
+	}
 }

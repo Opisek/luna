@@ -1,6 +1,7 @@
 package primitives
 
 import (
+	"luna-backend/errors"
 	"luna-backend/types"
 	"time"
 )
@@ -13,11 +14,11 @@ type Calendar interface {
 	GetColor() *types.Color
 	SetColor(color *types.Color)
 	GetSettings() CalendarSettings
-	GetEvents(start time.Time, end time.Time, q types.DatabaseQueries) ([]Event, error)
-	GetEvent(settings EventSettings, q types.DatabaseQueries) (Event, error)
-	AddEvent(name string, desc string, color *types.Color, date *types.EventDate, q types.DatabaseQueries) (Event, error)
-	EditEvent(event Event, name string, desc string, color *types.Color, date *types.EventDate, q types.DatabaseQueries) (Event, error)
-	DeleteEvent(event Event, q types.DatabaseQueries) error
+	GetEvents(start time.Time, end time.Time, q types.DatabaseQueries) ([]Event, *errors.ErrorTrace)
+	GetEvent(settings EventSettings, q types.DatabaseQueries) (Event, *errors.ErrorTrace)
+	AddEvent(name string, desc string, color *types.Color, date *types.EventDate, q types.DatabaseQueries) (Event, *errors.ErrorTrace)
+	EditEvent(event Event, name string, desc string, color *types.Color, date *types.EventDate, q types.DatabaseQueries) (Event, *errors.ErrorTrace)
+	DeleteEvent(event Event, q types.DatabaseQueries) *errors.ErrorTrace
 }
 
 type CalendarSettings interface {

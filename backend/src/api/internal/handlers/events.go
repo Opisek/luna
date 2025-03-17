@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"luna-backend/api/internal/context"
 	"luna-backend/api/internal/util"
+	"luna-backend/errors"
 	"luna-backend/interface/primitives"
 	"luna-backend/types"
 	"net/http"
@@ -21,24 +21,20 @@ type exposedEvent struct {
 }
 
 func GetEvents(c *gin.Context) {
-	// Get config
-	config := context.GetConfig(c)
-	userId := context.GetUserId(c)
-	calendarId, err := context.GetId(c, "calendar")
-	if err != nil {
-		config.Logger.Errorf("could not get calendar id: %v", err)
-		util.Error(c, util.ErrorMalformedID)
+	u := util.GetUtil(c)
+
+	userId := util.GetUserId(c)
+
+	calendarId, tr := util.GetId(c, "calendar")
+	if tr != nil {
+		u.Error(tr)
 		return
 	}
 
-	tx := context.GetTransaction(c)
-	defer tx.Rollback(config.Logger)
-
 	// Get the requested calendar
-	calendar, err := tx.Queries().GetCalendar(userId, calendarId)
-	if err != nil {
-		config.Logger.Errorf("could not get events: %v", err)
-		util.Error(c, util.ErrorDatabase)
+	calendar, tr := u.Tx.Queries().GetCalendar(userId, calendarId)
+	if tr != nil {
+		u.Error(tr)
 		return
 	}
 
@@ -46,37 +42,37 @@ func GetEvents(c *gin.Context) {
 	startStr := c.Query("start")
 	startTime, err := time.Parse(time.RFC3339, startStr)
 	if err != nil {
-		config.Logger.Warnf("could not get events: could not parse start time: %v", err)
-		util.ErrorDetailed(c, util.ErrorPayload, util.DetailTime)
+		u.Error(errors.New().
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlPlain, "Missing or malformed start time"))
 		return
 	}
 	endStr := c.Query("end")
 	endTime, err := time.Parse(time.RFC3339, endStr)
 	if err != nil {
-		config.Logger.Warnf("could not get events: could not parse end time: %v", err)
-		util.ErrorDetailed(c, util.ErrorPayload, util.DetailTime)
+		u.Error(errors.New().
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlPlain, "Missing or malformed end time"))
 		return
 	}
 	if startTime.After(endTime) {
-		config.Logger.Warn("start time is after end time")
-		util.ErrorDetailed(c, util.ErrorPayload, util.DetailTime)
+		u.Error(errors.New().
+			Append(errors.LvlPlain, "Start time must not be after end time"))
 		return
 	}
 	if endTime.Sub(startTime) > time.Hour*24*365 {
 		endTime = startTime.Add(time.Hour * 24 * 365)
 	}
 
-	eventsFromCal, err := calendar.GetEvents(startTime, endTime, tx.Queries())
-	if err != nil {
-		config.Logger.Errorf("could not get events: could not get events from calendar %v: %v", calendar.GetName(), err)
-		util.Error(c, util.ErrorUnknown)
+	eventsFromCal, tr := calendar.GetEvents(startTime, endTime, u.Tx.Queries())
+	if tr != nil {
+		u.Error(tr)
 		return
 	}
 
-	events, err := tx.Queries().ReconcileEvents(eventsFromCal)
-	if err != nil {
-		config.Logger.Errorf("could not reconcile events: %v", err)
-		util.Error(c, util.ErrorDatabase)
+	events, tr := u.Tx.Queries().ReconcileEvents(eventsFromCal)
+	if tr != nil {
+		u.Error(tr)
 		return
 	}
 
@@ -84,10 +80,9 @@ func GetEvents(c *gin.Context) {
 	expandedEvents := make([]primitives.Event, len(events))
 	count := 0
 	for _, event := range events {
-		expanded, err := primitives.ExpandRecurrence(event, &startTime, &endTime)
-		if err != nil {
-			config.Logger.Errorf("could not expand recurrence: %v", err)
-			util.Error(c, util.ErrorUnknown)
+		expanded, tr := primitives.ExpandRecurrence(event, &startTime, &endTime)
+		if tr != nil {
+			u.Error(tr)
 			return
 		}
 
@@ -117,36 +112,27 @@ func GetEvents(c *gin.Context) {
 			Desc:     event.GetDesc(),
 			Color:    event.GetColor(),
 			Date:     event.GetDate(),
-			//Settings: event.GetSettings(),
 		}
 	}
 
-	if tx.Commit(config.Logger) != nil {
-		util.Error(c, util.ErrorDatabase)
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"events": convertedEvents})
+	u.Success(&gin.H{"events": convertedEvents})
 }
 
 func GetEvent(c *gin.Context) {
-	apiConfig := context.GetConfig(c)
-	eventId, err := context.GetId(c, "event")
-	if err != nil {
-		apiConfig.Logger.Errorf("could not get event id: %v", err)
-		util.Error(c, util.ErrorMalformedID)
+	u := util.GetUtil(c)
+
+	userId := util.GetUserId(c)
+
+	eventId, tr := util.GetId(c, "event")
+	if tr != nil {
+		u.Error(tr)
 		return
 	}
 
-	userId := context.GetUserId(c)
-	tx := context.GetTransaction(c)
-	defer tx.Rollback(apiConfig.Logger)
-
 	// Get event
-	event, err := tx.Queries().GetEvent(userId, eventId)
+	event, err := u.Tx.Queries().GetEvent(userId, eventId)
 	if err != nil {
-		apiConfig.Logger.Errorf("could not get event: %v", err)
-		util.Error(c, util.ErrorDatabase)
+		u.Error(err)
 		return
 	}
 
@@ -161,38 +147,30 @@ func GetEvent(c *gin.Context) {
 		//Settings: event.GetSettings(),
 	}
 
-	if tx.Commit(apiConfig.Logger) != nil {
-		util.Error(c, util.ErrorDatabase)
-		return
-	}
-
-	c.JSON(http.StatusOK, convertedCal)
+	u.Success(&gin.H{"event": convertedCal})
 }
 
 func PutEvent(c *gin.Context) {
-	apiConfig := context.GetConfig(c)
-	userId := context.GetUserId(c)
-	tx := context.GetTransaction(c)
-	defer tx.Rollback(apiConfig.Logger)
+	u := util.GetUtil(c)
 
-	calendarId, err := context.GetId(c, "calendar")
-	if err != nil {
-		apiConfig.Logger.Warn("missing or malformed calendar id")
-		util.ErrorDetailed(c, util.ErrorPayload, util.DetailId)
+	userId := util.GetUserId(c)
+
+	calendarId, tr := util.GetId(c, "calendar")
+	if tr != nil {
+		u.Error(tr)
 		return
 	}
 
-	calendar, err := tx.Queries().GetCalendar(userId, calendarId)
-	if err != nil {
-		apiConfig.Logger.Errorf("could not get calendar: %v", err)
-		util.Error(c, util.ErrorDatabase)
+	calendar, tr := u.Tx.Queries().GetCalendar(userId, calendarId)
+	if tr != nil {
+		u.Error(tr)
 		return
 	}
 
 	eventName := c.PostForm("name")
 	if eventName == "" {
-		apiConfig.Logger.Warn("missing name")
-		util.ErrorDetailed(c, util.ErrorPayload, util.DetailName)
+		u.Error(errors.New().Status(http.StatusBadRequest).
+			Append(errors.LvlPlain, "Missing name"))
 		return
 	}
 
@@ -200,8 +178,9 @@ func PutEvent(c *gin.Context) {
 
 	eventColor, err := types.ParseColor(c.PostForm("color"))
 	if err != nil {
-		apiConfig.Logger.Warnf("missing or malformed color: %v", err)
-		util.ErrorDetailed(c, util.ErrorPayload, util.DetailColor)
+		u.Error(errors.New().Status(http.StatusBadRequest).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlPlain, "Missing or malformed color"))
 		return
 	}
 
@@ -210,8 +189,9 @@ func PutEvent(c *gin.Context) {
 	eventDateStartStr := c.PostForm("date_start")
 	eventDateStart, err := time.Parse(time.RFC3339, eventDateStartStr)
 	if err != nil {
-		apiConfig.Logger.Warnf("missing or malformed date start: %v", err)
-		util.ErrorDetailed(c, util.ErrorPayload, util.DetailDate)
+		u.Error(errors.New().Status(http.StatusBadRequest).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlWordy, "Missing or malformed start time"))
 		return
 	}
 
@@ -221,58 +201,51 @@ func PutEvent(c *gin.Context) {
 	eventDateEnd, endErr := time.Parse(time.RFC3339, eventDateEndStr)
 	eventDateDuration, durationErr := time.ParseDuration(eventDateDurationStr)
 
-	if (endErr != nil && durationErr != nil) || (endErr == nil && durationErr == nil) {
-		apiConfig.Logger.Warn("missing or malformed date start")
-		util.ErrorDetailed(c, util.ErrorPayload, util.DetailDate)
-		return
-	}
-
 	var date *types.EventDate
-	if endErr == nil {
+	if (endErr != nil && durationErr != nil) || (endErr == nil && durationErr == nil) {
+		u.Error(errors.New().Status(http.StatusBadRequest).
+			AddErr(errors.LvlDebug, endErr).AndErr(durationErr).
+			Append(errors.LvlPlain, "Missing or malformed date end or duration"))
+		return
+	} else if endErr == nil && durationErr == nil {
+		u.Error(errors.New().Status(http.StatusBadRequest).
+			Append(errors.LvlPlain, "Cannot specify both end and duration"))
+		return
+	} else if endErr == nil {
 		date = types.NewEventDateFromEndTime(&eventDateStart, &eventDateEnd, eventDateAllDay, nil)
 	} else {
 		date = types.NewEventDateFromDuration(&eventDateStart, &eventDateDuration, eventDateAllDay, nil)
 	}
 
-	event, err := calendar.AddEvent(eventName, eventDesc, eventColor, date, tx.Queries())
-	if err != nil {
-		apiConfig.Logger.Errorf("could not add event: %v", err)
-		util.Error(c, util.ErrorInternal)
+	event, tr := calendar.AddEvent(eventName, eventDesc, eventColor, date, u.Tx.Queries())
+	if tr != nil {
+		u.Error(tr)
 		return
 	}
 
-	err = tx.Queries().InsertEvent(event)
-	if err != nil {
-		apiConfig.Logger.Errorf("could not insert event: %v", err)
-		util.Error(c, util.ErrorDatabase)
+	tr = u.Tx.Queries().InsertEvent(event)
+	if tr != nil {
+		u.Error(tr)
 		return
 	}
 
-	if tx.Commit(apiConfig.Logger) != nil {
-		util.Error(c, util.ErrorDatabase)
-		return
-	}
-
-	c.JSON(http.StatusCreated, gin.H{"id": event.GetId().String()})
+	u.Success(&gin.H{"id": event.GetId().String()})
 }
 
 func PatchEvent(c *gin.Context) {
-	apiConfig := context.GetConfig(c)
-	userId := context.GetUserId(c)
-	tx := context.GetTransaction(c)
-	defer tx.Rollback(apiConfig.Logger)
+	u := util.GetUtil(c)
 
-	eventId, err := context.GetId(c, "event")
+	userId := util.GetUserId(c)
+
+	eventId, err := util.GetId(c, "event")
 	if err != nil {
-		apiConfig.Logger.Warn("missing or malformed event id")
-		util.ErrorDetailed(c, util.ErrorPayload, util.DetailId)
+		u.Error(err)
 		return
 	}
 
-	event, err := tx.Queries().GetEvent(userId, eventId)
+	event, err := u.Tx.Queries().GetEvent(userId, eventId)
 	if err != nil {
-		apiConfig.Logger.Errorf("could not get event: %v", err)
-		util.Error(c, util.ErrorDatabase)
+		u.Error(err)
 		return
 	}
 
@@ -294,8 +267,8 @@ func PatchEvent(c *gin.Context) {
 	eventDateDuration, durationErr := time.ParseDuration(eventDateDurationStr)
 
 	if newEventName == "" && newEventDesc == event.GetDesc() && colErr != nil && startErr != nil && endErr != nil && durationErr != nil {
-		apiConfig.Logger.Warn("no values to change")
-		util.ErrorDetailed(c, util.ErrorPayload, util.DetailFields)
+		u.Error(errors.New().Status(http.StatusBadRequest).
+			Append(errors.LvlPlain, "Nothing to change"))
 		return
 	}
 
@@ -323,8 +296,8 @@ func PatchEvent(c *gin.Context) {
 				newEventDate = types.NewEventDateFromEndTime(&eventDateStart, &eventDateEnd, eventDateAllDay, nil)
 			}
 		} else if endErr == nil && durationErr == nil {
-			apiConfig.Logger.Warn("cannot specify both end and duration")
-			util.ErrorDetailed(c, util.ErrorPayload, util.DetailDate)
+			u.Error(errors.New().Status(http.StatusBadRequest).
+				Append(errors.LvlPlain, "Cannot specify both end and duration"))
 			return
 		} else if endErr == nil {
 			newEventDate = types.NewEventDateFromEndTime(&eventDateStart, &eventDateEnd, eventDateAllDay, nil)
@@ -333,69 +306,52 @@ func PatchEvent(c *gin.Context) {
 		}
 	}
 
-	newEvent, err := event.GetCalendar().EditEvent(event, newEventName, newEventDesc, newEventColor, newEventDate, tx.Queries())
+	newEvent, err := event.GetCalendar().EditEvent(event, newEventName, newEventDesc, newEventColor, newEventDate, u.Tx.Queries())
 	if err != nil {
-		apiConfig.Logger.Errorf("could not edit event: %v", err)
-		util.Error(c, util.ErrorInternal)
+		u.Error(err)
 		return
 	}
 
-	err = tx.Queries().UpdateEvent(newEvent)
+	err = u.Tx.Queries().UpdateEvent(newEvent)
 	if err != nil {
-		apiConfig.Logger.Errorf("could not update event: %v", err)
-		util.Error(c, util.ErrorDatabase)
+		u.Error(err)
 		return
 	}
 
-	if tx.Commit(apiConfig.Logger) != nil {
-		util.Error(c, util.ErrorDatabase)
-		return
-	}
-
-	util.Success(c)
+	u.Success(nil)
 }
 
 func DeleteEvent(c *gin.Context) {
-	apiConfig := context.GetConfig(c)
-	eventId, err := context.GetId(c, "event")
+	u := util.GetUtil(c)
+
+	userId := util.GetUserId(c)
+
+	eventId, err := util.GetId(c, "event")
 	if err != nil {
-		apiConfig.Logger.Errorf("could not get event id: %v", err)
-		util.Error(c, util.ErrorMalformedID)
+		u.Error(err)
 		return
 	}
 
-	userId := context.GetUserId(c)
-	tx := context.GetTransaction(c)
-	defer tx.Rollback(apiConfig.Logger)
-
 	// Get event first
-	event, err := tx.Queries().GetEvent(userId, eventId)
+	event, err := u.Tx.Queries().GetEvent(userId, eventId)
 	if err != nil {
-		apiConfig.Logger.Errorf("could not get event: %v", err)
-		util.Error(c, util.ErrorDatabase)
+		u.Error(err)
 		return
 	}
 
 	// Remove the calendar from the upstream source
-	err = event.GetCalendar().DeleteEvent(event, tx.Queries())
+	err = event.GetCalendar().DeleteEvent(event, u.Tx.Queries())
 	if err != nil {
-		apiConfig.Logger.Errorf("could not delete event from remote source: %v", err)
-		util.Error(c, util.ErrorInternal)
+		u.Error(err)
 		return
 	}
 
 	// Delete event entry from the database
-	err = tx.Queries().DeleteEvent(userId, eventId)
+	err = u.Tx.Queries().DeleteEvent(userId, eventId)
 	if err != nil {
-		apiConfig.Logger.Errorf("could not delete event: %v", err)
-		util.Error(c, util.ErrorDatabase)
+		u.Error(err)
 		return
 	}
 
-	if tx.Commit(apiConfig.Logger) != nil {
-		util.Error(c, util.ErrorDatabase)
-		return
-	}
-
-	util.Success(c)
+	u.Success(nil)
 }

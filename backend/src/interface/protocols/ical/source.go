@@ -2,12 +2,13 @@ package ical
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"luna-backend/auth"
+	"luna-backend/errors"
 	"luna-backend/files"
 	"luna-backend/interface/primitives"
 	"luna-backend/types"
+	"net/http"
 
 	"github.com/emersion/go-ical"
 )
@@ -28,18 +29,21 @@ type IcalSourceSettings struct {
 	icalCalendar *ical.Calendar `json:"-"`
 }
 
-func (source *IcalSource) getIcalFile(q types.DatabaseQueries) (*ical.Calendar, error) {
+func (source *IcalSource) getIcalFile(q types.DatabaseQueries) (*ical.Calendar, *errors.ErrorTrace) {
 	if source.settings.icalCalendar == nil {
-		content, err := source.settings.file.GetContent(q)
-		if err != nil {
-			return nil, fmt.Errorf("could not get ical file: %v", err)
+		content, tr := source.settings.file.GetContent(q)
+		if tr != nil {
+			return nil, tr.
+				Append(errors.LvlWordy, "Could not get iCal file")
 		}
 
 		decoder := ical.NewDecoder(content)
 
 		cal, err := decoder.Decode()
 		if err != nil {
-			return nil, fmt.Errorf("could not decode ical file: %v", err)
+			return nil, errors.New().Status(http.StatusInternalServerError).
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlWordy, "Could not decode iCal file")
 		}
 
 		source.settings.icalCalendar = cal
@@ -88,10 +92,10 @@ func NewRemoteIcalSource(name string, url *types.Url, auth auth.AuthMethod) *Ica
 	}
 }
 
-func NewDatabaseIcalSource(name string, content io.Reader, q types.DatabaseQueries) (*IcalSource, error) {
+func NewDatabaseIcalSource(name string, content io.Reader, q types.DatabaseQueries) (*IcalSource, *errors.ErrorTrace) {
 	file, err := files.NewDatabaseFileFromContent(content, q)
 	if err != nil {
-		return nil, fmt.Errorf("could not create database file: %v", err)
+		return nil, err
 	}
 
 	return &IcalSource{
@@ -119,7 +123,7 @@ func NewLocalIcalSource(name string, path *types.Path) *IcalSource {
 	}
 }
 
-func PackIcalSource(id types.ID, name string, settings *IcalSourceSettings, auth auth.AuthMethod) (*IcalSource, error) {
+func PackIcalSource(id types.ID, name string, settings *IcalSourceSettings, auth auth.AuthMethod) (*IcalSource, *errors.ErrorTrace) {
 	switch settings.Location {
 	case "remote":
 		settings.file = files.NewRemoteFile(settings.Url, auth)
@@ -128,7 +132,7 @@ func PackIcalSource(id types.ID, name string, settings *IcalSourceSettings, auth
 	case "database":
 		settings.file = files.NewDatabaseFile(settings.FileId)
 	default:
-		return nil, fmt.Errorf("unknown file location type: %v", settings.Location)
+		return nil, errors.New().Status(http.StatusInternalServerError).Append(errors.LvlWordy, "Unknown file location type: %v", settings.Location)
 	}
 
 	return &IcalSource{
@@ -139,43 +143,43 @@ func PackIcalSource(id types.ID, name string, settings *IcalSourceSettings, auth
 	}, nil
 }
 
-func (source *IcalSource) GetCalendars(q types.DatabaseQueries) ([]primitives.Calendar, error) {
+func (source *IcalSource) GetCalendars(q types.DatabaseQueries) ([]primitives.Calendar, *errors.ErrorTrace) {
 	cal, err := source.getIcalFile(q)
 	if err != nil {
-		return nil, fmt.Errorf("could not get calendars: %v", err)
+		return nil, err.Append(errors.LvlBroad, "Could not get calendars")
 	}
 
 	result := make([]primitives.Calendar, 1)
 	result[0], err = source.calendarFromIcal(cal)
 	if err != nil {
-		return nil, fmt.Errorf("could not get calendars: %v", err)
+		return nil, err.Append(errors.LvlBroad, "Could not get calendars")
 	}
 
 	return result, nil
 }
 
-func (source *IcalSource) GetCalendar(settings primitives.CalendarSettings, q types.DatabaseQueries) (primitives.Calendar, error) {
+func (source *IcalSource) GetCalendar(settings primitives.CalendarSettings, q types.DatabaseQueries) (primitives.Calendar, *errors.ErrorTrace) {
 	cals, err := source.GetCalendars(q)
 	if err != nil {
-		return nil, fmt.Errorf("could not get calendar: %v", err)
+		return nil, err.Append(errors.LvlBroad, "Could not get calendar")
 	}
 	return cals[0], nil
 }
 
 /* Ical source is read-only */
 
-func (source *IcalSource) AddCalendar(name string, color *types.Color, q types.DatabaseQueries) (primitives.Calendar, error) {
-	return nil, fmt.Errorf("not supported")
+func (source *IcalSource) AddCalendar(name string, color *types.Color, q types.DatabaseQueries) (primitives.Calendar, *errors.ErrorTrace) {
+	return nil, errors.New().Status(http.StatusMethodNotAllowed)
 }
 
-func (source *IcalSource) EditCalendar(calendar primitives.Calendar, name string, color *types.Color, q types.DatabaseQueries) (primitives.Calendar, error) {
-	return nil, fmt.Errorf("not supported")
+func (source *IcalSource) EditCalendar(calendar primitives.Calendar, name string, color *types.Color, q types.DatabaseQueries) (primitives.Calendar, *errors.ErrorTrace) {
+	return nil, errors.New().Status(http.StatusMethodNotAllowed)
 }
 
-func (source *IcalSource) DeleteCalendar(calendar primitives.Calendar, q types.DatabaseQueries) error {
-	return fmt.Errorf("not supported")
+func (source *IcalSource) DeleteCalendar(calendar primitives.Calendar, q types.DatabaseQueries) *errors.ErrorTrace {
+	return errors.New().Status(http.StatusMethodNotAllowed)
 }
 
-func (source *IcalSource) Cleanup(q types.DatabaseQueries) error {
+func (source *IcalSource) Cleanup(q types.DatabaseQueries) *errors.ErrorTrace {
 	return q.DeleteFilecache(source.settings.file)
 }
