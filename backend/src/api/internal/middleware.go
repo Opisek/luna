@@ -134,7 +134,8 @@ func RequestSetup(timeout time.Duration, database *db.Database, withTransaction 
 			}
 
 			if ctx.Err() == context.DeadlineExceeded {
-				responseErr.Status(http.StatusRequestTimeout).
+				// Would prefer to use StatusRequestTimeout, but then the browser keeps retrying indefinitely
+				responseErr.Status(http.StatusGatewayTimeout).
 					Append(errors.LvlWordy, "Request timed out after %v seconds", timeout.Seconds()).
 					AltStr(errors.LvlBroad, "Request timed out")
 			} else {
