@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"context"
-	"fmt"
 	"luna-backend/api/internal/util"
 	"luna-backend/auth"
 	"luna-backend/common"
@@ -83,9 +82,7 @@ func RequestSetup(timeout time.Duration, database *db.Database, withTransaction 
 
 		// Pass the execution on to the next middleware or the handler
 		go func() {
-			fmt.Println("HANDLER START")
 			c.Next()
-			fmt.Println("HANDLER END")
 		}()
 
 		// Gather warnings until we are done
