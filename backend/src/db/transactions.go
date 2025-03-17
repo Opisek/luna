@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"fmt"
 	"luna-backend/db/internal/migrations"
 	"luna-backend/db/internal/migrations/types"
 	"luna-backend/db/internal/queries"
@@ -27,10 +28,25 @@ type Transaction struct {
 func (db *Database) BeginTransaction(ctx context.Context) (*Transaction, *errors.ErrorTrace) {
 	tx, err := db.pool.Begin(ctx)
 
-	switch err {
-	case nil:
+	var errMsg string
+	if err != nil {
+		errMsg = err.Error()
+	}
+	if err != nil {
+		fmt.Println(errMsg)
+	}
+	switch {
+	case err == nil:
 		break
-	// TODO: determine error for when database is down
+	case strings.Contains(errMsg, "connection refused"):
+		return nil, errors.New().Status(http.StatusServiceUnavailable).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlPlain, "The database is not reachable")
+	case strings.Contains(errMsg, "authentication failed"):
+		return nil, errors.New().Status(http.StatusServiceUnavailable).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Wrong database credentials").
+			AltStr(errors.LvlPlain, "Database error")
 	default:
 		return nil, errors.New().Status(http.StatusServiceUnavailable).
 			AddErr(errors.LvlDebug, err).

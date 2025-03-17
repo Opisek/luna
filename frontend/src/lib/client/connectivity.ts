@@ -41,7 +41,7 @@ class Connectivity {
         this.reachable = Reachability.None;
       } else if (err.message === "The backend is not reachable") {
         this.reachable = Reachability.Frontend;
-      } else if (err.message === "Database error") {
+      } else if (err.message === "The database is not reachable") {
         this.reachable = Reachability.Backend;
       } else {
         this.reachable = Reachability.Unknown;
