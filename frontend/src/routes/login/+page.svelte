@@ -23,7 +23,6 @@
   let alreadyShownError = $state(false);
   $effect(() => {
     ((form) => {
-      console.log(form, page.status);
       if (form?.error && !alreadyShownError) {
         alreadyShownError = true;
         queueNotification("failure", form.error);
