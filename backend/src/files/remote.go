@@ -10,6 +10,7 @@ import (
 	"luna-backend/net"
 	"luna-backend/types"
 	"net/http"
+	"path"
 	"time"
 )
 
@@ -31,6 +32,10 @@ func (file *RemoteFile) GetId() types.ID {
 
 func (file *RemoteFile) SetId(id types.ID) {
 	panic("illegal operation")
+}
+
+func (file *RemoteFile) GetName(_ types.DatabaseQueries) string {
+	return path.Base(file.url.URL().Path)
 }
 
 func (file *RemoteFile) fetchContentFromRemote(q types.DatabaseQueries) (io.Reader, *errors.ErrorTrace) {
@@ -55,7 +60,7 @@ func (file *RemoteFile) fetchContentFromRemote(q types.DatabaseQueries) (io.Read
 }
 
 func (file *RemoteFile) fetchContentFromDatabase(q types.DatabaseQueries) (io.Reader, *time.Time, *errors.ErrorTrace) {
-	content, date, err := q.GetFilecache(file)
+	_, content, date, err := q.GetFilecache(file)
 	if err != nil {
 		return nil, nil, err.
 			Append(errors.LvlDebug, "Could not get file %v from the database", file.GetId()).
@@ -116,4 +121,21 @@ func (file *RemoteFile) GetContent(q types.DatabaseQueries) (io.Reader, *errors.
 func (file *RemoteFile) ForceFetchFromRemote(q types.DatabaseQueries) *errors.ErrorTrace {
 	_, err := file.fetchContentFromRemote(q)
 	return err
+}
+
+func (file *RemoteFile) GetBytes(q types.DatabaseQueries) ([]byte, *errors.ErrorTrace) {
+	content, tr := file.GetContent(q)
+	if tr != nil {
+		return nil, tr
+	}
+
+	bytes, err := io.ReadAll(content)
+	if err != nil {
+		return nil, errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlWordy, "Could not read file content from buffer").
+			AltStr(errors.LvlPlain, "Could not read contents of file")
+	}
+
+	return bytes, nil
 }

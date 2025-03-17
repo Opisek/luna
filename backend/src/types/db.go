@@ -35,7 +35,7 @@ type SourceDatabaseEntry struct {
 // Required to avoid circular dependencies
 type DatabaseQueries interface {
 	GetContext() context.Context
-	GetFilecache(file File) (io.Reader, *time.Time, *errors.ErrorTrace)
+	GetFilecache(file File) (string, io.Reader, *time.Time, *errors.ErrorTrace)
 	SetFilecache(file File, content io.Reader) *errors.ErrorTrace
 	SetFilecacheWithoutId(file File, content io.Reader) (ID, *errors.ErrorTrace)
 	DeleteFilecache(file File) *errors.ErrorTrace

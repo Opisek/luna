@@ -93,8 +93,8 @@ func NewRemoteIcalSource(name string, url *types.Url, auth auth.AuthMethod) *Ica
 	}
 }
 
-func NewDatabaseIcalSource(name string, content io.Reader, q types.DatabaseQueries) (*IcalSource, *errors.ErrorTrace) {
-	file, err := files.NewDatabaseFileFromContent(content, q)
+func NewDatabaseIcalSource(name string, fileName string, content io.Reader, q types.DatabaseQueries) (*IcalSource, *errors.ErrorTrace) {
+	file, err := files.NewDatabaseFileFromContent(fileName, content, q)
 	if err != nil {
 		return nil, err
 	}

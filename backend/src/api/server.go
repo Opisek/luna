@@ -64,5 +64,10 @@ func run(api *util.Api) {
 	eventEndpoints.PATCH("/:eventId", handlers.PatchEvent)
 	eventEndpoints.DELETE("/:eventId", handlers.DeleteEvent)
 
+	// /api/files/*
+	fileEndpoints := authenticatedEndpoints.Group("/files")
+	fileEndpoints.GET("/:fileId", handlers.GetFile)
+
+	// Run the server
 	router.Run(fmt.Sprintf(":%d", api.CommonConfig.Env.API_PORT))
 }

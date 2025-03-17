@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"fmt"
 	"luna-backend/api/internal/util"
 	"luna-backend/auth"
 	"luna-backend/common"
@@ -17,12 +18,27 @@ import (
 func RequestSetup(timeout time.Duration, database *db.Database, withTransaction bool, config *common.CommonConfig, logger *logrus.Entry) gin.HandlerFunc {
 	responseStatus := http.StatusOK
 	var responseMsg *gin.H
+	var responseFileName string
+	var responseFileBody []byte
 	var responseErr *errors.ErrorTrace
 	var responseWarns []*errors.ErrorTrace
 
 	// Final response sent at the end of the execution.
 	return func(c *gin.Context) {
 		defer func() {
+			if responseFileBody != nil {
+				c.Header("Content-Disposition", "attachment; filename="+responseFileName)
+				c.Header("Content-Type", "application/text/plain")
+				c.Header("Accept-Length", fmt.Sprintf("%d", len(responseFileBody)))
+				_, err := c.Writer.Write(responseFileBody)
+
+				if err != nil {
+					responseErr = errors.New().Status(http.StatusInternalServerError).
+						AddErr(errors.LvlDebug, err).
+						AltStr(errors.LvlPlain, "Could not download file")
+				}
+			}
+
 			if responseErr != nil {
 				logger.Error(responseErr.Serialize(errors.LvlDebug))
 				c.AbortWithStatusJSON(responseErr.GetStatus(), &gin.H{"error": responseErr.Serialize(config.DetailLevel)})
@@ -43,7 +59,7 @@ func RequestSetup(timeout time.Duration, database *db.Database, withTransaction 
 				(*responseMsg)["warnings"] = warnStrs
 			}
 
-			c.JSON(responseStatus, responseMsg)
+			c.JSON(responseStatus, *responseMsg)
 		}()
 
 		// Timeout to be used by the handler and all its long-running functions (database queries, network request, ...)
@@ -63,6 +79,12 @@ func RequestSetup(timeout time.Duration, database *db.Database, withTransaction 
 		responseChan := make(chan *util.Response)
 		errChan := make(chan *errors.ErrorTrace)
 		warnChan := make(chan *errors.ErrorTrace)
+
+		// Pass important variables to the handler
+		c.Set("transaction", tx)
+		c.Set("config", config)
+		c.Set("logger", logger)
+		c.Set("context", ctx)
 
 		// Pass important variables to the handler
 		c.Set("transaction", tx)
@@ -102,14 +124,24 @@ func RequestSetup(timeout time.Duration, database *db.Database, withTransaction 
 		// In case of a response
 		case response := <-responseChan:
 			// Commit if the database was used
+			responseStatus = response.GetStatus()
+			responseMsg = response.GetMsg()
+			responseFile := response.GetFile()
+
+			if responseFile != nil {
+				responseFileName = responseFile.GetName(tx.Queries())
+				responseFileBody, responseErr = responseFile.GetBytes(tx.Queries())
+				if responseErr != nil {
+					return
+				}
+			}
+
 			if withTransaction {
 				responseErr = tx.Commit(logger)
 				if responseErr != nil {
 					return
 				}
 			}
-			responseStatus = response.GetStatus()
-			responseMsg = response.GetMsg()
 
 		// In case of a reported error
 		case responseErr = <-errChan:

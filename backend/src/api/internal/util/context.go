@@ -27,6 +27,7 @@ type HandlerUtility struct {
 type Response struct {
 	httpCode int
 	msg      *gin.H
+	file     types.File
 }
 
 func (r *Response) GetStatus() int {
@@ -37,12 +38,20 @@ func (r *Response) GetMsg() *gin.H {
 	return r.msg
 }
 
+func (r *Response) GetFile() types.File {
+	return r.file
+}
+
 func (u *HandlerUtility) Success(msg *gin.H) {
 	u.ResponseWithStatus(http.StatusOK, msg)
 }
 
 func (u *HandlerUtility) ResponseWithStatus(httpCode int, msg *gin.H) {
-	u.ResponseChan <- &Response{httpCode, msg}
+	u.ResponseChan <- &Response{httpCode, msg, nil}
+}
+
+func (u *HandlerUtility) ResponseWithFile(file types.File) {
+	u.ResponseChan <- &Response{http.StatusOK, nil, file}
 }
 
 func (u *HandlerUtility) Error(err *errors.ErrorTrace) {

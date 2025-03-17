@@ -199,3 +199,11 @@ The description field is optional. Either the end date or the event duration is 
 - **Method**: ``DELETE``
 - **Body**: Empty
 - **Purpose**: Deletes the event from the local database and the upstream source.
+
+### Files
+#### Get File
+- **Path**: ``/api/files/<ID>``
+- **Method**: ``GET``
+- **Body**: Empty
+- **Purpose**: Returns a file from the database
+- **Note**: There are currently no mechanisms in place determining which users may download which files. Any authenticated user with knowledge of the file ID can download this file. UUIDs do not provide enough security guarantees in this scenario. This should be revisited in the future.

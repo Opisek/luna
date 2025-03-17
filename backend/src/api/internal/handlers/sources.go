@@ -214,7 +214,7 @@ func parseSource(c *gin.Context, sourceName string, sourceAuth auth.AuthMethod, 
 			}
 
 			var tr *errors.ErrorTrace
-			source, tr = ical.NewDatabaseIcalSource(sourceName, file, q)
+			source, tr = ical.NewDatabaseIcalSource(sourceName, fileHeader.Filename, file, q)
 			if tr != nil {
 				return nil, tr
 			}
