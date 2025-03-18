@@ -212,4 +212,4 @@ The description field is optional. Either the end date or the event duration is 
 - **Path**: ``/api/files/<ID>``
 - **Method**: ``HEAD``
 - **Body**: Empty
-- **Purpose**: Returns the name and size of a file iin the database
+- **Purpose**: Returns the name and size of a file in the database
