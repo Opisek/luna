@@ -207,3 +207,9 @@ The description field is optional. Either the end date or the event duration is 
 - **Body**: Empty
 - **Purpose**: Returns a file from the database
 - **Note**: There are currently no mechanisms in place determining which users may download which files. Any authenticated user with knowledge of the file ID can download this file. UUIDs do not provide enough security guarantees in this scenario. This should be revisited in the future.
+
+#### Get File Header
+- **Path**: ``/api/files/<ID>``
+- **Method**: ``HEAD``
+- **Body**: Empty
+- **Purpose**: Returns the name and size of a file iin the database
