@@ -4,7 +4,7 @@
   import { alwaysValidFile, valid } from "$lib/client/validation";
   import { focusIndicator } from "$lib/client/decoration";
   import IconButton from "../interactive/IconButton.svelte";
-  import { Download, Upload, X } from "lucide-svelte";
+  import { Download, FileEdit, Upload, X } from "lucide-svelte";
   import { downloadFileToClient } from "../../lib/client/net";
 
   let wrapper: HTMLDivElement | null = $state(null);
@@ -22,12 +22,12 @@
 
   let {
     files = $bindable(null),
-    fileId = "",
+    fileId = $bindable(""),
     placeholder,
     name,
     editable = true,
     validation = alwaysValidFile,
-    validity = $bindable(files ? validation(files) : valid)
+    validity = $bindable(files && fileId == "" ? validation(files) : valid)
   }: Props = $props();
 
   function select() {
@@ -54,7 +54,7 @@
       if (!value || value === lastValue) return; // prevents some infinite loop that i don't understand, might be a svelte bug
       lastValue = value;
       if (wrapper != null && (document.activeElement === wrapper || wrapper.contains(document.activeElement))) return;
-      validity = value ? validation(value) : valid;
+      validity = value && fileId == "" ? validation(value) : valid;
     })(files);
   });
 
@@ -64,8 +64,10 @@
 
   // Update validity when the file changes
   function internalOnChange() {
-    if (!files) return;
-    validity = validation(files);
+    if (files) {
+      fileId = "";
+    }
+    validity = files ? validation(files) : valid;
   }
 </script>
 

@@ -22,19 +22,18 @@ export async function fetchJson(url: string, options: RequestInit = {}) {
 export function downloadFileToClient(file: FileList | string | null) {
   if (file === null) return;
 
+  const a = document.createElement("a");
+
   let url: string;
   if (typeof file === "string") {
     url = `/api/files/${file}`;
   } else {
     const blob = new Blob([file[0]], { type: file[0].type });
     url = URL.createObjectURL(blob);
+    a.download = file[0].name;
   }
 
-  const a = document.createElement("a");
   a.href = url;
-  console.log(a.href);
-
-  //if (files !== null) a.download = files[0].name;
 
   a.click();
   URL.revokeObjectURL(url);
