@@ -59,7 +59,6 @@ func RequestSetup(timeout time.Duration, database *db.Database, withTransaction 
 				(*responseMsg)["warnings"] = warnStrs
 			}
 
-			fmt.Println(c.Request.URL.Path, responseMsg)
 			c.JSON(responseStatus, *responseMsg)
 		}()
 
