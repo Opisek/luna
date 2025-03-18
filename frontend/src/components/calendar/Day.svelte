@@ -95,7 +95,7 @@
     position: absolute;
     width: calc(1.25 * text.$fontSize);
     aspect-ratio: 1 / 1;
-    border-radius: 50%;
+    border-radius: dimensions.$borderRadius;
     left: calc(50% - 1.25 * 0.5 * #{text.$fontSize});
     top: translateY(1.25 * 0.5 * text.$fontSize - #{dimensions.$gapSmall});
     z-index: -1;
