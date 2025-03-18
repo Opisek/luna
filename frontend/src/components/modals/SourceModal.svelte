@@ -6,7 +6,7 @@
   import { EmptySource, NoOp } from "$lib/client/placeholders";
   import { getRepository } from "$lib/client/repository";
   import { deepCopy, deepEquality } from "$lib/common/misc";
-  import { isValidFile, isValidPath, isValidUrl, valid } from "$lib/client/validation";
+  import { isValidIcalFile, isValidPath, isValidUrl, valid } from "$lib/client/validation";
   import { queueNotification } from "$lib/client/notifications";
   import FileUpload from "../forms/FileUpload.svelte";
   import { fetchResponse } from "../../lib/client/net";
@@ -202,7 +202,7 @@
       {#if sourceDetailed.settings.location === "remote"}
         <TextInput bind:value={sourceDetailed.settings.url} name="ical_url" placeholder="iCal URL" editable={editMode} validation={isValidUrl} bind:validity={icalLinkValidity} />
       {:else if sourceDetailed.settings.location === "database"}
-          <FileUpload bind:files={sourceDetailed.settings.file} bind:fileId={sourceDetailed.settings.fileId} name="ical_file" placeholder="iCal File" editable={editMode} validation={isValidFile} bind:validity={icalFileValidity} />
+          <FileUpload bind:files={sourceDetailed.settings.file} bind:fileId={sourceDetailed.settings.fileId} name="ical_file" placeholder="iCal File" editable={editMode} validation={isValidIcalFile} bind:validity={icalFileValidity} />
       {:else if sourceDetailed.settings.location === "local"}
         <TextInput bind:value={sourceDetailed.settings.path} name="ical_path" placeholder="iCal Path" editable={editMode} validation={isValidPath} bind:validity={icalPathValidity} />
       {/if}

@@ -15,7 +15,7 @@ const invalidResponse = (message: string): Validity => {
 }
 
 export const alwaysValid: InputValidation = () => valid;
-export const alwaysValidFile: FileValidation = () => valid;
+export const alwaysValidFile: FileValidation = () => Promise.resolve(valid);
 
 export const isValidUsername: InputValidation = (username) => {
   if (username.length < 3)
@@ -63,7 +63,7 @@ export const isValidPath: InputValidation = (path) => {
   return valid;
 }
 
-export const isValidFile: FileValidation = (files) => {
+export const isValidFile: FileValidation = async (files) => {
   if (files.length === 0)
     return invalidResponse("No files selected.");
   if (files.length > 1)
@@ -72,5 +72,23 @@ export const isValidFile: FileValidation = (files) => {
     return invalidResponse("File is null.");
   if ((files.item(0) as File).size > 50000000)
     return invalidResponse("File must not be larger than 50MB.");
+  return valid;
+}
+
+export const isValidIcalFile: FileValidation = async (files) => {
+  const fileValidation = await isValidFile(files);
+  if (!fileValidation.valid)
+    return fileValidation;
+
+  const file = files.item(0) as File;
+
+  if (file.type !== "text/calendar")
+    return invalidResponse("File must be of type text/calendar.");
+  
+  const content = await file.text();
+
+  if (!content.includes("BEGIN:VCALENDAR") || !content.includes("END:VCALENDAR"))
+    return invalidResponse("Invalid file format");
+
   return valid;
 }

@@ -27,7 +27,7 @@
     name,
     editable = true,
     validation = alwaysValidFile,
-    validity = $bindable(files && fileId == "" ? validation(files) : valid)
+    validity = $bindable(valid)
   }: Props = $props();
 
   function select() {
@@ -50,11 +50,11 @@
   // For example when opening a new form
   let lastValue: FileList | null = $state(null); // TODO: check if still needed in svelte 5
   $effect(() => {
-    ((value) => {
+    (async (value) => {
       if (!value || value === lastValue) return; // prevents some infinite loop that i don't understand, might be a svelte bug
       lastValue = value;
       if (wrapper != null && (document.activeElement === wrapper || wrapper.contains(document.activeElement))) return;
-      validity = value && fileId == "" ? validation(value) : valid;
+      validity = value && fileId == "" ? await validation(value) : valid;
     })(files);
   });
 
@@ -63,11 +63,11 @@
   let empty = $derived(files === null);
 
   // Update validity when the file changes
-  function internalOnChange() {
+  async function internalOnChange() {
     if (files) {
       fileId = "";
     }
-    validity = files ? validation(files) : valid;
+    validity = files ? await validation(files) : valid;
   }
 </script>
 
