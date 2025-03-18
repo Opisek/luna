@@ -67,6 +67,7 @@ func run(api *util.Api) {
 	// /api/files/*
 	fileEndpoints := authenticatedEndpoints.Group("/files")
 	fileEndpoints.GET("/:fileId", handlers.GetFile)
+	fileEndpoints.HEAD("/:fileId", handlers.GetFile)
 
 	// Run the server
 	router.Run(fmt.Sprintf(":%d", api.CommonConfig.Env.API_PORT))

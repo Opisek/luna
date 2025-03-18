@@ -18,3 +18,25 @@ export async function fetchResponse(url: string, options: RequestInit = {}): Pro
 export async function fetchJson(url: string, options: RequestInit = {}) {
   return (await fetchResponse(url, options).catch(err => { throw err; })).json();
 }
+
+export function downloadFileToClient(file: FileList | string | null) {
+  if (file === null) return;
+
+  let url: string;
+  if (typeof file === "string") {
+    url = `/api/files/${file}`;
+  } else {
+    const blob = new Blob([file[0]], { type: file[0].type });
+    url = URL.createObjectURL(blob);
+  }
+
+  const a = document.createElement("a");
+  a.href = url;
+  console.log(a.href);
+
+  //if (files !== null) a.download = files[0].name;
+
+  a.click();
+  URL.revokeObjectURL(url);
+  a.remove();
+}

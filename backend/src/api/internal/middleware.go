@@ -30,12 +30,17 @@ func RequestSetup(timeout time.Duration, database *db.Database, withTransaction 
 				c.Header("Content-Disposition", "attachment; filename="+responseFileName)
 				c.Header("Content-Type", "application/text/plain")
 				c.Header("Accept-Length", fmt.Sprintf("%d", len(responseFileBody)))
-				_, err := c.Writer.Write(responseFileBody)
+				var err error
+				if c.Request.Method != http.MethodHead {
+					_, err = c.Writer.Write(responseFileBody) // TODO: it would be nice if we could prevent the body from being fetched in first place
+				}
 
 				if err != nil {
 					responseErr = errors.New().Status(http.StatusInternalServerError).
 						AddErr(errors.LvlDebug, err).
 						AltStr(errors.LvlPlain, "Could not download file")
+				} else {
+					return
 				}
 			}
 

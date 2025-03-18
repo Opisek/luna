@@ -4,13 +4,15 @@
   import { alwaysValidFile, valid } from "$lib/client/validation";
   import { focusIndicator } from "$lib/client/decoration";
   import IconButton from "../interactive/IconButton.svelte";
-  import { Upload, X } from "lucide-svelte";
+  import { Download, Upload, X } from "lucide-svelte";
+  import { downloadFileToClient } from "../../lib/client/net";
 
   let wrapper: HTMLDivElement | null = $state(null);
   let fileInput: HTMLInputElement | null = $state(null);
 
   interface Props {
     files: FileList | null;
+    fileId?: string;
     placeholder: string;
     name: string;
     editable?: boolean;
@@ -20,6 +22,7 @@
 
   let {
     files = $bindable(null),
+    fileId = "",
     placeholder,
     name,
     editable = true,
@@ -36,6 +39,11 @@
     if (!editable) return;
     if (fileInput) fileInput.value = "";
     files = null;
+  }
+
+  function download() {
+    if (fileId === "") downloadFileToClient(files)
+    else downloadFileToClient(fileId);
   }
 
   // If the value is set programmatically, update the validity.
@@ -117,12 +125,17 @@
     --barFocusIndicatorColor: transparent;
   }
 
-  div.button {
+  div.buttons {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
     right: calc(1.5 * dimensions.$gapSmaller);
     color: colors.$foregroundDim;
+    display: flex;
+    flex-direction: row;
+  }
+  div.editable > div.buttons {
+    background-color: colors.$backgroundSecondary;
   }
 
   span.label {
@@ -170,19 +183,28 @@
 />
   {#if editable}
     {#if empty}
-      <div class="upload button">
-        <IconButton click={select} tabindex={editable && empty ? 0 : -1}>
+      <div class="buttons">
+        <IconButton click={select}>
             <!-- Upload, FileUp, MonitorUp, CloudUpload, HardDriveUpload -->
             <Upload size={16}/>
         </IconButton>
       </div>
     {:else}
-      <div class="clear button">
-        <IconButton click={clear} tabindex={editable && !empty ? 0 : -1}>
+      <div class="buttons">
+        <IconButton click={download}>
+          <Download size={16}/>
+        </IconButton>
+        <IconButton click={clear}>
             <X size={16}/>
         </IconButton>
       </div>
     {/if}
+  {:else}
+    <div class="buttons">
+      <IconButton click={download}>
+        <Download size={16}/>
+      </IconButton>
+    </div>
   {/if}
 </div>
 
