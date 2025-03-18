@@ -6,7 +6,7 @@
   import { EmptySource, NoOp } from "$lib/client/placeholders";
   import { getRepository } from "$lib/client/repository";
   import { deepCopy, deepEquality } from "$lib/common/misc";
-  import { isValidIcalFile, isValidPath, isValidUrl, valid } from "$lib/client/validation";
+  import { isValidFile, isValidIcalFile, isValidPath, isValidUrl, valid } from "$lib/client/validation";
   import { queueNotification } from "$lib/client/notifications";
   import FileUpload from "../forms/FileUpload.svelte";
   import { fetchResponse } from "../../lib/client/net";

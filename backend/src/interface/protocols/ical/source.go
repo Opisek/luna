@@ -44,7 +44,7 @@ func (source *IcalSource) getIcalFile(q types.DatabaseQueries) (*ical.Calendar, 
 			return nil, errors.New().Status(http.StatusInternalServerError).
 				AddErr(errors.LvlDebug, err).
 				Append(errors.LvlWordy, "Could not decode iCal file").
-				AltStr(errors.LvlPlain, "Wrong file format. Are you sure the URL is correct?")
+				AltStr(errors.LvlPlain, "Wrong file format")
 		}
 
 		source.settings.icalCalendar = cal

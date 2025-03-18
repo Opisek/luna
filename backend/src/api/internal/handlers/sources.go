@@ -1,11 +1,14 @@
 package handlers
 
 import (
+	"bytes"
+	"io"
 	"net/http"
 
 	"luna-backend/api/internal/util"
 	"luna-backend/auth"
 	"luna-backend/errors"
+	"luna-backend/files"
 	"luna-backend/interface/primitives"
 	"luna-backend/interface/protocols/caldav"
 	"luna-backend/interface/protocols/ical"
@@ -213,8 +216,16 @@ func parseSource(c *gin.Context, sourceName string, sourceAuth auth.AuthMethod, 
 					Append(errors.LvlPlain, "Could not open iCal file")
 			}
 
+			var contentToSave bytes.Buffer
+			contentToValidate := io.TeeReader(file, &contentToSave)
+
+			fileParseErr := files.IsValidIcalFile(contentToValidate, q)
+			if fileParseErr != nil {
+				return nil, fileParseErr
+			}
+
 			var tr *errors.ErrorTrace
-			source, tr = ical.NewDatabaseIcalSource(sourceName, fileHeader.Filename, file, q)
+			source, tr = ical.NewDatabaseIcalSource(sourceName, fileHeader.Filename, &contentToSave, q)
 			if tr != nil {
 				return nil, tr
 			}
