@@ -16,15 +16,15 @@ import (
 )
 
 func RequestSetup(timeout time.Duration, database *db.Database, withTransaction bool, config *common.CommonConfig, logger *logrus.Entry) gin.HandlerFunc {
-	responseStatus := http.StatusOK
-	var responseMsg *gin.H
-	var responseFileName string
-	var responseFileBody []byte
-	var responseErr *errors.ErrorTrace
-	var responseWarns []*errors.ErrorTrace
-
-	// Final response sent at the end of the execution.
 	return func(c *gin.Context) {
+		responseStatus := http.StatusOK
+		var responseMsg *gin.H
+		var responseFileName string
+		var responseFileBody []byte
+		var responseErr *errors.ErrorTrace
+		var responseWarns []*errors.ErrorTrace
+
+		// Final response sent at the end of the execution.
 		defer func() {
 			if responseFileBody != nil {
 				c.Header("Content-Disposition", "attachment; filename="+responseFileName)
@@ -59,6 +59,7 @@ func RequestSetup(timeout time.Duration, database *db.Database, withTransaction 
 				(*responseMsg)["warnings"] = warnStrs
 			}
 
+			fmt.Println(c.Request.URL.Path, responseMsg)
 			c.JSON(responseStatus, *responseMsg)
 		}()
 
@@ -123,7 +124,6 @@ func RequestSetup(timeout time.Duration, database *db.Database, withTransaction 
 		select {
 		// In case of a response
 		case response := <-responseChan:
-			// Commit if the database was used
 			responseStatus = response.GetStatus()
 			responseMsg = response.GetMsg()
 			responseFile := response.GetFile()
@@ -136,6 +136,7 @@ func RequestSetup(timeout time.Duration, database *db.Database, withTransaction 
 				}
 			}
 
+			// Commit if the database was used
 			if withTransaction {
 				responseErr = tx.Commit(logger)
 				if responseErr != nil {
