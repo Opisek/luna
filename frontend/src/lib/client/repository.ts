@@ -554,22 +554,22 @@ class Repository {
   async moveCalendar(calendar: CalendarModel): Promise<void> {
     throw new Error("Not implemented");
 
-    if (!browser) return;
+    //if (!browser) return;
 
-    const oldId = calendar.id;
+    //const oldId = calendar.id;
 
-    // add to the new calendar
-    await this.createCalendar(calendar).catch((err) => { throw err; });
+    //// add to the new calendar
+    //await this.createCalendar(calendar).catch((err) => { throw err; });
 
-    // TODO: MOVE ALL EVENTS!!!
+    //// TODO: MOVE ALL EVENTS!!!
 
-    // remove from the old calendar
-    await this.deleteCalendar(calendar.id).catch((err) => {
-      // undo changes
-      this.deleteCalendar(calendar.id).catch(NoOp);
-      calendar.id = oldId;
-      throw err;
-    });
+    //// remove from the old calendar
+    //await this.deleteCalendar(calendar.id).catch((err) => {
+    //  // undo changes
+    //  this.deleteCalendar(calendar.id).catch(NoOp);
+    //  calendar.id = oldId;
+    //  throw err;
+    //});
   }
 
   //
