@@ -1,8 +1,8 @@
 @use "./dimensions.scss";
 
 /* Font family */
-$fontFamilyText: 'Karla', serif;
-$fontFamilyTime: 'Chivo Mono', monospace;
+$fontFamilyText: "Atkinson Hyperlegible Next", sans-serif;
+$fontFamilyTime: "Atkinson Hyperlegible Mono", sans-serif;
 
 /* Font size */
 $fontSizeSmaller: 0.6rem * dimensions.$multiplier;
@@ -13,10 +13,10 @@ $fontSizeLarge: 2rem * dimensions.$multiplier;
 /* Font weight */
 $fontWeightLight: 300 * dimensions.$multiplier;
 $fontWeight: 400 * dimensions.$multiplier;
-$fontWeightSemiBold: 600 * dimensions.$multiplier;
-$fontWeightBold: 800 * dimensions.$multiplier;
+$fontWeightSemiBold: 500 * dimensions.$multiplier;
+$fontWeightBold: 700 * dimensions.$multiplier;
 $fontWeightEmphasis: 350 * dimensions.$multiplier;
-$fontWeightTitle: 700 * dimensions.$multiplier;
+$fontWeightTitle: 600 * dimensions.$multiplier;
 
 /* Line height */
 $lineHeightParagraph: $fontSize * 1.4;

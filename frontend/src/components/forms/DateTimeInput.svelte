@@ -56,6 +56,7 @@
   @use "../../styles/text.scss";
 
   div.row {
+    font-family: text.$fontFamilyTime;
     display: flex;
     flex-direction: row;
     gap: dimensions.$gapSmall;
