@@ -5,18 +5,24 @@
   import { NoOp } from "$lib/client/placeholders";
 
   interface Props {
-    date: Date;
-    events: (EventModel | null)[];
-    showModal?: () => any;
+    showModal?: (date: Date, events: (EventModel | null)[]) => any;
     hideModal?: () => any;
   }
 
   let {
-    date,
-    events,
     showModal = $bindable(),
     hideModal = $bindable(NoOp),
   }: Props = $props();
+
+  let date = $state(new Date());
+  let events: (EventModel | null)[] = $state([]);
+
+  let showModalInternal = $state(NoOp);
+  showModal = (_date: Date, _events: (EventModel | null)[]) => {
+    date = _date;
+    events = _events;
+    showModalInternal();
+  };
 </script>
 
 <style lang="scss">
@@ -30,16 +36,20 @@
   }
 </style>
 
-<Modal title={date.toDateString()} bind:showModal={showModal} bind:hideModal={hideModal}>
-  <div class="wrapper">
-    {#each events as event, i ((event?.id || 0) + i.toString())}
-      <Event
-        event={event}
-        isFirstDay={true}
-        date={date}
-        visible={true}
-        view="day"
-      />
-    {/each}
-  </div>
+<Modal title={date.toDateString()} bind:showModal={showModalInternal} bind:hideModal={hideModal}>
+  {#if events.length === 0}
+    No events
+  {:else}
+    <div class="wrapper">
+      {#each events as event, i ((event?.id || 0) + i.toString())}
+        <Event
+          event={event}
+          isFirstDay={true}
+          date={date}
+          visible={true}
+          view="day"
+        />
+      {/each}
+    </div>
+  {/if}
 </Modal>

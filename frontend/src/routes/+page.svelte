@@ -25,6 +25,9 @@
   import { queueNotification } from "$lib/client/notifications";
   import { getConnectivity, Reachability } from "$lib/client/connectivity";
   import Button from "../components/interactive/Button.svelte";
+  import DayViewModal from "../components/modals/DayViewModal.svelte";
+  import { isInRange } from "../lib/common/date";
+  import { compareEventsByStartDate } from "../lib/common/comparators";
 
   /* Reachability */
   let reachability: Reachability = $state(Reachability.Database);
@@ -44,9 +47,107 @@
   let sourceCalendars: Map<string, number[]> = $state(new Map());
   let calendarEvents: Map<string, number[]> = new Map();
 
+  /* View logic */
+  let today = $state(new Date());
+  let date = $state(new Date());
+
+  // Svelte bug... These don't work like they're supposed to.
+  //let rangeStart = $derived.by(() => {
+  //  console.log("deriving range start");
+  //  const tmp = new Date(date);
+  //  tmp.setHours(0, 0, 0, 0);
+  //  switch (view) {
+  //    case "month":
+  //      tmp.setDate(1);
+  //      break;
+  //    case "week":
+  //      tmp.setDate(date.getDate() - ((date.getDay() + 6) % 7));
+  //      break;
+  //    case "day":
+  //    default:
+  //  }
+  //  console.log("range start changed", date, tmp)
+  //  return tmp;
+  //});
+  //let rangeEnd = $derived.by(() => {
+  //  console.log("deriving range end");
+  //  const tmp = new Date(date);
+  //  tmp.setHours(23, 59, 59, 999);
+  //  switch (view) {
+  //    case "month":
+  //      tmp.setMonth(tmp.getMonth() + 1);
+  //      tmp.setDate(0);
+  //      break;
+  //    case "week":
+  //      tmp.setDate(rangeStart.getDate() + 7);
+  //      break;
+  //    case "day":
+  //    default:
+  //  }
+  //  console.log("range end changed", date, tmp)
+  //  return tmp;
+  //});
+  //let todayInRange = $derived(isInRange(today, rangeStart, rangeEnd));
+
+  function getVisibleRange(date: Date, view: "month" | "week" | "day"): { start: Date, end: Date } {
+    const rangeStart = new Date(date);
+    const rangeEnd = new Date(date);
+    rangeStart.setHours(0, 0, 0, 0);
+    rangeEnd.setHours(23, 59, 59, 999);
+    switch (view) {
+      case "month":
+        rangeStart.setDate(1);
+        rangeStart.setDate(rangeStart.getDate() - ((rangeStart.getDay() + 6) % 7));
+        rangeEnd.setMonth(rangeEnd.getMonth() + 1);
+        rangeEnd.setDate(0);
+        rangeEnd.setDate(rangeEnd.getDate() + 7 - ((rangeEnd.getDay() + 6) % 7));
+        break;
+      case "week":
+        rangeStart.setDate(date.getDate() - ((date.getDay() + 6) % 7));
+        rangeEnd.setDate(rangeStart.getDate() + 7);
+        break;
+      case "day":
+      default:
+    }
+    return { start: rangeStart, end: rangeEnd };
+  }
+  let todayInRange = $derived.by(() => {
+    const range = getVisibleRange(date, view);
+    return isInRange(today, range.start, range.end)
+  });
+
+  function seeToday() {
+    today = new Date();
+    date = new Date(today);
+  }
+
+  function getRangeFromStorage() {
+    if (pageLoaded) return;
+
+    const storedDate = browser ? sessionStorage.getItem("selectedDate") : null;
+    date = storedDate === null ? today : new Date(storedDate);
+
+    const storedView = browser ? sessionStorage.getItem("selectedView") : "month";
+    //@ts-ignore
+    view = storedView && [ "month", "week", "day" ].includes(storedView) ? storedView : "month";
+
+    pageLoaded = true;
+  }
+
+  function smallCalendarClick(clickedDate: Date) {
+    const range = getVisibleRange(date, view);
+    if (isInRange(clickedDate, range.start, range.end) && clickedDate.getMonth() === date.getMonth()) {
+      showDateModal(clickedDate, localEvents
+        .filter((event) => event.date.start.getTime() <= clickedDate.getTime() + 24 * 60 * 60 * 1000 && event.date.end.getTime() >= clickedDate.getTime())
+        .sort(compareEventsByStartDate)
+      );
+    } else {
+      date = clickedDate;
+    }
+  }
+
   /* Fetching logic */
   let pageLoaded: boolean = $state(false);
-
   let isLoading: boolean = $state(false);
   let loaderAnimation = $state(false);
   getMetadata().loadingData.subscribe((loadingData) => {
@@ -54,26 +155,9 @@
     if (isLoading) loaderAnimation = true;
   });
 
-  let today = $state(new Date());
-  let date = $state(new Date());
-  let todayInRange = $state(true);
-
-  function seeToday() {
-    today = new Date();
-    date = new Date(today);
-    todayInRange = true;
-  }
-
-  function getRangeFromStorage() {
-    if (pageLoaded) return;
-    const storedDate = browser ? sessionStorage.getItem("selectedDate") : null;
-    date = storedDate === null ? today : new Date(storedDate);
-    pageLoaded = true;
-  }
-
   afterNavigate(() => {
     getRangeFromStorage();
-    refresh(date);
+    refresh();
   });
 
   beforeNavigate(() => {
@@ -118,31 +202,13 @@
   });
 
   let spooledRefresh: (ReturnType<typeof setTimeout> | undefined) = $state(undefined);
-  function refresh(date: Date, force = false) {
+  function refresh(force = false) {
     sessionStorage.setItem("selectedDate", date.toString());
+    sessionStorage.setItem("selectedView", view);
 
-    const rangeStart = new Date(date);
-    rangeStart.setHours(0, 0, 0, 0);
-    const rangeEnd = new Date(date);
-    rangeEnd.setHours(23, 59, 59, 999);
+    const range = getVisibleRange(date, view);
 
-    switch (view) {
-      case "month":
-        rangeStart.setDate(1);
-        rangeEnd.setMonth(rangeEnd.getMonth() + 1);
-        rangeEnd.setDate(0);
-        break;
-      case "week":
-        rangeStart.setDate(date.getDate() - ((date.getDay() + 6) % 7));
-        rangeEnd.setDate(rangeStart.getDate() + 7);
-        break;
-      case "day":
-      default:
-    }
-
-    todayInRange = rangeStart.getTime() <= today.getTime() && today.getTime() <= rangeEnd.getTime();
-
-    getRepository().getAllEvents(rangeStart, rangeEnd, force).catch((err) => {
+    getRepository().getAllEvents(range.start, range.end, force).catch((err) => {
       queueNotification("failure", `Failed to fetch events: ${err.message}`);
     });
 
@@ -150,26 +216,26 @@
 
     clearTimeout(spooledRefresh);
     spooledRefresh = setTimeout(() => {
-      refresh(date);
+      refresh();
     }, autoRefreshInterval);
   }
 
   function forceRefresh() {
     getRepository().invalidateCache();
-    refresh(date, true);
+    refresh(true);
   }
 
   $effect(() => {
-    ((date: Date, loaded: boolean) => {
+    ((date: Date, view: "month" | "week" | "day", loaded: boolean) => {
       untrack(() => {
         if (!browser) return;
         if (!loaded) {
           getRangeFromStorage();
           return;
         }
-        refresh(date);
+        refresh();
       });
-    })(date, pageLoaded);
+    })(date, view, pageLoaded);
   });
 
   getMetadata().collapsedSources.subscribe((collapsed) => {
@@ -196,6 +262,10 @@
   let showEventModal: (event: EventModel) => any = $state(NoOp);
   const showEventModalInternal = (event: EventModel) => { return showEventModal(event); };
   setContext("showEventModal", showEventModalInternal);
+
+  let showDateModal: (date: Date, events: (EventModel | null)[]) => any = $state(NoOp);
+  const showDateModalInternal = (date: Date, events: (EventModel | null)[]) => { return showDateModal(date, events); };
+  setContext("showDateModal", showDateModalInternal);
 </script>
 
 <style lang="scss">
@@ -277,11 +347,12 @@
 <SourceModal bind:showCreateModal={showNewSourceModal} bind:showModal={showSourceModal}/>
 <CalendarModal bind:showCreateModal={showNewCalendarModal} bind:showModal={showCalendarModal}/>
 <EventModal bind:showCreateModal={showNewEventModal} bind:showModal={showEventModal}/>
+<DayViewModal bind:showModal={showDateModal}/>
 
 <aside>
   <Title>Luna</Title>
 
-  <SmallCalendar date={date} smaller={true} onDayClick={(newDate) => date=newDate}></SmallCalendar>
+  <SmallCalendar date={date} smaller={true} onDayClick={(clickedDate) => smallCalendarClick(clickedDate)}></SmallCalendar>
 
   <div class="sources">
     {@render sourceEntries(localSources)}

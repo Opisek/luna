@@ -1,13 +1,11 @@
 <script lang="ts">
   import Day from "./Day.svelte";
 
-  import { NoOp } from "$lib/client/placeholders";
   import { compareEventsByStartDate } from "$lib/common/comparators";
   import { getDayName } from "$lib/common/humanization";
 
-  import { setContext } from "svelte";
+  import { getContext, setContext } from "svelte";
   import { writable } from "svelte/store";
-  import DayViewModal from "../modals/DayViewModal.svelte";
   import { isSameDay } from "$lib/common/date";
 
   interface Props {
@@ -131,13 +129,9 @@
   let maxEvents: number = $derived(containerHeight === 0 ? 0 : Math.max(Math.floor((containerHeight + 9) / 27), 0));
 
   /* Show more */
-  let showDayViewModal = $state(NoOp);
-  let showMoreDate: Date = $state(new Date(0));
-  let showMoreEvents: (EventModel | null)[] = $state([]);
+  let showDateModal: ((date: Date, events: (EventModel | null)[]) => any) = getContext("showDateModal");
   function showMore(date: Date, events: (EventModel | null)[]) {
-    showMoreDate = date;
-    showMoreEvents = events;
-    showDayViewModal();
+    showDateModal(date, events);
   }
 </script>
 
@@ -220,5 +214,3 @@
     {/each}
   </div>
 </div>
-
-<DayViewModal date={showMoreDate} events={showMoreEvents} bind:showModal={showDayViewModal}/>
