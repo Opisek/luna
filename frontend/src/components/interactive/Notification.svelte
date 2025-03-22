@@ -36,16 +36,17 @@
     viewDetails = false;
   }
 
+  let previousCount = $state(notification.count);
   let counterVisible = $state(false);
   let counterPop = $state(true);
   $effect(() => {
-    if (notification.count > 1) {
-      counterPop = false;
-      setTimeout(() => {
-        counterPop = true;
-        counterVisible = true;
-      }, 10);
-    }
+    if (notification.count == 1 || previousCount == notification.count) return;
+    previousCount = notification.count;
+    counterPop = false;
+    setTimeout(() => {
+      counterPop = true;
+      counterVisible = true;
+    }, 10);
   });
 </script>
 
