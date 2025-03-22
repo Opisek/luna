@@ -1,4 +1,4 @@
-/* Animotians */
+/* Animations */
 @keyframes notification-timer {
   from {
     width: 0%;
@@ -24,6 +24,18 @@
     transform: scale(0.95);
   }
   to {
+    transform: scale(1);
+  }
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
     transform: scale(1);
   }
 }
