@@ -3,7 +3,6 @@ package files
 import (
 	"bytes"
 	"io"
-	"luna-backend/auth"
 	"luna-backend/common"
 	"luna-backend/crypto"
 	"luna-backend/errors"
@@ -19,10 +18,10 @@ type RemoteFile struct {
 	url     *types.Url
 	date    *time.Time
 	content []byte
-	auth    auth.AuthMethod
+	auth    types.AuthMethod
 }
 
-func NewRemoteFile(url *types.Url, auth auth.AuthMethod) *RemoteFile {
+func NewRemoteFile(url *types.Url, auth types.AuthMethod) *RemoteFile {
 	return &RemoteFile{url: url, auth: auth}
 }
 

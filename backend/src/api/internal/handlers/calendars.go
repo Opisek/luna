@@ -10,11 +10,12 @@ import (
 )
 
 type exposedCalendar struct {
-	Id     types.ID     `json:"id"`
-	Source types.ID     `json:"source"`
-	Name   string       `json:"name"`
-	Desc   string       `json:"desc"`
-	Color  *types.Color `json:"color"`
+	Id         types.ID     `json:"id"`
+	Source     types.ID     `json:"source"`
+	Name       string       `json:"name"`
+	Desc       string       `json:"desc"`
+	Color      *types.Color `json:"color"`
+	Overridden bool         `json:"overridden"`
 }
 
 func GetCalendars(c *gin.Context) {
@@ -43,7 +44,7 @@ func GetCalendars(c *gin.Context) {
 		return
 	}
 
-	cals, err := u.Tx.Queries().ReconcileCalendars(calsFromSource)
+	cals, err := u.Tx.Queries().OverrideCalendars(calsFromSource)
 	if err != nil {
 		u.Error(err)
 		return
@@ -53,11 +54,12 @@ func GetCalendars(c *gin.Context) {
 	convertedCals := make([]exposedCalendar, len(cals))
 	for i, cal := range cals {
 		convertedCals[i] = exposedCalendar{
-			Id:     cal.GetId(),
-			Source: cal.GetSource().GetId(),
-			Name:   cal.GetName(),
-			Desc:   cal.GetDesc(),
-			Color:  cal.GetColor(),
+			Id:         cal.GetId(),
+			Source:     cal.GetSource().GetId(),
+			Name:       cal.GetName(),
+			Desc:       cal.GetDesc(),
+			Color:      cal.GetColor(),
+			Overridden: cal.GetOverridden(),
 			//Settings: cal.GetSettings(),
 		}
 	}
@@ -77,7 +79,13 @@ func GetCalendar(c *gin.Context) {
 	}
 
 	// Get calendar
-	cal, err := u.Tx.Queries().GetCalendar(userId, calendarId)
+	calFromSource, err := u.Tx.Queries().GetCalendar(userId, calendarId)
+	if err != nil {
+		u.Error(err)
+		return
+	}
+
+	cal, err := u.Tx.Queries().OverrideCalendar(calFromSource)
 	if err != nil {
 		u.Error(err)
 		return
@@ -85,11 +93,12 @@ func GetCalendar(c *gin.Context) {
 
 	// Convert to exposed format
 	convertedCal := exposedCalendar{
-		Id:     cal.GetId(),
-		Source: cal.GetSource().GetId(),
-		Name:   cal.GetName(),
-		Desc:   cal.GetDesc(),
-		Color:  cal.GetColor(),
+		Id:         cal.GetId(),
+		Source:     cal.GetSource().GetId(),
+		Name:       cal.GetName(),
+		Desc:       cal.GetDesc(),
+		Color:      cal.GetColor(),
+		Overridden: cal.GetOverridden(),
 		//Settings: cal.GetSettings(),
 	}
 
@@ -164,27 +173,25 @@ func PatchCalendar(c *gin.Context) {
 
 	newCalColor, colErr := types.ParseColor(c.PostForm("color"))
 
-	if newCalName == "" && colErr != nil {
+	newCalDesc := c.PostForm("desc")
+
+	isOverridden := c.PostForm("overridden") == "true"
+
+	if !isOverridden && (newCalName == "" && newCalDesc == "" && colErr != nil) {
 		u.Error(errors.New().Status(http.StatusBadRequest).
 			Append(errors.LvlWordy, "Nothing to change"))
 		return
 	}
 
-	if newCalName == "" {
+	if newCalName == "" && !isOverridden {
 		newCalName = calendar.GetName()
 	}
 
-	if colErr != nil {
+	if colErr != nil && !isOverridden {
 		newCalColor = calendar.GetColor()
 	}
 
-	newCal, err := calendar.GetSource().EditCalendar(calendar, newCalName, newCalColor, u.Tx.Queries())
-	if err != nil {
-		u.Error(err)
-		return
-	}
-
-	err = u.Tx.Queries().UpdateCalendar(newCal)
+	_, err = calendar.GetSource().EditCalendar(calendar, newCalName, newCalDesc, newCalColor, isOverridden, u.Tx.Queries())
 	if err != nil {
 		u.Error(err)
 		return

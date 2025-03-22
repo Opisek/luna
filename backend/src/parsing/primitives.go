@@ -4,9 +4,8 @@ import (
 	"encoding/json"
 	"luna-backend/auth"
 	"luna-backend/errors"
-	"luna-backend/interface/primitives"
-	"luna-backend/interface/protocols/caldav"
-	"luna-backend/interface/protocols/ical"
+	"luna-backend/protocols/caldav"
+	"luna-backend/protocols/ical"
 	"luna-backend/types"
 	"net/http"
 )
@@ -17,10 +16,10 @@ func GetPrimitivesParser() PrimitivesParser {
 	return PrimitivesParser{}
 }
 
-func (PrimitivesParser) ParseSource(entry *types.SourceDatabaseEntry) (primitives.Source, *errors.ErrorTrace) {
+func (PrimitivesParser) ParseSource(entry *types.SourceDatabaseEntry) (types.Source, *errors.ErrorTrace) {
 	var err error
 
-	var authMethod auth.AuthMethod
+	var authMethod types.AuthMethod
 	switch entry.AuthType {
 	case types.AuthNone:
 		authMethod = auth.NewNoAuth()
@@ -91,7 +90,7 @@ func (PrimitivesParser) ParseSource(entry *types.SourceDatabaseEntry) (primitive
 	}
 }
 
-func (PrimitivesParser) ParseCalendarSettings(sourceType string, settings []byte) (primitives.CalendarSettings, *errors.ErrorTrace) {
+func (PrimitivesParser) ParseCalendarSettings(sourceType string, settings []byte) (types.CalendarSettings, *errors.ErrorTrace) {
 	switch sourceType {
 	case types.SourceCaldav:
 		parsedSettings := &caldav.CaldavCalendarSettings{}
@@ -119,7 +118,7 @@ func (PrimitivesParser) ParseCalendarSettings(sourceType string, settings []byte
 	}
 }
 
-func (PrimitivesParser) ParseEventSettings(sourceType string, settings []byte) (primitives.EventSettings, *errors.ErrorTrace) {
+func (PrimitivesParser) ParseEventSettings(sourceType string, settings []byte) (types.EventSettings, *errors.ErrorTrace) {
 	switch sourceType {
 	case types.SourceCaldav:
 		parsedSettings := &caldav.CaldavEventSettings{}

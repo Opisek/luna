@@ -3,7 +3,6 @@ package parsing
 import (
 	"fmt"
 	"luna-backend/errors"
-	"luna-backend/interface/primitives"
 	"luna-backend/types"
 	"reflect"
 	"strings"
@@ -110,11 +109,11 @@ func (s *PgxScanner) GetEventEntry() *types.EventDatabaseEntry {
 	return s.event
 }
 
-func (s *PgxScanner) GetSource() (primitives.Source, *errors.ErrorTrace) {
+func (s *PgxScanner) GetSource() (types.Source, *errors.ErrorTrace) {
 	return s.primitivesParser.ParseSource(s.source)
 }
 
-func (s *PgxScanner) GetCalendar() (primitives.Calendar, *errors.ErrorTrace) {
+func (s *PgxScanner) GetCalendar() (types.Calendar, *errors.ErrorTrace) {
 	source, err := s.GetSource()
 	if err != nil {
 		return nil, err
@@ -130,14 +129,10 @@ func (s *PgxScanner) GetCalendar() (primitives.Calendar, *errors.ErrorTrace) {
 		return nil, err
 	}
 
-	if calendar.GetColor() == nil {
-		calendar.SetColor(types.ColorFromBytes(s.calendar.Color))
-	}
-
 	return calendar, nil
 }
 
-func (s *PgxScanner) GetEvent() (primitives.Event, *errors.ErrorTrace) {
+func (s *PgxScanner) GetEvent() (types.Event, *errors.ErrorTrace) {
 	calendar, err := s.GetCalendar()
 	if err != nil {
 		return nil, err
@@ -151,10 +146,6 @@ func (s *PgxScanner) GetEvent() (primitives.Event, *errors.ErrorTrace) {
 	event, err := calendar.GetEvent(settings, s.queries)
 	if err != nil {
 		return nil, err
-	}
-
-	if event.GetColor() == nil {
-		event.SetColor(types.ColorFromBytes(s.event.Color))
 	}
 
 	return event, nil

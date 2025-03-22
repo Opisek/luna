@@ -92,11 +92,25 @@ func init() {
 				Append(errors.LvlDebug, "Could not initialize calendars table")
 		}
 
+		err = q.Tables.InitializeCalendarOverridesTable()
+		if err != nil {
+			return errors.New().
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlDebug, "Could not initialize calendar overrides table")
+		}
+
 		err = q.Tables.InitializeEventsTable()
 		if err != nil {
 			return errors.New().
 				AddErr(errors.LvlDebug, err).
 				Append(errors.LvlDebug, "Could not initialize events table")
+		}
+
+		err = q.Tables.InitializeEventOverridesTable()
+		if err != nil {
+			return errors.New().
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlDebug, "Could not initialize event overrides table")
 		}
 
 		err = q.Tables.InitializeFilecacheTable()

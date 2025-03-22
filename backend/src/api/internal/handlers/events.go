@@ -3,7 +3,6 @@ package handlers
 import (
 	"luna-backend/api/internal/util"
 	"luna-backend/errors"
-	"luna-backend/interface/primitives"
 	"luna-backend/types"
 	"net/http"
 	"time"
@@ -12,12 +11,13 @@ import (
 )
 
 type exposedEvent struct {
-	Id       types.ID         `json:"id"`
-	Calendar types.ID         `json:"calendar"`
-	Name     string           `json:"name"`
-	Desc     string           `json:"desc"`
-	Color    *types.Color     `json:"color"`
-	Date     *types.EventDate `json:"date"`
+	Id         types.ID         `json:"id"`
+	Calendar   types.ID         `json:"calendar"`
+	Name       string           `json:"name"`
+	Desc       string           `json:"desc"`
+	Color      *types.Color     `json:"color"`
+	Date       *types.EventDate `json:"date"`
+	Overridden bool             `json:"overridden"`
 }
 
 func GetEvents(c *gin.Context) {
@@ -70,24 +70,24 @@ func GetEvents(c *gin.Context) {
 		return
 	}
 
-	events, tr := u.Tx.Queries().ReconcileEvents(eventsFromCal)
+	events, tr := u.Tx.Queries().OverrideEvents(eventsFromCal)
 	if tr != nil {
 		u.Error(tr)
 		return
 	}
 
 	// Expand recurring events
-	expandedEvents := make([]primitives.Event, len(events))
+	expandedEvents := make([]types.Event, len(events))
 	count := 0
 	for _, event := range events {
-		expanded, tr := primitives.ExpandRecurrence(event, &startTime, &endTime)
+		expanded, tr := types.ExpandRecurrence(event, &startTime, &endTime)
 		if tr != nil {
 			u.Error(tr)
 			return
 		}
 
 		if len(expanded) > 1 {
-			newRes := make([]primitives.Event, len(expandedEvents)-1+len(expanded))
+			newRes := make([]types.Event, len(expandedEvents)-1+len(expanded))
 			copy(newRes, expandedEvents[:count])
 			expandedEvents = newRes
 		}
@@ -106,12 +106,13 @@ func GetEvents(c *gin.Context) {
 		}
 
 		convertedEvents[i] = exposedEvent{
-			Id:       event.GetId(),
-			Calendar: event.GetCalendar().GetId(),
-			Name:     event.GetName(),
-			Desc:     event.GetDesc(),
-			Color:    event.GetColor(),
-			Date:     event.GetDate(),
+			Id:         event.GetId(),
+			Calendar:   event.GetCalendar().GetId(),
+			Name:       event.GetName(),
+			Desc:       event.GetDesc(),
+			Color:      event.GetColor(),
+			Date:       event.GetDate(),
+			Overridden: event.GetOverridden(),
 		}
 	}
 
@@ -130,7 +131,13 @@ func GetEvent(c *gin.Context) {
 	}
 
 	// Get event
-	event, err := u.Tx.Queries().GetEvent(userId, eventId)
+	eventFromCal, err := u.Tx.Queries().GetEvent(userId, eventId)
+	if err != nil {
+		u.Error(err)
+		return
+	}
+
+	event, err := u.Tx.Queries().OverrideEvent(eventFromCal)
 	if err != nil {
 		u.Error(err)
 		return
@@ -138,12 +145,13 @@ func GetEvent(c *gin.Context) {
 
 	// Convert to exposed format
 	convertedCal := exposedEvent{
-		Id:       event.GetId(),
-		Calendar: event.GetCalendar().GetId(),
-		Name:     event.GetName(),
-		Desc:     event.GetDesc(),
-		Color:    event.GetColor(),
-		Date:     event.GetDate(),
+		Id:         event.GetId(),
+		Calendar:   event.GetCalendar().GetId(),
+		Name:       event.GetName(),
+		Desc:       event.GetDesc(),
+		Color:      event.GetColor(),
+		Date:       event.GetDate(),
+		Overridden: event.GetOverridden(),
 		//Settings: event.GetSettings(),
 	}
 
@@ -253,6 +261,8 @@ func PatchEvent(c *gin.Context) {
 
 	newEventDesc := c.PostForm("desc")
 
+	isOverridden := c.PostForm("overridden") == "true"
+
 	var newEventColor *types.Color
 	var colErr error
 	if c.PostForm("color") == "" {
@@ -272,17 +282,17 @@ func PatchEvent(c *gin.Context) {
 	eventDateEnd, endErr := time.Parse(time.RFC3339, eventDateEndStr)
 	eventDateDuration, durationErr := time.ParseDuration(eventDateDurationStr)
 
-	if newEventName == "" && newEventDesc == event.GetDesc() && (newEventColor == event.GetColor() || colErr != nil) && startErr != nil && endErr != nil && durationErr != nil {
+	if !isOverridden && (newEventName == "" && newEventDesc == event.GetDesc() && (newEventColor == event.GetColor() || colErr != nil) && startErr != nil && endErr != nil && durationErr != nil) {
 		u.Error(errors.New().Status(http.StatusBadRequest).
 			Append(errors.LvlPlain, "Nothing to change"))
 		return
 	}
 
-	if newEventName == "" {
+	if newEventName == "" && !isOverridden {
 		newEventName = event.GetName()
 	}
 
-	if colErr != nil {
+	if colErr != nil && !isOverridden {
 		newEventColor = event.GetColor()
 	}
 
@@ -312,13 +322,7 @@ func PatchEvent(c *gin.Context) {
 		}
 	}
 
-	newEvent, err := event.GetCalendar().EditEvent(event, newEventName, newEventDesc, newEventColor, newEventDate, u.Tx.Queries())
-	if err != nil {
-		u.Error(err)
-		return
-	}
-
-	err = u.Tx.Queries().UpdateEvent(newEvent)
+	_, err = event.GetCalendar().EditEvent(event, newEventName, newEventDesc, newEventColor, newEventDate, isOverridden, u.Tx.Queries())
 	if err != nil {
 		u.Error(err)
 		return

@@ -7,12 +7,6 @@ import (
 	"net/http"
 )
 
-type AuthMethod interface {
-	Do(req *http.Request) (*http.Response, error)
-	GetType() string
-	String() (string, error)
-}
-
 // No Authentication
 
 type NoAuth struct{}
@@ -28,7 +22,7 @@ func (auth NoAuth) String() (string, error) {
 	return "", nil
 }
 
-func NewNoAuth() AuthMethod {
+func NewNoAuth() types.AuthMethod {
 	return NoAuth{}
 }
 
@@ -55,7 +49,7 @@ func (auth BasicAuth) String() (string, error) {
 	return string(bytes), nil
 }
 
-func NewBasicAuth(username, password string) AuthMethod {
+func NewBasicAuth(username, password string) types.AuthMethod {
 	return BasicAuth{Username: username, Password: password}
 }
 
@@ -81,7 +75,7 @@ func (auth BearerAuth) String() (string, error) {
 	return string(bytes), nil
 }
 
-func NewBearerAuth(token string) AuthMethod {
+func NewBearerAuth(token string) types.AuthMethod {
 	return BearerAuth{Token: token}
 }
 

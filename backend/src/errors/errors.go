@@ -226,8 +226,9 @@ func (tr *ErrorTrace) Serialize(detailLevel int) string {
 	}
 
 	if count == 0 {
+		msgs = make([]string, 1)
 		msgs[0] = http.StatusText(tr.httpCode)
-		count++
+		count = 1
 	}
 
 	return strings.Join(msgs[:count], ": ")

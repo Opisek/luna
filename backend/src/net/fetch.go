@@ -3,13 +3,12 @@ package net
 import (
 	"context"
 	"io"
-	"luna-backend/auth"
 	"luna-backend/errors"
 	"luna-backend/types"
 	"net/http"
 )
 
-func FetchFile(url *types.Url, auth auth.AuthMethod, ctx context.Context) (io.Reader, *errors.ErrorTrace) {
+func FetchFile(url *types.Url, auth types.AuthMethod, ctx context.Context) (io.Reader, *errors.ErrorTrace) {
 	req, err := http.NewRequest("GET", url.String(), nil)
 	if err != nil {
 		return nil, errors.New().Status(http.StatusInternalServerError).

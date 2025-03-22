@@ -9,9 +9,8 @@ import (
 	"luna-backend/auth"
 	"luna-backend/errors"
 	"luna-backend/files"
-	"luna-backend/interface/primitives"
-	"luna-backend/interface/protocols/caldav"
-	"luna-backend/interface/protocols/ical"
+	"luna-backend/protocols/caldav"
+	"luna-backend/protocols/ical"
 	"luna-backend/types"
 
 	"github.com/gin-gonic/gin"
@@ -32,7 +31,7 @@ type exposedDetailedSource struct {
 	Auth     interface{} `json:"auth"`
 }
 
-func getSources(u *util.HandlerUtility, userId types.ID) ([]primitives.Source, *errors.ErrorTrace) {
+func getSources(u *util.HandlerUtility, userId types.ID) ([]types.Source, *errors.ErrorTrace) {
 	srcs, err := u.Tx.Queries().GetSourcesByUser(userId)
 	if err != nil {
 		return nil, err
@@ -92,8 +91,8 @@ func GetSource(c *gin.Context) {
 	u.Success(&gin.H{"source": exposedSource})
 }
 
-func parseAuthMethod(c *gin.Context) (auth.AuthMethod, *errors.ErrorTrace) {
-	var sourceAuth auth.AuthMethod
+func parseAuthMethod(c *gin.Context) (types.AuthMethod, *errors.ErrorTrace) {
+	var sourceAuth types.AuthMethod
 
 	authType := c.PostForm("auth_type")
 	switch authType {
@@ -127,8 +126,8 @@ func parseAuthMethod(c *gin.Context) (auth.AuthMethod, *errors.ErrorTrace) {
 	return sourceAuth, nil
 }
 
-func parseSource(c *gin.Context, sourceName string, sourceAuth auth.AuthMethod, q types.DatabaseQueries) (primitives.Source, *errors.ErrorTrace) {
-	var source primitives.Source
+func parseSource(c *gin.Context, sourceName string, sourceAuth types.AuthMethod, q types.DatabaseQueries) (types.Source, *errors.ErrorTrace) {
+	var source types.Source
 
 	sourceType := c.PostForm("type")
 	switch sourceType {
@@ -302,7 +301,7 @@ func PatchSource(c *gin.Context) {
 		return
 	}
 
-	var newAuth auth.AuthMethod = nil
+	var newAuth types.AuthMethod = nil
 	if newAuthType != "" {
 		newAuth, err = parseAuthMethod(c)
 		if err != nil {
@@ -311,7 +310,7 @@ func PatchSource(c *gin.Context) {
 		}
 	}
 
-	var newSourceSettings primitives.SourceSettings = nil
+	var newSourceSettings types.SourceSettings = nil
 	if newType != "" {
 		if newAuth == nil {
 			newAuth = source.GetAuth()
@@ -323,8 +322,8 @@ func PatchSource(c *gin.Context) {
 		}
 		newSourceSettings = newSource.GetSettings()
 	}
-	if source.GetType() == "ical" {
-		if newType == "ical" {
+	if source.GetType() == types.SourceIcal {
+		if newType == types.SourceIcal {
 			err = source.Cleanup(u.Tx.Queries())
 		}
 		if err != nil {

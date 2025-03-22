@@ -7,7 +7,7 @@ func (q *Tables) InitializePasswordsTable() error {
 		q.Context,
 		`
 		CREATE TABLE IF NOT EXISTS passwords (
-			userid UUID REFERENCES users(id) ON DELETE CASCADE,
+			userid UUID UNIQUE REFERENCES users(id) ON DELETE CASCADE,
 			hash BYTEA NOT NULL,
 			salt BYTEA NOT NULL,
 			algorithm VARCHAR(32) NOT NULL,

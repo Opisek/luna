@@ -4,8 +4,7 @@ import (
 	"encoding/json"
 	"luna-backend/crypto"
 	"luna-backend/errors"
-	"luna-backend/interface/primitives"
-	common "luna-backend/interface/protocols/internal"
+	common "luna-backend/protocols/internal"
 	"luna-backend/types"
 	"net/http"
 	"time"
@@ -16,9 +15,10 @@ import (
 type IcalCalendar struct {
 	name         string
 	desc         string
-	source       *IcalSource
 	color        *types.Color
+	overridden   bool
 	settings     *IcalCalendarSettings
+	source       *IcalSource
 	icalCalendar *ical.Calendar
 }
 
@@ -59,9 +59,10 @@ func (source *IcalSource) calendarFromIcal(rawCalendar *ical.Calendar) (*IcalCal
 	calendar := &IcalCalendar{
 		name:         common.UnespaceIcalString(name.Value),
 		desc:         common.UnespaceIcalString(desc.Value),
-		source:       source,
 		color:        calColor,
+		overridden:   false,
 		settings:     settings,
+		source:       source,
 		icalCalendar: rawCalendar,
 	}
 
@@ -89,15 +90,23 @@ func (calendar *IcalCalendar) GetName() string {
 	return calendar.name
 }
 
+func (calendar *IcalCalendar) SetName(name string) {
+	calendar.name = name
+}
+
 func (calendar *IcalCalendar) GetDesc() string {
 	return calendar.desc
 }
 
-func (calendar *IcalCalendar) GetSource() primitives.Source {
+func (calendar *IcalCalendar) SetDesc(desc string) {
+	calendar.desc = desc
+}
+
+func (calendar *IcalCalendar) GetSource() types.Source {
 	return calendar.source
 }
 
-func (calendar *IcalCalendar) GetSettings() primitives.CalendarSettings {
+func (calendar *IcalCalendar) GetSettings() types.CalendarSettings {
 	return calendar.settings
 }
 
@@ -113,8 +122,16 @@ func (calendar *IcalCalendar) SetColor(color *types.Color) {
 	calendar.color = color
 }
 
-func (calendar *IcalCalendar) GetEvents(start time.Time, end time.Time, q types.DatabaseQueries) ([]primitives.Event, *errors.ErrorTrace) {
-	res := make([]primitives.Event, len(calendar.icalCalendar.Children))
+func (calendar *IcalCalendar) GetOverridden() bool {
+	return calendar.overridden
+}
+
+func (calendar *IcalCalendar) SetOverridden(overridden bool) {
+	calendar.overridden = overridden
+}
+
+func (calendar *IcalCalendar) GetEvents(start time.Time, end time.Time, q types.DatabaseQueries) ([]types.Event, *errors.ErrorTrace) {
+	res := make([]types.Event, len(calendar.icalCalendar.Children))
 
 	count := 0
 	for _, comp := range calendar.icalCalendar.Children {
@@ -141,7 +158,7 @@ func (calendar *IcalCalendar) GetEvents(start time.Time, end time.Time, q types.
 	return res[:count], nil
 }
 
-func (calendar *IcalCalendar) GetEvent(settings primitives.EventSettings, q types.DatabaseQueries) (primitives.Event, *errors.ErrorTrace) {
+func (calendar *IcalCalendar) GetEvent(settings types.EventSettings, q types.DatabaseQueries) (types.Event, *errors.ErrorTrace) {
 	icalSettings := settings.(*IcalEventSettings)
 	targetUid := icalSettings.Uid
 
@@ -171,14 +188,38 @@ func (calendar *IcalCalendar) GetEvent(settings primitives.EventSettings, q type
 
 /* Ical calendar is read-only */
 
-func (calendar *IcalCalendar) AddEvent(name string, desc string, color *types.Color, date *types.EventDate, q types.DatabaseQueries) (primitives.Event, *errors.ErrorTrace) {
+func (calendar *IcalCalendar) AddEvent(name string, desc string, color *types.Color, date *types.EventDate, q types.DatabaseQueries) (types.Event, *errors.ErrorTrace) {
 	return nil, errors.New().Status(http.StatusMethodNotAllowed)
 }
 
-func (calendar *IcalCalendar) EditEvent(originalEvent primitives.Event, name string, desc string, color *types.Color, date *types.EventDate, q types.DatabaseQueries) (primitives.Event, *errors.ErrorTrace) {
-	return nil, errors.New().Status(http.StatusMethodNotAllowed)
+func (calendar *IcalCalendar) EditEvent(event types.Event, name string, desc string, color *types.Color, date *types.EventDate, override bool, q types.DatabaseQueries) (types.Event, *errors.ErrorTrace) {
+	if override {
+		anyOverrides := false
+		if name != "" {
+			event.SetName(name)
+			anyOverrides = true
+		}
+		if desc != "" {
+			event.SetDesc(desc)
+			anyOverrides = true
+		}
+		if color != nil && !color.IsEmpty() {
+			event.SetColor(color)
+			anyOverrides = true
+		}
+
+		if anyOverrides {
+			q.SetEventOverrides(event.GetId(), name, desc, color)
+			return event, nil
+		} else {
+			q.DeleteEventOverrides(event.GetId())
+			return calendar.GetEvent(event.GetSettings(), q)
+		}
+	} else {
+		return nil, errors.New().Status(http.StatusMethodNotAllowed)
+	}
 }
 
-func (calendar *IcalCalendar) DeleteEvent(event primitives.Event, q types.DatabaseQueries) *errors.ErrorTrace {
+func (calendar *IcalCalendar) DeleteEvent(event types.Event, q types.DatabaseQueries) *errors.ErrorTrace {
 	return errors.New().Status(http.StatusMethodNotAllowed)
 }

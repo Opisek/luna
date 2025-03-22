@@ -6,7 +6,6 @@ import (
 	"luna-backend/auth"
 	"luna-backend/errors"
 	"luna-backend/files"
-	"luna-backend/interface/primitives"
 	"luna-backend/types"
 	"net/http"
 
@@ -17,7 +16,7 @@ type IcalSource struct {
 	id       types.ID
 	name     string
 	settings *IcalSourceSettings
-	auth     auth.AuthMethod
+	auth     types.AuthMethod
 }
 
 type IcalSourceSettings struct {
@@ -72,15 +71,15 @@ func (source *IcalSource) GetName() string {
 	return source.name
 }
 
-func (source *IcalSource) GetAuth() auth.AuthMethod {
+func (source *IcalSource) GetAuth() types.AuthMethod {
 	return source.auth
 }
 
-func (source *IcalSource) GetSettings() primitives.SourceSettings {
+func (source *IcalSource) GetSettings() types.SourceSettings {
 	return source.settings
 }
 
-func NewRemoteIcalSource(name string, url *types.Url, auth auth.AuthMethod) *IcalSource {
+func NewRemoteIcalSource(name string, url *types.Url, auth types.AuthMethod) *IcalSource {
 	return &IcalSource{
 		id:   types.EmptyId(), // Placeholder until the database assigns an ID
 		name: name,
@@ -124,7 +123,7 @@ func NewLocalIcalSource(name string, path *types.Path) *IcalSource {
 	}
 }
 
-func PackIcalSource(id types.ID, name string, settings *IcalSourceSettings, auth auth.AuthMethod) (*IcalSource, *errors.ErrorTrace) {
+func PackIcalSource(id types.ID, name string, settings *IcalSourceSettings, auth types.AuthMethod) (*IcalSource, *errors.ErrorTrace) {
 	switch settings.Location {
 	case "remote":
 		settings.file = files.NewRemoteFile(settings.Url, auth)
@@ -144,13 +143,13 @@ func PackIcalSource(id types.ID, name string, settings *IcalSourceSettings, auth
 	}, nil
 }
 
-func (source *IcalSource) GetCalendars(q types.DatabaseQueries) ([]primitives.Calendar, *errors.ErrorTrace) {
+func (source *IcalSource) GetCalendars(q types.DatabaseQueries) ([]types.Calendar, *errors.ErrorTrace) {
 	cal, err := source.getIcalFile(q)
 	if err != nil {
 		return nil, err.Append(errors.LvlBroad, "Could not get calendars")
 	}
 
-	result := make([]primitives.Calendar, 1)
+	result := make([]types.Calendar, 1)
 	result[0], err = source.calendarFromIcal(cal)
 	if err != nil {
 		return nil, err.Append(errors.LvlBroad, "Could not get calendars")
@@ -159,7 +158,7 @@ func (source *IcalSource) GetCalendars(q types.DatabaseQueries) ([]primitives.Ca
 	return result, nil
 }
 
-func (source *IcalSource) GetCalendar(settings primitives.CalendarSettings, q types.DatabaseQueries) (primitives.Calendar, *errors.ErrorTrace) {
+func (source *IcalSource) GetCalendar(settings types.CalendarSettings, q types.DatabaseQueries) (types.Calendar, *errors.ErrorTrace) {
 	cals, err := source.GetCalendars(q)
 	if err != nil {
 		return nil, err.Append(errors.LvlBroad, "Could not get calendar")
@@ -169,15 +168,39 @@ func (source *IcalSource) GetCalendar(settings primitives.CalendarSettings, q ty
 
 /* Ical source is read-only */
 
-func (source *IcalSource) AddCalendar(name string, color *types.Color, q types.DatabaseQueries) (primitives.Calendar, *errors.ErrorTrace) {
+func (source *IcalSource) AddCalendar(name string, color *types.Color, q types.DatabaseQueries) (types.Calendar, *errors.ErrorTrace) {
 	return nil, errors.New().Status(http.StatusMethodNotAllowed)
 }
 
-func (source *IcalSource) EditCalendar(calendar primitives.Calendar, name string, color *types.Color, q types.DatabaseQueries) (primitives.Calendar, *errors.ErrorTrace) {
-	return nil, errors.New().Status(http.StatusMethodNotAllowed)
+func (source *IcalSource) EditCalendar(calendar types.Calendar, name string, desc string, color *types.Color, override bool, q types.DatabaseQueries) (types.Calendar, *errors.ErrorTrace) {
+	if override {
+		anyOverrides := false
+		if name != "" {
+			calendar.SetName(name)
+			anyOverrides = true
+		}
+		if desc != "" {
+			calendar.SetDesc(desc)
+			anyOverrides = true
+		}
+		if color != nil && !color.IsEmpty() {
+			calendar.SetColor(color)
+			anyOverrides = true
+		}
+
+		if anyOverrides {
+			q.SetCalendarOverrides(calendar.GetId(), name, desc, color)
+			return calendar, nil
+		} else {
+			q.DeleteCalendarOverrides(calendar.GetId())
+			return source.GetCalendar(calendar.GetSettings(), q)
+		}
+	} else {
+		return nil, errors.New().Status(http.StatusMethodNotAllowed)
+	}
 }
 
-func (source *IcalSource) DeleteCalendar(calendar primitives.Calendar, q types.DatabaseQueries) *errors.ErrorTrace {
+func (source *IcalSource) DeleteCalendar(calendar types.Calendar, q types.DatabaseQueries) *errors.ErrorTrace {
 	return errors.New().Status(http.StatusMethodNotAllowed)
 }
 

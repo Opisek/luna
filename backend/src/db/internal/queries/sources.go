@@ -2,11 +2,9 @@ package queries
 
 import (
 	"fmt"
-	"luna-backend/auth"
 	"luna-backend/db/internal/parsing"
 	"luna-backend/db/internal/util"
 	"luna-backend/errors"
-	"luna-backend/interface/primitives"
 	"luna-backend/types"
 	"net/http"
 	"strings"
@@ -15,7 +13,7 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func (q *Queries) GetSource(userId types.ID, sourceId types.ID) (primitives.Source, *errors.ErrorTrace) {
+func (q *Queries) GetSource(userId types.ID, sourceId types.ID) (types.Source, *errors.ErrorTrace) {
 	decryptionKey, tr := util.GetUserDecryptionKey(q.CommonConfig, userId)
 	if tr != nil {
 		return nil, tr.
@@ -71,7 +69,7 @@ func (q *Queries) GetSource(userId types.ID, sourceId types.ID) (primitives.Sour
 
 }
 
-func (q *Queries) GetSourcesByUser(userId types.ID) ([]primitives.Source, *errors.ErrorTrace) {
+func (q *Queries) GetSourcesByUser(userId types.ID) ([]types.Source, *errors.ErrorTrace) {
 	decryptionKey, tr := util.GetUserDecryptionKey(q.CommonConfig, userId)
 	if tr != nil {
 		return nil, tr.
@@ -113,7 +111,7 @@ func (q *Queries) GetSourcesByUser(userId types.ID) ([]primitives.Source, *error
 	}
 	defer rows.Close()
 
-	sources := []primitives.Source{}
+	sources := []types.Source{}
 	for rows.Next() {
 		rows.Scan(params...) // TODO: we might have to "reset" the scanner each time due to pass by reference
 		source, err := scanner.GetSource()
@@ -175,7 +173,7 @@ func (q *Queries) GetSourceSettingsByType(sourceType string) ([][]byte, *errors.
 	return settings, nil
 }
 
-func (q *Queries) InsertSource(userId types.ID, source primitives.Source) (types.ID, *errors.ErrorTrace) {
+func (q *Queries) InsertSource(userId types.ID, source types.Source) (types.ID, *errors.ErrorTrace) {
 	encryptionKey, tr := util.GetUserEncryptionKey(q.CommonConfig, userId)
 	if tr != nil {
 		return types.EmptyId(), tr.
@@ -217,7 +215,7 @@ func (q *Queries) InsertSource(userId types.ID, source primitives.Source) (types
 	return types.IdFromUuid(id), nil
 }
 
-func (q *Queries) UpdateSource(userId types.ID, sourceId types.ID, newName string, newAuth auth.AuthMethod, newSourceType string, newSourceSettings primitives.SourceSettings) *errors.ErrorTrace {
+func (q *Queries) UpdateSource(userId types.ID, sourceId types.ID, newName string, newAuth types.AuthMethod, newSourceType string, newSourceSettings types.SourceSettings) *errors.ErrorTrace {
 	encryptionKey, tr := util.GetUserEncryptionKey(q.CommonConfig, userId)
 	if tr != nil {
 		return tr.

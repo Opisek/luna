@@ -1,8 +1,7 @@
-package primitives
+package types
 
 import (
 	"luna-backend/errors"
-	"luna-backend/types"
 	"net/http"
 	"time"
 
@@ -10,14 +9,21 @@ import (
 )
 
 type Event interface {
-	GetId() types.ID
+	GetId() ID
 	GetCalendar() Calendar
+
 	GetName() string
+	SetName(name string)
 	GetDesc() string
-	GetColor() *types.Color
-	SetColor(color *types.Color)
+	SetDesc(desc string)
+	GetColor() *Color
+	SetColor(color *Color)
+	GetOverridden() bool
+	SetOverridden(overridden bool)
+
 	GetSettings() EventSettings
-	GetDate() *types.EventDate
+	GetDate() *EventDate
+
 	Clone() Event
 }
 

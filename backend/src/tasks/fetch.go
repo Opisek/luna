@@ -6,7 +6,8 @@ import (
 	"luna-backend/db"
 	"luna-backend/errors"
 	"luna-backend/files"
-	"luna-backend/interface/protocols/ical"
+	"luna-backend/protocols/ical"
+	"luna-backend/types"
 	"sync"
 
 	"github.com/sirupsen/logrus"
@@ -16,7 +17,7 @@ import (
 // local cache up to date, should the remote file be inaccessible when the user
 // requests it later.
 func RefetchIcalFiles(tx *db.Transaction, logger *logrus.Entry) *errors.ErrorTrace {
-	settings, tr := tx.Queries().GetSourceSettingsByType("ical")
+	settings, tr := tx.Queries().GetSourceSettingsByType(types.SourceIcal)
 
 	if tr != nil {
 		return tr.

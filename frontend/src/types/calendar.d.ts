@@ -4,6 +4,7 @@ type CalendarModel = {
   name: string;
   desc: string;
   color: string;
+  overridden: boolean;
 }
 
 type CalendarModelChanges = {

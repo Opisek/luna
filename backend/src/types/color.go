@@ -32,7 +32,7 @@ func (c *Color) String() string {
 }
 
 func (c *Color) Bytes() []byte {
-	if c == nil {
+	if c == nil || c.empty {
 		return []byte{}
 	}
 
@@ -88,7 +88,7 @@ func ColorFromRGBA(rgba color.RGBA) *Color {
 
 func ColorFromBytes(bytes []byte) *Color {
 	if bytes == nil || len(bytes) != 3 {
-		return nil
+		return ColorEmpty
 	}
 
 	rgba := color.RGBA{

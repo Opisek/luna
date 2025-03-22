@@ -1,12 +1,14 @@
 <script lang="ts">
+  import Button from "../interactive/Button.svelte";
   import EditableModal from "./EditableModal.svelte";
   import TextInput from "../forms/TextInput.svelte";
 
-  import { EmptyCalendar, NoOp } from "$lib/client/placeholders";
+  import { EmptyCalendar, NoChangesCalendar, NoOp } from "$lib/client/placeholders";
   import { getRepository } from "$lib/client/repository";
   import { deepCopy } from "$lib/common/misc";
   import SelectInput from "../forms/SelectInput.svelte";
   import ColorInput from "../forms/ColorInput.svelte";
+  import { queueNotification } from "../../lib/client/notifications";
 
   interface Props {
     showCreateModal?: () => any;
@@ -32,7 +34,8 @@
       source: "",
       name: "",
       desc: "",
-      color: ""
+      color: "",
+      overridden: false,
     };
 
     showCreateModalInternal();
@@ -40,10 +43,12 @@
   showModal = async (original: CalendarModel): Promise<CalendarModel> => {
     cancelCalendar();
 
+    editMode = false;
+    console.log(original);
+    calendar = await deepCopy(original);
     originalCalendar = await deepCopy(original);
-    calendar = original;
 
-    showModalInternal();
+    setTimeout(showModalInternal(), 0);
 
     return new Promise((resolve, reject) => {
       saveCalendar = resolve;
@@ -82,7 +87,7 @@
         desc: calendar.desc != originalCalendar.desc,
         color: calendar.color != originalCalendar.color
       }
-      await getRepository().editCalendar(calendar, changes).catch(err => {
+      await getRepository().editCalendar(calendar, changes, true).catch(err => {
         cancelCalendar();
         throw new Error(`Could not edit calendar ${calendar.name}: ${err.message}`);
       });
@@ -95,6 +100,22 @@
       saveCalendar(calendar);
     }
   };
+  const resetOverrides = async () => {
+    calendar.overridden = false;
+    getRepository().editCalendar(calendar, NoChangesCalendar, true).catch(err => {
+      calendar.overridden = true;
+      queueNotification("failure", `Could not reset calendar ${calendar.name}: ${err.message}`);
+      return;
+    }).then(async () => {
+      getRepository().getCalendar(calendar.id, true).catch(err => {
+        calendar.overridden = true;
+        queueNotification("failure", `Could not reset event ${calendar.name}: ${err.message}`);
+        return;
+      }).then((fetched) => {
+        calendar = fetched as CalendarModel;
+      });
+    });
+  }
 
   let canSubmit: boolean = $derived(calendar && calendar.name !== "" && calendar.source !== "");
 </script>
@@ -107,12 +128,12 @@
   bind:showModal={showModalInternal}
   onDelete={onDelete}
   onEdit={onEdit}
-  editable={false}
+  deletable={false}
   submittable={canSubmit}
 >
   {#if calendar != EmptyCalendar}
     <TextInput bind:value={calendar.name} name="name" placeholder="Name" editable={editMode} />
-    <SelectInput bind:value={calendar.source} name="source" placeholder="Source" options={selectableSources} editable={editMode} />
+    <SelectInput bind:value={calendar.source} name="source" placeholder="Source" options={selectableSources} editable={false} />
     {#if editMode}
       <ColorInput bind:color={calendar.color} name="color" editable={editMode} />
     {/if}
@@ -124,4 +145,9 @@
     <TextInput bind:value={source.id} name="id" placeholder="ID" editable={false} />
     -->
   {/if}
+  {#snippet extraButtonsLeft()}
+    {#if calendar != EmptyCalendar && !editMode && calendar.overridden}
+      <Button color="accent" onClick={resetOverrides}>Reset</Button>
+    {/if}
+  {/snippet}
 </EditableModal>

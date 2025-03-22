@@ -5,8 +5,7 @@ import (
 	"fmt"
 	"luna-backend/crypto"
 	"luna-backend/errors"
-	"luna-backend/interface/primitives"
-	common "luna-backend/interface/protocols/internal"
+	common "luna-backend/protocols/internal"
 	"luna-backend/types"
 	"net/http"
 	"time"
@@ -16,12 +15,13 @@ import (
 )
 
 type CaldavCalendar struct {
-	name     string
-	desc     string
-	source   *CaldavSource
-	color    *types.Color
-	settings *CaldavCalendarSettings
-	client   *caldav.Client
+	name       string
+	desc       string
+	color      *types.Color
+	overridden bool
+	settings   *CaldavCalendarSettings
+	source     *CaldavSource
+	client     *caldav.Client
 }
 
 type CaldavCalendarSettings struct {
@@ -44,12 +44,13 @@ func (source *CaldavSource) calendarFromCaldav(rawCalendar caldav.Calendar) (*Ca
 	}
 
 	calendar := &CaldavCalendar{
-		name:     rawCalendar.Name,
-		desc:     rawCalendar.Description,
-		source:   source,
-		color:    nil,
-		settings: settings,
-		client:   source.settings.client,
+		name:       rawCalendar.Name,
+		desc:       rawCalendar.Description,
+		color:      nil,
+		overridden: false,
+		settings:   settings,
+		source:     source,
+		client:     source.settings.client,
 	}
 
 	return calendar, nil
@@ -75,15 +76,23 @@ func (calendar *CaldavCalendar) GetName() string {
 	return calendar.name
 }
 
+func (calendar *CaldavCalendar) SetName(name string) {
+	calendar.name = name
+}
+
 func (calendar *CaldavCalendar) GetDesc() string {
 	return calendar.desc
 }
 
-func (calendar *CaldavCalendar) GetSource() primitives.Source {
+func (calendar *CaldavCalendar) SetDesc(desc string) {
+	calendar.desc = desc
+}
+
+func (calendar *CaldavCalendar) GetSource() types.Source {
 	return calendar.source
 }
 
-func (calendar *CaldavCalendar) GetSettings() primitives.CalendarSettings {
+func (calendar *CaldavCalendar) GetSettings() types.CalendarSettings {
 	return calendar.settings
 }
 
@@ -99,7 +108,15 @@ func (calendar *CaldavCalendar) SetColor(color *types.Color) {
 	calendar.color = color
 }
 
-func (calendar *CaldavCalendar) convertEvent(event *caldav.CalendarObject, q types.DatabaseQueries) (primitives.Event, *errors.ErrorTrace) {
+func (calendar *CaldavCalendar) GetOverridden() bool {
+	return calendar.overridden
+}
+
+func (calendar *CaldavCalendar) SetOverridden(overridden bool) {
+	calendar.overridden = overridden
+}
+
+func (calendar *CaldavCalendar) convertEvent(event *caldav.CalendarObject, q types.DatabaseQueries) (types.Event, *errors.ErrorTrace) {
 	convertedEvent, err := calendar.eventFromCaldav(event, q)
 	if err != nil {
 		return nil, err.
@@ -107,12 +124,12 @@ func (calendar *CaldavCalendar) convertEvent(event *caldav.CalendarObject, q typ
 			AltStr(errors.LvlWordy, "Could not convert calendar")
 	}
 
-	castedEvent := (primitives.Event)(convertedEvent)
+	castedEvent := (types.Event)(convertedEvent)
 
 	return castedEvent, nil
 }
 
-func (calendar *CaldavCalendar) getEvents(query *caldav.CalendarQuery, q types.DatabaseQueries) ([]primitives.Event, *errors.ErrorTrace) {
+func (calendar *CaldavCalendar) getEvents(query *caldav.CalendarQuery, q types.DatabaseQueries) ([]types.Event, *errors.ErrorTrace) {
 	client, tr := calendar.source.getClient()
 	if tr != nil {
 		return nil, tr.
@@ -125,7 +142,7 @@ func (calendar *CaldavCalendar) getEvents(query *caldav.CalendarQuery, q types.D
 			Append(errors.LvlBroad, "Could not get events")
 	}
 
-	convertedEvents := make([]primitives.Event, len(events))
+	convertedEvents := make([]types.Event, len(events))
 	for i, event := range events {
 		convertedEvents[i], tr = calendar.convertEvent(&event, q)
 		if tr != nil {
@@ -137,7 +154,7 @@ func (calendar *CaldavCalendar) getEvents(query *caldav.CalendarQuery, q types.D
 	return convertedEvents, nil
 }
 
-func (calendar *CaldavCalendar) GetEvents(start time.Time, end time.Time, q types.DatabaseQueries) ([]primitives.Event, *errors.ErrorTrace) {
+func (calendar *CaldavCalendar) GetEvents(start time.Time, end time.Time, q types.DatabaseQueries) ([]types.Event, *errors.ErrorTrace) {
 	return calendar.getEvents(&caldav.CalendarQuery{
 		CompRequest: caldav.CalendarCompRequest{
 			Name: "VCALENDAR",
@@ -163,7 +180,7 @@ func (calendar *CaldavCalendar) GetEvents(start time.Time, end time.Time, q type
 	}, q)
 }
 
-func (calendar *CaldavCalendar) GetEvent(settings primitives.EventSettings, q types.DatabaseQueries) (primitives.Event, *errors.ErrorTrace) {
+func (calendar *CaldavCalendar) GetEvent(settings types.EventSettings, q types.DatabaseQueries) (types.Event, *errors.ErrorTrace) {
 	caldavSettings := settings.(*CaldavEventSettings)
 
 	obj, err := calendar.client.GetCalendarObject(q.GetContext(), caldavSettings.Url.Path)
@@ -256,7 +273,7 @@ func setEventProps(cal *ical.Calendar, id string, name string, desc string, colo
 	return nil
 }
 
-func (calendar *CaldavCalendar) AddEvent(name string, desc string, color *types.Color, date *types.EventDate, q types.DatabaseQueries) (primitives.Event, *errors.ErrorTrace) {
+func (calendar *CaldavCalendar) AddEvent(name string, desc string, color *types.Color, date *types.EventDate, q types.DatabaseQueries) (types.Event, *errors.ErrorTrace) {
 	id := types.RandomId()
 	cal := ical.NewCalendar()
 
@@ -293,7 +310,7 @@ func (calendar *CaldavCalendar) AddEvent(name string, desc string, color *types.
 	return finishedEvent, nil
 }
 
-func (calendar *CaldavCalendar) EditEvent(originalEvent primitives.Event, name string, desc string, color *types.Color, date *types.EventDate, q types.DatabaseQueries) (primitives.Event, *errors.ErrorTrace) {
+func (calendar *CaldavCalendar) EditEvent(originalEvent types.Event, name string, desc string, color *types.Color, date *types.EventDate, _ bool, q types.DatabaseQueries) (types.Event, *errors.ErrorTrace) {
 	originalCaldavEvent := originalEvent.(*CaldavEvent)
 	uid := originalCaldavEvent.GetSettings().(*CaldavEventSettings).Uid
 	originalRawEvent := originalCaldavEvent.settings.rawEvent
@@ -331,7 +348,7 @@ func (calendar *CaldavCalendar) EditEvent(originalEvent primitives.Event, name s
 	return finishedEvent, nil
 }
 
-func (calendar *CaldavCalendar) DeleteEvent(event primitives.Event, q types.DatabaseQueries) *errors.ErrorTrace {
+func (calendar *CaldavCalendar) DeleteEvent(event types.Event, q types.DatabaseQueries) *errors.ErrorTrace {
 	settings := event.GetSettings().(*CaldavEventSettings)
 
 	err := calendar.client.RemoveAll(q.GetContext(), settings.Url.Path)

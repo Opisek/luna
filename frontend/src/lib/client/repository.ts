@@ -1,6 +1,6 @@
 import { browser } from "$app/environment";
 
-import { AllChangesCalendar, AllChangesEvent, AllChangesSource, NoOp } from "./placeholders";
+import { AllChangesCalendar, AllChangesEvent, AllChangesSource, NoChangesCalendar, NoChangesEvent, NoOp } from "./placeholders";
 import { fetchJson, fetchResponse } from "./net";
 import { getMetadata } from "./metadata";
 import { queueNotification } from "./notifications";
@@ -481,10 +481,12 @@ class Repository {
     return fetched;
   }
 
-  async getCalendar(id: string, forceRefresh = false): Promise<CalendarModel | null> {
-    if (!browser) return {} as CalendarModel;
-
-    return this.calendarsMap.get(id) || null; // TODO: needs a bit of refactoring plus actual fetch of the relevant endpoint depending on cache age
+  async getCalendar(id: string, forceRefresh = false): Promise<CalendarModel> {
+    // TODO: needs refactoring like integrating cache age check
+    const fetched: CalendarModel = (await fetchJson(`/api/calendars/${id}`).catch((err) => { throw err; })).calendar;
+    this.calendarsMap.set(fetched.id, fetched);
+    this.compileCalendars();
+    return fetched;
   }
 
   async createCalendar(newCalendar: CalendarModel): Promise<void> {
@@ -510,19 +512,23 @@ class Repository {
     this.saveCache();
   };
 
-  async editCalendar(modifiedCalendar: CalendarModel, changes: CalendarModelChanges): Promise<void> {
+  async editCalendar(modifiedCalendar: CalendarModel, changes: CalendarModelChanges, override: boolean): Promise<void> {
     if (!browser) return;
 
     // update in database
+    if (override && changes !== NoChangesCalendar) changes.color = true; // we have no way to destinguish between "don't change color" and "default color"
     const formData = this.getCalendarFormData(modifiedCalendar, changes);
+    formData.set("overridden", override ? "true" : "false");
 
     await fetchResponse(`/api/calendars/${modifiedCalendar.id}`, { method: "PATCH", body: formData }).catch((err) => { throw err; });
 
     // update in cache
+    modifiedCalendar.overridden = override;
     this.calendarsMap.set(modifiedCalendar.id, modifiedCalendar);
 
     // update on display
     this.calendars.update((calendars) => calendars.map((cal) => cal.id === modifiedCalendar.id ? modifiedCalendar : cal));
+    if (changes.color) this.compileEvents(this.eventsRangeStart, this.eventsRangeEnd);
 
     this.saveCache();
   }
@@ -646,6 +652,20 @@ class Repository {
       );
     });
     return events.flat();
+  }
+
+  async getEvent(id: string, forceRefresh = false): Promise<EventModel> {
+    // TODO: needs refactoring like integrating cache age check
+    const fetched: EventModel = (await fetchJson(`/api/events/${id}`).catch((err) => { throw err; })).event;
+    fetched.date.start = new Date(fetched.date.start);
+    fetched.date.end = new Date(fetched.date.end);
+    if (fetched.date.allDay) {
+      fetched.date.start.setHours(0, 0, 0, 0);
+      fetched.date.end.setHours(0, 0, 0, 0);
+    }
+    this.eventsMap.set(fetched.id, fetched);
+    this.compileEvents(this.eventsRangeStart, this.eventsRangeEnd);
+    return fetched;
   }
 
   private async getEventsFromSource(source: string, start: Date, end: Date, forceRefresh = false): Promise<EventModel[]> {
@@ -790,7 +810,7 @@ class Repository {
     this.saveCache();
   };
 
-  async editEvent(modifiedEvent: EventModel, changes: EventModelChanges): Promise<void> {
+  async editEvent(modifiedEvent: EventModel, changes: EventModelChanges, override: boolean): Promise<void> {
     if (!browser) return;
 
     // update in database
@@ -799,11 +819,14 @@ class Repository {
       modifiedEvent.date.end.setHours(0, 0, 0, 0);
     }
 
+    if (override && changes !== NoChangesEvent) changes.color = true; // we have no way to destinguish between "don't change color" and "default color"
     const formData = this.getEventFormData(modifiedEvent, changes);
+    formData.set("overridden", override ? "true" : "false");
 
     await fetchResponse(`/api/events/${modifiedEvent.id}`, { method: "PATCH", body: formData }).catch((err) => { throw err; });
 
     // update in cache
+    modifiedEvent.overridden = override;
     const previousMonths = this.determineEventMonths(this.eventsMap.get(modifiedEvent.id)!);
     const currentMonths = this.determineEventMonths(modifiedEvent);
     this.eventsMap.set(modifiedEvent.id, modifiedEvent);

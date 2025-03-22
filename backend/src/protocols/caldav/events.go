@@ -4,8 +4,7 @@ import (
 	"encoding/json"
 	"luna-backend/crypto"
 	"luna-backend/errors"
-	"luna-backend/interface/primitives"
-	common "luna-backend/interface/protocols/internal"
+	common "luna-backend/protocols/internal"
 	"luna-backend/types"
 	"net/http"
 
@@ -13,12 +12,13 @@ import (
 )
 
 type CaldavEvent struct {
-	name      string
-	desc      string
-	color     *types.Color
-	settings  *CaldavEventSettings
-	calendar  *CaldavCalendar
-	eventDate *types.EventDate
+	name       string
+	desc       string
+	color      *types.Color
+	overridden bool
+	settings   *CaldavEventSettings
+	calendar   *CaldavCalendar
+	eventDate  *types.EventDate
 }
 
 type CaldavEventSettings struct {
@@ -55,9 +55,10 @@ func (calendar *CaldavCalendar) eventFromCaldav(obj *caldav.CalendarObject, q ty
 	}
 
 	event := &CaldavEvent{
-		name:  parsedProps.Name,
-		desc:  parsedProps.Desc,
-		color: parsedProps.Color,
+		name:       parsedProps.Name,
+		desc:       parsedProps.Desc,
+		color:      parsedProps.Color,
+		overridden: false,
 		settings: &CaldavEventSettings{
 			Url:      url,
 			Uid:      parsedProps.Uid,
@@ -68,7 +69,7 @@ func (calendar *CaldavCalendar) eventFromCaldav(obj *caldav.CalendarObject, q ty
 	}
 
 	if mustUpdate {
-		calendar.EditEvent(event, parsedProps.Name, parsedProps.Desc, parsedProps.Color, parsedProps.EventDate, q)
+		calendar.EditEvent(event, parsedProps.Name, parsedProps.Desc, parsedProps.Color, parsedProps.EventDate, false, q)
 		// TODO: we might want to catch errors and display them as notifications here
 	}
 
@@ -95,15 +96,23 @@ func (event *CaldavEvent) GetName() string {
 	return event.name
 }
 
+func (event *CaldavEvent) SetName(name string) {
+	event.name = name
+}
+
 func (event *CaldavEvent) GetDesc() string {
 	return event.desc
 }
 
-func (event *CaldavEvent) GetCalendar() primitives.Calendar {
+func (event *CaldavEvent) SetDesc(desc string) {
+	event.desc = desc
+}
+
+func (event *CaldavEvent) GetCalendar() types.Calendar {
 	return event.calendar
 }
 
-func (event *CaldavEvent) GetSettings() primitives.EventSettings {
+func (event *CaldavEvent) GetSettings() types.EventSettings {
 	return event.settings
 }
 
@@ -119,17 +128,26 @@ func (event *CaldavEvent) SetColor(color *types.Color) {
 	event.color = color
 }
 
+func (event *CaldavEvent) GetOverridden() bool {
+	return event.overridden
+}
+
+func (event *CaldavEvent) SetOverridden(overridden bool) {
+	event.overridden = overridden
+}
+
 func (event *CaldavEvent) GetDate() *types.EventDate {
 	return event.eventDate
 }
 
-func (event *CaldavEvent) Clone() primitives.Event {
+func (event *CaldavEvent) Clone() types.Event {
 	return &CaldavEvent{
-		name:      event.name,
-		desc:      event.desc,
-		color:     event.color.Clone(),
-		settings:  event.settings,
-		calendar:  event.calendar,
-		eventDate: event.eventDate.Clone(),
+		name:       event.name,
+		desc:       event.desc,
+		color:      event.color.Clone(),
+		overridden: event.overridden,
+		settings:   event.settings,
+		calendar:   event.calendar,
+		eventDate:  event.eventDate.Clone(),
 	}
 }

@@ -2,9 +2,7 @@ package caldav
 
 import (
 	"encoding/json"
-	"luna-backend/auth"
 	"luna-backend/errors"
-	"luna-backend/interface/primitives"
 	"luna-backend/types"
 	"net/http"
 
@@ -15,7 +13,7 @@ type CaldavSource struct {
 	id       types.ID
 	name     string
 	settings *CaldavSourceSettings
-	auth     auth.AuthMethod
+	auth     types.AuthMethod
 }
 
 type CaldavSourceSettings struct {
@@ -43,15 +41,15 @@ func (source *CaldavSource) GetName() string {
 	return source.name
 }
 
-func (source *CaldavSource) GetAuth() auth.AuthMethod {
+func (source *CaldavSource) GetAuth() types.AuthMethod {
 	return source.auth
 }
 
-func (source *CaldavSource) GetSettings() primitives.SourceSettings {
+func (source *CaldavSource) GetSettings() types.SourceSettings {
 	return source.settings
 }
 
-func NewCaldavSource(name string, url *types.Url, auth auth.AuthMethod) *CaldavSource {
+func NewCaldavSource(name string, url *types.Url, auth types.AuthMethod) *CaldavSource {
 	return &CaldavSource{
 		id:   types.EmptyId(), // Placeholder until the database assigns an ID
 		name: name,
@@ -62,7 +60,7 @@ func NewCaldavSource(name string, url *types.Url, auth auth.AuthMethod) *CaldavS
 	}
 }
 
-func PackCaldavSource(id types.ID, name string, settings *CaldavSourceSettings, auth auth.AuthMethod) *CaldavSource {
+func PackCaldavSource(id types.ID, name string, settings *CaldavSourceSettings, auth types.AuthMethod) *CaldavSource {
 	return &CaldavSource{
 		id:       id,
 		name:     name,
@@ -88,7 +86,7 @@ func (source *CaldavSource) getClient() (*caldav.Client, *errors.ErrorTrace) {
 	return source.settings.client, nil
 }
 
-func (source *CaldavSource) GetCalendars(q types.DatabaseQueries) ([]primitives.Calendar, *errors.ErrorTrace) {
+func (source *CaldavSource) GetCalendars(q types.DatabaseQueries) ([]types.Calendar, *errors.ErrorTrace) {
 	client, tr := source.getClient()
 	if tr != nil {
 		return nil, tr
@@ -100,7 +98,7 @@ func (source *CaldavSource) GetCalendars(q types.DatabaseQueries) ([]primitives.
 			Append(errors.LvlBroad, "Could not get calendars")
 	}
 
-	result := make([]primitives.Calendar, len(cals))
+	result := make([]types.Calendar, len(cals))
 	for i, calendar := range cals {
 		converted, err := source.calendarFromCaldav(calendar)
 		if err != nil {
@@ -108,7 +106,7 @@ func (source *CaldavSource) GetCalendars(q types.DatabaseQueries) ([]primitives.
 				Append(errors.LvlBroad, "Could not get calendars")
 		}
 
-		casted := (primitives.Calendar)(converted)
+		casted := (types.Calendar)(converted)
 
 		result[i] = casted
 	}
@@ -116,7 +114,7 @@ func (source *CaldavSource) GetCalendars(q types.DatabaseQueries) ([]primitives.
 	return result, nil
 }
 
-func (source *CaldavSource) GetCalendar(settings primitives.CalendarSettings, q types.DatabaseQueries) (primitives.Calendar, *errors.ErrorTrace) {
+func (source *CaldavSource) GetCalendar(settings types.CalendarSettings, q types.DatabaseQueries) (types.Calendar, *errors.ErrorTrace) {
 	caldavSettings := settings.(*CaldavCalendarSettings)
 
 	client, tr := source.getClient()
@@ -148,14 +146,14 @@ func (source *CaldavSource) GetCalendar(settings primitives.CalendarSettings, q 
 			Append(errors.LvlBroad, "Could not get calendar")
 	}
 
-	castedCal := (primitives.Calendar)(convertedCal)
+	castedCal := (types.Calendar)(convertedCal)
 
 	return castedCal, nil
 }
 
 // TODO: Add, Edit, and Delete are not supported by upstream yet
 
-func (source *CaldavSource) AddCalendar(name string, color *types.Color, _ types.DatabaseQueries) (primitives.Calendar, *errors.ErrorTrace) {
+func (source *CaldavSource) AddCalendar(name string, color *types.Color, _ types.DatabaseQueries) (types.Calendar, *errors.ErrorTrace) {
 	//caldavCal := calendar.(*CaldavCalendar)
 
 	//client, err := source.getClient()
@@ -166,18 +164,45 @@ func (source *CaldavSource) AddCalendar(name string, color *types.Color, _ types
 	return nil, errors.New().Status(http.StatusNotImplemented)
 }
 
-func (source *CaldavSource) EditCalendar(calendar primitives.Calendar, name string, color *types.Color, _ types.DatabaseQueries) (primitives.Calendar, *errors.ErrorTrace) {
-	//caldavCal := calendar.(*CaldavCalendar)
+func (source *CaldavSource) EditCalendar(calendar types.Calendar, name string, desc string, color *types.Color, override bool, q types.DatabaseQueries) (types.Calendar, *errors.ErrorTrace) {
+	if override {
+		anyOverrides := false
+		if name != "" {
+			calendar.SetName(name)
+			anyOverrides = true
+		}
+		if desc != "" {
+			calendar.SetDesc(desc)
+			anyOverrides = true
+		}
+		if color != nil && !color.IsEmpty() {
+			calendar.SetColor(color)
+			anyOverrides = true
+		}
 
-	//client, err := source.getClient()
-	//if err != nil {
-	//	return err
-	//}
+		if anyOverrides {
+			q.SetCalendarOverrides(calendar.GetId(), name, desc, color)
+			return calendar, nil
+		} else {
+			q.DeleteCalendarOverrides(calendar.GetId())
+			return source.GetCalendar(calendar.GetSettings(), q)
+		}
+	} else {
+		//caldavCal := calendar.(*CaldavCalendar)
 
-	return nil, errors.New().Status(http.StatusNotImplemented)
+		//client, err := source.getClient()
+		//if err != nil {
+		//	return err
+		//}
+
+		return nil, errors.New().Status(http.StatusNotImplemented).
+			Append(errors.LvlWordy, "Only override is supported").
+			Append(errors.LvlWordy, "CalDAV sources do not support editing calendars").
+			AltStr(errors.LvlPlain, "This source does not support editing calendars")
+	}
 }
 
-func (source *CaldavSource) DeleteCalendar(calendar primitives.Calendar, _ types.DatabaseQueries) *errors.ErrorTrace {
+func (source *CaldavSource) DeleteCalendar(calendar types.Calendar, _ types.DatabaseQueries) *errors.ErrorTrace {
 	//caldavCal := calendar.(*CaldavCalendar)
 
 	//client, err := source.getClient()
