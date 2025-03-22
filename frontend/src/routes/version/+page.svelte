@@ -13,9 +13,11 @@
   import Bold from "../../components/layout/Bold.svelte";
   import Divider from "../../components/layout/Divider.svelte";
   import Loader from "../../components/decoration/Loader.svelte";
+  import { getRedirectPage } from "../../lib/common/parsing";
 
   let versions: ({ frontend: string, backend: string, compatibility: VersionCompatibility } | undefined) = $state();
   let isCompatible = $derived(versions !== undefined && ![VersionCompatibility.BackendOutdatedMajor, VersionCompatibility.FrontendOutdatedMajor].includes(versions.compatibility));
+  let redirectPage = $derived(browser ? getRedirectPage(new URL(document.location.href)): "/");
 
   let promise: Promise<any> | undefined = $state();
   
@@ -84,9 +86,10 @@
       </Button>
 
       {#if isCompatible}
-        <Button href="/">Home</Button>
-        {#if browser && window.history.length > 1}
-          <Button onClick={() => history.back()}>Go Back</Button>
+        {#if !browser || redirectPage === "/"}
+          <Button color="success" href="/">Home</Button>
+        {:else}
+          <Button color="success" href={redirectPage}>Continue</Button>
         {/if}
       {/if}
     </Horizontal>

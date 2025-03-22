@@ -21,12 +21,21 @@ export function isCompatibleWithBackend(backendVersion: string) {
     return VersionCompatibility.Unknown;
   }
 
-  const frontendMajor = parseInt(frontendSplit[0]);
-  const backendMajor = parseInt(backendSplit[0]);
-  const frontendMinor = parseInt(frontendSplit[1]);
-  const backendMinor = parseInt(backendSplit[1]);
-  const frontendPatch = parseInt(frontendSplit[2]);
-  const backendPatch = parseInt(backendSplit[2]);
+  let frontendMajor = parseInt(frontendSplit[0]);
+  let backendMajor = parseInt(backendSplit[0]);
+  let frontendMinor = parseInt(frontendSplit[1]);
+  let backendMinor = parseInt(backendSplit[1]);
+  let frontendPatch = parseInt(frontendSplit[2]);
+  let backendPatch = parseInt(backendSplit[2]);
+
+  if (frontendMajor === 0 && backendMajor === 0) {
+    frontendMajor = frontendMinor;
+    backendMajor = backendMinor;
+    frontendMinor = frontendPatch;
+    backendMinor = backendPatch;
+    frontendPatch = 0;
+    backendPatch = 0;
+  }
 
   if (
     isNaN(frontendMajor) || frontendMajor < 0 ||
@@ -40,15 +49,15 @@ export function isCompatibleWithBackend(backendVersion: string) {
   }
 
   if (frontendMajor > backendMajor) {
-    return VersionCompatibility.FrontendOutdatedMajor;
-  } else if (frontendMajor < backendMajor) {
     return VersionCompatibility.BackendOutdatedMajor;
+  } else if (frontendMajor < backendMajor) {
+    return VersionCompatibility.FrontendOutdatedMajor;
   }
 
   if (frontendMinor > backendMinor) {
-    return VersionCompatibility.FrontendOutdatedMinor;
-  } else if (frontendMinor < backendMinor) {
     return VersionCompatibility.BackendOutdatedMinor;
+  } else if (frontendMinor < backendMinor) {
+    return VersionCompatibility.BackendOutdatedMajor;
   }
 
   return VersionCompatibility.Compatible;
