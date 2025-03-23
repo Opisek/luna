@@ -144,95 +144,96 @@
       urlValidityResolve(lastUrlValidity);
     }
     const cacheKey = JSON.stringify({ url: checkUrl, auth: needAuth == true && authType != "none" ? auth : null });
-    checkingUrl = true;
     if (checkUrl === "") {
-      checkingUrl = false;
       return {
         valid: false,
         message: "URL is required.",
       };
     }
     if (needAuth && ((authType === "basic" && (auth.username === "" || auth.password === "")) || (authType === "bearer" && auth.token === ""))) {
-      checkingUrl = false;
       return {
         valid: false,
         message: "Credentials are required to access this URL.",
       };
     }
     if (cachedChecks.has(cacheKey)) {
-      checkingUrl = false;
       return cachedChecks.get(cacheKey)!;
-    } else {
-      return new Promise((resolve) => {
-        urlValidityResolve = resolve;
-        urlValidityTimeout = setTimeout(async () => {
-          const validity = await (async () => {
-            urlType = "unknown";
-
-            const syntacticValidity = await isValidUrl(checkUrl);
-            if (!syntacticValidity.valid) return syntacticValidity;
-
-            const formData = new FormData();
-            formData.append("url", checkUrl);
-            if (!needAuth || authType == "none") {
-              formData.append("auth_type", "none");
-            } else if (authType == "basic") {
-              formData.append("auth_type", "basic");
-              formData.append("auth_username", auth.username);
-              formData.append("auth_password", auth.password);
-            } else if (authType == "bearer") {
-              formData.append("auth_type", "bearer");
-              formData.append("auth_token", auth.token);
-            }
-            return fetchJson(`/api/url`, { method: "POST", body: formData }).then((res) => {
-              urlType = res.type;
-              switch (res.type) {
-                default:
-                case "unknown":
-                  if (res.type === "unknown" && res.status == 401) {
-                    const message = (needAuth && authType !== "none") ? "Credentials are incorrect." : "Credentials are required to access this URL.";
-                    needAuth = true;
-                    if (authType == "none") authType = "basic";
-                    return {
-                      valid: false,
-                      message: message, 
-                    }
-                  } else {
-                    return {
-                      valid: false,
-                      message: "Could not find calendars. Are you sure this URL is correct?",
-                    };
-                  }
-                case "ical":
-                  needAuth = res.auth !== "none";
-                  return {
-                    valid: true,
-                    message: "",
-                  };
-                case "caldav":
-                  needAuth = res.auth !== "none";
-                  url = res.url;
-                  return {
-                    valid: true,
-                    message: "",
-                  };
-              }
-            }).catch((err) => {
-              queueNotification("failure", `Could not find calendars: ${err.message}`);
-              return {
-                valid: false,
-                message: "Could not find calendars. Are you sure this URL is correct?",
-              }
-            });
-          })();
-          lastUrlValidity = validity;
-          urlValid = validity;
-          cachedChecks.set(cacheKey, validity);
-          checkingUrl = false;
-          resolve(validity);
-        }, 1000);
-      });
     }
+    checkingUrl = true;
+    return new Promise((resolve) => {
+      urlValidityResolve = resolve;
+      urlValidityTimeout = setTimeout(async () => {
+        const validity = await (async () => {
+          urlType = "unknown";
+
+          const syntacticValidity = await isValidUrl(checkUrl);
+          if (!syntacticValidity.valid) return syntacticValidity;
+
+          const formData = new FormData();
+          formData.append("url", checkUrl);
+          if (!needAuth || authType == "none") {
+            formData.append("auth_type", "none");
+          } else if (authType == "basic") {
+            formData.append("auth_type", "basic");
+            formData.append("auth_username", auth.username);
+            formData.append("auth_password", auth.password);
+          } else if (authType == "bearer") {
+            formData.append("auth_type", "bearer");
+            formData.append("auth_token", auth.token);
+          }
+          let newCacheKey;
+          return fetchJson(`/api/url`, { method: "POST", body: formData }).then((res) => {
+            urlType = res.type;
+            switch (res.type) {
+              default:
+              case "unknown":
+                if (res.type === "unknown" && res.status == 401) {
+                  const message = (needAuth && authType !== "none") ? "Credentials are incorrect." : "Credentials are required to access this URL.";
+                  needAuth = true;
+                  if (authType == "none") authType = "basic";
+                  return {
+                    valid: false,
+                    message: message, 
+                  }
+                } else {
+                  return {
+                    valid: false,
+                    message: "Could not find calendars. Are you sure this URL is correct?",
+                  };
+                }
+              case "ical":
+                needAuth = res.auth !== "none";
+                newCacheKey = JSON.stringify({ url: checkUrl, auth: needAuth == true && authType != "none" ? auth : null })
+                cachedChecks.set(newCacheKey, { valid: true, message: "" }); // prevent second check
+                return {
+                  valid: true,
+                  message: "",
+                };
+              case "caldav":
+                needAuth = res.auth !== "none";
+                newCacheKey = JSON.stringify({ url: res.url, auth: needAuth == true && authType != "none" ? auth : null })
+                cachedChecks.set(newCacheKey, { valid: true, message: "" }); // prevent second check
+                url = res.url;
+                return {
+                  valid: true,
+                  message: "",
+                };
+            }
+          }).catch((err) => {
+            queueNotification("failure", `Could not find calendars: ${err.message}`);
+            return {
+              valid: false,
+              message: "Could not find calendars. Are you sure this URL is correct?",
+            }
+          });
+        })();
+        lastUrlValidity = validity;
+        urlValid = validity;
+        cachedChecks.set(cacheKey, validity);
+        checkingUrl = false;
+        resolve(validity);
+      }, 1000);
+    });
   }
 </script>
 
@@ -293,15 +294,13 @@
     <Link onClick={advanced}>Click to enter advanced mode</Link>
   </Horizontal>
   {#snippet buttons()}
-    {#if submittable}
-      <Button onClick={save} color="success" enabled={submittable} type="submit">
-        {#if awaitingEdit}
-          <Loader/>
-        {:else}
-          Save
-        {/if}
-      </Button>
-    {/if}
+    <Button onClick={save} color="success" enabled={submittable} type="submit">
+      {#if awaitingEdit}
+        <Loader/>
+      {:else}
+        Save
+      {/if}
+    </Button>
     <Button onClick={cancel} color="failure">Cancel</Button>
   {/snippet}
 </Modal>
