@@ -239,7 +239,7 @@
   ]}/>
 
   {#if inputType === "link"}
-    <TextInput bind:value={url} onInput={queueUrlCheck} name="url" placeholder="URL" validation={isValidUrl} bind:validity={urlValid} />
+    <TextInput bind:value={url} name="url" placeholder="URL" validation={checkUrl} bind:validity={urlValid} />
     {#if needAuth}
         <SelectButtons bind:value={authType} name="auth_type" placeholder={"Authentication Type"} options={[
         {
