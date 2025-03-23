@@ -44,7 +44,6 @@
     promiseReject();
 
     editMode = false;
-    console.log(original);
     calendar = await deepCopy(original);
     originalCalendar = await deepCopy(original);
 

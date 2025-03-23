@@ -12,6 +12,7 @@
   import Horizontal from "../layout/Horizontal.svelte";
   import { fetchJson } from "../../lib/client/net";
   import { queueNotification } from "../../lib/client/notifications";
+  import { getRepository } from "../../lib/client/repository";
 
   interface Props {
     showModal?: () => Promise<SourceModel>;
@@ -90,14 +91,35 @@
   function advanced() {
     showNewSourceModal().then((source) => {
       saveInternal(source);
-    });
+    }).catch(NoOp);
   }
 
   let awaitingEdit = $state(false);
   function save() {
-    saveInternal({} as SourceModel);
+    const source: SourceModel = {
+      id: "",
+      name: name,
+      type: urlType,
+      auth_type: needAuth ? authType : "none",
+      auth: needAuth && authType != "none" ? auth : {},
+      settings: {}
+    };
+
+    if (inputType === "link") {
+      if (urlType === "ical") source.settings.location = "remote";
+      source.settings.url = url;
+    } else if (inputType === "file") {
+      source.settings.location = "database";
+      source.settings.file = files;
+    }
+
+    getRepository().createSource(source).then(() => {
+      saveInternal(source);
+    }).catch(err => {
+      queueNotification("failure", `Could not create source ${source.name}: ${err.message}`);
+    });
   }
-  function saveInternal(source: SourceModel) {
+  async function saveInternal(source: SourceModel) {
     promiseResolve(source);
     hideModalInternal();
   }
@@ -163,7 +185,6 @@
               formData.append("auth_token", auth.token);
             }
             return fetchJson(`/api/url`, { method: "POST", body: formData }).then((res) => {
-              console.log(res);
               urlType = res.type;
               switch (res.type) {
                 default:
@@ -215,10 +236,6 @@
   }
 </script>
 
-<style lang="scss">
-
-</style>
-
 <Modal
   title="Source Wizard"
   bind:showModal={showModalInternal}
@@ -269,7 +286,7 @@
   {:else if inputType === "file"}
     <FileUpload bind:files={files} name="file" placeholder="File" validation={isValidIcalFile} bind:validity={fileValid} />
   {:else if inputType === "holidays"}
-    TODO
+      Feature not yet available
   {/if}
 
   <Horizontal position="right">
