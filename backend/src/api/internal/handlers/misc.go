@@ -3,6 +3,7 @@ package handlers
 import (
 	"luna-backend/api/internal/util"
 	"luna-backend/errors"
+	"luna-backend/files"
 	"luna-backend/types"
 	"net/http"
 	"strings"
@@ -110,7 +111,7 @@ func CheckUrl(c *gin.Context) {
 }
 
 func isUrlIcal(u *util.HandlerUtility, url *types.Url, auth types.AuthMethod) (bool, *errors.ErrorTrace, int) {
-	req, err := http.NewRequest("HEAD", url.String(), nil)
+	req, err := http.NewRequest("GET", url.String(), nil)
 	if err != nil {
 		return false, errors.New().Status(http.StatusInternalServerError).
 			AddErr(errors.LvlDebug, err).
@@ -132,7 +133,12 @@ func isUrlIcal(u *util.HandlerUtility, url *types.Url, auth types.AuthMethod) (b
 		return false, nil, res.StatusCode
 	}
 
-	return res.Header.Get("Content-Type") == "text/calendar", nil, res.StatusCode
+	tr := files.IsValidIcalFile(res.Body, u.Tx.Queries())
+	if tr != nil {
+		return false, tr, http.StatusOK
+	}
+
+	return true, nil, http.StatusOK
 }
 
 func isUrlCaldav(u *util.HandlerUtility, url *types.Url, auth types.AuthMethod) (bool, *errors.ErrorTrace, string) {
