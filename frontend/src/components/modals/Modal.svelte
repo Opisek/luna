@@ -8,6 +8,7 @@
 
   import { NoOp } from "$lib/client/placeholders";
   import { redrawNotifications } from "$lib/client/notifications";
+  import { isChildOfModal } from "../../lib/common/misc";
 
   interface Props {
     title: string;
@@ -37,8 +38,13 @@
 
   let visible = $state(false);
 
+  let ignoreClickOutside = $state(false);
+  function mouseDown(event: MouseEvent) {
+    ignoreClickOutside = isChildOfModal(event.target as HTMLElement) && event.target !== dialog;
+  }
+
   function clickOutside(event: MouseEvent) {
-    if (!dialog) return;
+    if (!dialog || ignoreClickOutside) return;
     if (event.target === dialog) {
       hideModal();
       event.stopPropagation();
@@ -54,12 +60,14 @@
     else dialog.focus();
   }
   showModal = () => {
+    window.addEventListener("mousedown", mouseDown);
     window.addEventListener("click", clickOutside);
     visible = true
     setTimeout(resetFocus, 0);
     setTimeout(redrawNotifications, 0); // hacky way to make sure that notifications are always on the very top. sometimes has a visible blink. should revisit one day.
   }
   hideModal = () => {
+    window.removeEventListener("mousedown", mouseDown);
     window.removeEventListener("click", clickOutside);
     dialog.close();
     onModalHide();

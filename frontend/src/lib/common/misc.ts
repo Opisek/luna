@@ -60,3 +60,10 @@ export function isChildOfModal(element: HTMLElement): boolean {
     }
     return false;
 }
+
+export function isChildOfForm(element: HTMLElement): boolean {
+    for (let node: (HTMLElement | null) = element; node; node = node.parentElement) {
+        if (node instanceof HTMLFormElement) return true;
+    }
+    return false;
+}

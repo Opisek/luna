@@ -163,13 +163,11 @@
 
   function pickerDown(e: MouseEvent) {
     if (pickerActive || hueActive) return;
-    e.stopPropagation();
     pickerActive = true;
     pickerMove(e);
   }
   function pickerMove(e: MouseEvent) {
     if (!pickerActive) return;
-    e.stopPropagation();
     const [x,y] = calculateCoordsRelativeToElement(e, picker);
 
     const s = 100 - y;
@@ -182,26 +180,22 @@
     setColorFromHSL();
   }
   function pickerUp(e: MouseEvent) {
-    e.stopPropagation();
     pickerActive = false
   }
 
   function hueDown(e: MouseEvent) {
     if (pickerActive || hueActive) return;
-    e.stopPropagation();
     hueActive = true;
     hueMove(e);
   }
   function hueMove(e: MouseEvent) {
     if (!hueActive) return;
-    e.stopPropagation();
     const [x,_] = calculateCoordsRelativeToElement(e, hue);
 
     currentHSL[0] = x / 100 * 360;
     setColorFromHSL();
   }
   function hueUp(e: MouseEvent) {
-    e.stopPropagation();
     hueActive = false
   }
 </script>
