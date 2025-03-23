@@ -5,6 +5,7 @@
   import { alwaysValid, valid } from "$lib/client/validation";
   import { focusIndicator } from "$lib/client/decoration";
   import { NoOp } from "../../lib/client/placeholders";
+  import { CircleAlert } from "lucide-svelte";
 
   let passwordVisible: boolean = $state(false);
 
@@ -145,6 +146,8 @@
     font-size: text.$fontSizeSmall;
     margin-bottom: -(dimensions.$gapMiddle);
     padding-left: calc(dimensions.$gapSmall * (text.$fontSize / text.$fontSizeSmall));
+    display: flex;
+    justify-content: space-between;
   }
 
   span.errorMessage {
