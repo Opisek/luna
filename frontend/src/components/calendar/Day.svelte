@@ -35,7 +35,7 @@
   let showCreateEventModal: ((date: Date) => Promise<EventModel>) = getContext("showNewEventModal");
   let createEventButtonClick = () => {
     showCreateEventModal(date).catch((err) => {
-      queueNotification("failure", `Could not create event: ${err.message}`);
+      if (err) queueNotification("failure", `Could not create event: ${err.message}`);
     });
   };
 
