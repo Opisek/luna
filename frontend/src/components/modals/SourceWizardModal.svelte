@@ -183,11 +183,13 @@
                     };
                   }
                 case "ical":
+                  needAuth = res.auth !== "none";
                   return {
                     valid: true,
                     message: "",
                   };
                 case "caldav":
+                  needAuth = res.auth !== "none";
                   url = res.url;
                   return {
                     valid: true,

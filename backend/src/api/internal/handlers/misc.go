@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"luna-backend/api/internal/util"
+	"luna-backend/auth"
 	"luna-backend/errors"
 	"luna-backend/files"
 	"luna-backend/types"
@@ -35,11 +36,12 @@ func GetHealth(c *gin.Context) {
 	}
 }
 
+// Determine if a link points at an iCal or CalDAV source
 func CheckUrl(c *gin.Context) {
 	u := util.GetUtil(c)
 
-	// Pares URL aund auth parameters
-	auth, tr := parseAuthMethod(c)
+	// Pares URL aund authMethod parameters
+	authMethod, tr := parseAuthMethod(c)
 	if tr != nil {
 		u.Error(tr)
 		return
@@ -62,23 +64,51 @@ func CheckUrl(c *gin.Context) {
 			Append(errors.LvlPlain, "Invalid url"))
 	}
 
+	authResponse, authTr := checkUrlWithAuth(u, url, authMethod)
+	var noAuthResponse *gin.H
+	var noAuthTr *errors.ErrorTrace
+
+	if authMethod.GetType() != types.AuthNone {
+		noAuthResponse, noAuthTr = checkUrlWithAuth(u, url, auth.NewNoAuth())
+	} else {
+		noAuthResponse, noAuthTr = authResponse, authTr
+	}
+
+	if authTr != nil && noAuthTr != nil {
+		u.Error(authTr)
+		return
+	} else if authTr != nil && noAuthTr == nil {
+		u.Success(noAuthResponse)
+		return
+	} else if authTr == nil && noAuthTr != nil {
+		u.Success(authResponse)
+		return
+	} else if (*authResponse)["type"] == (*noAuthResponse)["type"] {
+		u.Success(noAuthResponse)
+		return
+	} else {
+		u.Success(authResponse)
+		return
+	}
+}
+
+func checkUrlWithAuth(u *util.HandlerUtility, url *types.Url, auth types.AuthMethod) (*gin.H, *errors.ErrorTrace) {
 	isIcal, tr, statusCode := isUrlIcal(u, url, auth)
 	if tr != nil {
-		u.Error(tr)
-		return
+		return nil, tr
 	}
 	if isIcal {
-		u.Success(&gin.H{
+		return &gin.H{
 			"type": types.SourceIcal,
-		})
-		return
+			"auth": auth.GetType(),
+		}, nil
 	}
 	if statusCode == http.StatusUnauthorized {
-		u.Success(&gin.H{
+		return &gin.H{
 			"type":   types.SourceUnknown,
 			"status": statusCode,
-		})
-		return
+			"auth":   auth.GetType(),
+		}, nil
 	}
 
 	isCaldav, tr, principalUrl := isUrlCaldav(u, url, auth)
@@ -87,27 +117,28 @@ func CheckUrl(c *gin.Context) {
 			statusCode = http.StatusUnauthorized
 		}
 		if statusCode != http.StatusOK {
-			u.Success(&gin.H{
+			return &gin.H{
 				"type":   types.SourceUnknown,
 				"status": statusCode,
-			})
+				"auth":   auth.GetType(),
+			}, nil
 		} else {
-			u.Error(tr)
+			return nil, tr
 		}
-		return
 	}
 	if isCaldav {
-		u.Success(&gin.H{
+		return &gin.H{
 			"type": types.SourceCaldav,
 			"url":  principalUrl,
-		})
-		return
+			"auth": auth.GetType(),
+		}, nil
 	}
 
-	u.Success(&gin.H{
+	return &gin.H{
 		"type":   types.SourceUnknown,
 		"status": statusCode,
-	})
+		"auth":   auth.GetType(),
+	}, nil
 }
 
 func isUrlIcal(u *util.HandlerUtility, url *types.Url, auth types.AuthMethod) (bool, *errors.ErrorTrace, int) {
@@ -134,11 +165,7 @@ func isUrlIcal(u *util.HandlerUtility, url *types.Url, auth types.AuthMethod) (b
 	}
 
 	tr := files.IsValidIcalFile(res.Body, u.Tx.Queries())
-	if tr != nil {
-		return false, tr, http.StatusOK
-	}
-
-	return true, nil, http.StatusOK
+	return tr == nil, nil, http.StatusOK
 }
 
 func isUrlCaldav(u *util.HandlerUtility, url *types.Url, auth types.AuthMethod) (bool, *errors.ErrorTrace, string) {
