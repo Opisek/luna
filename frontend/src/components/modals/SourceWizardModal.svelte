@@ -241,7 +241,7 @@
 </script>
 
 <Modal
-  title="Source Wizard"
+  title="Source wizard"
   bind:showModal={showModalInternal}
   bind:hideModal={hideModalInternal}
 >
