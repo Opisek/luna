@@ -28,6 +28,7 @@
   let urlValid: Validity = $state(valid);
   let fileValid: Validity = $state(valid);
 
+  let name: string = $state("");
   let inputType: "link" | "file" | "holidays" = $state("link");
   let url: string = $state("");
   let urlType: "ical" | "caldav" | "unknown" = $state("unknown");
@@ -46,6 +47,7 @@
   showModal = async () => {
     awaitingEdit = false;
 
+    name = "";
     inputType = "link";
     url = "";
     urlType = "unknown";
@@ -77,11 +79,11 @@
   let submittable = $derived.by(() => {
     switch (inputType) {
       case "link":
-        return urlValid.valid && urlType !== "unknown" && lastUrlValidity.valid && urlValid.valid && !checkingUrl;
+        return urlValid.valid && urlType !== "unknown" && lastUrlValidity.valid && urlValid.valid && !checkingUrl && name !== "";
       case "file":
-        return fileValid.valid && files !== null && files.length === 1;
+        return fileValid.valid && files !== null && files.length === 1 && name !== "";
       case "holidays":
-        return false;
+        return false && name !== "";
     }
   });
 
@@ -220,6 +222,7 @@
   bind:showModal={showModalInternal}
   bind:hideModal={hideModalInternal}
 >
+  <TextInput bind:value={name} name="name" placeholder="Name"/>
   <SelectButtons bind:value={inputType} name="ical_location" placeholder={"What do you want to add?"} options={[
     {
       value: "link",
@@ -237,11 +240,6 @@
 
   {#if inputType === "link"}
     <TextInput bind:value={url} onInput={queueUrlCheck} name="url" placeholder="URL" validation={isValidUrl} bind:validity={urlValid} />
-    {#if checkingUrl}
-      <Horizontal position="center">
-        <Loader/>
-      </Horizontal>
-    {/if}
     {#if needAuth}
         <SelectButtons bind:value={authType} name="auth_type" placeholder={"Authentication Type"} options={[
         {
@@ -260,6 +258,11 @@
       {#if authType === "bearer"}
         <TextInput bind:value={auth.token} onInput={queueUrlCheck} name="auth_token" placeholder="Token" password={true} />
       {/if}
+    {/if}
+    {#if checkingUrl}
+      <Horizontal position="center">
+        <Loader/>
+      </Horizontal>
     {/if}
   {:else if inputType === "file"}
     <FileUpload bind:files={files} name="file" placeholder="File" validation={isValidIcalFile} bind:validity={fileValid} />
