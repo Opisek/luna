@@ -46,7 +46,7 @@ func RefetchIcalFiles(tx *db.Transaction, logger *logrus.Entry) *errors.ErrorTra
 			// This will fail for users whose remote iCal files require authentication.
 			// This will not be fixed in this task, because we don't want to expose users' encryption keys unnecessarily.
 			// Instead, refetching of access-controlled iCal files might become an opt-in feature later on.
-			file := files.NewRemoteFile(icalSourceSettings.Url, auth.NewNoAuth())
+			file := files.NewRemoteFile(icalSourceSettings.Url, "text/calendar", auth.NewNoAuth())
 			tr = file.ForceFetchFromRemote(tx.Queries())
 
 			if tr != nil {

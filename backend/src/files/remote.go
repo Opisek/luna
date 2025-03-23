@@ -18,11 +18,12 @@ type RemoteFile struct {
 	url     *types.Url
 	date    *time.Time
 	content []byte
+	accept  string
 	auth    types.AuthMethod
 }
 
-func NewRemoteFile(url *types.Url, auth types.AuthMethod) *RemoteFile {
-	return &RemoteFile{url: url, auth: auth}
+func NewRemoteFile(url *types.Url, accept string, auth types.AuthMethod) *RemoteFile {
+	return &RemoteFile{url: url, accept: accept, auth: auth}
 }
 
 func (file *RemoteFile) GetId() types.ID {
@@ -38,7 +39,7 @@ func (file *RemoteFile) GetName(_ types.DatabaseQueries) string {
 }
 
 func (file *RemoteFile) fetchContentFromRemote(q types.DatabaseQueries) (io.Reader, *errors.ErrorTrace) {
-	content, err := net.FetchFile(file.url, file.auth, q.GetContext())
+	content, err := net.FetchFile(file.url, file.auth, file.accept, q.GetContext())
 	if err != nil {
 		return nil, err.
 			Append(errors.LvlDebug, "Could not read from remote").

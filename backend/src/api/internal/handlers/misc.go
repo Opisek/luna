@@ -151,6 +151,7 @@ func isUrlIcal(u *util.HandlerUtility, url *types.Url, auth types.AuthMethod) (b
 			AltStr(errors.LvlPlain, "Could not check url"), 0
 	}
 
+	req.Header.Set("Accept", "text/calendar")
 	req = req.WithContext(u.Context)
 
 	res, err := auth.Do(req)

@@ -87,7 +87,7 @@ func NewRemoteIcalSource(name string, url *types.Url, auth types.AuthMethod) *Ic
 		settings: &IcalSourceSettings{
 			Location: "remote",
 			Url:      url,
-			file:     files.NewRemoteFile(url, auth), // TDOO: allow remote files and local (uploaded) files
+			file:     files.NewRemoteFile(url, "text/calendar", auth), // TDOO: allow remote files and local (uploaded) files
 		},
 	}
 }
@@ -126,7 +126,7 @@ func NewLocalIcalSource(name string, path *types.Path) *IcalSource {
 func PackIcalSource(id types.ID, name string, settings *IcalSourceSettings, auth types.AuthMethod) (*IcalSource, *errors.ErrorTrace) {
 	switch settings.Location {
 	case "remote":
-		settings.file = files.NewRemoteFile(settings.Url, auth)
+		settings.file = files.NewRemoteFile(settings.Url, "text/calendar", auth)
 	case "local":
 		settings.file = files.NewLocalFile(settings.Path)
 	case "database":
