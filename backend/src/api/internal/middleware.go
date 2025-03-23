@@ -195,6 +195,7 @@ func RequestAuth() gin.HandlerFunc {
 		if !gotCookie && !gotBearer {
 			u.Error(errors.New().Status(http.StatusUnauthorized).
 				Append(errors.LvlWordy, "Missing token"))
+			c.Abort()
 			return
 		}
 
@@ -208,6 +209,7 @@ func RequestAuth() gin.HandlerFunc {
 		parsedToken, err := auth.ParseToken(u.Config, token)
 		if err != nil {
 			u.Error(err)
+			c.Abort()
 			return
 		}
 
