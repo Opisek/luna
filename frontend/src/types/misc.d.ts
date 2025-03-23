@@ -13,7 +13,7 @@ type Validity = {
   message: string;
 }
 
-type InputValidation = (value: string) => Validity;
+type InputValidation = (value: string) => Promise<Validity>;
 type FileValidation = (value: FileList) => Promise<Validity>;
 
 type CacheEntry<T> = {

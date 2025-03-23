@@ -23,11 +23,11 @@
   let calendar: CalendarModel = $state(EmptyCalendar);
   let originalCalendar: CalendarModel = $state(EmptyCalendar);
 
-  let saveCalendar = (_: CalendarModel | PromiseLike<CalendarModel>) => {};
-  let cancelCalendar = (_?: any) => {};
+  let promiseResolve: (value: CalendarModel | PromiseLike<CalendarModel>) => void = $state(NoOp);
+  let promiseReject: (reason?: any) => void = $state(NoOp);
 
   showCreateModal = async () => {
-    cancelCalendar();
+    promiseReject();
 
     calendar = {
       id: "",
@@ -41,7 +41,7 @@
     showCreateModalInternal();
   }
   showModal = async (original: CalendarModel): Promise<CalendarModel> => {
-    cancelCalendar();
+    promiseReject();
 
     editMode = false;
     console.log(original);
@@ -51,8 +51,8 @@
     setTimeout(showModalInternal(), 0);
 
     return new Promise((resolve, reject) => {
-      saveCalendar = resolve;
-      cancelCalendar = reject;
+      promiseResolve = resolve;
+      promiseReject = reject;
     })
   };
 
@@ -72,15 +72,15 @@
     await getRepository().deleteCalendar(calendar.id).catch(err => {
       throw new Error(`Could not delete calendar ${calendar.name}: ${err.message}`);
     });
-    cancelCalendar();
+    promiseReject();
   };
   const onEdit = async () => {
     if (calendar.id === "") {
       await getRepository().createCalendar(calendar).catch(err => {
-        cancelCalendar();
+        promiseReject();
         throw new Error(`Could not create calendar ${calendar.name}: ${err.message}`);
       });
-      saveCalendar(calendar);
+      promiseResolve(calendar);
     } else if (calendar.source === originalCalendar.source) {
       const changes = {
         name: calendar.name != originalCalendar.name,
@@ -88,16 +88,16 @@
         color: calendar.color != originalCalendar.color
       }
       await getRepository().editCalendar(calendar, changes, true).catch(err => {
-        cancelCalendar();
+        promiseReject();
         throw new Error(`Could not edit calendar ${calendar.name}: ${err.message}`);
       });
-      saveCalendar(calendar);
+      promiseResolve(calendar);
     } else {
       await getRepository().moveCalendar(calendar).catch(err => {
-        cancelCalendar();
+        promiseReject();
         throw new Error(`Could not move calendar ${calendar.name}: ${err.message}`);
       });
-      saveCalendar(calendar);
+      promiseResolve(calendar);
     }
   };
   const resetOverrides = async () => {
@@ -128,6 +128,7 @@
   bind:showModal={showModalInternal}
   onDelete={onDelete}
   onEdit={onEdit}
+  onCancel={promiseReject}
   deletable={false}
   submittable={canSubmit}
 >

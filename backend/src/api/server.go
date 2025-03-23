@@ -69,6 +69,9 @@ func run(api *util.Api) {
 	fileEndpoints.GET("/:fileId", handlers.GetFile)
 	fileEndpoints.HEAD("/:fileId", handlers.GetFile)
 
+	// /api/* the rest
+	authenticatedEndpoints.POST("/url", handlers.CheckUrl) // TODO: technically this does not need a database transaction
+
 	// Run the server
 	router.Run(fmt.Sprintf(":%d", api.CommonConfig.Env.API_PORT))
 }

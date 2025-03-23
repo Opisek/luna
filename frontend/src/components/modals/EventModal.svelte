@@ -7,7 +7,7 @@
   import SelectInput from "../forms/SelectInput.svelte";
   import TextInput from "../forms/TextInput.svelte";
 
-  import { EmptyEvent, NoChangesEvent } from "$lib/client/placeholders";
+  import { EmptyEvent, NoChangesEvent, NoOp } from "$lib/client/placeholders";
   import { deepCopy, deepEquality } from "$lib/common/misc";
   import { getRepository } from "$lib/client/repository";
   import { isSameDay } from "$lib/common/date";
@@ -39,11 +39,11 @@
     return source.type;
   });
 
-  let saveEvent = (_: EventModel | PromiseLike<EventModel>) => {};
-  let cancelEvent = (_?: any) => {};
+  let promiseResolve: (value: EventModel | PromiseLike<EventModel>) => void = $state(NoOp);
+  let promiseReject: (reason?: any) => void = $state(NoOp);
 
   showCreateModal = async (date: Date) => {
-    cancelEvent();
+    promiseReject();
 
     calendars = getRepository().calendars.getArray();
     sources = getRepository().sources.getArray();
@@ -74,13 +74,13 @@
     setTimeout(showCreateModalInternal, 0);
 
     return new Promise((resolve, reject) => {
-      saveEvent = resolve;
-      cancelEvent = reject;
+      promiseResolve = resolve;
+      promiseReject = reject;
     });
   }
 
   showModal = async (original: EventModel): Promise<EventModel> => {
-    cancelEvent();
+    promiseReject();
 
     calendars = getRepository().calendars.getArray();
     sources = getRepository().sources.getArray();
@@ -110,8 +110,8 @@
     setTimeout(showModalInternal, 0);
 
     return new Promise((resolve, reject) => {
-      saveEvent = resolve;
-      cancelEvent = reject;
+      promiseResolve = resolve;
+      promiseReject = reject;
     });
   };
 
@@ -143,7 +143,7 @@
     await getRepository().deleteEvent(event.id).catch(err => {
       throw new Error(`Could not delete event ${event.name}: ${err.message}`);
     });
-    cancelEvent();
+    promiseReject();
   };
   const onEdit = async () => {
     if (event.date.allDay) {
@@ -151,10 +151,10 @@
     }
     if (event.id === "") {
       await getRepository().createEvent(event).catch(err => {
-        cancelEvent();
+        promiseReject();
         throw new Error(`Could not create event ${event.name}: ${err.message}`);
       });
-      saveEvent(event);
+      promiseResolve(event);
     } else if (event.calendar == originalEvent.calendar) {
       const changes = {
         name: event.name != originalEvent.name,
@@ -163,16 +163,16 @@
         date: !deepEquality(event.date, originalEvent.date)
       };
       await getRepository().editEvent(event, changes, eventSourceType === "ical").catch(err => {
-        cancelEvent();
+        promiseReject();
         throw new Error(`Could not edit event ${event.name}: ${err.message}`);
       });
-      saveEvent(event);
+      promiseResolve(event);
     } else {
       await getRepository().moveEvent(event).catch(err => {
-        cancelEvent();
+        promiseReject();
         throw new Error(`Could not move event ${event.name}: ${err.message}`);
       });
-      saveEvent(event);
+      promiseResolve(event);
     }
   };
   const resetOverrides = async () => {
@@ -224,6 +224,7 @@
   bind:showModal={showModalInternal}
   onDelete={onDelete}
   onEdit={onEdit}
+  onCancel={promiseReject}
   deletable={event && eventSourceType !== "ical" && !event.date.recurrence}
   editable={event && !event.date.recurrence}
   submittable={event.calendar !== "" && event.name !== "" && (event.date.start.getTime() < event.date.end.getTime() || (event.date.start.getTime() <= event.date.end.getTime() && event.date.allDay))}

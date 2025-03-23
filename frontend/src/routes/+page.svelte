@@ -28,6 +28,7 @@
   import DayViewModal from "../components/modals/DayViewModal.svelte";
   import { isInRange } from "../lib/common/date";
   import { compareEventsByStartDate } from "../lib/common/comparators";
+  import SourceWizardModal from "../components/modals/SourceWizardModal.svelte";
 
   /* Reachability */
   let reachability: Reachability = $state(Reachability.Database);
@@ -243,7 +244,11 @@
   });
 
   /* Single instance modal logic */
+  let showSourceWizardModal: () => any = $state(NoOp);
+
   let showNewSourceModal: () => any = $state(NoOp);
+  const showNewSourceModalInternal = () => { return showNewSourceModal(); };
+  setContext("showNewSourceModal", showNewSourceModalInternal);
 
   let showSourceModal: (source: SourceModel) => any = $state(NoOp);
   const showSourceModalInternal = (source: SourceModel) => { return showSourceModal(source); };
@@ -344,6 +349,7 @@
   }
 </style>
 
+<SourceWizardModal bind:showModal={showSourceWizardModal}/>
 <SourceModal bind:showCreateModal={showNewSourceModal} bind:showModal={showSourceModal}/>
 <CalendarModal bind:showCreateModal={showNewCalendarModal} bind:showModal={showCalendarModal}/>
 <EventModal bind:showCreateModal={showNewEventModal} bind:showModal={showEventModal}/>
@@ -362,7 +368,7 @@
     <IconButton href="/settings">
       <Settings/>
     </IconButton>
-    <IconButton click={showNewSourceModal}>
+    <IconButton click={showSourceWizardModal}>
       <PlusIcon/>
     </IconButton>
     <IconButton href="https://github.com/Opisek/luna">

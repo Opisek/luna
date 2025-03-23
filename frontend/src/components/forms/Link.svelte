@@ -4,13 +4,13 @@
   import { NoOp } from "$lib/client/placeholders";
 
   interface Props {
-    href: string;
+    href?: string;
     onClick?: () => any;
     children?: Snippet;
   }
 
   let {
-    href,
+    href = "",
     onClick = NoOp,
     children
   }: Props = $props();
@@ -19,11 +19,23 @@
 <style lang="scss">
   @use "../../styles/colors.scss";
 
-  a {
+  a, button {
     text-decoration: none;
     color: colors.$foregroundLink;
     width: max-content;
+    outline: none;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: inherit;
+    font: inherit;
+    margin: 0;
+    padding: 0;
   }
 </style>
 
-<a href={href} onclick={onClick()}>{@render children?.()}</a>
+{#if href === ""}
+  <button onclick={onClick}>{@render children?.()}</button>
+{:else}
+  <a href={href} onclick={onClick}>{@render children?.()}</a>
+{/if}

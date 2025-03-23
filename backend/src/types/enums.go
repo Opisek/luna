@@ -1,8 +1,9 @@
 package types
 
 const (
-	SourceCaldav = "caldav"
-	SourceIcal   = "ical"
+	SourceUnknown = "unknown"
+	SourceCaldav  = "caldav"
+	SourceIcal    = "ical"
 )
 
 const (

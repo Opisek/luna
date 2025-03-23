@@ -12,7 +12,7 @@
   import { fetchResponse } from "../../lib/client/net";
 
   interface Props {
-    showCreateModal?: () => any;
+    showCreateModal?: () => Promise<SourceModel>;
     showModal?: (source: SourceModel) => Promise<SourceModel>;
   }
 
@@ -24,11 +24,11 @@
   let sourceDetailed: SourceModel = $state(EmptySource);
   let originalSource: SourceModel;
 
-  let saveSource = (_: SourceModel | PromiseLike<SourceModel>) => {};
-  let cancelSource = (_?: any) => {};
+  let promiseResolve: (value: SourceModel | PromiseLike<SourceModel>) => void = $state(NoOp);
+  let promiseReject: (reason?: any) => void = $state(NoOp);
 
   showCreateModal = () => {
-    cancelSource();
+    promiseReject();
 
     sourceDetailed = {
       id: "",
@@ -44,9 +44,13 @@
     };
 
     showCreateModalInternal();
+    return new Promise((resolve, reject) => {
+      promiseResolve = resolve;
+      promiseReject = reject;
+    })
   }
   showModal = async (source: SourceModel): Promise<SourceModel> => {
-    cancelSource();
+    promiseReject();
 
     // TODO: this should be a call to repository with force refresh = true
     sourceDetailed = await getRepository().getSourceDetails(source.id).catch(err => {
@@ -96,8 +100,8 @@
 
     showModalInternal();
     return new Promise((resolve, reject) => {
-      saveSource = resolve;
-      cancelSource = reject;
+      promiseResolve = resolve;
+      promiseReject = reject;
     })
   };
 
@@ -111,15 +115,15 @@
     await getRepository().deleteSource(sourceDetailed.id).catch(err => {
       throw new Error(`Could not delete source ${sourceDetailed.name}: ${err.message}`);
     });
-    cancelSource();
+    promiseReject();
   };
   const onEdit = async () => {
     if (sourceDetailed.id === "") {
       await getRepository().createSource(sourceDetailed).catch(err => {
-        cancelSource();
+        promiseReject();
         throw new Error(`Could not create source ${sourceDetailed.name}: ${err.message}`);
       });
-      saveSource(sourceDetailed);
+      promiseResolve(sourceDetailed);
     } else {
       if (originalSource.settings.file instanceof String && sourceDetailed.settings.file instanceof FileList && sourceDetailed.settings.file.length === 1 && sourceDetailed.settings.file[0].name === originalSource.settings.file) {
         sourceDetailed.settings.file = sourceDetailed.settings.file[0];
@@ -131,10 +135,10 @@
         auth: sourceDetailed.auth_type != originalSource.auth_type || !deepEquality(sourceDetailed.auth, originalSource.auth)
       }
       await getRepository().editSource(sourceDetailed, changes).catch(err => {
-        cancelSource();
+        promiseReject();
         throw new Error(`Could not edit source ${sourceDetailed.name}: ${err.message}`);
       });
-      saveSource(sourceDetailed);
+      promiseResolve(sourceDetailed);
     }
   };
 
@@ -161,6 +165,7 @@
   bind:showModal={showModalInternal}
   onDelete={onDelete}
   onEdit={onEdit}
+  onCancel={promiseReject}
   submittable={canSubmit}
 >
   {#if sourceDetailed}

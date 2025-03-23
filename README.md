@@ -213,3 +213,16 @@ The description field is optional. Either the end date or the event duration is 
 - **Method**: ``HEAD``
 - **Body**: Empty
 - **Purpose**: Returns the name and size of a file in the database
+
+### Miscellaneous
+- **Path**: ``/api/url``
+- **Method**: ``POST``
+- **Body**: `url`, `auth_type`
+- **Purpose**: Tries to determine if the supplied URL links to an iCal file or a CalDAV server. In case of a CalDAV server, it also returns the principal's base URL.
+
+Depending on the `auth_type` field, additional information may need to be passed:
+- `none`: No additional information
+- `basic`: `username`, `password`
+- `bearer`: `token`
+- `oauth`: Not yet implemented
+

@@ -17,6 +17,7 @@
     submittable?: boolean;
     onEdit: () => Promise<void>;
     onDelete: () => Promise<void>;
+    onCancel?: () => any;
     showCreateModal?: () => any;
     showModal?: () => any;
     hideModal?: () => any;
@@ -34,6 +35,7 @@
     submittable = true,
     onEdit,
     onDelete,
+    onCancel,
     showCreateModal = $bindable(),
     showModal = $bindable(),
     hideModal = $bindable(NoOp),
@@ -45,6 +47,7 @@
   let creating = false;
 
   let showModalInternal: () => any = $state(NoOp);
+  let hideModalInternal: () => any = $state(NoOp);
   let showDeleteModal: () => any = $state(NoOp);
   let resetFocus: () => any = $state(NoOp);
 
@@ -58,6 +61,10 @@
     creating = false;
     editMode = false;
     showModalInternal();
+  };
+  hideModal = () => {
+    onCancel?.();
+    hideModalInternal();
   };
 
   function startEditMode() {
@@ -97,7 +104,7 @@
   }
 </script>
 
-<Modal title={title} bind:showModal={showModalInternal} bind:hideModal={hideModal} onModalHide={() => {editMode = false}} bind:resetFocus>
+<Modal title={title} bind:showModal={showModalInternal} bind:hideModal={hideModalInternal} onModalHide={() => {editMode = false}} bind:resetFocus>
   {@render children?.()}
   {#snippet buttons()}
     {@render extraButtonsLeft?.()}
