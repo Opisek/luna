@@ -113,10 +113,13 @@
       source.settings.file = files;
     }
 
+    awaitingEdit = true;
     getRepository().createSource(source).then(() => {
       saveInternal(source);
     }).catch(err => {
       queueNotification("failure", `Could not create source ${source.name}: ${err.message}`);
+    }).finally(() => {
+      awaitingEdit = false;
     });
   }
   async function saveInternal(source: SourceModel) {
