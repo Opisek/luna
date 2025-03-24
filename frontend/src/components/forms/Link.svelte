@@ -2,6 +2,7 @@
   import type { Snippet } from "svelte";
 
   import { NoOp } from "$lib/client/placeholders";
+  import { focusIndicator } from "$lib/client/decoration";
 
   interface Props {
     href?: string;
@@ -31,11 +32,23 @@
     font: inherit;
     margin: 0;
     padding: 0;
+    position: relative;
   }
 </style>
 
 {#if href === ""}
-  <button onclick={onClick}>{@render children?.()}</button>
+  <button
+    onclick={onClick}
+    use:focusIndicator={{ type: "underline", ignoreParent: true }}
+  >
+    {@render children?.()}
+  </button>
 {:else}
-  <a href={href} onclick={onClick}>{@render children?.()}</a>
+  <a
+    href={href}
+    onclick={onClick}
+    use:focusIndicator={{ type: "underline", ignoreParent: true }}
+  >
+    {@render children?.()}
+  </a>
 {/if}
