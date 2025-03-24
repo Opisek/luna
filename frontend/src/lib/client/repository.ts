@@ -590,8 +590,8 @@ class Repository {
 
     const months = [];
     while (start < end) {
-      start.setUTCMonth(start.getUTCMonth() + 1);
       months.push(new Date(start));
+      start.setUTCMonth(start.getUTCMonth() + 1);
     }
 
     return months;
