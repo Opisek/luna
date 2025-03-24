@@ -693,14 +693,20 @@ class Repository {
     const fetchEnd = new Date(end);
 
     while (fetchStart.getTime() <= fetchEnd.getTime()) {
-      const cached = this.cacheOk(cache.get(fetchStart.getTime()));
+      const cacheKey = new Date(fetchStart);
+      cacheKey.setUTCDate(1);
+      cacheKey.setUTCHours(0, 0, 0, 0);
+      const cached = this.cacheOk(cache.get(cacheKey.getTime()));
       if (!cached) break;
       result = result.concat(await this.mapAllRecurrenceInstances(cached));
       fetchStart.setMonth(fetchStart.getMonth() + 1);
     }
 
     while (fetchEnd.getTime() >= fetchStart.getTime()) {
-      const cached = this.cacheOk(cache.get(fetchEnd.getTime()));
+      const cacheKey = new Date(fetchStart);
+      cacheKey.setUTCDate(1);
+      cacheKey.setUTCHours(0, 0, 0, 0);
+      const cached = this.cacheOk(cache.get(cacheKey.getTime()));
       if (!cached) break;
       result = result.concat(await this.mapAllRecurrenceInstances(cached));
       fetchEnd.setMonth(fetchEnd.getMonth() - 1);
@@ -712,7 +718,7 @@ class Repository {
 
     const stopLoading = getMetadata().startLoadingCalendar(calendar);
 
-    const fetchedEvents = await this.fetchEvents(calendar, start, end).catch((err) => {
+    const fetchedEvents = await this.fetchEvents(calendar, fetchStart, fetchEnd).catch((err) => {
       getMetadata().addFaultyCalendar(calendar, err.message);
       throw err;
     }).finally(() => {
@@ -739,7 +745,7 @@ class Repository {
       calendarEventsCache = new Map();
       this.eventsCache.set(calendar, calendarEventsCache);
     }
-    for (let i = new Date(localStart); i.getTime() < localEnd.getTime(); i.setMonth(i.getMonth() + 1)) {
+    for (let i = new Date(start); i.getTime() < end.getTime(); i.setMonth(i.getMonth() + 1)) {
       calendarEventsCache.set(i.getTime(), {
         date: Date.now(),
         value: []
