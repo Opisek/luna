@@ -703,7 +703,7 @@ class Repository {
     }
 
     while (fetchEnd.getTime() >= fetchStart.getTime()) {
-      const cacheKey = new Date(fetchStart);
+      const cacheKey = new Date(fetchEnd);
       cacheKey.setUTCDate(1);
       cacheKey.setUTCHours(0, 0, 0, 0);
       const cached = this.cacheOk(cache.get(cacheKey.getTime()));
@@ -745,6 +745,7 @@ class Repository {
       calendarEventsCache = new Map();
       this.eventsCache.set(calendar, calendarEventsCache);
     }
+    end.setDate(end.getDate() - 1);
     for (let i = new Date(start); i.getTime() < end.getTime(); i.setMonth(i.getMonth() + 1)) {
       calendarEventsCache.set(i.getTime(), {
         date: Date.now(),
