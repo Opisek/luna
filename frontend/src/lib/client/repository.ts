@@ -631,14 +631,13 @@ class Repository {
     start.setUTCHours(0, 0, 0, 0);
     end.setUTCHours(23, 59, 59, 999);
 
-    // Set start and end to the start and end of each month
-    start.setDate(1);
-    end.setMonth(end.getMonth() + 1);
-    end.setDate(0);
-
     // Add one month of padding in both directions
     start.setMonth(start.getMonth() - 1);
     end.setMonth(end.getMonth() + 1);
+
+    // Set start and end to the start and end of each month
+    start.setDate(1);
+    end.setDate(0);
 
     this.compileEvents(start, end);
     const allSources = await this.getSources(forceRefresh).catch((err) => { throw err; });
