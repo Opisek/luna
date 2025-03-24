@@ -26,7 +26,7 @@ export const actions = {
       const opts = {
         path: "/",
         httpOnly: false,
-        maxAge: undefined as number | undefined,
+        maxAge: COOKIE_MAX_AGE as number | undefined,
         sameSite: "strict" as boolean | "strict" | "lax" | "none",
       };
 
@@ -34,7 +34,6 @@ export const actions = {
         opts.maxAge = COOKIE_MAX_AGE;
       }
 
-      // TODO: max age
       cookies.set("tokenPresent", "true", opts);
       cookies.set("token", body.token, opts);
 
