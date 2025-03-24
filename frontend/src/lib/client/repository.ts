@@ -739,7 +739,7 @@ class Repository {
       calendarEventsCache = new Map();
       this.eventsCache.set(calendar, calendarEventsCache);
     }
-    for (let i = new Date(start); i.getTime() < end.getTime(); i.setMonth(i.getMonth() + 1)) {
+    for (let i = new Date(localStart); i.getTime() < localEnd.getTime(); i.setMonth(i.getMonth() + 1)) {
       calendarEventsCache.set(i.getTime(), {
         date: Date.now(),
         value: []
