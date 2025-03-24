@@ -26,7 +26,7 @@ export const actions = {
       const opts = {
         path: "/",
         httpOnly: false,
-        maxAge: COOKIE_MAX_AGE as number | undefined,
+        maxAge: undefined as number | undefined,
         sameSite: "strict" as boolean | "strict" | "lax" | "none",
       };
 
