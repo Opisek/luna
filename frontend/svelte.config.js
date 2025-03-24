@@ -9,7 +9,7 @@ const config = {
 			precompress: true
 		}),
 		csrf: {
-			checkOrigin: false // TODO: reenable in production or implement an alterative
+			checkOrigin: false // own solution implemented in src/routes/api/[...endpoint]/+server.ts
 		}
 	}
 };

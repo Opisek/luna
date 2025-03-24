@@ -17,7 +17,7 @@ services:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     environment:
-      ORIGIN: http://localhost:3000
+      PUBLIC_URL: http://localhost:3000, http://127.0.0.1:3000
       API_URL: http://luna-backend:3000
     build:
       context: frontend
