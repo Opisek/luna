@@ -7,19 +7,14 @@ const proxy = (async ({ params, request, url }: RequestEvent) => {
   if (request.method !== "GET" && request.method !== "HEAD") {
     const origin = request.headers.get("Origin");
     const publicUrl = process.env.PUBLIC_URL
-    if (publicUrl === null || publicUrl === undefined || publicUrl === "") {
+    if (publicUrl === null || publicUrl === undefined || publicUrl === "" || origin !== publicUrl) {
     // @ts-ignore
-      return new error(403, { message: "Environmental variable PUBLIC_URL was not set." });
-    }
-    const allowedOrigins = publicUrl.split(",").map(x => x.trim());
-    if (!origin || !allowedOrigins.includes(origin)) {
-    // @ts-ignore
-      return new error(403, { message: "Origin not allowed. Was PUBLIC_URL set correctly?" });
+      return new error(403, { message: "Origin not allowed. Was PUBLIC_URL set correctly in the frontend?" });
     }
   }
 
   // API call to the backend
-  return callApi(params.endpoint + url.search, request).catch((err) => {
+  const response = await callApi(params.endpoint + url.search, request).catch((err) => {
     let errorMessage = "Internal Server Error";
 
     if (err.cause && err.cause.code === "ECONNREFUSED") {
@@ -29,6 +24,15 @@ const proxy = (async ({ params, request, url }: RequestEvent) => {
     // @ts-ignore
     return new error(500, { message: errorMessage } );
   });
+
+  // CORS check
+  const corsHeader = response.headers.get("Access-Control-Allow-Origin")
+  if (corsHeader === null || corsHeader === undefined || corsHeader === "" || corsHeader === "*" || corsHeader !== process.env.PUBLIC_URL) {
+    // @ts-ignore
+    return new error(403, { message: "Unexpected CORS header. Was PUBLIC_URL set correctly in the backend?" });
+  }
+
+  return response;
 })
 
 export const DELETE = proxy

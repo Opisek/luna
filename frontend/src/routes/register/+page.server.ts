@@ -27,6 +27,7 @@ export const actions = {
         path: "/",
         httpOnly: false,
         maxAge: undefined as number | undefined,
+        sameSite: "strict" as boolean | "strict" | "lax" | "none",
       };
 
       if (formData.get("remember") === "true") {

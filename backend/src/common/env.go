@@ -11,6 +11,8 @@ import (
 )
 
 type Environmental struct {
+	PUBLIC_URL string
+
 	DB_HOST     string
 	DB_PORT     uint16
 	DB_USERNAME string
