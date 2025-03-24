@@ -10,7 +10,8 @@
   let { event, parent }: Props = $props();
 
   let circle: HTMLDivElement;
-  let disappear = $state(-1);
+  let mouseLeft = $state(true);
+  let transitionsFinished = $state(-1);
 
   $effect(() => {
     ((circle: HTMLDivElement) => {
@@ -24,15 +25,16 @@
       circle.style.top = `${event.clientY - rect.top -diameter/2}px`;
 
       if (browser) {
-        disappear = 0;
-        window.addEventListener("mouseup", () => { disappear++ }, { once: true });
+        mouseLeft = false;
+        transitionsFinished = 0;
+        window.addEventListener("mouseup", () => { mouseLeft = true }, { once: true });
+        window.addEventListener("mouseout", () => { mouseLeft = true }, { once: true });
       } else circle.remove();
     })(circle);
   });
 
   function transitionEnd() {
-    disappear++;
-    if (disappear >= 3) circle.remove();
+    if (++transitionsFinished == 2) circle.remove();
   }
 
 </script>
@@ -65,8 +67,8 @@
 
 <div
   class="ripple"
-  class:animate={disappear >= 0}
-  class:disappear={disappear >= 2}
+  class:animate={transitionsFinished >= 0}
+  class:disappear={mouseLeft && transitionsFinished >= 1}
   bind:this={circle}
   ontransitionend={transitionEnd}
 ></div>
