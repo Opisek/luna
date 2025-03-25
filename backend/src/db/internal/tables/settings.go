@@ -9,7 +9,7 @@ func (q *Tables) InitializeUserSettingsTable() error {
 		CREATE TABLE IF NOT EXISTS user_settings (
 			userid UUID REFERENCES users(id) ON DELETE CASCADE,
 			key VARCHAR(64) NOT NULL,
-			value JSONB NOT NULL,
+			value BYTEA NOT NULL,
 			PRIMARY KEY (userid, key)
 		);
 		`,
@@ -26,7 +26,7 @@ func (q *Tables) InitializeGlobalSettingsTable() error {
 		`
 		CREATE TABLE IF NOT EXISTS global_settings (
 			key VARCHAR(64) PRIMARY KEY,
-			value JSONB NOT NULL
+			value BYTEA NOT NULL
 		);
 		`,
 	)
