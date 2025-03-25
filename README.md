@@ -214,7 +214,48 @@ The description field is optional. Either the end date or the event duration is 
 - **Body**: Empty
 - **Purpose**: Returns the name and size of a file in the database
 
+### Settings
+#### Get Global Settings
+- **Path**: ``/api/settings/global``
+- **Method**: ``GET``
+- **Body**: Empty
+- **Purpose**: Returns all key-value pairs from the global settings
+- **Note**: This endpoint is only accessibly by an administrator
+
+#### Get Global Setting
+- **Path**: ``/api/settings/global/<KEY>``
+- **Method**: ``GET``
+- **Body**: Empty
+- **Purpose**: Returns a specific key-value pair from the global settings
+- **Note**: This endpoint is only accessibly by an administrator
+
+#### Patch Global Setting
+- **Path**: ``/api/settings/global/<KEY>``
+- **Method**: ``PATCH``
+- **Body**: `value` as serialized JSON object
+- **Purpose**: Sets a specific key-value pair in the global settings
+- **Note**: This endpoint is only accessibly by an administrator
+
+#### Get User Settings
+- **Path**: ``/api/settings/user``
+- **Method**: ``GET``
+- **Body**: Empty
+- **Purpose**: Returns all key-value pairs from the requesting user's settings
+
+#### Get User Setting
+- **Path**: ``/api/settings/user/<KEY>``
+- **Method**: ``GET``
+- **Body**: Empty
+- **Purpose**: Returns a specific key-value pair from the requesting user's settings
+
+#### Patch User Setting
+- **Path**: ``/api/settings/global/<KEY>``
+- **Method**: ``PATCH``
+- **Body**: `value` as serialized JSON object
+- **Purpose**: Sets a specific key-value pair in the requesting user's settings
+
 ### Miscellaneous
+#### URL Type Check
 - **Path**: ``/api/url``
 - **Method**: ``POST``
 - **Body**: `url`, `auth_type`
