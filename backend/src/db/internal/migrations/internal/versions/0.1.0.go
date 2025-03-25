@@ -120,6 +120,20 @@ func init() {
 				Append(errors.LvlDebug, "Could not initialize filecache table")
 		}
 
+		err = q.Tables.InitializeUserSettingsTable()
+		if err != nil {
+			return errors.New().
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlDebug, "Could not initialize user settings table")
+		}
+
+		err = q.Tables.InitializeGlobalSettingsTable()
+		if err != nil {
+			return errors.New().
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlDebug, "Could not initialize global settings table")
+		}
+
 		return nil
 	})
 }

@@ -10,7 +10,9 @@ func (q *Tables) InitializeUsersTable() error {
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 			username VARCHAR(255) NOT NULL UNIQUE,
 			email VARCHAR(255) NOT NULL UNIQUE,
-			admin BOOLEAN
+			admin BOOLEAN,
+			searchable BOOLEAN,
+			profile_picture VARCHAR(255)
 		);
 		`,
 	)

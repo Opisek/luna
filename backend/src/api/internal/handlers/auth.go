@@ -154,9 +154,11 @@ func Register(c *gin.Context) {
 	}
 
 	user := &types.User{
-		Username: payload.Username,
-		Email:    payload.Email,
-		Admin:    !usersExist,
+		Username:       payload.Username,
+		Email:          payload.Email,
+		Admin:          !usersExist,
+		Searchable:     true,
+		ProfilePicture: util.GetGravatarUrl(payload.Email),
 	}
 
 	userId, err := u.Tx.Queries().AddUser(user)

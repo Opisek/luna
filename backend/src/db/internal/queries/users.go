@@ -14,13 +14,13 @@ func (q *Queries) AddUser(user *types.User) (types.ID, *errors.ErrorTrace) {
 	var err error
 
 	query := `
-		INSERT INTO users (username, email, admin)
+		INSERT INTO users (username, email, admin, searchable, profile_picture)
 		VALUES ($1, $2, $3)
 		RETURNING id;
 	`
 
 	var id types.ID
-	err = q.Tx.QueryRow(q.Context, query, user.Username, user.Email, user.Admin).Scan(&id)
+	err = q.Tx.QueryRow(q.Context, query, user.Username, user.Email, user.Admin, user.Searchable, user.ProfilePicture).Scan(&id)
 
 	if err != nil {
 		return types.EmptyId(), errors.New().Status(http.StatusInternalServerError).
