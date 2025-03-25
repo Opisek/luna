@@ -134,6 +134,11 @@ func init() {
 				Append(errors.LvlDebug, "Could not initialize global settings table")
 		}
 
+		tr := q.Tables.InitializeGlobalSettings()
+		if tr != nil {
+			return tr
+		}
+
 		return nil
 	})
 }

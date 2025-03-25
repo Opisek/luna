@@ -1,6 +1,7 @@
 package util
 
 import (
+	"encoding/hex"
 	"fmt"
 	"luna-backend/crypto"
 	"luna-backend/types"
@@ -21,8 +22,11 @@ func GetGravatarUrl(email string) *types.Url {
 	// Get email hash
 	hash := crypto.GetSha256Hash(email)
 
+	// Convert the hash to a hex string
+	hex := hex.EncodeToString(hash)
+
 	// Construct gravatar url
-	rawUrl := "https://www.gravatar.com/avatar/" + string(hash)
+	rawUrl := "https://www.gravatar.com/avatar/" + hex
 
 	// Return as URL
 	// We know this will never error unless we are hit by cosmic radiation

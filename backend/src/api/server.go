@@ -69,6 +69,12 @@ func run(api *util.Api) {
 	fileEndpoints.GET("/:fileId", handlers.GetFile)
 	fileEndpoints.HEAD("/:fileId", handlers.GetFile)
 
+	// /api/settings
+	userSettingsEndpoints := authenticatedEndpoints.Group("/settings/user")
+	userSettingsEndpoints.GET("", handlers.GetUserSettings)
+
+	// TODO: adminEndpoints := endpoints.Group("", middleware.Admin())
+
 	// /api/* the rest
 	authenticatedEndpoints.POST("/url", handlers.CheckUrl) // TODO: technically this does not need a database transaction
 

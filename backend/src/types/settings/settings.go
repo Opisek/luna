@@ -1,7 +1,7 @@
 package settings
 
 type SettingsEntry interface {
-	GetKey() string
+	Key() string
 	Default()
 	MarshalJSON() ([]byte, error)
 	UnmarshalJSON([]byte) error

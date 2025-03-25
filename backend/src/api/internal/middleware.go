@@ -18,6 +18,8 @@ import (
 func RequestSetup(timeout time.Duration, database *db.Database, withTransaction bool, config *common.CommonConfig, logger *logrus.Entry) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		responseStatus := http.StatusOK
+		var responseRaw []byte
+		var responseRawType string
 		var responseMsg *gin.H
 		var responseFileName string
 		var responseFileBody []byte
@@ -49,6 +51,11 @@ func RequestSetup(timeout time.Duration, database *db.Database, withTransaction 
 			if responseErr != nil {
 				logger.Error(responseErr.Serialize(errors.LvlDebug))
 				c.AbortWithStatusJSON(responseErr.GetStatus(), &gin.H{"error": responseErr.Serialize(config.DetailLevel)})
+				return
+			}
+
+			if responseRaw != nil {
+				c.Data(responseStatus, responseRawType, responseRaw)
 				return
 			}
 
@@ -131,6 +138,8 @@ func RequestSetup(timeout time.Duration, database *db.Database, withTransaction 
 		// In case of a response
 		case response := <-responseChan:
 			responseStatus = response.GetStatus()
+			responseRaw = response.GetRaw()
+			responseRawType = response.GetRawType()
 			responseMsg = response.GetMsg()
 			responseFile := response.GetFile()
 

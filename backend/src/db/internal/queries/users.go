@@ -15,7 +15,7 @@ func (q *Queries) AddUser(user *types.User) (types.ID, *errors.ErrorTrace) {
 
 	query := `
 		INSERT INTO users (username, email, admin, searchable, profile_picture)
-		VALUES ($1, $2, $3)
+		VALUES ($1, $2, $3, $4, $5)
 		RETURNING id;
 	`
 

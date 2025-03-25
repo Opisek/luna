@@ -120,6 +120,7 @@ type registerPayload struct {
 func Register(c *gin.Context) {
 	u := util.GetUtil(c)
 
+	// Parse and validate the payload
 	payload := registerPayload{}
 	if err := c.ShouldBind(&payload); err != nil {
 		u.Error(errors.New().Status(http.StatusBadRequest).
@@ -143,6 +144,7 @@ func Register(c *gin.Context) {
 		return
 	}
 
+	// Check if any users exist to know if this user should be an admin
 	usersExist, err := u.Tx.Queries().AnyUsersExist()
 	if err != nil {
 		u.Error(err.
@@ -153,6 +155,7 @@ func Register(c *gin.Context) {
 		return
 	}
 
+	// Construct the user
 	user := &types.User{
 		Username:       payload.Username,
 		Email:          payload.Email,
@@ -161,6 +164,7 @@ func Register(c *gin.Context) {
 		ProfilePicture: util.GetGravatarUrl(payload.Email),
 	}
 
+	// Insert the user into the database
 	userId, err := u.Tx.Queries().AddUser(user)
 	if err != nil {
 		u.Error(err.
@@ -169,6 +173,16 @@ func Register(c *gin.Context) {
 		return
 	}
 
+	// Initialize the user's settings
+	err = u.Tx.Queries().InitializeUserSettings(userId)
+	if err != nil {
+		u.Error(err.
+			Append(errors.LvlDebug, "Could not register"),
+		)
+		return
+	}
+
+	// Hash the password
 	securedPassword, err := auth.SecurePassword(payload.Password)
 	if err != nil {
 		u.Error(err.
@@ -179,6 +193,7 @@ func Register(c *gin.Context) {
 		return
 	}
 
+	// Insert the password into the database
 	err = u.Tx.Queries().InsertPassword(user.Id, securedPassword)
 	if err != nil {
 		u.Error(err.

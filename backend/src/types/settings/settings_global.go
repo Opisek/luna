@@ -2,6 +2,7 @@ package settings
 
 import (
 	"fmt"
+	"luna-backend/parsing"
 )
 
 // Whether any user can register without an explicit invitation
@@ -10,26 +11,18 @@ type RegistrationEnabled struct {
 	Enabled bool
 }
 
-func (entry *RegistrationEnabled) GetKey() string {
+func (entry *RegistrationEnabled) Key() string {
 	return "registration_enabled"
 }
 func (entry *RegistrationEnabled) Default() {
 	entry.Enabled = false
 }
 func (entry *RegistrationEnabled) MarshalJSON() ([]byte, error) {
-	if entry.Enabled {
-		return []byte("true"), nil
-	} else {
-		return []byte("false"), nil
-	}
+	return parsing.MarshalBool(entry.Enabled), nil
 }
-func (entry *RegistrationEnabled) UnmarshalJSON(data []byte) error {
-	if string(data) == "true" {
-		entry.Enabled = true
-	} else {
-		entry.Enabled = false
-	}
-	return nil
+func (entry *RegistrationEnabled) UnmarshalJSON(data []byte) (err error) {
+	entry.Enabled, err = parsing.UnmarshalBool(data)
+	return err
 }
 
 // How verbose the logging should be
@@ -38,20 +31,24 @@ type LoggingVerbosity struct {
 	Verbosity int
 }
 
-func (entry *LoggingVerbosity) GetKey() string {
+func (entry *LoggingVerbosity) Key() string {
 	return "logging_verbosity"
 }
 func (entry *LoggingVerbosity) Default() {
 	entry.Verbosity = 2
 }
 func (entry *LoggingVerbosity) MarshalJSON() ([]byte, error) {
-	return []byte{byte(entry.Verbosity)}, nil
+	return parsing.MarshalInt(entry.Verbosity), nil
 }
 func (entry *LoggingVerbosity) UnmarshalJSON(data []byte) error {
-	entry.Verbosity = int(data[0])
-	if entry.Verbosity < 0 || entry.Verbosity > 3 {
-		return fmt.Errorf("invalid verbosity level: %d", entry.Verbosity)
+	verbosity, err := parsing.UnmarshalInt(data)
+	if err != nil {
+		return fmt.Errorf("could not parse verbosity level: %v", err)
 	}
+	if verbosity < 0 || verbosity > 3 {
+		return fmt.Errorf("invalid verbosity level: %d", verbosity)
+	}
+	entry.Verbosity = verbosity
 	return nil
 }
 
@@ -61,24 +58,16 @@ type UseCdnFonts struct {
 	UseCdn bool
 }
 
-func (entry *UseCdnFonts) GetKey() string {
+func (entry *UseCdnFonts) Key() string {
 	return "use_cdn_fonts"
 }
 func (entry *UseCdnFonts) Default() {
 	entry.UseCdn = false
 }
 func (entry *UseCdnFonts) MarshalJSON() ([]byte, error) {
-	if entry.UseCdn {
-		return []byte("true"), nil
-	} else {
-		return []byte("false"), nil
-	}
+	return parsing.MarshalBool(entry.UseCdn), nil
 }
-func (entry *UseCdnFonts) UnmarshalJSON(data []byte) error {
-	if string(data) == "true" {
-		entry.UseCdn = true
-	} else {
-		entry.UseCdn = false
-	}
-	return nil
+func (entry *UseCdnFonts) UnmarshalJSON(data []byte) (err error) {
+	entry.UseCdn, err = parsing.UnmarshalBool(data)
+	return err
 }
