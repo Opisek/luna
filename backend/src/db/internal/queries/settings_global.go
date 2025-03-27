@@ -4,6 +4,8 @@ import (
 	"luna-backend/config"
 	"luna-backend/errors"
 	"net/http"
+
+	"github.com/jackc/pgx/v5"
 )
 
 func (q *Queries) GetRawGlobalSettings() ([]byte, *errors.ErrorTrace) {
@@ -20,7 +22,7 @@ func (q *Queries) GetRawGlobalSettings() ([]byte, *errors.ErrorTrace) {
 	if err != nil {
 		return []byte{}, errors.New().Status(http.StatusInternalServerError).
 			AddErr(errors.LvlDebug, err).
-			Append(errors.LvlDebug, "Could not get global settings").
+			Append(errors.LvlWordy, "Could not get global settings").
 			AltStr(errors.LvlPlain, "Database error")
 	}
 
@@ -40,9 +42,38 @@ func (q *Queries) GetGlobalSettings() (*config.GlobalSettings, *errors.ErrorTrac
 	if err != nil {
 		return nil, errors.New().Status(http.StatusInternalServerError).
 			AddErr(errors.LvlDebug, err).
-			Append(errors.LvlDebug, "Could not get global settings").
+			Append(errors.LvlWordy, "Could not get global settings").
 			AltStr(errors.LvlPlain, "Database error")
 	}
 
 	return &globalSettings, nil
+}
+
+func (q *Queries) GetRawGlobalSetting(key string) ([]byte, *errors.ErrorTrace) {
+	var setting []byte
+
+	err := q.Tx.QueryRow(
+		q.Context,
+		`
+		SELECT value
+		FROM global_settings
+		WHERE key = $1;
+		`,
+		key,
+	).Scan(&setting)
+
+	switch err {
+	case nil:
+		break
+	case pgx.ErrNoRows:
+		return []byte{}, errors.New().Status(http.StatusNotFound).
+			Append(errors.LvlPlain, "This setting does not exist")
+	default:
+		return []byte{}, errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlWordy, "Could not get global setting").
+			AltStr(errors.LvlPlain, "Database error")
+	}
+
+	return setting, nil
 }

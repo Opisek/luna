@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/jackc/pgx/v5"
 )
 
 func (q *Queries) InitializeUserSettings(userId types.ID) *errors.ErrorTrace {
@@ -62,7 +64,7 @@ func (q *Queries) InitializeUserSettings(userId types.ID) *errors.ErrorTrace {
 	if err != nil {
 		return errors.New().Status(http.StatusInternalServerError).
 			AddErr(errors.LvlDebug, err).
-			Append(errors.LvlDebug, "Could not initialize user's settings").
+			Append(errors.LvlWordy, "Could not initialize user's settings").
 			AltStr(errors.LvlPlain, "Database error")
 	}
 
@@ -91,4 +93,34 @@ func (q *Queries) GetRawUserSettings(userId types.ID) ([]byte, *errors.ErrorTrac
 	}
 
 	return settings, nil
+}
+
+func (q *Queries) GetRawUserSetting(userId types.ID, key string) ([]byte, *errors.ErrorTrace) {
+	var setting []byte
+
+	err := q.Tx.QueryRow(
+		q.Context,
+		`
+		SELECT value
+		FROM user_settings
+		WHERE userid = $1 AND key = $2;
+		`,
+		userId.UUID(),
+		key,
+	).Scan(&setting)
+
+	switch err {
+	case nil:
+		break
+	case pgx.ErrNoRows:
+		return []byte{}, errors.New().Status(http.StatusNotFound).
+			Append(errors.LvlPlain, "This setting does not exist")
+	default:
+		return []byte{}, errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlWordy, "Could not get user's setting").
+			AltStr(errors.LvlPlain, "Database error")
+	}
+
+	return setting, nil
 }
