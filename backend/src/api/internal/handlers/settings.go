@@ -18,3 +18,15 @@ func GetUserSettings(c *gin.Context) {
 
 	u.SuccessRawJson(settings)
 }
+
+func GetGlobalSettings(c *gin.Context) {
+	u := util.GetUtil(c)
+
+	settings, err := u.Tx.Queries().GetRawGlobalSettings()
+	if err != nil {
+		u.Error(err)
+		return
+	}
+
+	u.SuccessRawJson(settings)
+}

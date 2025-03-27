@@ -166,7 +166,7 @@ func isUrlIcal(u *util.HandlerUtility, url *types.Url, auth types.AuthMethod) (b
 		return false, nil, res.StatusCode
 	}
 
-	tr := files.IsValidIcalFile(res.Body, u.Tx.Queries())
+	tr := files.IsValidIcalFile(res.Body)
 	return tr == nil, nil, http.StatusOK
 }
 

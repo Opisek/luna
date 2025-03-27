@@ -80,7 +80,7 @@ func (q *Queries) GetUserIdFromUsername(username string) (types.ID, *errors.Erro
 	return types.IdFromUuid(id), nil
 }
 
-func (q *Queries) IsAdmin(userId int) (bool, *errors.ErrorTrace) {
+func (q *Queries) IsAdmin(userId types.ID) (bool, *errors.ErrorTrace) {
 	var err error
 
 	var admin bool
@@ -92,7 +92,7 @@ func (q *Queries) IsAdmin(userId int) (bool, *errors.ErrorTrace) {
 		FROM users
 		WHERE id = $1;
 		`,
-		userId,
+		userId.UUID(),
 	).Scan(&admin)
 
 	if err != nil {

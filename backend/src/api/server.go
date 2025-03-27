@@ -38,7 +38,9 @@ func run(api *util.Api) {
 	endpoints.GET("/health", handlers.GetHealth)
 
 	// everything past here requires the user to be logged in
-	authenticatedEndpoints := endpoints.Group("", middleware.RequestAuth())
+	noDatabaseAuthenticatedEndpoints := noDatabaseEndpoints.Group("", middleware.RequireAuth())
+	authenticatedEndpoints := endpoints.Group("", middleware.RequireAuth())
+	administratorEndpoints := authenticatedEndpoints.Group("", middleware.RequireAdmin())
 
 	// /api/sources/*
 	sourcesEndpoints := authenticatedEndpoints.Group("/sources")
@@ -73,10 +75,11 @@ func run(api *util.Api) {
 	userSettingsEndpoints := authenticatedEndpoints.Group("/settings/user")
 	userSettingsEndpoints.GET("", handlers.GetUserSettings)
 
-	// TODO: adminEndpoints := endpoints.Group("", middleware.Admin())
+	globalSettingsEndpoints := administratorEndpoints.Group("/settings/global")
+	globalSettingsEndpoints.GET("", handlers.GetGlobalSettings)
 
 	// /api/* the rest
-	authenticatedEndpoints.POST("/url", handlers.CheckUrl) // TODO: technically this does not need a database transaction
+	noDatabaseAuthenticatedEndpoints.POST("/url", handlers.CheckUrl)
 
 	// Run the server
 	router.Run(fmt.Sprintf(":%d", api.CommonConfig.Env.API_PORT))

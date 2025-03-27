@@ -219,7 +219,7 @@ func parseSource(c *gin.Context, sourceName string, sourceAuth types.AuthMethod,
 			var contentToSave bytes.Buffer
 			contentToValidate := io.TeeReader(file, &contentToSave)
 
-			fileParseErr := files.IsValidIcalFile(contentToValidate, q)
+			fileParseErr := files.IsValidIcalFile(contentToValidate)
 			if fileParseErr != nil {
 				return nil, fileParseErr
 			}

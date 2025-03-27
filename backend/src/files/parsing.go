@@ -3,13 +3,12 @@ package files
 import (
 	"io"
 	"luna-backend/errors"
-	"luna-backend/types"
 	"net/http"
 
 	"github.com/emersion/go-ical"
 )
 
-func IsValidIcalFile(content io.Reader, q types.DatabaseQueries) *errors.ErrorTrace {
+func IsValidIcalFile(content io.Reader) *errors.ErrorTrace {
 	decoder := ical.NewDecoder(content)
 
 	_, err := decoder.Decode()
