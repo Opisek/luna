@@ -7,6 +7,7 @@ import (
 
 	"luna-backend/api/internal/util"
 	"luna-backend/auth"
+	"luna-backend/constants"
 	"luna-backend/errors"
 	"luna-backend/files"
 	"luna-backend/protocols/caldav"
@@ -96,9 +97,9 @@ func parseAuthMethod(c *gin.Context) (types.AuthMethod, *errors.ErrorTrace) {
 
 	authType := c.PostForm("auth_type")
 	switch authType {
-	case types.AuthNone:
+	case constants.AuthNone:
 		sourceAuth = auth.NewNoAuth()
-	case types.AuthBasic:
+	case constants.AuthBasic:
 		username := c.PostForm("auth_username")
 		password := c.PostForm("auth_password")
 		if username == "" || password == "" {
@@ -107,7 +108,7 @@ func parseAuthMethod(c *gin.Context) (types.AuthMethod, *errors.ErrorTrace) {
 		}
 
 		sourceAuth = auth.NewBasicAuth(username, password)
-	case types.AuthBearer:
+	case constants.AuthBearer:
 		token := c.PostForm("auth_token")
 		if token == "" {
 			return nil, errors.New().Status(http.StatusBadRequest).
@@ -131,7 +132,7 @@ func parseSource(c *gin.Context, sourceName string, sourceAuth types.AuthMethod,
 
 	sourceType := c.PostForm("type")
 	switch sourceType {
-	case types.SourceCaldav:
+	case constants.SourceCaldav:
 		rawUrl := c.PostForm("url")
 		if rawUrl == "" {
 			return nil, errors.New().Status(http.StatusBadRequest).
@@ -149,7 +150,7 @@ func parseSource(c *gin.Context, sourceName string, sourceAuth types.AuthMethod,
 		}
 
 		source = caldav.NewCaldavSource(sourceName, sourceUrl, sourceAuth)
-	case types.SourceIcal:
+	case constants.SourceIcal:
 		locationType := c.PostForm("location")
 		if locationType == "" {
 			return nil, errors.New().Status(http.StatusBadRequest).
@@ -175,7 +176,7 @@ func parseSource(c *gin.Context, sourceName string, sourceAuth types.AuthMethod,
 			}
 			source = ical.NewRemoteIcalSource(sourceName, sourceUrl, sourceAuth)
 		case "local":
-			if sourceAuth.GetType() != types.AuthNone {
+			if sourceAuth.GetType() != constants.AuthNone {
 				return nil, errors.New().Status(http.StatusBadRequest).
 					Append(errors.LvlPlain, "Local iCal sources do not support authentication")
 			}
@@ -192,7 +193,7 @@ func parseSource(c *gin.Context, sourceName string, sourceAuth types.AuthMethod,
 			}
 			source = ical.NewLocalIcalSource(sourceName, sourcePath)
 		case "database":
-			if sourceAuth.GetType() != types.AuthNone {
+			if sourceAuth.GetType() != constants.AuthNone {
 				return nil, errors.New().Status(http.StatusBadRequest).
 					Append(errors.LvlPlain, "Database iCal sources do not support authentication")
 			}
@@ -322,8 +323,8 @@ func PatchSource(c *gin.Context) {
 		}
 		newSourceSettings = newSource.GetSettings()
 	}
-	if source.GetType() == types.SourceIcal {
-		if newType == types.SourceIcal {
+	if source.GetType() == constants.SourceIcal {
+		if newType == constants.SourceIcal {
 			err = source.Cleanup(u.Tx.Queries())
 		}
 		if err != nil {

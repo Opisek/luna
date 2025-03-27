@@ -1,14 +1,14 @@
 package versions
 
 import (
-	"luna-backend/common"
 	"luna-backend/db/internal/migrations/internal/registry"
-	"luna-backend/db/internal/migrations/types"
+	migrationTypes "luna-backend/db/internal/migrations/types"
 	"luna-backend/errors"
+	"luna-backend/types"
 )
 
 func init() {
-	registry.RegisterMigration(common.Ver(0, 1, 0), func(q *types.MigrationQueries) *errors.ErrorTrace {
+	registry.RegisterMigration(types.Ver(0, 1, 0), func(q *migrationTypes.MigrationQueries) *errors.ErrorTrace {
 		// Support for UUID and encryption
 		_, err := q.Tx.Exec(
 			q.Context,

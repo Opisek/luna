@@ -1,8 +1,8 @@
-package settings
+package config
 
 import (
 	"fmt"
-	"luna-backend/parsing"
+	"luna-backend/common"
 )
 
 // Whether the debug mode is enabled, which for example displays IDs in the UI
@@ -18,10 +18,10 @@ func (entry *DebugMode) Default() {
 	entry.Enabled = false
 }
 func (entry *DebugMode) MarshalJSON() ([]byte, error) {
-	return parsing.MarshalBool(entry.Enabled), nil
+	return common.MarshalBool(entry.Enabled), nil
 }
 func (entry *DebugMode) UnmarshalJSON(data []byte) (err error) {
-	entry.Enabled, err = parsing.UnmarshalBool(data)
+	entry.Enabled, err = common.UnmarshalBool(data)
 	return err
 }
 
@@ -38,10 +38,10 @@ func (entry *DisplayWeekNumbers) Default() {
 	entry.Enabled = false
 }
 func (entry *DisplayWeekNumbers) MarshalJSON() ([]byte, error) {
-	return parsing.MarshalBool(entry.Enabled), nil
+	return common.MarshalBool(entry.Enabled), nil
 }
 func (entry *DisplayWeekNumbers) UnmarshalJSON(data []byte) (err error) {
-	entry.Enabled, err = parsing.UnmarshalBool(data)
+	entry.Enabled, err = common.UnmarshalBool(data)
 	return err
 }
 
@@ -58,10 +58,10 @@ func (entry *FirstDayOfWeek) Default() {
 	entry.Day = 1
 }
 func (entry *FirstDayOfWeek) MarshalJSON() ([]byte, error) {
-	return parsing.MarshalInt(entry.Day), nil
+	return common.MarshalInt(entry.Day), nil
 }
 func (entry *FirstDayOfWeek) UnmarshalJSON(data []byte) error {
-	day, err := parsing.UnmarshalInt(data)
+	day, err := common.UnmarshalInt(data)
 	if err != nil {
 		return fmt.Errorf("could not parse day of the week: %v", err)
 	}
@@ -85,10 +85,10 @@ func (entry *ThemeLight) Default() {
 	entry.Theme = "luna-light"
 }
 func (entry *ThemeLight) MarshalJSON() ([]byte, error) {
-	return parsing.MarshalString(entry.Theme), nil
+	return common.MarshalString(entry.Theme), nil
 }
 func (entry *ThemeLight) UnmarshalJSON(data []byte) (err error) {
-	entry.Theme, err = parsing.UnmarshalString(data)
+	entry.Theme, err = common.UnmarshalString(data)
 	return err
 }
 
@@ -105,10 +105,10 @@ func (entry *ThemeDark) Default() {
 	entry.Theme = "luna-dark"
 }
 func (entry *ThemeDark) MarshalJSON() ([]byte, error) {
-	return parsing.MarshalString(entry.Theme), nil
+	return common.MarshalString(entry.Theme), nil
 }
 func (entry *ThemeDark) UnmarshalJSON(data []byte) (err error) {
-	entry.Theme, err = parsing.UnmarshalString(data)
+	entry.Theme, err = common.UnmarshalString(data)
 	return err
 }
 
@@ -125,10 +125,10 @@ func (entry *FontText) Default() {
 	entry.Font = "Atkinson Hyperlegible Next"
 }
 func (entry *FontText) MarshalJSON() ([]byte, error) {
-	return parsing.MarshalString(entry.Font), nil
+	return common.MarshalString(entry.Font), nil
 }
 func (entry *FontText) UnmarshalJSON(data []byte) (err error) {
-	entry.Font, err = parsing.UnmarshalString(data)
+	entry.Font, err = common.UnmarshalString(data)
 	return err
 }
 
@@ -145,9 +145,9 @@ func (entry *FontTime) Default() {
 	entry.Font = "Atkinson Hyperlegible Mono"
 }
 func (entry *FontTime) MarshalJSON() ([]byte, error) {
-	return parsing.MarshalString(entry.Font), nil
+	return common.MarshalString(entry.Font), nil
 }
 func (entry *FontTime) UnmarshalJSON(data []byte) (err error) {
-	entry.Font, err = parsing.UnmarshalString(data)
+	entry.Font, err = common.UnmarshalString(data)
 	return err
 }

@@ -5,7 +5,7 @@ import (
 	middleware "luna-backend/api/internal"
 	"luna-backend/api/internal/handlers"
 	"luna-backend/api/internal/util"
-	"luna-backend/common"
+	"luna-backend/config"
 	"luna-backend/db"
 	"time"
 
@@ -13,7 +13,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func NewApi(db *db.Database, commonConfig *common.CommonConfig, logger *logrus.Entry) *util.Api {
+func NewApi(db *db.Database, commonConfig *config.CommonConfig, logger *logrus.Entry) *util.Api {
 	return util.NewApi(db, commonConfig, logger, run)
 }
 

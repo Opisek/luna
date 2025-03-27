@@ -2,23 +2,23 @@ package queries
 
 import (
 	"fmt"
+	"luna-backend/config"
 	"luna-backend/errors"
 	"luna-backend/types"
-	"luna-backend/types/settings"
 	"net/http"
 	"strconv"
 	"strings"
 )
 
 func (q *Queries) InitializeUserSettings(userId types.ID) *errors.ErrorTrace {
-	settings := []settings.SettingsEntry{
-		&settings.DebugMode{},
-		&settings.DisplayWeekNumbers{},
-		&settings.FirstDayOfWeek{},
-		&settings.ThemeLight{},
-		&settings.ThemeDark{},
-		&settings.FontText{},
-		&settings.FontTime{},
+	settings := []config.SettingsEntry{
+		&config.DebugMode{},
+		&config.DisplayWeekNumbers{},
+		&config.FirstDayOfWeek{},
+		&config.ThemeLight{},
+		&config.ThemeDark{},
+		&config.FontText{},
+		&config.FontTime{},
 	}
 
 	valuesString := strings.Builder{}

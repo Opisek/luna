@@ -1,7 +1,7 @@
 package util
 
 import (
-	"luna-backend/common"
+	"luna-backend/config"
 	"luna-backend/db"
 
 	"github.com/sirupsen/logrus"
@@ -9,12 +9,12 @@ import (
 
 type Api struct {
 	Db           *db.Database
-	CommonConfig *common.CommonConfig
+	CommonConfig *config.CommonConfig
 	Logger       *logrus.Entry
 	run          func(*Api)
 }
 
-func NewApi(db *db.Database, commonConfig *common.CommonConfig, logger *logrus.Entry, run func(*Api)) *Api {
+func NewApi(db *db.Database, commonConfig *config.CommonConfig, logger *logrus.Entry, run func(*Api)) *Api {
 	return &Api{
 		Db:           db,
 		CommonConfig: commonConfig,

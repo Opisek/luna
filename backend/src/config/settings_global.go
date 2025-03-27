@@ -1,8 +1,8 @@
-package settings
+package config
 
 import (
 	"fmt"
-	"luna-backend/parsing"
+	"luna-backend/common"
 )
 
 // Whether any user can register without an explicit invitation
@@ -18,10 +18,10 @@ func (entry *RegistrationEnabled) Default() {
 	entry.Enabled = false
 }
 func (entry *RegistrationEnabled) MarshalJSON() ([]byte, error) {
-	return parsing.MarshalBool(entry.Enabled), nil
+	return common.MarshalBool(entry.Enabled), nil
 }
 func (entry *RegistrationEnabled) UnmarshalJSON(data []byte) (err error) {
-	entry.Enabled, err = parsing.UnmarshalBool(data)
+	entry.Enabled, err = common.UnmarshalBool(data)
 	return err
 }
 
@@ -38,10 +38,10 @@ func (entry *LoggingVerbosity) Default() {
 	entry.Verbosity = 2
 }
 func (entry *LoggingVerbosity) MarshalJSON() ([]byte, error) {
-	return parsing.MarshalInt(entry.Verbosity), nil
+	return common.MarshalInt(entry.Verbosity), nil
 }
 func (entry *LoggingVerbosity) UnmarshalJSON(data []byte) error {
-	verbosity, err := parsing.UnmarshalInt(data)
+	verbosity, err := common.UnmarshalInt(data)
 	if err != nil {
 		return fmt.Errorf("could not parse verbosity level: %v", err)
 	}
@@ -65,9 +65,9 @@ func (entry *UseCdnFonts) Default() {
 	entry.UseCdn = false
 }
 func (entry *UseCdnFonts) MarshalJSON() ([]byte, error) {
-	return parsing.MarshalBool(entry.UseCdn), nil
+	return common.MarshalBool(entry.UseCdn), nil
 }
 func (entry *UseCdnFonts) UnmarshalJSON(data []byte) (err error) {
-	entry.UseCdn, err = parsing.UnmarshalBool(data)
+	entry.UseCdn, err = common.UnmarshalBool(data)
 	return err
 }

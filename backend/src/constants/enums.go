@@ -1,4 +1,4 @@
-package types
+package constants
 
 const (
 	SourceUnknown = "unknown"

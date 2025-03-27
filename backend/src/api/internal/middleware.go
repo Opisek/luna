@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"luna-backend/api/internal/util"
 	"luna-backend/auth"
-	"luna-backend/common"
+	"luna-backend/config"
 	"luna-backend/db"
 	"luna-backend/errors"
 	"net/http"
@@ -15,7 +15,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func RequestSetup(timeout time.Duration, database *db.Database, withTransaction bool, config *common.CommonConfig, logger *logrus.Entry) gin.HandlerFunc {
+func RequestSetup(timeout time.Duration, database *db.Database, withTransaction bool, config *config.CommonConfig, logger *logrus.Entry) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		responseStatus := http.StatusOK
 		var responseRaw []byte
@@ -50,7 +50,7 @@ func RequestSetup(timeout time.Duration, database *db.Database, withTransaction 
 
 			if responseErr != nil {
 				logger.Error(responseErr.Serialize(errors.LvlDebug))
-				c.AbortWithStatusJSON(responseErr.GetStatus(), &gin.H{"error": responseErr.Serialize(config.DetailLevel)})
+				c.AbortWithStatusJSON(responseErr.GetStatus(), &gin.H{"error": responseErr.Serialize(config.LoggingVerbosity())})
 				return
 			}
 
@@ -67,7 +67,7 @@ func RequestSetup(timeout time.Duration, database *db.Database, withTransaction 
 				warnStrs := make([]string, len(responseWarns))
 				for i, warn := range responseWarns {
 					logger.Warn(warn.Serialize(errors.LvlDebug))
-					warnStrs[i] = warn.Serialize(config.DetailLevel)
+					warnStrs[i] = warn.Serialize(config.LoggingVerbosity())
 				}
 
 				(*responseMsg)["warnings"] = warnStrs

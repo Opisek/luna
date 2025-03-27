@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"luna-backend/auth"
+	"luna-backend/constants"
 	"luna-backend/errors"
 	"luna-backend/files"
 	"luna-backend/types"
@@ -60,7 +61,7 @@ func (settings *IcalSourceSettings) GetBytes() []byte {
 }
 
 func (source *IcalSource) GetType() string {
-	return types.SourceIcal
+	return constants.SourceIcal
 }
 
 func (source *IcalSource) GetId() types.ID {

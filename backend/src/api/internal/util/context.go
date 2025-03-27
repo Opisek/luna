@@ -3,7 +3,7 @@ package util
 import (
 	"context"
 	"fmt"
-	"luna-backend/common"
+	"luna-backend/config"
 	"luna-backend/db"
 	"luna-backend/errors"
 	"luna-backend/types"
@@ -15,7 +15,7 @@ import (
 )
 
 type HandlerUtility struct {
-	Config       *common.CommonConfig
+	Config       *config.CommonConfig
 	Logger       *logrus.Entry
 	Tx           *db.Transaction
 	Context      context.Context

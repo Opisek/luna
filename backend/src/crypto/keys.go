@@ -4,7 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
-	"luna-backend/common"
+	"luna-backend/config"
 	"luna-backend/errors"
 	"net/http"
 	"os"
@@ -12,7 +12,7 @@ import (
 	"golang.org/x/crypto/hkdf"
 )
 
-func GenerateSymmetricKey(commonConfig *common.CommonConfig, name string) ([]byte, *errors.ErrorTrace) {
+func GenerateSymmetricKey(commonConfig *config.CommonConfig, name string) ([]byte, *errors.ErrorTrace) {
 	secret, tr := GenerateRandomBytes(64)
 	if tr != nil {
 		return nil, tr.
@@ -37,7 +37,7 @@ func GenerateSymmetricKey(commonConfig *common.CommonConfig, name string) ([]byt
 	return secret, nil
 }
 
-func GetSymmetricKey(commonConfig *common.CommonConfig, name string) ([]byte, *errors.ErrorTrace) {
+func GetSymmetricKey(commonConfig *config.CommonConfig, name string) ([]byte, *errors.ErrorTrace) {
 	fileName := "%s/%s.key"
 	path := fmt.Sprintf(fileName, commonConfig.Env.GetKeysPath(), name)
 

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"luna-backend/common"
+	"luna-backend/config"
 	"luna-backend/db/internal/parsing"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -15,13 +15,13 @@ import (
 type Database struct {
 	pool *pgxpool.Pool
 
-	commonConfig     *common.CommonConfig
+	commonConfig     *config.CommonConfig
 	primitivesParser parsing.PrimitivesParser
 
 	logger *logrus.Entry
 }
 
-func NewDatabase(host string, port uint16, username, password, database string, commonConfig *common.CommonConfig, primitivesParser parsing.PrimitivesParser, logger *logrus.Entry) *Database {
+func NewDatabase(host string, port uint16, username, password, database string, commonConfig *config.CommonConfig, primitivesParser parsing.PrimitivesParser, logger *logrus.Entry) *Database {
 	url := fmt.Sprintf("postgres://%s:%s@%s:%d/%s", username, password, host, port, database)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)

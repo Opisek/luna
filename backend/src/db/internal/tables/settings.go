@@ -2,8 +2,8 @@ package tables
 
 import (
 	"fmt"
+	"luna-backend/config"
 	"luna-backend/errors"
-	"luna-backend/types/settings"
 	"net/http"
 	"strconv"
 	"strings"
@@ -47,10 +47,10 @@ func (q *Tables) InitializeGlobalSettingsTable() error {
 // migrations, it has to be part of the Tables struct.
 // TODO: might refactor that later
 func (q *Tables) InitializeGlobalSettings() *errors.ErrorTrace {
-	settings := []settings.SettingsEntry{
-		&settings.RegistrationEnabled{},
-		&settings.LoggingVerbosity{},
-		&settings.UseCdnFonts{},
+	settings := []config.SettingsEntry{
+		&config.RegistrationEnabled{},
+		&config.LoggingVerbosity{},
+		&config.UseCdnFonts{},
 	}
 
 	for _, setting := range settings {

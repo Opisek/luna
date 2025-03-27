@@ -3,7 +3,7 @@ package files
 import (
 	"bytes"
 	"io"
-	"luna-backend/common"
+	"luna-backend/constants"
 	"luna-backend/crypto"
 	"luna-backend/errors"
 	"luna-backend/net"
@@ -87,12 +87,12 @@ func (file *RemoteFile) GetContent(q types.DatabaseQueries) (io.Reader, *errors.
 	if reader != nil {
 		deltaTime := curTime.Sub(*file.date)
 
-		if deltaTime >= common.LifetimeCacheSoft {
+		if deltaTime >= constants.LifetimeCacheSoft {
 			reader, tr = file.fetchContentFromRemote(q)
 
 			if tr == nil {
 				file.date = &curTime
-			} else if deltaTime >= common.LifetimeCacheHard {
+			} else if deltaTime >= constants.LifetimeCacheHard {
 				return nil, tr
 			}
 		}

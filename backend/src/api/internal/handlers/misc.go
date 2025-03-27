@@ -3,6 +3,7 @@ package handlers
 import (
 	"luna-backend/api/internal/util"
 	"luna-backend/auth"
+	"luna-backend/constants"
 	"luna-backend/errors"
 	"luna-backend/files"
 	"luna-backend/types"
@@ -68,7 +69,7 @@ func CheckUrl(c *gin.Context) {
 	var noAuthResponse *gin.H
 	var noAuthTr *errors.ErrorTrace
 
-	if authMethod.GetType() != types.AuthNone {
+	if authMethod.GetType() != constants.AuthNone {
 		noAuthResponse, noAuthTr = checkUrlWithAuth(u, url, auth.NewNoAuth())
 	} else {
 		noAuthResponse, noAuthTr = authResponse, authTr
@@ -99,13 +100,13 @@ func checkUrlWithAuth(u *util.HandlerUtility, url *types.Url, auth types.AuthMet
 	}
 	if isIcal {
 		return &gin.H{
-			"type": types.SourceIcal,
+			"type": constants.SourceIcal,
 			"auth": auth.GetType(),
 		}, nil
 	}
 	if statusCode == http.StatusUnauthorized {
 		return &gin.H{
-			"type":   types.SourceUnknown,
+			"type":   constants.SourceUnknown,
 			"status": statusCode,
 			"auth":   auth.GetType(),
 		}, nil
@@ -118,7 +119,7 @@ func checkUrlWithAuth(u *util.HandlerUtility, url *types.Url, auth types.AuthMet
 		}
 		if statusCode != http.StatusOK {
 			return &gin.H{
-				"type":   types.SourceUnknown,
+				"type":   constants.SourceUnknown,
 				"status": statusCode,
 				"auth":   auth.GetType(),
 			}, nil
@@ -128,14 +129,14 @@ func checkUrlWithAuth(u *util.HandlerUtility, url *types.Url, auth types.AuthMet
 	}
 	if isCaldav {
 		return &gin.H{
-			"type": types.SourceCaldav,
+			"type": constants.SourceCaldav,
 			"url":  principalUrl,
 			"auth": auth.GetType(),
 		}, nil
 	}
 
 	return &gin.H{
-		"type":   types.SourceUnknown,
+		"type":   constants.SourceUnknown,
 		"status": statusCode,
 		"auth":   auth.GetType(),
 	}, nil

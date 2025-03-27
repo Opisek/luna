@@ -3,6 +3,7 @@ package auth
 import (
 	"encoding/json"
 	"fmt"
+	"luna-backend/constants"
 	"luna-backend/types"
 	"net/http"
 )
@@ -16,7 +17,7 @@ func (auth NoAuth) Do(req *http.Request) (*http.Response, error) {
 }
 
 func (auth NoAuth) GetType() string {
-	return types.AuthNone
+	return constants.AuthNone
 }
 func (auth NoAuth) String() (string, error) {
 	return "", nil
@@ -39,7 +40,7 @@ func (auth BasicAuth) Do(req *http.Request) (*http.Response, error) {
 }
 
 func (auth BasicAuth) GetType() string {
-	return types.AuthBasic
+	return constants.AuthBasic
 }
 func (auth BasicAuth) String() (string, error) {
 	bytes, err := json.Marshal(auth)
@@ -65,7 +66,7 @@ func (auth BearerAuth) Do(req *http.Request) (*http.Response, error) {
 }
 
 func (auth BearerAuth) GetType() string {
-	return types.AuthBearer
+	return constants.AuthBearer
 }
 func (auth BearerAuth) String() (string, error) {
 	bytes, err := json.Marshal(auth)

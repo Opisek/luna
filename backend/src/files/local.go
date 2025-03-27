@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"luna-backend/common"
+	"luna-backend/constants"
 	"luna-backend/crypto"
 	"luna-backend/errors"
 	"luna-backend/types"
@@ -85,12 +85,12 @@ func (file *LocalFile) GetContent(q types.DatabaseQueries) (io.Reader, *errors.E
 
 	deltaTime := curTime.Sub(*file.date)
 
-	if deltaTime >= common.LifetimeCacheSoft {
+	if deltaTime >= constants.LifetimeCacheSoft {
 		reader, tr = file.fetchContentFromFilesystem()
 
 		if tr == nil {
 			file.date = &curTime
-		} else if deltaTime >= common.LifetimeCacheHard {
+		} else if deltaTime >= constants.LifetimeCacheHard {
 			return nil, tr
 		}
 	}

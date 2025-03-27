@@ -2,6 +2,7 @@ package caldav
 
 import (
 	"encoding/json"
+	"luna-backend/constants"
 	"luna-backend/errors"
 	"luna-backend/types"
 	"net/http"
@@ -30,7 +31,7 @@ func (settings *CaldavSourceSettings) GetBytes() []byte {
 }
 
 func (source *CaldavSource) GetType() string {
-	return types.SourceCaldav
+	return constants.SourceCaldav
 }
 
 func (source *CaldavSource) GetId() types.ID {

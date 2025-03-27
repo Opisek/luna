@@ -3,6 +3,7 @@ package parsing
 import (
 	"encoding/json"
 	"luna-backend/auth"
+	"luna-backend/constants"
 	"luna-backend/errors"
 	"luna-backend/protocols/caldav"
 	"luna-backend/protocols/ical"
@@ -21,9 +22,9 @@ func (PrimitivesParser) ParseSource(entry *types.SourceDatabaseEntry) (types.Sou
 
 	var authMethod types.AuthMethod
 	switch entry.AuthType {
-	case types.AuthNone:
+	case constants.AuthNone:
 		authMethod = auth.NewNoAuth()
-	case types.AuthBasic:
+	case constants.AuthBasic:
 		basicAuth := &auth.BasicAuth{}
 		err = json.Unmarshal([]byte(entry.Auth), basicAuth)
 		if err != nil {
@@ -33,7 +34,7 @@ func (PrimitivesParser) ParseSource(entry *types.SourceDatabaseEntry) (types.Sou
 				Append(errors.LvlWordy, "Could not unmarshal authentication")
 		}
 		authMethod = basicAuth
-	case types.AuthBearer:
+	case constants.AuthBearer:
 		bearerAuth := &auth.BearerAuth{}
 		err = json.Unmarshal([]byte(entry.Auth), bearerAuth)
 		if err != nil {
@@ -49,7 +50,7 @@ func (PrimitivesParser) ParseSource(entry *types.SourceDatabaseEntry) (types.Sou
 	}
 
 	switch entry.Type {
-	case types.SourceCaldav:
+	case constants.SourceCaldav:
 		settings := &caldav.CaldavSourceSettings{}
 		err = json.Unmarshal(entry.Settings, settings)
 		if err != nil {
@@ -65,7 +66,7 @@ func (PrimitivesParser) ParseSource(entry *types.SourceDatabaseEntry) (types.Sou
 			authMethod,
 		)
 		return caldavSource, nil
-	case types.SourceIcal:
+	case constants.SourceIcal:
 		settings := &ical.IcalSourceSettings{}
 		err = json.Unmarshal(entry.Settings, settings)
 		if err != nil {
@@ -92,7 +93,7 @@ func (PrimitivesParser) ParseSource(entry *types.SourceDatabaseEntry) (types.Sou
 
 func (PrimitivesParser) ParseCalendarSettings(sourceType string, settings []byte) (types.CalendarSettings, *errors.ErrorTrace) {
 	switch sourceType {
-	case types.SourceCaldav:
+	case constants.SourceCaldav:
 		parsedSettings := &caldav.CaldavCalendarSettings{}
 		err := json.Unmarshal(settings, parsedSettings)
 		if err != nil {
@@ -102,7 +103,7 @@ func (PrimitivesParser) ParseCalendarSettings(sourceType string, settings []byte
 				Append(errors.LvlWordy, "Could not unmarshal settings")
 		}
 		return parsedSettings, nil
-	case types.SourceIcal:
+	case constants.SourceIcal:
 		parsedSettings := &ical.IcalCalendarSettings{}
 		err := json.Unmarshal(settings, parsedSettings)
 		if err != nil {
@@ -120,7 +121,7 @@ func (PrimitivesParser) ParseCalendarSettings(sourceType string, settings []byte
 
 func (PrimitivesParser) ParseEventSettings(sourceType string, settings []byte) (types.EventSettings, *errors.ErrorTrace) {
 	switch sourceType {
-	case types.SourceCaldav:
+	case constants.SourceCaldav:
 		parsedSettings := &caldav.CaldavEventSettings{}
 		err := json.Unmarshal(settings, parsedSettings)
 		if err != nil {
@@ -130,7 +131,7 @@ func (PrimitivesParser) ParseEventSettings(sourceType string, settings []byte) (
 				Append(errors.LvlWordy, "Could not unmarshal settings")
 		}
 		return parsedSettings, nil
-	case types.SourceIcal:
+	case constants.SourceIcal:
 		parsedSettings := &ical.IcalEventSettings{}
 		err := json.Unmarshal(settings, parsedSettings)
 		if err != nil {

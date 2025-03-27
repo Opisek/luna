@@ -1,4 +1,4 @@
-package common
+package config
 
 import (
 	"fmt"
@@ -71,4 +71,12 @@ func ParseEnvironmental(logger *logrus.Entry) (Environmental, error) {
 	}
 
 	return env, nil
+}
+
+func (env *Environmental) getBasePath() string {
+	return env.DATA_PATH
+}
+
+func (env *Environmental) GetKeysPath() string {
+	return env.getBasePath() + "/keys"
 }

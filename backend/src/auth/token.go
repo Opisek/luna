@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"luna-backend/common"
+	"luna-backend/config"
 	"luna-backend/crypto"
 	"luna-backend/errors"
 	"luna-backend/types"
@@ -15,7 +15,7 @@ type JsonWebToken struct {
 	jwt.RegisteredClaims
 }
 
-func NewToken(commonConfig *common.CommonConfig, userId types.ID) (string, *errors.ErrorTrace) {
+func NewToken(commonConfig *config.CommonConfig, userId types.ID) (string, *errors.ErrorTrace) {
 	token := JsonWebToken{UserId: userId}
 
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS512, token)
@@ -35,13 +35,13 @@ func NewToken(commonConfig *common.CommonConfig, userId types.ID) (string, *erro
 	return signedToken, nil
 }
 
-func ParseToken(commonConfig *common.CommonConfig, tokenString string) (*JsonWebToken, *errors.ErrorTrace) {
+func ParseToken(commonConfig *config.CommonConfig, tokenString string) (*JsonWebToken, *errors.ErrorTrace) {
 	token := &JsonWebToken{}
 
 	_, err := jwt.ParseWithClaims(tokenString, token, func(token *jwt.Token) (interface{}, error) {
 		key, tr := crypto.GetSymmetricKey(commonConfig, "token")
 		if tr != nil {
-			return nil, tr.SerializeError(commonConfig.DetailLevel)
+			return nil, tr.SerializeError(commonConfig.LoggingVerbosity())
 		}
 		return key, nil
 	})
