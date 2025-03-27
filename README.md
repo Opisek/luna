@@ -236,6 +236,12 @@ The description field is optional. Either the end date or the event duration is 
 - **Purpose**: Sets a specific key-value pair in the global settings
 - **Note**: This endpoint is only accessibly by an administrator
 
+#### Delete Global Setting
+- **Path**: ``/api/settings/global/<KEY>``
+- **Method**: ``DELETE``
+- **Body**: Empty
+- **Purpose**: Reverts a global setting to its default value
+
 #### Get User Settings
 - **Path**: ``/api/settings/user``
 - **Method**: ``GET``
@@ -253,6 +259,12 @@ The description field is optional. Either the end date or the event duration is 
 - **Method**: ``PATCH``
 - **Body**: `value` as serialized JSON object
 - **Purpose**: Sets a specific key-value pair in the requesting user's settings
+
+#### Delete User Setting
+- **Path**: ``/api/settings/user/<KEY>``
+- **Method**: ``DELETE``
+- **Body**: Empty
+- **Purpose**: Reverts the requesting user's setting to its default value
 
 ### Miscellaneous
 #### URL Type Check
