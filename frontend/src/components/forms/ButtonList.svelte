@@ -58,6 +58,7 @@
   .selected {
     background-color: colors.$backgroundAccent;
     color: colors.$foregroundAccent;
+    --barFocusIndicatorColor: #{colors.$barFocusIndicatorColorAlt};
   }
 
   .option :global(*) {
