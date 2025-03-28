@@ -128,7 +128,13 @@ func createTask(name string, task func(*db.Transaction, *logrus.Entry) *errors.E
 			return
 		}
 
-		tx.Commit(cronLogger)
+		err = tx.Commit(cronLogger)
+		if err != nil {
+			cronLogger.Errorf("failure committing transaction for cron task %v: %v", name, err)
+			return
+		}
+
+		cronLogger.Infof("successfully finished cron task %v", name)
 	}
 }
 
