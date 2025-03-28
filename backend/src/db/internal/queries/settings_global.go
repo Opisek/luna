@@ -77,3 +77,45 @@ func (q *Queries) GetRawGlobalSetting(key string) ([]byte, *errors.ErrorTrace) {
 
 	return setting, nil
 }
+
+func (q *Queries) GetGlobalSetting(key string) (config.SettingsEntry, *errors.ErrorTrace) {
+	setting, tr := config.GetMatchingGlobalSettingStruct(key)
+	if tr != nil {
+		return nil, tr
+	}
+
+	raw, tr := q.GetRawGlobalSetting(key)
+	if tr != nil {
+		return nil, tr
+	}
+
+	err := setting.UnmarshalJSON(raw)
+	if err != nil {
+		return nil, errors.New().Status(http.StatusBadRequest).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlPlain, "Invalid setting value")
+	}
+	return setting, nil
+}
+
+func (q *Queries) UpdateGlobalSetting(setting config.SettingsEntry) *errors.ErrorTrace {
+	_, err := q.Tx.Exec(
+		q.Context,
+		`
+			UPDATE global_settings
+			SET value = $1
+			WHERE key = $2;
+		`,
+		setting,
+		setting.Key(),
+	)
+
+	if err != nil {
+		return errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlWordy, "Could not update global setting").
+			AltStr(errors.LvlPlain, "Database error")
+	}
+
+	return nil
+}

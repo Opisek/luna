@@ -13,3 +13,16 @@ type GlobalSettings struct {
 	LoggingVerbosity    LoggingVerbosity    `json:"logging_verbosity"`
 	UseCdnFonts         UseCdnFonts         `json:"use_cdn_fonts"`
 }
+
+func (s *GlobalSettings) UpdateSetting(entry SettingsEntry) {
+	switch entry.Key() {
+	case KeyRegistrationEnabled:
+		s.RegistrationEnabled.Enabled = entry.(*RegistrationEnabled).Enabled
+	case KeyLoggingVerbosity:
+		s.LoggingVerbosity.Verbosity = entry.(*LoggingVerbosity).Verbosity
+	case KeyUseCdnFonts:
+		s.UseCdnFonts.UseCdn = entry.(*UseCdnFonts).UseCdn
+	default:
+		// TODO: warning
+	}
+}

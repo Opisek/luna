@@ -124,3 +124,47 @@ func (q *Queries) GetRawUserSetting(userId types.ID, key string) ([]byte, *error
 
 	return setting, nil
 }
+
+func (q *Queries) GetUserSetting(userId types.ID, key string) (config.SettingsEntry, *errors.ErrorTrace) {
+	setting, tr := config.GetMatchingUserSettingStruct(key)
+	if tr != nil {
+		return nil, tr
+	}
+
+	raw, tr := q.GetRawUserSetting(userId, key)
+	if tr != nil {
+		return nil, tr
+	}
+
+	err := setting.UnmarshalJSON(raw)
+	if err != nil {
+		return nil, errors.New().Status(http.StatusBadRequest).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlPlain, "Invalid setting value")
+	}
+
+	return setting, nil
+}
+
+func (q *Queries) UpdateUserSetting(userId types.ID, setting config.SettingsEntry) *errors.ErrorTrace {
+	_, err := q.Tx.Exec(
+		q.Context,
+		`
+		UPDATE user_settings
+		SET value = $1
+		WHERE userid = $2 AND key = $3;
+		`,
+		setting,
+		userId.UUID(),
+		setting.Key(),
+	)
+
+	if err != nil {
+		return errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlWordy, "Could not update user's setting").
+			AltStr(errors.LvlPlain, "Database error")
+	}
+
+	return nil
+}

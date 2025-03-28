@@ -75,10 +75,14 @@ func run(api *util.Api) {
 	userSettingsEndpoints := authenticatedEndpoints.Group("/settings/user")
 	userSettingsEndpoints.GET("", handlers.GetUserSettings)
 	userSettingsEndpoints.GET("/:settingKey", handlers.GetUserSetting)
+	userSettingsEndpoints.PATCH("/:settingKey", handlers.PatchUserSetting)
+	userSettingsEndpoints.DELETE("/:settingKey", handlers.ResetUserSetting)
 
 	globalSettingsEndpoints := administratorEndpoints.Group("/settings/global")
 	globalSettingsEndpoints.GET("", handlers.GetGlobalSettings)
 	globalSettingsEndpoints.GET("/:settingKey", handlers.GetGlobalSetting)
+	globalSettingsEndpoints.PATCH("/:settingKey", handlers.PatchGlobalSetting)
+	globalSettingsEndpoints.DELETE("/:settingKey", handlers.ResetGlobalSetting)
 
 	// /api/* the rest
 	noDatabaseAuthenticatedEndpoints.POST("/url", handlers.CheckUrl)
