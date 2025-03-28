@@ -29,6 +29,7 @@
   import { isInRange } from "../lib/common/date";
   import { compareEventsByStartDate } from "../lib/common/comparators";
   import SourceWizardModal from "../components/modals/SourceWizardModal.svelte";
+  import SettingsModal from "../components/modals/SettingsModal.svelte";
 
   /* Reachability */
   let reachability: Reachability = $state(Reachability.Database);
@@ -271,6 +272,8 @@
   let showDateModal: (date: Date, events: (EventModel | null)[]) => any = $state(NoOp);
   const showDateModalInternal = (date: Date, events: (EventModel | null)[]) => { return showDateModal(date, events); };
   setContext("showDateModal", showDateModalInternal);
+
+  let showSettingsModal: () => any = $state(NoOp);
 </script>
 
 <style lang="scss">
@@ -354,6 +357,7 @@
 <CalendarModal bind:showCreateModal={showNewCalendarModal} bind:showModal={showCalendarModal}/>
 <EventModal bind:showCreateModal={showNewEventModal} bind:showModal={showEventModal}/>
 <DayViewModal bind:showModal={showDateModal}/>
+<SettingsModal bind:showModal={showSettingsModal}/>
 
 <aside>
   <Title>Luna</Title>
@@ -365,7 +369,7 @@
   </div>
 
   <Horizontal position="center">
-    <IconButton href="/settings">
+    <IconButton click={showSettingsModal}>
       <Settings/>
     </IconButton>
     <IconButton click={showSourceWizardModal}>

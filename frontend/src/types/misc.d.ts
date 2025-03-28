@@ -1,6 +1,7 @@
 type Option = {
   value: string;
   name: string;
+  icon?: any;
 }
 
 type FocusIndicatorSettings = {

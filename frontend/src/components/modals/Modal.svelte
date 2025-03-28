@@ -87,8 +87,6 @@
 
   dialog {
     border: 0;
-    max-width: 50vw;
-    min-width: 30em;
     border-radius: dimensions.$borderRadius;
     padding: 0;
   }
@@ -108,10 +106,12 @@
     padding: dimensions.$gapLarge dimensions.$gapLarger dimensions.$gapLarger dimensions.$gapLarger;
     border-radius: dimensions.$borderRadius;
     display: flex;
-    width: 100%;
     flex-direction: column;
     flex-wrap: nowrap;
     gap: dimensions.$gapMiddle;
+    box-sizing: content-box;
+    max-width: 50vw;
+    min-width: 30em;
   }
 </style>
 

@@ -24,7 +24,6 @@
     options
   }: Props = $props();
 
-  // TODO: redo this
   let selected: Option = $derived(options.filter(option => option.value === value)[0] || options[0] || EmptyOption);
 </script>
 
