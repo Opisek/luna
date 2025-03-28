@@ -60,6 +60,10 @@
     color: colors.$foregroundAccent;
   }
 
+  .option :global(*) {
+    pointer-events: none;
+  }
+
   p {
     margin: 0;
     padding: 0;
