@@ -24,7 +24,9 @@
   let showPopup: () => any = $state(NoOp);
 
   function previousMonth() {
-    date = new Date(date.getFullYear(), date.getMonth() - 1, date.getDate());
+    const newDate = new Date(date.getFullYear(), date.getMonth() - 1, date.getDate());
+    if (newDate.getMonth() === date.getMonth()) newDate.setDate(0);
+    date = newDate;
     onSelect(date);
   }
 
