@@ -1,5 +1,5 @@
-type Option = {
-  value: string;
+type Option<T> = {
+  value: T;
   name: string;
   icon?: any;
 }

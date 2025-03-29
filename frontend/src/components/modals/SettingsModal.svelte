@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Code, GlobeLock, LockKeyhole, LogOut, Monitor, User, UserSearch } from "lucide-svelte";
+  import { Code, LockKeyhole, LogOut, Monitor, User } from "lucide-svelte";
   import { NoOp } from "../../lib/client/placeholders";
   import ButtonList from "../forms/ButtonList.svelte";
   import Modal from "./Modal.svelte";
@@ -11,7 +11,10 @@
   import FileUpload from "../forms/FileUpload.svelte";
   import Horizontal from "../layout/Horizontal.svelte";
   import SelectInput from "../forms/SelectInput.svelte";
-  import { GlobalSettingKeys, UserSettingKeys } from "../../types/settings";
+  import { GlobalSettingKeys, UserSettingKeys, type GlobalSettings, type UserData, type UserSettings } from "../../types/settings";
+  import { getSettings } from "../../lib/client/setttings";
+  import Loader from "../decoration/Loader.svelte";
+  import { getSha256Hash } from "../../lib/common/crypto";
 
   interface Props {
     showModal?: () => any;
@@ -24,6 +27,12 @@
   }: Props = $props();
 
   showModal = () => {
+    const settings = getSettings();
+    settings.fetchSettings().then(() => {
+      userData = settings.getUserData();
+      userSettings = settings.getUserSettings();
+      globalSettings = settings.getGlobalSettings();
+    });
     showModalInternal();
   };
 
@@ -34,7 +43,7 @@
   let showModalInternal = $state(NoOp);
   let hideModalInternal = $state(NoOp);
 
-  const categories: Option[][] = [
+  const categories: Option<string>[][] = [
     [
       { name: "Account", value: "account", icon: User },
       { name: "Appearance", value: "appearance", icon: Monitor },
@@ -49,21 +58,48 @@
   ]
   let selectedCategory = $state("account");
 
+  // Setting Data Structures
+  let userData: UserData | null = $state(null);
+  let userSettings: UserSettings | null = $state(null);
+  let globalSettings: GlobalSettings | null = $state(null);
+
   // Account Settings
   let profilePictureType = $state("gravatar");
   let profilePictureFiles: FileList | null = $state(null);
+  let profilePictureRemoteUrl = $state("");
+  let profilePictureGravatarUrl = $derived.by(() => {
+    if (!userData) return "";
+    const email = userData.email || "";
+    const trimmedLowercaseEmail = email.trim().toLowerCase();
+    const emailHash = getSha256Hash(trimmedLowercaseEmail);
+    return `https://www.gravatar.com/avatar/${emailHash}`;
+  })
+
+  let effectiveProfilePictureSource = $derived.by(() => {
+    if (profilePictureType === "gravatar") return profilePictureGravatarUrl;
+    else if (profilePictureType === "database") return "TODO"
+    else if (profilePictureType === "remote") return profilePictureRemoteUrl;
+    else return "";
+  });
+
+  $effect(() => {
+    const loadedProfilePictureUrl = userData?.profile_picture || "";
+
+    if (/https:\/\/www\.gravatar\.com\/avatar\/[a-z0-9]{32}/.test(loadedProfilePictureUrl)) {
+      profilePictureType = "gravatar";
+    } else if (1 != 1) { // TODO: need current domain to compare
+      profilePictureType = "database";
+    } else {
+      profilePictureType = "remote";
+      profilePictureRemoteUrl = loadedProfilePictureUrl;
+    }
+  });
 
   // Appearance Settings
-  let firstDayOfWeek = $state("1");
-  let lightTheme = $state("luna-light");
-  let darkTheme = $state("luna-dark");
-  let fontText = $state("Atkinson Hyperlegible Next");
-  let fontTime = $state("Atkinson Hyperlegible Mono");
 
   // Developer Settings
 
   // Admin Settings
-  let loggingVerbosity = $state("plain");
 </script>
 
 <style lang="scss">
@@ -105,166 +141,186 @@
       options={categories} 
     />
     <main>
-      {#if selectedCategory === "account"}
-        <TextInput
-          name="username"
-          placeholder="Username"
-          validation={isValidUsername}
-        />
-        <TextInput
-          name="email"
-          placeholder="Email"
-          validation={isValidEmail}
-        />
-        <TextInput
-          name="password"
-          placeholder="New Password"
-          password={true}
-          validation={isValidPassword}
-        />
-        <ToggleInput
-          name="searchable" 
-          description="Allow other users to find me"
-        />
-        <Horizontal position="justify">
-          <div class="pfpButtons">
-            <SelectButtons
-              name="pfp_type"
-              placeholder="Profile Picture"
-              bind:value={profilePictureType}
-              options={[
-                { name: "Gravatar", value: "gravatar" },
-                { name: "Upload File", value: "database" },
-                { name: "Internet Link", value: "remote" }
-              ]}
-            />
-          </div>
-          <Image
-            src="https://opisek.net/_app/immutable/assets/portrait.2-Ny2279.webp/"
-            alt="Profile Picture"
-          />
-        </Horizontal>
-        {#if profilePictureType === "database"}
-          <FileUpload
-            name="pfp_file"
-            placeholder="Profile Picture File"
-            files={profilePictureFiles}
-          />
-        {:else if profilePictureType === "remote"}
+      {#if userData != null && userSettings != null && globalSettings != null}
+        {#if selectedCategory === "account"}
           <TextInput
-            name="pfp_link"
-            placeholder="Profile Picture Link"
+            name="username"
+            placeholder="Username"
+            bind:value={userData.username}
+            validation={isValidUsername}
+          />
+          <TextInput
+            name="email"
+            placeholder="Email"
+            bind:value={userData.email}
+            validation={isValidEmail}
+          />
+          <TextInput
+            name="password"
+            placeholder="New Password"
+            password={true}
+            validation={isValidPassword}
+          />
+          <ToggleInput
+            name="searchable" 
+            description="Allow other users to find me"
+            bind:value={userData.searchable}
+          />
+          <Horizontal position="justify">
+            <div class="pfpButtons">
+              <SelectButtons
+                name="pfp_type"
+                placeholder="Profile Picture"
+                bind:value={profilePictureType}
+                options={[
+                  { name: "Gravatar", value: "gravatar" },
+                  { name: "Upload File", value: "database" },
+                  { name: "Internet Link", value: "remote" }
+                ]}
+              />
+            </div>
+            <Image
+              src={effectiveProfilePictureSource}
+              alt="Profile Picture"
+            />
+          </Horizontal>
+          {#if profilePictureType === "database"}
+            <FileUpload
+              name="pfp_file"
+              placeholder="Profile Picture File"
+              files={profilePictureFiles}
+            />
+          {:else if profilePictureType === "remote"}
+            <TextInput
+              name="pfp_link"
+              placeholder="Profile Picture Link"
+              bind:value={profilePictureRemoteUrl}
+            />
+          {/if}
+        {:else if selectedCategory === "appearance"}
+          <ToggleInput
+            name={UserSettingKeys.DisplayAllDayEventsFilled}
+            description="Fill All-Day Events"
+            bind:value={userSettings[UserSettingKeys.DisplayAllDayEventsFilled]}
+          />
+          <ToggleInput
+            name={UserSettingKeys.DisplayNonAllDayEventsFilled}
+            description="Fill Non-All-Day Events"
+            bind:value={userSettings[UserSettingKeys.DisplayNonAllDayEventsFilled]}
+          />
+          <ToggleInput
+            name={UserSettingKeys.DisplaySmallCalendar}
+            description="Display Small Calendar"
+            bind:value={userSettings[UserSettingKeys.DisplaySmallCalendar]}
+          />
+          <ToggleInput
+            name={UserSettingKeys.DynamicCalendarRows}
+            description="Dynamic Calendar Row Count"
+            bind:value={userSettings[UserSettingKeys.DynamicCalendarRows]}
+          />
+          <ToggleInput
+            name={UserSettingKeys.DynamicSmallCalendarRows}
+            description="Dynamic Small Calendar Row Count"
+            bind:value={userSettings[UserSettingKeys.DynamicSmallCalendarRows]}
+          />
+          <ToggleInput
+            name={UserSettingKeys.DisplayWeekNumbers}
+            description="Display Week Numbers"
+            bind:value={userSettings[UserSettingKeys.DisplayWeekNumbers]}
+          />
+          <SelectInput
+            name={UserSettingKeys.FirstDayOfWeek}
+            placeholder="First Day of Week"
+            bind:value={userSettings[UserSettingKeys.FirstDayOfWeek]}
+            options={[
+              { name: "Monday", value: 1 },
+              { name: "Tuesday", value: 2 },
+              { name: "Wednesday", value: 3 },
+              { name: "Thursday", value: 4 },
+              { name: "Friday", value: 5 },
+              { name: "Saturday", value: 6 },
+              { name: "Sunday", value: 0 }
+            ]}
+          />
+          <ToggleInput
+            name={UserSettingKeys.DisplayRoundedCorners}
+            description="Rounded Corners"
+            bind:value={userSettings[UserSettingKeys.DisplayRoundedCorners]}
+          />
+          <SelectInput
+            name={UserSettingKeys.ThemeLight}
+            placeholder="Light Theme"
+            bind:value={userSettings[UserSettingKeys.ThemeLight]}
+            options={[
+              { name: "Luna Light", value: "luna-light" },
+              { name: "Solarized Light", value: "solarized-light" },
+              { name: "Nord Light", value: "nord-light" },
+              { name: "High Constrast Light", value: "high-contrast-light" },
+            ]}
+          />
+          <SelectInput
+            name={UserSettingKeys.ThemeDark}
+            placeholder="Dark Theme"
+            bind:value={userSettings[UserSettingKeys.ThemeDark]}
+            options={[
+              { name: "Luna Dark", value: "luna-dark" },
+              { name: "Solarized Dark", value: "solarized-dark" },
+              { name: "Nord Dark", value: "Nord Dark" },
+              { name: "High Contrast Light", value: "high-contrast-light" },
+            ]}
+          />
+          <SelectInput
+            name={UserSettingKeys.FontText}
+            placeholder="Text Font"
+            bind:value={userSettings[UserSettingKeys.FontText]}
+            options={[
+              { name: "Atkinson Hyperlegible Next", value: "Atkinson Hyperlegible Next" },
+              { name: "Atkinson Hyperlegible Mono", value: "Atkinson Hyperlegible Mono" }
+            ]}
+          />
+          <SelectInput
+            name={UserSettingKeys.FontTime}
+            placeholder="Time Font"
+            bind:value={userSettings[UserSettingKeys.FontTime]}
+            options={[
+              { name: "Atkinson Hyperlegible Next", value: "Atkinson Hyperlegible Next" },
+              { name: "Atkinson Hyperlegible Mono", value: "Atkinson Hyperlegible Mono" }
+            ]}
+          />
+          TODO: scaling slider
+        {:else if selectedCategory === "developer"}
+          <ToggleInput
+            name={UserSettingKeys.DebugMode}
+            description="Display IDs"
+            bind:value={userSettings[UserSettingKeys.DebugMode]}
+          />
+        {:else if selectedCategory === "admin"}
+          <ToggleInput
+            name={GlobalSettingKeys.RegistrationEnabled}
+            description="Enable Registration"
+            bind:value={globalSettings[GlobalSettingKeys.RegistrationEnabled]}
+          />
+          <ToggleInput
+            name={GlobalSettingKeys.UseCdnFonts}
+            description="Use Google's CDN for fonts"
+            bind:value={globalSettings[GlobalSettingKeys.UseCdnFonts]}
+          />
+          <SelectButtons
+            name={GlobalSettingKeys.LoggingVerbosity}
+            bind:value={globalSettings[GlobalSettingKeys.LoggingVerbosity]}
+            placeholder="Error Messages Verbosity"
+            options={[
+              { name: "Broad", value: 3 },
+              { name: "Plain", value: 2 },
+              { name: "Wordy", value: 1 },
+              { name: "Debug", value: 0 }
+            ]}
           />
         {/if}
-      {:else if selectedCategory === "appearance"}
-        <ToggleInput
-          name={UserSettingKeys.DisplayAllDayEventsFilled}
-          description="Fill All-Day Events"
-        />
-        <ToggleInput
-          name={UserSettingKeys.DisplayAllDayEventsFilled}
-          description="Fill Non-All-Day Events"
-        />
-        <ToggleInput
-          name={UserSettingKeys.DisplaySmallCalendar}
-          description="Display Small Calendar"
-        />
-        <ToggleInput
-          name={UserSettingKeys.DynamicCalendarRows}
-          description="Dynamic Calendar Row Count"
-        />
-        <ToggleInput
-          name={UserSettingKeys.DynamicSmallCalendarRows}
-          description="Dynamic Small Calendar Row Count"
-        />
-        <ToggleInput
-          name={UserSettingKeys.DisplayWeekNumbers}
-          description="Display Week Numbers"
-        />
-        <SelectInput
-          name={UserSettingKeys.FirstDayOfWeek}
-          placeholder="First Day of Week"
-          bind:value={firstDayOfWeek}
-          options={[
-            { name: "Monday", value: "1" },
-            { name: "Tuesday", value: "2" },
-            { name: "Wednesday", value: "3" },
-            { name: "Thursday", value: "4" },
-            { name: "Friday", value: "5" },
-            { name: "Saturday", value: "6" },
-            { name: "Sunday", value: "0" }
-          ]}
-        />
-        <ToggleInput
-          name={UserSettingKeys.DisplayRoundedCorners}
-          description="Rounded Corners"
-        />
-        <SelectInput
-          name={UserSettingKeys.ThemeLight}
-          placeholder="Light Theme"
-          bind:value={lightTheme}
-          options={[
-            { name: "Luna Light", value: "luna-light" },
-            { name: "Solarized Light", value: "solarized-light" },
-            { name: "Nord Light", value: "nord-light" },
-            { name: "High Constrast Light", value: "high-contrast-light" },
-          ]}
-        />
-        <SelectInput
-          name={UserSettingKeys.ThemeDark}
-          placeholder="Dark Theme"
-          bind:value={darkTheme}
-          options={[
-            { name: "Luna Dark", value: "luna-dark" },
-            { name: "Solarized Dark", value: "solarized-dark" },
-            { name: "Nord Dark", value: "Nord Dark" },
-            { name: "High Contrast Light", value: "high-contrast-light" },
-          ]}
-        />
-        <SelectInput
-          name={UserSettingKeys.FontText}
-          placeholder="Text Font"
-          bind:value={fontText}
-          options={[
-            { name: "Atkinson Hyperlegible Next", value: "Atkinson Hyperlegible Next" },
-            { name: "Atkinson Hyperlegible Mono", value: "Atkinson Hyperlegible Mono" }
-          ]}
-        />
-        <SelectInput
-          name={UserSettingKeys.FontTime}
-          placeholder="Time Font"
-          bind:value={fontTime}
-          options={[
-            { name: "Atkinson Hyperlegible Next", value: "Atkinson Hyperlegible Next" },
-            { name: "Atkinson Hyperlegible Mono", value: "Atkinson Hyperlegible Mono" }
-          ]}
-        />
-        TODO: scaling slider
-      {:else if selectedCategory === "developer"}
-        <ToggleInput
-          name={UserSettingKeys.DebugMode}
-          description="Display IDs"
-        />
-      {:else if selectedCategory === "admin"}
-        <ToggleInput
-          name={GlobalSettingKeys.RegistrationEnabled}
-          description="Enable Registration"
-        />
-        <ToggleInput
-          name={GlobalSettingKeys.UseCdnFonts}
-          description="Use Google's CDN for fonts"
-        />
-        <SelectButtons
-          name={GlobalSettingKeys.LoggingVerbosity}
-          bind:value={loggingVerbosity}
-          placeholder="Error Messages Verbosity"
-          options={[
-            { name: "Broad", value: "broad" },
-            { name: "Plain", value: "plain" },
-            { name: "Wordy", value: "wordy" },
-            { name: "Debug", value: "debug" }
-          ]}
-        />
+      {:else}
+        <Horizontal position="center">
+          <Loader/>
+        </Horizontal>
       {/if}
     </main>
   </div>

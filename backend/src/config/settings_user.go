@@ -315,7 +315,7 @@ func (entry *DynamicCalendarRows) UnmarshalJSON(data []byte) (err error) {
 }
 
 // Whether to use dynamic small calendar rows
-// Should default to true
+// Should default to false
 type DynamicSmallCalendarRows struct {
 	Enabled bool `json:"value"`
 }
@@ -324,7 +324,7 @@ func (entry *DynamicSmallCalendarRows) Key() string {
 	return KeyDynamicSmallCalendarRows
 }
 func (entry *DynamicSmallCalendarRows) Default() {
-	entry.Enabled = true
+	entry.Enabled = false
 }
 func (entry *DynamicSmallCalendarRows) MarshalJSON() ([]byte, error) {
 	return common.MarshalBool(entry.Enabled), nil

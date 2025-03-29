@@ -1,17 +1,17 @@
-<script lang="ts">
+<script lang="ts" generics="T">
   import Label from "./Label.svelte";
 
   import { addRipple, focusIndicator } from "$lib/client/decoration";
   import { EmptyOption } from "../../lib/client/placeholders";
 
   interface Props {
-    value: string;
+    value: T | null;
     name: string;
     placeholder?: string;
     label?: boolean;
     editable?: boolean;
     compact?: boolean;
-    options: Option[];
+    options: Option<T>[];
   }
 
   let {
@@ -24,7 +24,7 @@
     options
   }: Props = $props();
 
-  let selected: Option = $derived(options.filter(option => option.value === value)[0] || options[0] || EmptyOption);
+  let selected: Option<T> = $derived(options.filter(option => option.value === value)[0] || options[0] || EmptyOption);
 </script>
 
 <style lang="scss">

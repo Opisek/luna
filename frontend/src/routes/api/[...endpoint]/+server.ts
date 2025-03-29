@@ -25,6 +25,10 @@ const proxy = (async ({ params, request, url }: RequestEvent) => {
     return new error(500, { message: errorMessage } );
   });
 
+  if (!response.ok) {
+    return response;
+  }
+
   // CORS check
   const corsHeader = response.headers.get("Access-Control-Allow-Origin")
   if (corsHeader === null || corsHeader === undefined || corsHeader === "" || corsHeader === "*" || corsHeader !== process.env.PUBLIC_URL) {
