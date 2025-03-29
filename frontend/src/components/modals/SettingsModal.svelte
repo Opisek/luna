@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Code, LockKeyhole, LogOut, Monitor, User } from "lucide-svelte";
+  import { Code, GlobeLock, LockKeyhole, LogOut, Monitor, User, UserSearch } from "lucide-svelte";
   import { NoOp } from "../../lib/client/placeholders";
   import ButtonList from "../forms/ButtonList.svelte";
   import Modal from "./Modal.svelte";
@@ -157,31 +157,31 @@
         {/if}
       {:else if selectedCategory === "appearance"}
         <ToggleInput
-          name="display_allday_events_filled" 
+          name={UserSettingKeys.DisplayAllDayEventsFilled}
           description="Fill All-Day Events"
         />
         <ToggleInput
-          name="display_nonallday_events_filled" 
+          name={UserSettingKeys.DisplayAllDayEventsFilled}
           description="Fill Non-All-Day Events"
         />
         <ToggleInput
-          name="display_small_calendar" 
+          name={UserSettingKeys.DisplaySmallCalendar}
           description="Display Small Calendar"
         />
         <ToggleInput
-          name="dynamic_calendar_rows" 
+          name={UserSettingKeys.DynamicCalendarRows}
           description="Dynamic Calendar Row Count"
         />
         <ToggleInput
-          name="dynamic_small_calendar_rows" 
+          name={UserSettingKeys.DynamicSmallCalendarRows}
           description="Dynamic Small Calendar Row Count"
         />
         <ToggleInput
-          name="display_week_numbers" 
+          name={UserSettingKeys.DisplayWeekNumbers}
           description="Display Week Numbers"
         />
         <SelectInput
-          name="first_day_of_week"
+          name={UserSettingKeys.FirstDayOfWeek}
           placeholder="First Day of Week"
           bind:value={firstDayOfWeek}
           options={[
@@ -195,11 +195,11 @@
           ]}
         />
         <ToggleInput
-          name="display_rounded_corners" 
+          name={UserSettingKeys.DisplayRoundedCorners}
           description="Rounded Corners"
         />
         <SelectInput
-          name="light_theme"
+          name={UserSettingKeys.ThemeLight}
           placeholder="Light Theme"
           bind:value={lightTheme}
           options={[
@@ -210,7 +210,7 @@
           ]}
         />
         <SelectInput
-          name="dark_theme"
+          name={UserSettingKeys.ThemeDark}
           placeholder="Dark Theme"
           bind:value={darkTheme}
           options={[
@@ -221,7 +221,7 @@
           ]}
         />
         <SelectInput
-          name="font_text"
+          name={UserSettingKeys.FontText}
           placeholder="Text Font"
           bind:value={fontText}
           options={[
@@ -230,7 +230,7 @@
           ]}
         />
         <SelectInput
-          name="font_time"
+          name={UserSettingKeys.FontTime}
           placeholder="Time Font"
           bind:value={fontTime}
           options={[
@@ -241,20 +241,20 @@
         TODO: scaling slider
       {:else if selectedCategory === "developer"}
         <ToggleInput
-          name="debug_mode" 
+          name={UserSettingKeys.DebugMode}
           description="Display IDs"
         />
       {:else if selectedCategory === "admin"}
         <ToggleInput
-          name="registraton_enabled" 
+          name={GlobalSettingKeys.RegistrationEnabled}
           description="Enable Registration"
         />
         <ToggleInput
-          name="use_cdn_fonts" 
+          name={GlobalSettingKeys.UseCdnFonts}
           description="Use Google's CDN for fonts"
         />
         <SelectButtons
-          name="logging_verbosity"
+          name={GlobalSettingKeys.LoggingVerbosity}
           bind:value={loggingVerbosity}
           placeholder="Error Messages Verbosity"
           options={[

@@ -20,3 +20,35 @@ enum GlobalSettingKeys {
   LoggingVerbosity = "logging_verbosity",
   UseCdnFonts = "use_cdn_fonts",
 }
+
+type UserSettings = {
+  [UserSettingKeys.DebugMode]: boolean;
+  [UserSettingKeys.DisplayWeekNumbers]: boolean;
+  [UserSettingKeys.FirstDayOfWeek]: number;
+  [UserSettingKeys.ThemeLight]: string;
+  [UserSettingKeys.ThemeDark]: string;
+  [UserSettingKeys.FontText]: string;
+  [UserSettingKeys.FontTime]: string;
+  [UserSettingKeys.DisplayAllDayEventsFilled]: boolean;
+  [UserSettingKeys.DisplayNonAllDayEventsFilled]: boolean;
+  [UserSettingKeys.DisplaySmallCalendar]: boolean;
+  [UserSettingKeys.DynamicCalendarRows]: boolean;
+  [UserSettingKeys.DynamicSmallCalendarRows]: boolean;
+  [UserSettingKeys.DisplayRoundedCorners]: boolean;
+  [UserSettingKeys.UiScaling]: number;
+};
+
+type GlobalSettings = {
+  [GlobalSettingKeys.RegistrationEnabled]: boolean;
+  [GlobalSettingKeys.LoggingVerbosity]: number;
+  [GlobalSettingKeys.UseCdnFonts]: boolean;
+};
+
+type UserData = {
+  id: string;
+  username: string;
+  email: string;
+  searchable: boolean;
+  profile_picture: string;
+  admin: boolean;
+}
