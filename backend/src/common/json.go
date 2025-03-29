@@ -49,3 +49,14 @@ func UnmarshalString(data []byte) (string, error) {
 	}
 	return string(data[1 : len(data)-1]), nil
 }
+
+func MarshalFloat(value float64) []byte {
+	return []byte(strconv.FormatFloat(value, 'f', -1, 64))
+}
+func UnmarshalFloat(data []byte) (float64, error) {
+	value, err := strconv.ParseFloat(string(data), 64)
+	if err != nil {
+		return 0, fmt.Errorf("could not parse float: %v", err)
+	}
+	return value, nil
+}

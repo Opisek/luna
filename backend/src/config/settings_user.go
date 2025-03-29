@@ -21,6 +21,7 @@ const (
 	KeyDynamicCalendarRows          = "dynamic_calendar_rows"
 	KeyDynamicSmallCalendarRows     = "dynamic_small_calendar_rows"
 	KeyDisplayRoundedCorners        = "display_rounded_corners"
+	KeyUiScaling                    = "ui_scaling"
 )
 
 func GetMatchingUserSettingStruct(key string) (SettingsEntry, *errors.ErrorTrace) {
@@ -51,6 +52,8 @@ func GetMatchingUserSettingStruct(key string) (SettingsEntry, *errors.ErrorTrace
 		return &DynamicSmallCalendarRows{}, nil
 	case KeyDisplayRoundedCorners:
 		return &DisplayRoundedCorners{}, nil
+	case KeyUiScaling:
+		return &UiScaling{}, nil
 	default:
 		return nil, errors.New().Status(http.StatusBadRequest).
 			Append(errors.LvlWordy, "Invalid setting key").
@@ -349,4 +352,30 @@ func (entry *DisplayRoundedCorners) MarshalJSON() ([]byte, error) {
 func (entry *DisplayRoundedCorners) UnmarshalJSON(data []byte) (err error) {
 	entry.Enabled, err = common.UnmarshalBool(data)
 	return err
+}
+
+// The factor by which to scale the UI
+// Should default to 1.0
+type UiScaling struct {
+	Factor float64 `json:"value"`
+}
+
+func (entry *UiScaling) Key() string {
+	return KeyUiScaling
+}
+func (entry *UiScaling) Default() {
+	entry.Factor = 1.0
+}
+func (entry *UiScaling) MarshalJSON() ([]byte, error) {
+	return common.MarshalFloat(entry.Factor), nil
+}
+func (entry *UiScaling) UnmarshalJSON(data []byte) (err error) {
+	entry.Factor, err = common.UnmarshalFloat(data)
+	if err != nil {
+		return fmt.Errorf("could not parse scaling factor: %v", err)
+	}
+	if entry.Factor < 0.5 || entry.Factor > 2.0 {
+		return fmt.Errorf("invalid scaling factor: %f", entry.Factor)
+	}
+	return nil
 }

@@ -27,6 +27,7 @@ func (q *Queries) InitializeUserSettings(userId types.ID) *errors.ErrorTrace {
 		&config.DynamicCalendarRows{},
 		&config.DynamicSmallCalendarRows{},
 		&config.DisplayRoundedCorners{},
+		&config.UiScaling{},
 	}
 
 	valuesString := strings.Builder{}
