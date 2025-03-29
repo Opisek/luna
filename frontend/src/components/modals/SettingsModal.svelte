@@ -186,13 +186,13 @@
           placeholder="First Day of Week"
           bind:value={firstDayOfWeek}
           options={[
-            { name: "Monday", value: "monday" },
-            { name: "Tuesday", value: "tuesday" },
-            { name: "Wednesday", value: "wednesday" },
-            { name: "Thursday", value: "thursday" },
-            { name: "Friday", value: "friday" },
-            { name: "Saturday", value: "saturday" },
-            { name: "Sunday", value: "sunday" }
+            { name: "Monday", value: "1" },
+            { name: "Tuesday", value: "2" },
+            { name: "Wednesday", value: "3" },
+            { name: "Thursday", value: "4" },
+            { name: "Friday", value: "5" },
+            { name: "Saturday", value: "6" },
+            { name: "Sunday", value: "0" }
           ]}
         />
         <ToggleInput
