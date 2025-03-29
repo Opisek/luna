@@ -165,6 +165,10 @@
           description="Fill Non-All-Day Events"
         />
         <ToggleInput
+          name="display_small_calendar" 
+          description="Display Small Calendar"
+        />
+        <ToggleInput
           name="dynamic_calendar_rows" 
           description="Dynamic Calendar Row Count"
         />
