@@ -23,6 +23,7 @@
 </script>
 
 <style lang="scss">
+  @use "../../styles/colors.scss";
   @use "../../styles/dimensions.scss";
 
   div {
@@ -41,6 +42,7 @@
     cursor: pointer;
     width: max-content;
     user-select: none;
+    color: colors.$foregroundDim;
   }
 </style>
 

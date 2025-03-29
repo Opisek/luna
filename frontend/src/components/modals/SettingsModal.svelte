@@ -144,7 +144,10 @@
       {:else if selectedCategory === "developer"}
         Developer Settings
       {:else if selectedCategory === "admin"}
-        Administrative Settings
+        <ToggleInput
+          name="debug_mode" 
+          description="Display IDs"
+        />
       {/if}
     </main>
   </div>
