@@ -79,8 +79,9 @@ func run(api *util.Api) {
 	userSettingsEndpoints.DELETE("/:settingKey", handlers.ResetUserSetting)
 
 	globalSettingsEndpoints := administratorEndpoints.Group("/settings/global")
-	globalSettingsEndpoints.GET("", handlers.GetGlobalSettings)
-	globalSettingsEndpoints.GET("/:settingKey", handlers.GetGlobalSetting)
+	globalSettingsEndpointsPublic := authenticatedEndpoints.Group("/settings/global")
+	globalSettingsEndpointsPublic.GET("", handlers.GetGlobalSettings)
+	globalSettingsEndpointsPublic.GET("/:settingKey", handlers.GetGlobalSetting)
 	globalSettingsEndpoints.PATCH("/:settingKey", handlers.PatchGlobalSetting)
 	globalSettingsEndpoints.DELETE("/:settingKey", handlers.ResetGlobalSetting)
 
