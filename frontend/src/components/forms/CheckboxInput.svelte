@@ -40,6 +40,7 @@
   label {
     cursor: pointer;
     width: max-content;
+    user-select: none;
   }
 </style>
 
