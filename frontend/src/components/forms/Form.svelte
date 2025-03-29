@@ -38,7 +38,7 @@
     display: flex;
     flex-direction: column;
     flex-wrap: nowrap;
-    gap: dimensions.$gapLarge;
+    gap: dimensions.$gapMiddle;
     box-shadow: decorations.$boxShadow;
   }
 </style>
