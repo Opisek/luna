@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { ActionData } from './$types';
 
-  import CheckboxInput from '../../components/forms/CheckboxInput.svelte';
+  import ToggleInput from '../../components/forms/ToggleInput.svelte';
   import Form from '../../components/forms/Form.svelte';
   import Link from '../../components/forms/Link.svelte';
   import TextInput from '../../components/forms/TextInput.svelte';
@@ -75,7 +75,7 @@
       validation={isValidRepeatPassword(password)}
       bind:validity={passwordRepeatValidity}
     />
-    <CheckboxInput
+    <ToggleInput
       name="remember"
       description="Remember me"
     />

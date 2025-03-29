@@ -1,7 +1,5 @@
 <script lang="ts">
-  import { CheckIcon } from "lucide-svelte";
-
-  import { addRipple, focusIndicator } from "$lib/client/decoration";
+  import { focusIndicator } from "$lib/client/decoration";
 
   interface Props {
     value: boolean;
@@ -16,13 +14,12 @@
     name,
     enabled = true,
     onChange = () => {},
-    toggle = $bindable()
+    toggle = $bindable(),
   }: Props = $props();
 
   toggle = (e: MouseEvent | KeyboardEvent) => {
     value = !value;
     onChange(value);
-    if (e instanceof MouseEvent) addRipple(e, false);
     e.stopPropagation();
   }
 </script>
@@ -36,7 +33,7 @@
   button {
     all: unset;
 
-    width: text.$lineHeightParagraph;
+    width: 2 * text.$lineHeightParagraph;
     height: text.$lineHeightParagraph;
 
     position: relative;
@@ -47,15 +44,52 @@
 
     cursor: pointer;
 
-    border-radius: dimensions.$borderRadius;
-    background-color: colors.$backgroundSecondary;
+    border-radius: 0.5 * text.$lineHeightParagraph;
+    background-color: colors.$backgroundSecondaryActive;
     overflow: hidden;
   }
 
   button.check {
-    color: colors.$foregroundAccent;
+    --barFocusIndicatorColor: #{colors.$barFocusIndicatorColorAlt} !important;
+  }
+
+  button::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
     background-color: colors.$backgroundAccent;
-    --barFocusIndicatorColor: #{colors.$barFocusIndicatorColorAlt};
+    border-radius: 0.5 * text.$lineHeightParagraph;
+
+    transition: transform animations.$animationSpeed;
+
+    transform: scale(0);
+  }
+
+  button.check::after {
+    transform: none;
+  }
+
+  .handle {
+    height: calc(100% - dimensions.$gapSmaller);
+    aspect-ratio: 1/1;
+    border-radius: 50%;
+    background-color: colors.$backgroundPrimary;
+
+    left: dimensions.$gapSmaller;
+
+    position: absolute;
+
+    transition: transform animations.$animationSpeed animations.$cubic;
+
+    z-index: 2;
+  }
+
+  .handle.check {
+    transform: translateX(100%);
   }
 
   button.disabled {
@@ -74,15 +108,19 @@
   }
 </style>
 
+<!-- Components that use this toggle all implement for={name} -->
+<!-- svelte-ignore a11y_consider_explicit_label -->
 <button
   type="button"
-  class:check={value}
   class:disabled={!enabled}
+  class:check={value}
   onclick={toggle}
   use:focusIndicator
 >
-  {#if value}
-    <CheckIcon size={16}/>
-  {/if}
+  <div
+    class="handle"
+    class:check={value}
+  >
+  </div>
   <input type="hidden" name={name} value={value}>
 </button>

@@ -1,6 +1,5 @@
 <script lang="ts">
   import Button from "../interactive/Button.svelte";
-  import CheckboxInput from "../forms/CheckboxInput.svelte";
   import ColorInput from "../forms/ColorInput.svelte";
   import DateTimeInput from "../forms/DateTimeInput.svelte";
   import EditableModal from "./EditableModal.svelte";
@@ -12,6 +11,7 @@
   import { getRepository } from "$lib/client/repository";
   import { isSameDay } from "$lib/common/date";
   import { queueNotification } from "$lib/client/notifications";
+  import ToggleInput from "../forms/ToggleInput.svelte";
 
   interface Props {
     showCreateModal?: (date: Date) => Promise<EventModel>;
@@ -239,7 +239,7 @@
       <TextInput bind:value={event.desc} name="desc" placeholder="Description" multiline={true} editable={editMode} />
     {/if}
     {#if editMode}
-        <CheckboxInput bind:value={event.date.allDay} name="all_day" description="All Day"/>
+        <ToggleInput bind:value={event.date.allDay} name="all_day" description="All Day"/>
     {/if}
     <DateTimeInput bind:value={event.date.start} name="date_start" placeholder={showEndDate ? "Start" : "Date"} editable={editMode} allDay={event.date.allDay} onChange={changeStart}/>
     {#if showEndDate}

@@ -5,11 +5,10 @@
   import Modal from "./Modal.svelte";
   import TextInput from "../forms/TextInput.svelte";
   import { isValidEmail, isValidPassword, isValidUsername } from "../../lib/client/validation";
-  import CheckboxInput from "../forms/CheckboxInput.svelte";
+  import ToggleInput from "../forms/ToggleInput.svelte";
   import SelectButtons from "../forms/SelectButtons.svelte";
   import Image from "../layout/Image.svelte";
   import FileUpload from "../forms/FileUpload.svelte";
-  import Subtitle from "../layout/Subtitle.svelte";
   import Horizontal from "../layout/Horizontal.svelte";
 
   interface Props {
@@ -106,7 +105,7 @@
           password={true}
           validation={isValidPassword}
         />
-        <CheckboxInput
+        <ToggleInput
           name="searchable" 
           description="Allow other users to find me"
         />
