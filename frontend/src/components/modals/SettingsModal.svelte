@@ -10,6 +10,7 @@
   import Image from "../layout/Image.svelte";
   import FileUpload from "../forms/FileUpload.svelte";
   import Horizontal from "../layout/Horizontal.svelte";
+  import SelectInput from "../forms/SelectInput.svelte";
 
   interface Props {
     showModal?: () => any;
@@ -47,6 +48,18 @@
   // Account Settings
   let profilePictureType = $state("gravatar");
   let profilePictureFiles: FileList | null = $state(null);
+
+  // Appearance Settings
+  let firstDayOfWeek = $state("monday");
+  let lightTheme = $state("luna-light");
+  let darkTheme = $state("luna-dark");
+  let fontText = $state("Atkinson Hyperlegible Next");
+  let fontTime = $state("Atkinson Hyperlegible Mono");
+
+  // Developer Settings
+
+  // Admin Settings
+  let loggingVerbosity = $state("plain");
 </script>
 
 <style lang="scss">
@@ -140,13 +153,95 @@
           />
         {/if}
       {:else if selectedCategory === "appearance"}
-        Appearance Settings
+        <ToggleInput
+          name="display_allday_events_filled" 
+          description="Fill All-Day Events"
+        />
+        <ToggleInput
+          name="display_nonallday_events_filled" 
+          description="Fill Non-All-Day Events"
+        />
+        <ToggleInput
+          name="display_week_numbers" 
+          description="Display Week Numbers"
+        />
+        <SelectInput
+          name="first_day_of_week"
+          placeholder="First Day of Week"
+          bind:value={firstDayOfWeek}
+          options={[
+            { name: "Monday", value: "monday" },
+            { name: "Tuesday", value: "tuesday" },
+            { name: "Wednesday", value: "wednesday" },
+            { name: "Thursday", value: "thursday" },
+            { name: "Friday", value: "friday" },
+            { name: "Saturday", value: "saturday" },
+            { name: "Sunday", value: "sunday" }
+          ]}
+        />
+        <SelectInput
+          name="light_theme"
+          placeholder="Light Theme"
+          bind:value={lightTheme}
+          options={[
+            { name: "Luna Light", value: "luna-light" },
+            { name: "Solarized Light", value: "solarized-light" },
+            { name: "Nord Light", value: "Nord Light" }
+          ]}
+        />
+        <SelectInput
+          name="dark_theme"
+          placeholder="Dark Theme"
+          bind:value={darkTheme}
+          options={[
+            { name: "Luna Dark", value: "luna-dark" },
+            { name: "Solarized Dark", value: "solarized-dark" },
+            { name: "Nord Dark", value: "Nord Dark" }
+          ]}
+        />
+        <SelectInput
+          name="font_text"
+          placeholder="Text Font"
+          bind:value={fontText}
+          options={[
+            { name: "Atkinson Hyperlegible Next", value: "Atkinson Hyperlegible Next" },
+            { name: "Atkinson Hyperlegible Mono", value: "Atkinson Hyperlegible Mono" }
+          ]}
+        />
+        <SelectInput
+          name="font_time"
+          placeholder="Time Font"
+          bind:value={fontTime}
+          options={[
+            { name: "Atkinson Hyperlegible Next", value: "Atkinson Hyperlegible Next" },
+            { name: "Atkinson Hyperlegible Mono", value: "Atkinson Hyperlegible Mono" }
+          ]}
+        />
+        TODO: scaling slider
       {:else if selectedCategory === "developer"}
-        Developer Settings
-      {:else if selectedCategory === "admin"}
         <ToggleInput
           name="debug_mode" 
           description="Display IDs"
+        />
+      {:else if selectedCategory === "admin"}
+        <ToggleInput
+          name="registraton_enabled" 
+          description="Enable Registration"
+        />
+        <ToggleInput
+          name="use_cdn_fonts" 
+          description="Use Google's CDN for fonts"
+        />
+        <SelectButtons
+          name="logging_verbosity"
+          bind:value={loggingVerbosity}
+          placeholder="Error Messages Verbosity"
+          options={[
+            { name: "Broad", value: "broad" },
+            { name: "Plain", value: "plain" },
+            { name: "Wordy", value: "wordy" },
+            { name: "Debug", value: "debug" }
+          ]}
         />
       {/if}
     </main>
