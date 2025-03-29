@@ -42,6 +42,12 @@ func run(api *util.Api) {
 	authenticatedEndpoints := endpoints.Group("", middleware.RequireAuth())
 	administratorEndpoints := authenticatedEndpoints.Group("", middleware.RequireAdmin())
 
+	// /api/user
+	userEndpoints := authenticatedEndpoints.Group("/user")
+	userEndpoints.GET("", handlers.GetUserData)
+	userEndpoints.PATCH("", handlers.PatchUserData)
+	userEndpoints.DELETE("", handlers.DeleteUser)
+
 	// /api/sources/*
 	sourcesEndpoints := authenticatedEndpoints.Group("/sources")
 	sourcesEndpoints.GET("", handlers.GetSources)

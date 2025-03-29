@@ -87,6 +87,25 @@ Luna uses its own (UU)IDs for every resource accessed through it. Therefore, the
 - **Body**: Empty
 - **Purpose**: Determines whether the frontend, the backend, and the database are all functioning correctly.
 
+### User Data
+#### Get User Data
+- **Path**: ``/api/user``
+- **Method**: ``GET``
+- **Body**: Empty
+- **Purpose**: Returns the user's saved data, like username and email address.
+
+#### Patch User Data
+- **Path**: ``/api/user``
+- **Method**: ``PATCH``
+- **Body**: Depending on which the user wants to change: `username`, `new_password`, `email`, `profile_picture`, `searchable`. The old password `password` is required if any of `username`, `new_password`, or `email` are specified.
+- **Purpose**: Changes the user's data.
+
+#### Delete User
+- **Path**: ``/api/user`
+- **Method**: ``DELETE``
+- **Body**: `password`
+- **Purpose**: Deletes the user account.
+
 ### Sources
 #### Get Sources
 - **Path**: ``/api/sources``
