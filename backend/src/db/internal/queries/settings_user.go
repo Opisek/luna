@@ -21,6 +21,12 @@ func (q *Queries) InitializeUserSettings(userId types.ID) *errors.ErrorTrace {
 		&config.ThemeDark{},
 		&config.FontText{},
 		&config.FontTime{},
+		&config.DisplayAllDayEventsFilled{},
+		&config.DisplayNonAllDayEventsFilled{},
+		&config.DisplaySmallCalendar{},
+		&config.DynamicCalendarRows{},
+		&config.DynamicSmallCalendarRows{},
+		&config.DisplayRoundedCorners{},
 	}
 
 	valuesString := strings.Builder{}

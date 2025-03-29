@@ -8,13 +8,19 @@ import (
 )
 
 const (
-	KeyDebugMode          = "debug_mode"
-	KeyDisplayWeekNumbers = "display_week_numbers"
-	KeyFirstDayOfWeek     = "first_day_of_week"
-	KeyThemeLight         = "theme_light"
-	KeyThemeDark          = "theme_dark"
-	KeyFontText           = "font_text"
-	KeyFontTime           = "font_time"
+	KeyDebugMode                    = "debug_mode"
+	KeyDisplayWeekNumbers           = "display_week_numbers"
+	KeyFirstDayOfWeek               = "first_day_of_week"
+	KeyThemeLight                   = "theme_light"
+	KeyThemeDark                    = "theme_dark"
+	KeyFontText                     = "font_text"
+	KeyFontTime                     = "font_time"
+	KeyDisplayAllDayEventsFilled    = "display_all_day_events_filled"
+	KeyDisplayNonAllDayEventsFilled = "display_non_all_day_events_filled"
+	KeyDisplaySmallCalendar         = "display_small_calendar"
+	KeyDynamicCalendarRows          = "dynamic_calendar_rows"
+	KeyDynamicSmallCalendarRows     = "dynamic_small_calendar_rows"
+	KeyDisplayRoundedCorners        = "display_rounded_corners"
 )
 
 func GetMatchingUserSettingStruct(key string) (SettingsEntry, *errors.ErrorTrace) {
@@ -33,6 +39,18 @@ func GetMatchingUserSettingStruct(key string) (SettingsEntry, *errors.ErrorTrace
 		return &FontText{}, nil
 	case KeyFontTime:
 		return &FontTime{}, nil
+	case KeyDisplayAllDayEventsFilled:
+		return &DisplayAllDayEventsFilled{}, nil
+	case KeyDisplayNonAllDayEventsFilled:
+		return &DisplayNonAllDayEventsFilled{}, nil
+	case KeyDisplaySmallCalendar:
+		return &DisplaySmallCalendar{}, nil
+	case KeyDynamicCalendarRows:
+		return &DynamicCalendarRows{}, nil
+	case KeyDynamicSmallCalendarRows:
+		return &DynamicSmallCalendarRows{}, nil
+	case KeyDisplayRoundedCorners:
+		return &DisplayRoundedCorners{}, nil
 	default:
 		return nil, errors.New().Status(http.StatusBadRequest).
 			Append(errors.LvlWordy, "Invalid setting key").
@@ -210,5 +228,125 @@ func (entry *FontTime) MarshalJSON() ([]byte, error) {
 }
 func (entry *FontTime) UnmarshalJSON(data []byte) (err error) {
 	entry.Font, err = common.UnmarshalString(data)
+	return err
+}
+
+// Whether to display all day events filled-in with color
+// Should default to true
+type DisplayAllDayEventsFilled struct {
+	Enabled bool `json:"value"`
+}
+
+func (entry *DisplayAllDayEventsFilled) Key() string {
+	return KeyDisplayAllDayEventsFilled
+}
+func (entry *DisplayAllDayEventsFilled) Default() {
+	entry.Enabled = true
+}
+func (entry *DisplayAllDayEventsFilled) MarshalJSON() ([]byte, error) {
+	return common.MarshalBool(entry.Enabled), nil
+}
+func (entry *DisplayAllDayEventsFilled) UnmarshalJSON(data []byte) (err error) {
+	entry.Enabled, err = common.UnmarshalBool(data)
+	return err
+}
+
+// Whether to display non-all day events filled-in with color
+// Should default to false
+type DisplayNonAllDayEventsFilled struct {
+	Enabled bool `json:"value"`
+}
+
+func (entry *DisplayNonAllDayEventsFilled) Key() string {
+	return KeyDisplayNonAllDayEventsFilled
+}
+func (entry *DisplayNonAllDayEventsFilled) Default() {
+	entry.Enabled = false
+}
+func (entry *DisplayNonAllDayEventsFilled) MarshalJSON() ([]byte, error) {
+	return common.MarshalBool(entry.Enabled), nil
+}
+func (entry *DisplayNonAllDayEventsFilled) UnmarshalJSON(data []byte) (err error) {
+	entry.Enabled, err = common.UnmarshalBool(data)
+	return err
+}
+
+// Whether to display the small calendar
+// Should default to true
+type DisplaySmallCalendar struct {
+	Enabled bool `json:"value"`
+}
+
+func (entry *DisplaySmallCalendar) Key() string {
+	return KeyDisplaySmallCalendar
+}
+func (entry *DisplaySmallCalendar) Default() {
+	entry.Enabled = true
+}
+func (entry *DisplaySmallCalendar) MarshalJSON() ([]byte, error) {
+	return common.MarshalBool(entry.Enabled), nil
+}
+func (entry *DisplaySmallCalendar) UnmarshalJSON(data []byte) (err error) {
+	entry.Enabled, err = common.UnmarshalBool(data)
+	return err
+}
+
+// Whether to use dynamic calendar rows
+// Should default to true
+type DynamicCalendarRows struct {
+	Enabled bool `json:"value"`
+}
+
+func (entry *DynamicCalendarRows) Key() string {
+	return KeyDynamicCalendarRows
+}
+func (entry *DynamicCalendarRows) Default() {
+	entry.Enabled = true
+}
+func (entry *DynamicCalendarRows) MarshalJSON() ([]byte, error) {
+	return common.MarshalBool(entry.Enabled), nil
+}
+func (entry *DynamicCalendarRows) UnmarshalJSON(data []byte) (err error) {
+	entry.Enabled, err = common.UnmarshalBool(data)
+	return err
+}
+
+// Whether to use dynamic small calendar rows
+// Should default to true
+type DynamicSmallCalendarRows struct {
+	Enabled bool `json:"value"`
+}
+
+func (entry *DynamicSmallCalendarRows) Key() string {
+	return KeyDynamicSmallCalendarRows
+}
+func (entry *DynamicSmallCalendarRows) Default() {
+	entry.Enabled = true
+}
+func (entry *DynamicSmallCalendarRows) MarshalJSON() ([]byte, error) {
+	return common.MarshalBool(entry.Enabled), nil
+}
+func (entry *DynamicSmallCalendarRows) UnmarshalJSON(data []byte) (err error) {
+	entry.Enabled, err = common.UnmarshalBool(data)
+	return err
+}
+
+// Whether to display rounded corners
+// Should default to true
+type DisplayRoundedCorners struct {
+	Enabled bool `json:"value"`
+}
+
+func (entry *DisplayRoundedCorners) Key() string {
+	return KeyDisplayRoundedCorners
+}
+func (entry *DisplayRoundedCorners) Default() {
+	entry.Enabled = true
+}
+func (entry *DisplayRoundedCorners) MarshalJSON() ([]byte, error) {
+	return common.MarshalBool(entry.Enabled), nil
+}
+func (entry *DisplayRoundedCorners) UnmarshalJSON(data []byte) (err error) {
+	entry.Enabled, err = common.UnmarshalBool(data)
 	return err
 }
