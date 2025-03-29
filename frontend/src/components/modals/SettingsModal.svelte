@@ -54,7 +54,7 @@
   let profilePictureFiles: FileList | null = $state(null);
 
   // Appearance Settings
-  let firstDayOfWeek = $state("monday");
+  let firstDayOfWeek = $state("1");
   let lightTheme = $state("luna-light");
   let darkTheme = $state("luna-dark");
   let fontText = $state("Atkinson Hyperlegible Next");
