@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Code, LockKeyhole, Monitor, User } from "lucide-svelte";
+  import { Code, LockKeyhole, LogOut, Monitor, User } from "lucide-svelte";
   import { NoOp } from "../../lib/client/placeholders";
   import ButtonList from "../forms/ButtonList.svelte";
   import Modal from "./Modal.svelte";
@@ -41,6 +41,9 @@
     ],
     [
       { name: "Administrative", value: "admin", icon: LockKeyhole },
+    ],
+    [
+      { name: "Logout", value: "logout", icon: LogOut },
     ],
   ]
   let selectedCategory = $state("account");
@@ -178,6 +181,10 @@
             { name: "Saturday", value: "saturday" },
             { name: "Sunday", value: "sunday" }
           ]}
+        />
+        <ToggleInput
+          name="display_rounded_corners" 
+          description="Rounded Corners"
         />
         <SelectInput
           name="light_theme"
