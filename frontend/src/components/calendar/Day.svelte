@@ -7,6 +7,7 @@
 
   import { queueNotification } from "$lib/client/notifications";
   import { NoOp } from "$lib/client/placeholders";
+  import { flip } from "svelte/animate";
 
   interface Props {
     date: Date;
@@ -168,14 +169,18 @@
   <!-- TODO: forcing EventEntry to be unique for each event and i like that
   fixes a few issues but might be less performant. figure out the right
   compromise -->
-  {#each events as event, i ((event?.id || 0) + i.toString())}
-    <Event
-      event={event}
-      isFirstDay={isFirstDay}
-      date={date}
-      visible={i < actualMaxEvents}
-      view={view}
-    />
+  <!-- {#each events as event, i ((event?.id || 0) + i.toString())} -->
+
+  {#each events as event, i ((event?.id || i))}
+    <div animate:flip={{duration: 300}}>
+      <Event
+        event={event}
+        isFirstDay={isFirstDay}
+        date={date}
+        visible={i < actualMaxEvents}
+        view={view}
+      />
+    </div>
   {/each}
   {#if events.length > maxEvents && actualMaxEvents >= 0}
     <button class="more" class:otherMonth={!isCurrentMonth} onclick={() => showMore(date, events)}>
