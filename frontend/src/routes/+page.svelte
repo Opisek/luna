@@ -158,6 +158,7 @@
   });
 
   afterNavigate(() => {
+    getConnectivity().check().then((res) => reachability = res);
     getRangeFromStorage();
     refresh();
   });
@@ -214,7 +215,7 @@
       queueNotification("failure", `Failed to fetch events: ${err.message}`);
     });
 
-    getConnectivity().check().then((res) => reachability = res);
+    if (force) getConnectivity().check().then((res) => reachability = res);
 
     clearTimeout(spooledRefresh);
     spooledRefresh = setTimeout(() => {
