@@ -11,6 +11,7 @@
   import FileUpload from "../forms/FileUpload.svelte";
   import Horizontal from "../layout/Horizontal.svelte";
   import SelectInput from "../forms/SelectInput.svelte";
+  import { GlobalSettingKeys, UserSettingKeys } from "../../types/settings";
 
   interface Props {
     showModal?: () => any;

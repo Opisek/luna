@@ -1,4 +1,4 @@
-enum UserSettingKeys {
+export enum UserSettingKeys {
   DebugMode = "debug_mode",
   DisplayWeekNumbers = "display_week_numbers",
   FirstDayOfWeek = "first_day_of_week",
@@ -15,13 +15,13 @@ enum UserSettingKeys {
   UiScaling = "ui_scaling",
 }
 
-enum GlobalSettingKeys {
+export enum GlobalSettingKeys {
   RegistrationEnabled = "registration_enabled",
   LoggingVerbosity = "logging_verbosity",
   UseCdnFonts = "use_cdn_fonts",
 }
 
-type UserSettings = {
+export type UserSettings = {
   [UserSettingKeys.DebugMode]: boolean;
   [UserSettingKeys.DisplayWeekNumbers]: boolean;
   [UserSettingKeys.FirstDayOfWeek]: number;
@@ -38,13 +38,13 @@ type UserSettings = {
   [UserSettingKeys.UiScaling]: number;
 };
 
-type GlobalSettings = {
+export type GlobalSettings = {
   [GlobalSettingKeys.RegistrationEnabled]: boolean;
   [GlobalSettingKeys.LoggingVerbosity]: number;
   [GlobalSettingKeys.UseCdnFonts]: boolean;
 };
 
-type UserData = {
+export type UserData = {
   id: string;
   username: string;
   email: string;
