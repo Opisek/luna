@@ -8,7 +8,11 @@ $fontFamilyTime: "Atkinson Hyperlegible Mono", sans-serif;
 $fontSizeSmaller: 0.6rem * dimensions.$multiplier;
 $fontSizeSmall: 0.8rem * dimensions.$multiplier;
 $fontSize: 1rem * dimensions.$multiplier;
-$fontSizeLarge: 2rem * dimensions.$multiplier;
+$fontSizeLarge: 1.5rem * dimensions.$multiplier;
+$fontSizeLarger: 2rem * dimensions.$multiplier;
+
+$fontSizeTitle: $fontSizeLarger;
+$fontSizeSubtitle: $fontSizeLarge;
 
 /* Font weight */
 $fontWeightLight: 300 * dimensions.$multiplier;

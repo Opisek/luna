@@ -12,14 +12,14 @@
   @use "../../styles/dimensions.scss";
   @use "../../styles/text.scss";
 
-  h1 {
+  h2 {
     padding: 0;
-    margin: dimensions.$gapSmall 0;
+    margin: dimensions.$gapSmaller 0;
     font-weight: text.$fontWeightTitle;
-    font-size: text.$fontSizeTitle;
+    font-size: text.$fontSizeSubtitle;
   }
 </style>
 
-<h1>
+<h2>
   {@render children?.()}
-</h1>
+</h2>
