@@ -7,6 +7,7 @@
   import { getContext, setContext } from "svelte";
   import { writable } from "svelte/store";
   import { isSameDay } from "$lib/common/date";
+  import { fade, fly } from "svelte/transition";
 
   interface Props {
     date: Date;
@@ -144,6 +145,7 @@
     gap: dimensions.$gapSmall;
     width: 100%;
     height: 100%;
+    overflow: hidden;
   }
 
   div.weekdays {

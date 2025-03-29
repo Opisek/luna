@@ -8,6 +8,7 @@
   import { queueNotification } from "$lib/client/notifications";
   import { NoOp } from "$lib/client/placeholders";
   import { flip } from "svelte/animate";
+  import { fly } from "svelte/transition";
 
   interface Props {
     date: Date;
@@ -171,8 +172,9 @@
   compromise -->
   <!-- {#each events as event, i ((event?.id || 0) + i.toString())} -->
 
-  {#each events as event, i ((event?.id || i))}
-    <div animate:flip={{duration: 300}}>
+  {#each events as event, i ((event?.id || i).toString() + date.getTime())}
+    <!-- TODO: make parameters match css, look into cubic easing, invert fly direction when going back in range -->
+    <div animate:flip={{duration: 300, delay: 300}} in:fly={{duration: 300, x: 200}} out:fly={{duration: 300, x: -200}}>
       <Event
         event={event}
         isFirstDay={isFirstDay}
