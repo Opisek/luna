@@ -110,8 +110,8 @@
     flex-wrap: nowrap;
     gap: dimensions.$gapMiddle;
     box-sizing: content-box;
-    max-width: 50vw;
     min-width: 30em;
+    width: fit-content;
   }
 </style>
 

@@ -111,7 +111,7 @@
     grid-template-columns: auto 1fr;
     grid-template-rows: 1fr;
     gap: dimensions.$gapMiddle;
-    width: 40vw;
+    min-width: 30vw;
     height: 60vh;
   }
 
@@ -120,9 +120,14 @@
     flex-direction: column;
     flex-wrap: nowrap;
     gap: dimensions.$gapMiddle;
-    overflow: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
     padding-right: calc(dimensions.$gapLarger);
     margin-right: -(dimensions.$gapLarger);
+  }
+
+  main > :global(*) {
+    flex-shrink: 0;
   }
 
   div.pfpButtons {
@@ -169,7 +174,7 @@
             description="Allow other users to find me"
             bind:value={userData.searchable}
           />
-          <Horizontal position="justify">
+          <Horizontal position="justify" width="full">
             <div class="pfpButtons">
               <SelectButtons
                 name="pfp_type"
