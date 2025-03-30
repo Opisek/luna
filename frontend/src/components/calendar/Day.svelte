@@ -140,10 +140,6 @@
   .otherMonth {
     background-color: colors.$backgroundSecondaryFaded !important;
   }
-
-  .eventAnimation {
-    z-index: 10;
-  }
 </style>
 
 <div class="day">
