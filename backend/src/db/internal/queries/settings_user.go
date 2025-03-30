@@ -13,27 +13,11 @@ import (
 )
 
 func (q *Queries) InitializeUserSettings(userId types.ID) *errors.ErrorTrace {
-	settings := []config.SettingsEntry{
-		&config.DebugMode{},
-		&config.DisplayWeekNumbers{},
-		&config.FirstDayOfWeek{},
-		&config.ThemeLight{},
-		&config.ThemeDark{},
-		&config.FontText{},
-		&config.FontTime{},
-		&config.DisplayAllDayEventsFilled{},
-		&config.DisplayNonAllDayEventsFilled{},
-		&config.DisplaySmallCalendar{},
-		&config.DynamicCalendarRows{},
-		&config.DynamicSmallCalendarRows{},
-		&config.DisplayRoundedCorners{},
-		&config.UiScaling{},
-	}
+	settings := config.AllDefaultUserSettings()
 
 	valuesString := strings.Builder{}
 	keys := make([]string, len(settings))
 	for i, setting := range settings {
-		setting.Default()
 		keys[i] = setting.Key()
 
 		// Technically we could just inject they keys directly into the query,

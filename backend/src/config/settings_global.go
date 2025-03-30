@@ -13,6 +13,20 @@ const (
 	KeyUseCdnFonts         = "use_cdn_fonts"
 )
 
+func AllDefaultGlobalSettings() []SettingsEntry {
+	settings := []SettingsEntry{
+		&RegistrationEnabled{},
+		&LoggingVerbosity{},
+		&UseCdnFonts{},
+	}
+
+	for _, setting := range settings {
+		setting.Default()
+	}
+
+	return settings
+}
+
 func GetMatchingGlobalSettingStruct(key string) (SettingsEntry, *errors.ErrorTrace) {
 	switch key {
 	case KeyRegistrationEnabled:

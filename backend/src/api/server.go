@@ -78,17 +78,19 @@ func run(api *util.Api) {
 	fileEndpoints.HEAD("/:fileId", handlers.GetFile)
 
 	// /api/settings
-	userSettingsEndpoints := authenticatedEndpoints.Group("/settings/user")
+	userSettingsEndpoints := userEndpoints.Group("/settings")
 	userSettingsEndpoints.GET("", handlers.GetUserSettings)
 	userSettingsEndpoints.GET("/:settingKey", handlers.GetUserSetting)
-	userSettingsEndpoints.PATCH("/:settingKey", handlers.PatchUserSetting)
+	userSettingsEndpoints.PATCH("", handlers.PatchUserSettings)
+	userSettingsEndpoints.DELETE("", handlers.ResetUserSettings)
 	userSettingsEndpoints.DELETE("/:settingKey", handlers.ResetUserSetting)
 
-	globalSettingsEndpoints := administratorEndpoints.Group("/settings/global")
-	globalSettingsEndpointsPublic := authenticatedEndpoints.Group("/settings/global")
+	globalSettingsEndpoints := administratorEndpoints.Group("/settings")
+	globalSettingsEndpointsPublic := authenticatedEndpoints.Group("/settings")
 	globalSettingsEndpointsPublic.GET("", handlers.GetGlobalSettings)
 	globalSettingsEndpointsPublic.GET("/:settingKey", handlers.GetGlobalSetting)
-	globalSettingsEndpoints.PATCH("/:settingKey", handlers.PatchGlobalSetting)
+	globalSettingsEndpoints.PATCH("", handlers.PatchGlobalSettings)
+	globalSettingsEndpoints.DELETE("", handlers.ResetGlobalSettings)
 	globalSettingsEndpoints.DELETE("/:settingKey", handlers.ResetGlobalSetting)
 
 	// /api/* the rest

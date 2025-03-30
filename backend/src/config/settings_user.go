@@ -24,6 +24,31 @@ const (
 	KeyUiScaling                    = "ui_scaling"
 )
 
+func AllDefaultUserSettings() []SettingsEntry {
+	settings := []SettingsEntry{
+		&DebugMode{},
+		&DisplayWeekNumbers{},
+		&FirstDayOfWeek{},
+		&ThemeLight{},
+		&ThemeDark{},
+		&FontText{},
+		&FontTime{},
+		&DisplayAllDayEventsFilled{},
+		&DisplayNonAllDayEventsFilled{},
+		&DisplaySmallCalendar{},
+		&DynamicCalendarRows{},
+		&DynamicSmallCalendarRows{},
+		&DisplayRoundedCorners{},
+		&UiScaling{},
+	}
+
+	for _, setting := range settings {
+		setting.Default()
+	}
+
+	return settings
+}
+
 func GetMatchingUserSettingStruct(key string) (SettingsEntry, *errors.ErrorTrace) {
 	switch key {
 	case KeyDebugMode:

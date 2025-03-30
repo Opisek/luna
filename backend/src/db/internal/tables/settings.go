@@ -47,15 +47,7 @@ func (q *Tables) InitializeGlobalSettingsTable() error {
 // migrations, it has to be part of the Tables struct.
 // TODO: might refactor that later
 func (q *Tables) InitializeGlobalSettings() *errors.ErrorTrace {
-	settings := []config.SettingsEntry{
-		&config.RegistrationEnabled{},
-		&config.LoggingVerbosity{},
-		&config.UseCdnFonts{},
-	}
-
-	for _, setting := range settings {
-		setting.Default()
-	}
+	settings := config.AllDefaultGlobalSettings()
 
 	valuesString := strings.Builder{}
 	keys := make([]string, len(settings))

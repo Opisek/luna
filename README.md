@@ -235,52 +235,62 @@ The description field is optional. Either the end date or the event duration is 
 
 ### Settings
 #### Get Global Settings
-- **Path**: ``/api/settings/global``
+- **Path**: ``/api/settings``
 - **Method**: ``GET``
 - **Body**: Empty
 - **Purpose**: Returns all key-value pairs from the global settings
-- **Note**: This endpoint is only accessibly by an administrator
 
 #### Get Global Setting
-- **Path**: ``/api/settings/global/<KEY>``
+- **Path**: ``/api/settings/<KEY>``
 - **Method**: ``GET``
 - **Body**: Empty
 - **Purpose**: Returns a specific key-value pair from the global settings
+
+#### Patch Global Settings
+- **Path**: ``/api/settings``
+- **Method**: ``PATCH``
+- **Body**: Key-value pairs to change with value as a serialized JSON object
+- **Purpose**: Sets specific key-value pairs in the global settings
 - **Note**: This endpoint is only accessibly by an administrator
 
-#### Patch Global Setting
-- **Path**: ``/api/settings/global/<KEY>``
-- **Method**: ``PATCH``
-- **Body**: `value` as serialized JSON object
-- **Purpose**: Sets a specific key-value pair in the global settings
-- **Note**: This endpoint is only accessibly by an administrator
+#### Delete Global Settings
+- **Path**: ``/api/settings``
+- **Method**: ``DELETE``
+- **Body**: Empty
+- **Purpose**: Reverts all global settings to their default values
 
 #### Delete Global Setting
-- **Path**: ``/api/settings/global/<KEY>``
+- **Path**: ``/api/settings/<KEY>``
 - **Method**: ``DELETE``
 - **Body**: Empty
 - **Purpose**: Reverts a global setting to its default value
 
 #### Get User Settings
-- **Path**: ``/api/settings/user``
+- **Path**: ``/api/user/settings``
 - **Method**: ``GET``
 - **Body**: Empty
 - **Purpose**: Returns all key-value pairs from the requesting user's settings
 
 #### Get User Setting
-- **Path**: ``/api/settings/user/<KEY>``
+- **Path**: ``/api/user/settings/<KEY>``
 - **Method**: ``GET``
 - **Body**: Empty
 - **Purpose**: Returns a specific key-value pair from the requesting user's settings
 
-#### Patch User Setting
-- **Path**: ``/api/settings/global/<KEY>``
+#### Patch User Settings
+- **Path**: ``/api/user/settings``
 - **Method**: ``PATCH``
-- **Body**: `value` as serialized JSON object
-- **Purpose**: Sets a specific key-value pair in the requesting user's settings
+- **Body**: Key-value pairs to change with value as a serialized JSON object
+- **Purpose**: Sets specific key-value pairs in the global settings
+
+#### Delete User Settings
+- **Path**: ``/api/user/settings``
+- **Method**: ``DELETE``
+- **Body**: Empty
+- **Purpose**: Reverts all of the requesting user's settings to their default values
 
 #### Delete User Setting
-- **Path**: ``/api/settings/user/<KEY>``
+- **Path**: ``/api/user/settings/<KEY>``
 - **Method**: ``DELETE``
 - **Body**: Empty
 - **Purpose**: Reverts the requesting user's setting to its default value

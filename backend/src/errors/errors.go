@@ -165,6 +165,10 @@ func (tr *ErrorTrace) AndErr(err error) *ErrorTrace {
 
 // Add more verbosity options to the last level of abstraction
 func (tr *ErrorTrace) AltStr(detailLevel int, msg string, args ...any) *ErrorTrace {
+	if len(tr.trace) == 0 {
+		return tr.Append(detailLevel, msg, args...)
+	}
+
 	disjunction := tr.trace[len(tr.trace)-1]
 
 	disjunction = append(disjunction, &errEntry{
