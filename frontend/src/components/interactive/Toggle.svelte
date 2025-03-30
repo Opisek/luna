@@ -83,6 +83,8 @@
 
     position: absolute;
 
+    transform: scale(0.75);
+
     transition: transform animations.$animationSpeed animations.$cubic;
 
     z-index: 2;
