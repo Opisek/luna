@@ -27,7 +27,7 @@ export async function deepCopy<T>(obj: T): Promise<T> {
         const arr = obj as Array<any>;
         const copy = new Array(arr.length);
         for (let i = 0; i < arr.length; i++) {
-            copy[i] = deepCopy(arr[i]);
+            copy[i] = await deepCopy(arr[i]);
         }
         return copy as T;
     }
@@ -35,7 +35,7 @@ export async function deepCopy<T>(obj: T): Promise<T> {
     if (obj instanceof Object) {
         const copy = {} as {[key: string]: any };
         for (let key in obj) {
-            copy[key] = deepCopy((obj as any)[key]);
+            copy[key] = await deepCopy((obj as any)[key]);
         }
         return copy as T;
     }

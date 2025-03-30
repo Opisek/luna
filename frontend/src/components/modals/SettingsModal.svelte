@@ -14,6 +14,7 @@
   import { GlobalSettingKeys, UserSettingKeys, type GlobalSettings, type UserData, type UserSettings } from "../../types/settings";
   import { getSettings } from "../../lib/client/settings.svelte";
   import { getSha256Hash } from "../../lib/common/crypto";
+  import { deepCopy } from "$lib/common/misc";
 
   interface Props {
     showModal?: () => any;
@@ -28,7 +29,10 @@
   const settings = getSettings();
 
   showModal = () => {
-    settings.fetchSettings();
+    snapshotSettings();
+    settings.fetchSettings().then(() => {
+      snapshotSettings();
+    });
     showModalInternal();
   };
 
@@ -53,6 +57,27 @@
     ],
   ]
   let selectedCategory = $state("account");
+  let previousCategory = $state("account");
+  $effect(() => {
+    if (selectedCategory === previousCategory) return;
+    previousCategory = selectedCategory;
+    restoreSettings();
+  });
+
+  // Interaction with the stores
+  let userDataSnapshot: UserData | null = $state(null);
+  let userSettingsSnapshot: UserSettings | null = $state(null);
+  let globalSettingsSnapshot: GlobalSettings | null = $state(null);
+  async function snapshotSettings() {
+    userDataSnapshot = await deepCopy(settings.userData);
+    userSettingsSnapshot = await deepCopy(settings.userSettings);
+    globalSettingsSnapshot = await deepCopy(settings.globalSettings);
+  }
+  async function restoreSettings() {
+    if (userDataSnapshot) settings.userData = await deepCopy(userDataSnapshot);
+    if (userSettingsSnapshot) settings.userSettings = await deepCopy(userSettingsSnapshot);
+    if (globalSettingsSnapshot) settings.globalSettings = await deepCopy(globalSettingsSnapshot);
+  }
 
   // Account Settings
   let profilePictureType = $state("gravatar");
@@ -132,6 +157,7 @@
   title={"Settings"}
   bind:showModal={showModalInternal}
   bind:hideModal={hideModalInternal}
+  onModalHide={restoreSettings}
 >
   <div class="container">
     <ButtonList

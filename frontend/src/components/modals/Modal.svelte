@@ -25,7 +25,7 @@
   let {
     title,
     focusElement = null,
-    onModalHide = () => {},
+    onModalHide = NoOp,
     showModal = $bindable(),
     hideModal = $bindable(NoOp),
     resetFocus = $bindable(),
