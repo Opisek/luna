@@ -241,7 +241,7 @@
       {/if}
     {/if}
 
-    {#if settings.userSettings[UserSettingKeys.DebugMode]}
+    {#if sourceDetailed.id && settings.userSettings[UserSettingKeys.DebugMode]}
       <TextInput bind:value={sourceDetailed.id} name="id" placeholder="ID" editable={false} />
     {/if}
   {/if}

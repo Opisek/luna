@@ -249,7 +249,7 @@
     {#if showEndDate}
       <DateTimeInput bind:value={event.date.end} name="date_end" placeholder="End" editable={editMode} allDay={event.date.allDay} onChange={changeEnd}/>
     {/if}
-    {#if settings.userSettings[UserSettingKeys.DebugMode]}
+    {#if event.id && settings.userSettings[UserSettingKeys.DebugMode]}
       <TextInput bind:value={event.id} name="id" placeholder="ID" editable={false} />
     {/if}
   {/if}

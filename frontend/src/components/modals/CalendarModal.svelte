@@ -144,7 +144,7 @@
     {#if editMode || calendar.desc}
       <TextInput bind:value={calendar.desc} name="desc" placeholder="Description" multiline={true} editable={editMode} />
     {/if}
-    {#if settings.userSettings[UserSettingKeys.DebugMode]}
+    {#if calendar.id && settings.userSettings[UserSettingKeys.DebugMode]}
       <TextInput bind:value={calendar.id} name="id" placeholder="ID" editable={false} />
     {/if}
   {/if}
