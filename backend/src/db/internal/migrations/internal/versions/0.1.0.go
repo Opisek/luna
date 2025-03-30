@@ -1,14 +1,14 @@
 package versions
 
 import (
-	"luna-backend/common"
 	"luna-backend/db/internal/migrations/internal/registry"
-	"luna-backend/db/internal/migrations/types"
+	migrationTypes "luna-backend/db/internal/migrations/types"
 	"luna-backend/errors"
+	"luna-backend/types"
 )
 
 func init() {
-	registry.RegisterMigration(common.Ver(0, 1, 0), func(q *types.MigrationQueries) *errors.ErrorTrace {
+	registry.RegisterMigration(types.Ver(0, 1, 0), func(q *migrationTypes.MigrationQueries) *errors.ErrorTrace {
 		// Support for UUID and encryption
 		_, err := q.Tx.Exec(
 			q.Context,
@@ -92,6 +92,13 @@ func init() {
 				Append(errors.LvlDebug, "Could not initialize calendars table")
 		}
 
+		err = q.Tables.InitializeCalendarOverridesTable()
+		if err != nil {
+			return errors.New().
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlDebug, "Could not initialize calendar overrides table")
+		}
+
 		err = q.Tables.InitializeEventsTable()
 		if err != nil {
 			return errors.New().
@@ -99,11 +106,37 @@ func init() {
 				Append(errors.LvlDebug, "Could not initialize events table")
 		}
 
+		err = q.Tables.InitializeEventOverridesTable()
+		if err != nil {
+			return errors.New().
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlDebug, "Could not initialize event overrides table")
+		}
+
 		err = q.Tables.InitializeFilecacheTable()
 		if err != nil {
 			return errors.New().
 				AddErr(errors.LvlDebug, err).
 				Append(errors.LvlDebug, "Could not initialize filecache table")
+		}
+
+		err = q.Tables.InitializeUserSettingsTable()
+		if err != nil {
+			return errors.New().
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlDebug, "Could not initialize user settings table")
+		}
+
+		err = q.Tables.InitializeGlobalSettingsTable()
+		if err != nil {
+			return errors.New().
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlDebug, "Could not initialize global settings table")
+		}
+
+		tr := q.Tables.InitializeGlobalSettings()
+		if tr != nil {
+			return tr
 		}
 
 		return nil

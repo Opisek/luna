@@ -13,13 +13,17 @@
     deleteConfirmation: string;
     editMode?: boolean;
     editable?: boolean;
+    deletable?: boolean;
     submittable?: boolean;
     onEdit: () => Promise<void>;
     onDelete: () => Promise<void>;
+    onCancel?: () => any;
     showCreateModal?: () => any;
     showModal?: () => any;
     hideModal?: () => any;
     children?: Snippet;
+    extraButtonsLeft?: Snippet;
+    extraButtonsRight?: Snippet;
   }
 
   let {
@@ -27,18 +31,23 @@
     deleteConfirmation,
     editMode = $bindable(false),
     editable = true,
+    deletable = true,
     submittable = true,
     onEdit,
     onDelete,
+    onCancel,
     showCreateModal = $bindable(),
     showModal = $bindable(),
     hideModal = $bindable(NoOp),
     children,
+    extraButtonsLeft,
+    extraButtonsRight,
   }: Props = $props(); import Modal from "./Modal.svelte";
 
   let creating = false;
 
   let showModalInternal: () => any = $state(NoOp);
+  let hideModalInternal: () => any = $state(NoOp);
   let showDeleteModal: () => any = $state(NoOp);
   let resetFocus: () => any = $state(NoOp);
 
@@ -52,6 +61,10 @@
     creating = false;
     editMode = false;
     showModalInternal();
+  };
+  hideModal = () => {
+    onCancel?.();
+    hideModalInternal();
   };
 
   function startEditMode() {
@@ -91,28 +104,31 @@
   }
 </script>
 
-<Modal title={title} bind:showModal={showModalInternal} bind:hideModal={hideModal} onModalHide={() => {editMode = false}} bind:resetFocus>
+<Modal title={title} bind:showModal={showModalInternal} bind:hideModal={hideModalInternal} onModalHide={() => {editMode = false}} bind:resetFocus>
   {@render children?.()}
   {#snippet buttons()}
-  
-      {#if editMode}
-        <Button onClick={saveEdit} color="success" enabled={submittable} type="submit">
-          {#if awaitingEdit}
-            <Loader/>
-          {:else}
-            Save
-          {/if}
-        </Button>
-        <Button onClick={cancelEdit} color="failure">Cancel</Button>
-      {:else}
-        {#if editable}
-          <Button onClick={startEditMode} color="accent">Edit</Button>
-          <Button onClick={showDeleteModal} color="failure">Delete</Button>
+    {@render extraButtonsLeft?.()}
+    {#if editMode}
+      <Button onClick={saveEdit} color="success" enabled={submittable} type="submit">
+        {#if awaitingEdit}
+          <Loader/>
         {:else}
-          <Button onClick={hideModal}>Close</Button>
+          Save
         {/if}
+      </Button>
+      <Button onClick={cancelEdit} color="failure">Cancel</Button>
+    {:else}
+      {#if editable}
+        <Button onClick={startEditMode} color="accent">Edit</Button>
       {/if}
-    
+      {#if deletable}
+        <Button onClick={showDeleteModal} color="failure">Delete</Button>
+      {/if}
+      {#if !editable && !deletable}
+        <Button onClick={hideModal}>Close</Button>
+      {/if}
+    {/if}
+    {@render extraButtonsRight?.()}
   {/snippet}
 </Modal>
 

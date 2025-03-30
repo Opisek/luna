@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"fmt"
 	"luna-backend/db/internal/migrations"
 	"luna-backend/db/internal/migrations/types"
 	"luna-backend/db/internal/queries"
@@ -31,9 +30,6 @@ func (db *Database) BeginTransaction(ctx context.Context) (*Transaction, *errors
 	var errMsg string
 	if err != nil {
 		errMsg = err.Error()
-	}
-	if err != nil {
-		fmt.Println(errMsg)
 	}
 	switch {
 	case err == nil:
@@ -114,7 +110,7 @@ func (tx *Transaction) Tables() *tables.Tables {
 
 func (tx *Transaction) Migrations() *types.MigrationQueries {
 	if tx.migrations == nil {
-		tx.migrations = migrations.NewMigrationQueries(tx.tx, tx.db.logger, tx.db.commonConfig, tx.Tables())
+		tx.migrations = migrations.NewMigrationQueries(tx.tx, tx.context, tx.db.logger, tx.db.commonConfig, tx.Tables())
 	}
 	return tx.migrations
 }

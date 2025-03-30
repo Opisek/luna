@@ -1,15 +1,15 @@
 package registry
 
 import (
-	"luna-backend/common"
-	"luna-backend/db/internal/migrations/types"
+	migrationTypes "luna-backend/db/internal/migrations/types"
 	"luna-backend/errors"
+	"luna-backend/types"
 )
 
-type MigrationFunc func(*types.MigrationQueries) *errors.ErrorTrace
+type MigrationFunc func(*migrationTypes.MigrationQueries) *errors.ErrorTrace
 
 type Migration struct {
-	Ver common.Version
+	Ver types.Version
 	Fun MigrationFunc
 }
 
@@ -26,7 +26,7 @@ func GetRegistry() *MigrationRegistry {
 	return registry
 }
 
-func RegisterMigration(version common.Version, fun MigrationFunc) {
+func RegisterMigration(version types.Version, fun MigrationFunc) {
 	reg := GetRegistry()
 	migrations := reg.migrations
 
@@ -50,7 +50,7 @@ func RegisterMigration(version common.Version, fun MigrationFunc) {
 	reg.migrations = migrations
 }
 
-func GetMigrations(lastVersion common.Version) []*Migration {
+func GetMigrations(lastVersion types.Version) []*Migration {
 	reg := GetRegistry()
 	migrations := reg.migrations
 	selectedMigrations := []*Migration{}

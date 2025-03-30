@@ -9,7 +9,8 @@ type EventModel = {
     end: Date;
     allDay: boolean;
     recurrence: any;
-  }
+  };
+  overridden: boolean;
 };
 
 type EventModelChanges = {

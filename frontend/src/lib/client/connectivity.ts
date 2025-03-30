@@ -1,6 +1,7 @@
 // This class periodically checks /api/health to determine the reachability of the different parts of the application.
 // It also checks /api/version to determine the compatibility of the frontend with the backend.
 
+import { browser } from "$app/environment";
 import { FRONTEND_VERSION, isCompatibleWithBackend, VersionCompatibility } from "$lib/common/version";
 import { fetchJson } from "./net";
 
@@ -68,11 +69,21 @@ class Connectivity {
     this.backendVersion = version.version;
     this.compatibility = isCompatibleWithBackend(version.version);
 
+    if (
+      browser &&
+      document.location.pathname !== "/version" &&
+      [VersionCompatibility.BackendOutdatedMajor, VersionCompatibility.FrontendOutdatedMajor].includes(this.compatibility)
+    ) {
+      document.location.href = `/version?redirect=${encodeURIComponent(document.location.href)}`;
+    } 
+
     return this.compatibility;
   }
 
   async getVersions(): Promise<{ frontend: string, backend: string, compatibility: VersionCompatibility }> {
     await this.checkVersion();
+
+
     return {
       frontend: FRONTEND_VERSION,
       backend: this.backendVersion || "unknown",

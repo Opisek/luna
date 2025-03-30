@@ -11,27 +11,28 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func (q *Queries) GetFilecache(file types.File) (io.Reader, *time.Time, *errors.ErrorTrace) {
+func (q *Queries) GetFilecache(file types.File) (string, io.Reader, *time.Time, *errors.ErrorTrace) {
+	var name string
 	var content []byte
 	var date time.Time
 
 	err := q.Tx.QueryRow(
 		q.Context,
 		`
-		SELECT file, date
+		SELECT name, file, date
 		FROM filecache
 		WHERE id = $1;
 		`,
 		file.GetId().UUID(),
-	).Scan(&content, &date)
+	).Scan(&name, &content, &date)
 
 	if err != nil {
 		switch err {
 		case pgx.ErrNoRows:
-			return nil, nil, errors.New().Status(http.StatusNotFound).
+			return "", nil, nil, errors.New().Status(http.StatusNotFound).
 				Append(errors.LvlPlain, "File not found")
 		default:
-			return nil, nil, errors.New().Status(http.StatusInternalServerError).
+			return "", nil, nil, errors.New().Status(http.StatusInternalServerError).
 				AddErr(errors.LvlDebug, err).
 				Append(errors.LvlPlain, "Database error")
 		}
@@ -39,7 +40,7 @@ func (q *Queries) GetFilecache(file types.File) (io.Reader, *time.Time, *errors.
 	}
 
 	// TODO: read directly from the database instead of into an array first
-	return bytes.NewReader(content), &date, nil
+	return name, bytes.NewReader(content), &date, nil
 }
 
 func (q *Queries) SetFilecache(file types.File, content io.Reader) *errors.ErrorTrace {
@@ -54,13 +55,14 @@ func (q *Queries) SetFilecache(file types.File, content io.Reader) *errors.Error
 	_, err = q.Tx.Exec(
 		q.Context,
 		`
-		INSERT INTO filecache (id, file, date)
-		VALUES ($1, $2, CURRENT_TIMESTAMP)
+		INSERT INTO filecache (id, file, name, date)
+		VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
 		ON CONFLICT (id) DO UPDATE
-		SET file = $2;
+		SET file = $2, name = $3;
 		`,
 		file.GetId().UUID(),
 		buf,
+		file.GetName(q),
 	)
 
 	return errors.New().Status(http.StatusInternalServerError).
@@ -79,15 +81,15 @@ func (q *Queries) SetFilecacheWithoutId(file types.File, content io.Reader) (typ
 	}
 
 	query := `
-		INSERT INTO filecache (file, date)
-		VALUES ($1, CURRENT_TIMESTAMP)
+		INSERT INTO filecache (file, name, date)
+		VALUES ($1, $2, CURRENT_TIMESTAMP)
 		ON CONFLICT (id) DO UPDATE
-		SET file = $1
+		SET file = $1, name = $2
 		RETURNING id;
 	`
 
 	var id types.ID
-	err = q.Tx.QueryRow(q.Context, query, buf).Scan(&id)
+	err = q.Tx.QueryRow(q.Context, query, buf, file.GetName(q)).Scan(&id)
 	if err != nil {
 		return types.EmptyId(), errors.New().Status(http.StatusInternalServerError).
 			AddErr(errors.LvlDebug, err).

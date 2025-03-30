@@ -17,24 +17,41 @@ function showNotification() {
   const nextNotification = queue.shift();
   if (!nextNotification) return;
 
-  const notification = {
-    created: new Date(),
-    message: nextNotification.message,
-    details: nextNotification.details,
-    type: nextNotification.type,
-    disappear: false,
-    remove: () => {
-      if (notification.disappear) return;
+  notifications.update((currentNotifications) => {
+    const duplicate = currentNotifications.filter(n =>
+      n.message == nextNotification.message &&
+      n.details == nextNotification.details &&
+      n.type == nextNotification.type &&
+      n.disappear == false
+    );
 
-      notification.disappear = true;
-      notifications.update((notifications) => notifications.map((n) => n.created === notification.created ? notification : n));
-      setTimeout(() => {
-        notifications.update((notifications) => notifications.filter((n) => n !== notification));
-      }, 250); // wait for the disappear animation to finish
+    // Instead of showing the same notification multiple times, we increment a
+    // counter if a notification with the same content is found.
+    if (duplicate.length > 0) {
+      duplicate[0].count++;
+      return currentNotifications;
+    } else {
+      const notification = {
+        created: new Date(),
+        message: nextNotification.message,
+        details: nextNotification.details,
+        count: 1,
+        type: nextNotification.type,
+        disappear: false,
+        remove: () => {
+          if (notification.disappear) return;
+
+          notification.disappear = true;
+          notifications.update((notifications) => notifications.map((n) => n.created === notification.created ? notification : n));
+          setTimeout(() => {
+            notifications.update((notifications) => notifications.filter((n) => n !== notification));
+          }, 250); // wait for the disappear animation to finish
+        }
+      }
+
+      return [...currentNotifications, notification];
     }
-  }
-
-  notifications.update((notifications) => [...notifications, notification]);
+  });
 
   if (queue.length != 0) {
     setTimeout(() => {

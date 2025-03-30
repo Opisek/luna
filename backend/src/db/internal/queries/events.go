@@ -5,29 +5,20 @@ import (
 	"luna-backend/db/internal/parsing"
 	"luna-backend/db/internal/util"
 	"luna-backend/errors"
-	"luna-backend/interface/primitives"
 	"luna-backend/types"
 	"net/http"
+	"strings"
 
 	"github.com/jackc/pgx/v5"
 )
 
-func (q *Queries) insertEvents(events []primitives.Event) *errors.ErrorTrace {
+func (q *Queries) insertEvents(events []types.Event) *errors.ErrorTrace {
 	rows := [][]any{}
 
 	for _, event := range events {
-		color := event.GetColor()
-		var colBytes []byte
-		if color.IsEmpty() {
-			colBytes = nil
-		} else {
-			colBytes = color.Bytes()
-		}
-
 		row := []any{
 			event.GetId(),
 			event.GetCalendar().GetId(),
-			colBytes,
 			event.GetSettings().Bytes(),
 		}
 
@@ -38,8 +29,8 @@ func (q *Queries) insertEvents(events []primitives.Event) *errors.ErrorTrace {
 		q.Tx,
 		q.Context,
 		"events",
-		[]string{"id", "calendar", "color", "settings"},
-		[]string{"color", "settings"},
+		[]string{"id", "calendar", "settings"},
+		[]string{"settings"},
 		rows,
 	)
 
@@ -51,11 +42,15 @@ func (q *Queries) insertEvents(events []primitives.Event) *errors.ErrorTrace {
 	return nil
 }
 
-func (q *Queries) getEventEntries(events []primitives.Event) ([]*types.EventDatabaseEntry, *errors.ErrorTrace) {
+func (q *Queries) getEventEntries(events []types.Event) ([]*types.EventExtendedDatabaseEntry, *errors.ErrorTrace) {
 	query := fmt.Sprintf(
 		`
-		SELECT id, calendar, color, settings
+		SELECT id, calendar, settings, COALESCE(title, '') as title, COALESCE(description, '') as description, color, COALESCE(overridden, false) AS overridden
 		FROM events
+		LEFT OUTER JOIN (
+			SELECT eventid, title, description, color, true AS overridden
+			FROM event_overrides
+		) AS overrides ON events.id = overrides.eventid
 		WHERE id IN (
 			%s
 		);
@@ -66,7 +61,7 @@ func (q *Queries) getEventEntries(events []primitives.Event) ([]*types.EventData
 	rows, err := q.Tx.Query(
 		q.Context,
 		query,
-		util.JoinIds(events, func(e primitives.Event) types.ID { return e.GetId() })...,
+		util.JoinIds(events, func(e types.Event) types.ID { return e.GetId() })...,
 	)
 	if err != nil {
 		return nil, errors.New().Status(http.StatusInternalServerError).
@@ -75,11 +70,11 @@ func (q *Queries) getEventEntries(events []primitives.Event) ([]*types.EventData
 	}
 	defer rows.Close()
 
-	entries := []*types.EventDatabaseEntry{}
+	entries := []*types.EventExtendedDatabaseEntry{}
 	for rows.Next() {
-		entry := &types.EventDatabaseEntry{}
+		entry := &types.EventExtendedDatabaseEntry{}
 
-		err := rows.Scan(&entry.Id, &entry.Calendar, &entry.Color, &entry.Settings)
+		err := rows.Scan(&entry.Id, &entry.Calendar, &entry.Settings, &entry.Title, &entry.Description, &entry.Color, &entry.Overridden)
 		if err != nil {
 			return nil, errors.New().Status(http.StatusInternalServerError).
 				AddErr(errors.LvlDebug, err).
@@ -92,12 +87,12 @@ func (q *Queries) getEventEntries(events []primitives.Event) ([]*types.EventData
 	return entries, nil
 }
 
-func (q *Queries) ReconcileEvents(events []primitives.Event) ([]primitives.Event, *errors.ErrorTrace) {
+func (q *Queries) OverrideEvents(events []types.Event) ([]types.Event, *errors.ErrorTrace) {
 	if len(events) == 0 {
 		return events, nil
 	}
 
-	eventMap := map[types.ID]primitives.Event{}
+	eventMap := map[types.ID]types.Event{}
 	for _, event := range events {
 		eventMap[event.GetId()] = event
 	}
@@ -111,7 +106,17 @@ func (q *Queries) ReconcileEvents(events []primitives.Event) ([]primitives.Event
 
 	for _, dbEvent := range dbEvents {
 		if event, ok := eventMap[dbEvent.Id]; ok {
-			if event.GetColor() == nil {
+			if !dbEvent.Overridden {
+				continue
+			}
+			event.SetOverridden(true)
+			if dbEvent.Title != "" {
+				event.SetName(dbEvent.Title)
+			}
+			if dbEvent.Description != "" {
+				event.SetDesc(dbEvent.Description)
+			}
+			if dbEvent.Color != nil {
 				event.SetColor(types.ColorFromBytes(dbEvent.Color))
 			}
 		}
@@ -127,7 +132,15 @@ func (q *Queries) ReconcileEvents(events []primitives.Event) ([]primitives.Event
 	return events, nil
 }
 
-func (q *Queries) GetEvent(userId types.ID, eventId types.ID) (primitives.Event, *errors.ErrorTrace) {
+func (q *Queries) OverrideEvent(event types.Event) (types.Event, *errors.ErrorTrace) {
+	events, tr := q.OverrideEvents([]types.Event{event})
+	if tr != nil {
+		return nil, tr
+	}
+	return events[0], nil
+}
+
+func (q *Queries) GetEvent(userId types.ID, eventId types.ID) (types.Event, *errors.ErrorTrace) {
 	decryptionKey, tr := util.GetUserDecryptionKey(q.CommonConfig, userId)
 	if tr != nil {
 		return nil, tr.
@@ -185,16 +198,15 @@ func (q *Queries) GetEvent(userId types.ID, eventId types.ID) (primitives.Event,
 	return event, nil
 }
 
-func (q *Queries) InsertEvent(event primitives.Event) *errors.ErrorTrace {
+func (q *Queries) InsertEvent(event types.Event) *errors.ErrorTrace {
 	_, err := q.Tx.Exec(
 		q.Context,
 		`
-		INSERT INTO events (id, calendar, color, settings)
-		VALUES ($1, $2, $3, $4);
+		INSERT INTO events (id, calendar, settings)
+		VALUES ($1, $2, $3);
 		`,
 		event.GetId().UUID(),
 		event.GetCalendar().GetId().UUID(),
-		event.GetColor().Bytes(),
 		event.GetSettings().Bytes(),
 	)
 
@@ -208,16 +220,15 @@ func (q *Queries) InsertEvent(event primitives.Event) *errors.ErrorTrace {
 	return nil
 }
 
-func (q *Queries) UpdateEvent(event primitives.Event) *errors.ErrorTrace {
+func (q *Queries) UpdateEvent(event types.Event) *errors.ErrorTrace {
 	_, err := q.Tx.Exec(
 		q.Context,
 		`
 		UPDATE events
-		SET color = $2, settings = $3
+		SET settings = $2
 		WHERE id = $1;
 		`,
 		event.GetId().UUID(),
-		event.GetColor().Bytes(),
 		event.GetSettings().Bytes(),
 	)
 
@@ -271,4 +282,69 @@ func (q *Queries) DeleteEvent(userId types.ID, eventId types.ID) *errors.ErrorTr
 			Append(errors.LvlDebug, "Could not delete event %v", eventId).
 			AltStr(errors.LvlBroad, "Could not delete event")
 	}
+}
+
+func (q *Queries) SetEventOverrides(eventId types.ID, name string, desc string, color *types.Color) *errors.ErrorTrace {
+	columns := []string{}
+	params := []any{eventId.UUID()}
+
+	if name != "" {
+		columns = append(columns, "title")
+		params = append(params, name)
+	}
+	if desc != "" {
+		columns = append(columns, "description")
+		params = append(params, desc)
+	}
+	if color != nil {
+		columns = append(columns, "color")
+		params = append(params, color.Bytes())
+	}
+
+	query := fmt.Sprintf(
+		`
+		INSERT INTO event_overrides (eventid, %s)
+		VALUES ($1, %s)
+		ON CONFLICT (eventid) DO UPDATE
+		SET %s;
+		`,
+		strings.Join(columns, ", "),
+		util.GenerateArgList(2, len(columns)),
+		util.GenerateSetList(2, columns),
+	)
+
+	_, err := q.Tx.Exec(
+		q.Context,
+		query,
+		params...,
+	)
+
+	if err != nil {
+		return errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not set event overrides for %v", eventId).
+			AltStr(errors.LvlWordy, "Could not set event overrides for %v", name)
+	}
+
+	return nil
+}
+
+func (q *Queries) DeleteEventOverrides(eventId types.ID) *errors.ErrorTrace {
+	_, err := q.Tx.Exec(
+		q.Context,
+		`
+		DELETE FROM event_overrides
+		WHERE eventid = $1;
+		`,
+		eventId,
+	)
+
+	if err != nil {
+		return errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not delete event overrides for %v", eventId).
+			AltStr(errors.LvlWordy, "Could not delete event overrides")
+	}
+
+	return nil
 }

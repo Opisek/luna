@@ -1,4 +1,4 @@
-<script lang="ts">
+<script lang="ts" generics="T">
   import { ChevronDown } from "lucide-svelte";
 
   import { browser } from "$app/environment";
@@ -12,22 +12,22 @@
   let optionsAbove = $state(false);
 
   interface Props {
-    value: string;
+    value: T | null;
     placeholder: string;
     name: string;
     editable?: boolean;
-    options: Option[];
+    options: Option<T>[];
   }
 
   let {
-    value = $bindable(""),
+    value = $bindable(null),
     placeholder,
     name,
     editable = true,
     options
   }: Props = $props();
 
-  let selectedOption: Option | null = $derived(options.filter(x => x.value === value)[0] || null);
+  let selectedOption: Option<T> | null = $derived(options.filter(x => x.value === value)[0] || null);
 
   let selectWrapper: HTMLElement;
   let optionsWrapper: HTMLElement;
@@ -56,7 +56,7 @@
     }
   })
 
-  function optionClick(option: Option) {
+  function optionClick(option: Option<T>) {
     value = option.value;
     selectWrapper.focus();
   }

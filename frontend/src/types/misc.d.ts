@@ -1,6 +1,7 @@
-type Option = {
-  value: string;
+type Option<T> = {
+  value: T;
   name: string;
+  icon?: any;
 }
 
 type FocusIndicatorSettings = {
@@ -13,8 +14,8 @@ type Validity = {
   message: string;
 }
 
-type InputValidation = (value: string) => Validity;
-type FileValidation = (value: FileList) => Validity;
+type InputValidation = (value: string) => Promise<Validity>;
+type FileValidation = (value: FileList) => Promise<Validity>;
 
 type CacheEntry<T> = {
   date: number;

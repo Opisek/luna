@@ -1,15 +1,17 @@
 <script lang="ts">
-  import CheckboxInput from "../forms/CheckboxInput.svelte";
+  import Button from "../interactive/Button.svelte";
   import ColorInput from "../forms/ColorInput.svelte";
   import DateTimeInput from "../forms/DateTimeInput.svelte";
   import EditableModal from "./EditableModal.svelte";
   import SelectInput from "../forms/SelectInput.svelte";
   import TextInput from "../forms/TextInput.svelte";
 
-  import { EmptyEvent } from "$lib/client/placeholders";
-  import { getRepository } from "$lib/client/repository";
+  import { EmptyEvent, NoChangesEvent, NoOp } from "$lib/client/placeholders";
   import { deepCopy, deepEquality } from "$lib/common/misc";
+  import { getRepository } from "$lib/client/repository";
   import { isSameDay } from "$lib/common/date";
+  import { queueNotification } from "$lib/client/notifications";
+  import ToggleInput from "../forms/ToggleInput.svelte";
 
   interface Props {
     showCreateModal?: (date: Date) => Promise<EventModel>;
@@ -23,13 +25,28 @@
 
   let event: EventModel = $state(EmptyEvent);
   let originalEvent: EventModel = $state(EmptyEvent);
-  let eventSourceType = $state("");
 
-  let saveEvent = (_: EventModel | PromiseLike<EventModel>) => {};
-  let cancelEvent = (_?: any) => {};
+  let calendars: CalendarModel[] = $state([]);
+  let sources: SourceModel[] = $state([]);
+
+  let eventSourceType = $derived.by(() => {
+    const calendar = calendars.find(x => x.id === event.calendar);
+    if (!calendar) return "unknown";
+
+    const source = sources.find(x => x.id === calendar.source);
+    if (!source) return "unknown";
+
+    return source.type;
+  });
+
+  let promiseResolve: (value: EventModel | PromiseLike<EventModel>) => void = $state(NoOp);
+  let promiseReject: (reason?: any) => void = $state(NoOp);
 
   showCreateModal = async (date: Date) => {
-    cancelEvent();
+    promiseReject();
+
+    calendars = getRepository().calendars.getArray();
+    sources = getRepository().sources.getArray();
     
     editMode = false;
 
@@ -50,21 +67,26 @@
         end: end,
         allDay: false,
         recurrence: false,
-      }
+      },
+      overridden: false
     };
 
     setTimeout(showCreateModalInternal, 0);
 
     return new Promise((resolve, reject) => {
-      saveEvent = resolve;
-      cancelEvent = reject;
+      promiseResolve = resolve;
+      promiseReject = reject;
     });
   }
 
   showModal = async (original: EventModel): Promise<EventModel> => {
-    cancelEvent();
+    promiseReject();
+
+    calendars = getRepository().calendars.getArray();
+    sources = getRepository().sources.getArray();
 
     editMode = false;
+
     event = {
       id: original.id,
       calendar: original.calendar,
@@ -76,32 +98,20 @@
         end: new Date(original.date.end),
         allDay: original.date.allDay,
         recurrence: await deepCopy(original.date.recurrence),
-      }
+      },
+      overridden: original.overridden
     }
     if (event.date.allDay && event.date.end.getTime() !== event.date.start.getTime() && event.date.end.getHours() === 0 && event.date.end.getMinutes() === 0 && event.date.end.getSeconds() === 0 && event.date.end.getMilliseconds() === 0) {
       event.date.end.setDate(event.date.end.getDate() - 1);
     }
 
     originalEvent = await deepCopy(original);
-    const calendar = await getRepository().getCalendar(original.calendar).catch(err => {
-      throw new Error(`Could not get calendar: ${err.message}`);
-    });
-    if (calendar) {
-      const source = await getRepository().getSourceDetails(calendar.source).catch(err => {
-        throw new Error(`Could not get source details: ${err.message}`);
-      });
-      if (source) {
-        eventSourceType = source.type;
-      }
-    } else {
-      eventSourceType = "";
-    }
 
     setTimeout(showModalInternal, 0);
 
     return new Promise((resolve, reject) => {
-      saveEvent = resolve;
-      cancelEvent = reject;
+      promiseResolve = resolve;
+      promiseReject = reject;
     });
   };
 
@@ -110,28 +120,22 @@
 
   let editMode: boolean = $state(false);
   let title: string = $derived((event && event.id) ? (editMode ? "Edit event" : "Event") : "Create event");
-  let editable: boolean = $derived(event && !(
-    eventSourceType === "ical" || // iCal files are treated as read-only
-    event.date.recurrence != false // for now we won't allow editing recurring events
-  ))
   let showEndDate: boolean = $derived(editMode || (event && (!event.date.allDay || !isSameDay(event.date.start, event.date.end))));
 
   let selectableCalendars = $derived.by(() => {
-    let calendars = getRepository().calendars.getArray();
+    let selectable;
 
     if (editMode) {
-      const sources = getRepository().sources;
-
-      calendars = calendars.filter(x => {
+      selectable = calendars.filter(x => {
         if (x.id === event.calendar) return true;
-        const source = sources.find("id", x.source);
+        const source = sources.find(y => y.id === x.source);
         return source && source.type !== "ical";
       });
     } else {
-      calendars = calendars.filter(x => x.id === event.calendar);
+      selectable = calendars.filter(x => x.id === event.calendar);
     }
 
-    return calendars.map(x => ({ value: x.id, name: x.name }))
+    return selectable.map(x => ({ value: x.id, name: x.name }))
   });
 
 
@@ -139,7 +143,7 @@
     await getRepository().deleteEvent(event.id).catch(err => {
       throw new Error(`Could not delete event ${event.name}: ${err.message}`);
     });
-    cancelEvent();
+    promiseReject();
   };
   const onEdit = async () => {
     if (event.date.allDay) {
@@ -147,10 +151,10 @@
     }
     if (event.id === "") {
       await getRepository().createEvent(event).catch(err => {
-        cancelEvent();
+        promiseReject();
         throw new Error(`Could not create event ${event.name}: ${err.message}`);
       });
-      saveEvent(event);
+      promiseResolve(event);
     } else if (event.calendar == originalEvent.calendar) {
       const changes = {
         name: event.name != originalEvent.name,
@@ -158,19 +162,35 @@
         color: event.color != originalEvent.color,
         date: !deepEquality(event.date, originalEvent.date)
       };
-      await getRepository().editEvent(event, changes).catch(err => {
-        cancelEvent();
+      await getRepository().editEvent(event, changes, eventSourceType === "ical").catch(err => {
+        promiseReject();
         throw new Error(`Could not edit event ${event.name}: ${err.message}`);
       });
-      saveEvent(event);
+      promiseResolve(event);
     } else {
       await getRepository().moveEvent(event).catch(err => {
-        cancelEvent();
+        promiseReject();
         throw new Error(`Could not move event ${event.name}: ${err.message}`);
       });
-      saveEvent(event);
+      promiseResolve(event);
     }
   };
+  const resetOverrides = async () => {
+    event.overridden = false;
+    getRepository().editEvent(event, NoChangesEvent, true).catch(err => {
+      event.overridden = true;
+      queueNotification("failure", `Could not reset event ${event.name}: ${err.message}`);
+      return;
+    }).then(async () => {
+      getRepository().getEvent(event.id, true).catch(err => {
+        event.overridden = true;
+        queueNotification("failure", `Could not reset event ${event.name}: ${err.message}`);
+        return;
+      }).then((fetched) => {
+        event = fetched as EventModel;
+      });
+    });
+  }
 
   const changeEnd = (value: Date) => {
     if (value.getTime() < event.date.start.getTime()) {
@@ -204,12 +224,14 @@
   bind:showModal={showModalInternal}
   onDelete={onDelete}
   onEdit={onEdit}
-  editable={editable}
+  onCancel={promiseReject}
+  deletable={event && eventSourceType !== "ical" && !event.date.recurrence}
+  editable={event && !event.date.recurrence}
   submittable={event.calendar !== "" && event.name !== "" && (event.date.start.getTime() < event.date.end.getTime() || (event.date.start.getTime() <= event.date.end.getTime() && event.date.allDay))}
 >
   {#if event != EmptyEvent}
     <TextInput bind:value={event.name} name="name" placeholder="Name" editable={editMode} />
-    <SelectInput bind:value={event.calendar} name="calendar" placeholder="Calendar" options={selectableCalendars} editable={editMode} />
+    <SelectInput bind:value={event.calendar} name="calendar" placeholder="Calendar" options={selectableCalendars} editable={editMode && eventSourceType !== "ical"} />
     {#if editMode}
       <ColorInput bind:color={event.color} name="color" editable={editMode} />
     {/if}
@@ -217,7 +239,7 @@
       <TextInput bind:value={event.desc} name="desc" placeholder="Description" multiline={true} editable={editMode} />
     {/if}
     {#if editMode}
-        <CheckboxInput bind:value={event.date.allDay} name="all_day" description="All Day"/>
+        <ToggleInput bind:value={event.date.allDay} name="all_day" description="All Day"/>
     {/if}
     <DateTimeInput bind:value={event.date.start} name="date_start" placeholder={showEndDate ? "Start" : "Date"} editable={editMode} allDay={event.date.allDay} onChange={changeStart}/>
     {#if showEndDate}
@@ -228,4 +250,9 @@
     <TextInput bind:value={event.id} name="id" placeholder="ID" editable={false} />
     -->
   {/if}
+  {#snippet extraButtonsLeft()}
+    {#if event != EmptyEvent && !editMode && event.overridden}
+      <Button color="accent" onClick={resetOverrides}>Reset</Button>
+    {/if}
+  {/snippet}
 </EditableModal>

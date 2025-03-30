@@ -27,13 +27,13 @@ export const actions = {
         path: "/",
         httpOnly: false,
         maxAge: undefined as number | undefined,
+        sameSite: "strict" as boolean | "strict" | "lax" | "none",
       };
 
       if (formData.get("remember") === "true") {
         opts.maxAge = COOKIE_MAX_AGE;
       }
 
-      // TODO: max age
       cookies.set("tokenPresent", "true", opts);
       cookies.set("token", body.token, opts);
 

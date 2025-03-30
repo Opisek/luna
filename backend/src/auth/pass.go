@@ -2,6 +2,7 @@ package auth
 
 import (
 	"bytes"
+	"luna-backend/constants"
 	"luna-backend/crypto"
 	"luna-backend/errors"
 	"luna-backend/types"
@@ -10,7 +11,7 @@ import (
 	"golang.org/x/crypto/argon2"
 )
 
-var DefaultAlgorithm = types.HashArgon2
+var DefaultAlgorithm = constants.HashArgon2
 var defaultSettings = map[string]int{
 	"time":    1,
 	"memory":  64 * 1024,
@@ -67,10 +68,10 @@ func SecurePassword(password string) (*types.PasswordEntry, *errors.ErrorTrace) 
 
 func hashPassword(password string, algInfo *types.PasswordEntry) ([]byte, *errors.ErrorTrace) {
 	switch algInfo.Algorithm {
-	case types.HashPlain:
+	case constants.HashPlain:
 		return nil, errors.New().Status(http.StatusInternalServerError).
 			Append(errors.LvlDebug, "Plain text password storing is not allowed")
-	case types.HashArgon2:
+	case constants.HashArgon2:
 		params := &ParametersArgon2{}
 
 		if val, ok := algInfo.Parameters["time"]; ok {

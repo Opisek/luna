@@ -21,3 +21,24 @@ export async function fetchJson(url: string, options: RequestInit = {}) {
     // TODO: show warnings as notifications
   }
 }
+
+export function downloadFileToClient(file: FileList | string | null) {
+  if (file === null) return;
+
+  const a = document.createElement("a");
+
+  let url: string;
+  if (typeof file === "string") {
+    url = `/api/files/${file}`;
+  } else {
+    const blob = new Blob([file[0]], { type: file[0].type });
+    url = URL.createObjectURL(blob);
+    a.download = file[0].name;
+  }
+
+  a.href = url;
+
+  a.click();
+  URL.revokeObjectURL(url);
+  a.remove();
+}

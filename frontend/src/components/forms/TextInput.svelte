@@ -5,6 +5,7 @@
   import { alwaysValid, valid } from "$lib/client/validation";
   import { focusIndicator } from "$lib/client/decoration";
   import { NoOp } from "../../lib/client/placeholders";
+  import { CircleAlert } from "lucide-svelte";
 
   let passwordVisible: boolean = $state(false);
 
@@ -23,7 +24,7 @@
     onInput?: (value: string) => any;
     onFocus?: () => any;
     validation?: InputValidation;
-    validity?: any;
+    validity?: Validity;
   }
 
   let {
@@ -38,7 +39,7 @@
     onInput = NoOp,
     onFocus = NoOp,
     validation = alwaysValid,
-    validity = $bindable(value ? validation(value) : valid)
+    validity = $bindable(valid)
   }: Props = $props();
 
 
@@ -46,11 +47,11 @@
   // For example when opening a new form
   let lastValue: string | null = $state(null); // TODO: check if still needed in svelte 5
   $effect(() => {
-    ((value) => {
+    (async (value) => {
       if (!value || value === lastValue) return; // prevents some infinite loop that i don't understand, might be a svelte bug
       lastValue = value;
       if (wrapper != null && (document.activeElement === wrapper || wrapper.contains(document.activeElement))) return;
-      validity = value ? validation(value) : valid;
+      validity = value ? await validation(value) : valid;
     })(value);
   });
 
@@ -59,18 +60,18 @@
   let empty = $state(value === "");
 
   // Once the user has finished typing, update the validity.
-  function internalOnChange() {
+  async function internalOnChange() {
     if (!value) return;
-    validity = validation(value);
+    validity = await validation(value);
     empty = value === "";
     onChange(value);
   }
 
   // Immediately tell the user if the input becomes valid,
   // but not if it becomes invalid, as they are not done typing yet.
-  function internalOnInput() {
+  async function internalOnInput() {
     if (!value) return;
-    const res = validation(value);
+    const res = await validation(value);
     if (res.valid) validity = res;
     onInput(value);
   }
@@ -145,6 +146,8 @@
     font-size: text.$fontSizeSmall;
     margin-bottom: -(dimensions.$gapMiddle);
     padding-left: calc(dimensions.$gapSmall * (text.$fontSize / text.$fontSizeSmall));
+    display: flex;
+    justify-content: space-between;
   }
 
   span.errorMessage {

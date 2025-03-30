@@ -1,6 +1,6 @@
 import { browser } from "$app/environment";
 
-import { AllChangesCalendar, AllChangesEvent, AllChangesSource, NoOp } from "./placeholders";
+import { AllChangesCalendar, AllChangesEvent, AllChangesSource, NoChangesCalendar, NoChangesEvent, NoOp } from "./placeholders";
 import { fetchJson, fetchResponse } from "./net";
 import { getMetadata } from "./metadata";
 import { queueNotification } from "./notifications";
@@ -481,10 +481,12 @@ class Repository {
     return fetched;
   }
 
-  async getCalendar(id: string, forceRefresh = false): Promise<CalendarModel | null> {
-    if (!browser) return {} as CalendarModel;
-
-    return this.calendarsMap.get(id) || null; // TODO: needs a bit of refactoring plus actual fetch of the relevant endpoint depending on cache age
+  async getCalendar(id: string, forceRefresh = false): Promise<CalendarModel> {
+    // TODO: needs refactoring like integrating cache age check
+    const fetched: CalendarModel = (await fetchJson(`/api/calendars/${id}`).catch((err) => { throw err; })).calendar;
+    this.calendarsMap.set(fetched.id, fetched);
+    this.compileCalendars();
+    return fetched;
   }
 
   async createCalendar(newCalendar: CalendarModel): Promise<void> {
@@ -510,19 +512,23 @@ class Repository {
     this.saveCache();
   };
 
-  async editCalendar(modifiedCalendar: CalendarModel, changes: CalendarModelChanges): Promise<void> {
+  async editCalendar(modifiedCalendar: CalendarModel, changes: CalendarModelChanges, override: boolean): Promise<void> {
     if (!browser) return;
 
     // update in database
+    if (override && changes !== NoChangesCalendar) changes.color = true; // we have no way to destinguish between "don't change color" and "default color"
     const formData = this.getCalendarFormData(modifiedCalendar, changes);
+    formData.set("overridden", override ? "true" : "false");
 
     await fetchResponse(`/api/calendars/${modifiedCalendar.id}`, { method: "PATCH", body: formData }).catch((err) => { throw err; });
 
     // update in cache
+    modifiedCalendar.overridden = override;
     this.calendarsMap.set(modifiedCalendar.id, modifiedCalendar);
 
     // update on display
     this.calendars.update((calendars) => calendars.map((cal) => cal.id === modifiedCalendar.id ? modifiedCalendar : cal));
+    if (changes.color) this.compileEvents(this.eventsRangeStart, this.eventsRangeEnd);
 
     this.saveCache();
   }
@@ -554,22 +560,22 @@ class Repository {
   async moveCalendar(calendar: CalendarModel): Promise<void> {
     throw new Error("Not implemented");
 
-    if (!browser) return;
+    //if (!browser) return;
 
-    const oldId = calendar.id;
+    //const oldId = calendar.id;
 
-    // add to the new calendar
-    await this.createCalendar(calendar).catch((err) => { throw err; });
+    //// add to the new calendar
+    //await this.createCalendar(calendar).catch((err) => { throw err; });
 
-    // TODO: MOVE ALL EVENTS!!!
+    //// TODO: MOVE ALL EVENTS!!!
 
-    // remove from the old calendar
-    await this.deleteCalendar(calendar.id).catch((err) => {
-      // undo changes
-      this.deleteCalendar(calendar.id).catch(NoOp);
-      calendar.id = oldId;
-      throw err;
-    });
+    //// remove from the old calendar
+    //await this.deleteCalendar(calendar.id).catch((err) => {
+    //  // undo changes
+    //  this.deleteCalendar(calendar.id).catch(NoOp);
+    //  calendar.id = oldId;
+    //  throw err;
+    //});
   }
 
   //
@@ -584,8 +590,8 @@ class Repository {
 
     const months = [];
     while (start < end) {
-      start.setUTCMonth(start.getUTCMonth() + 1);
       months.push(new Date(start));
+      start.setUTCMonth(start.getUTCMonth() + 1);
     }
 
     return months;
@@ -625,14 +631,13 @@ class Repository {
     start.setUTCHours(0, 0, 0, 0);
     end.setUTCHours(23, 59, 59, 999);
 
-    // Set start and end to the start and end of each month
-    start.setDate(1);
-    end.setMonth(end.getMonth() + 1);
-    end.setDate(0);
-
     // Add one month of padding in both directions
     start.setMonth(start.getMonth() - 1);
     end.setMonth(end.getMonth() + 1);
+
+    // Set start and end to the start and end of each month
+    start.setDate(1);
+    end.setDate(0);
 
     this.compileEvents(start, end);
     const allSources = await this.getSources(forceRefresh).catch((err) => { throw err; });
@@ -646,6 +651,20 @@ class Repository {
       );
     });
     return events.flat();
+  }
+
+  async getEvent(id: string, forceRefresh = false): Promise<EventModel> {
+    // TODO: needs refactoring like integrating cache age check
+    const fetched: EventModel = (await fetchJson(`/api/events/${id}`).catch((err) => { throw err; })).event;
+    fetched.date.start = new Date(fetched.date.start);
+    fetched.date.end = new Date(fetched.date.end);
+    if (fetched.date.allDay) {
+      fetched.date.start.setHours(0, 0, 0, 0);
+      fetched.date.end.setHours(0, 0, 0, 0);
+    }
+    this.eventsMap.set(fetched.id, fetched);
+    this.compileEvents(this.eventsRangeStart, this.eventsRangeEnd);
+    return fetched;
   }
 
   private async getEventsFromSource(source: string, start: Date, end: Date, forceRefresh = false): Promise<EventModel[]> {
@@ -673,14 +692,20 @@ class Repository {
     const fetchEnd = new Date(end);
 
     while (fetchStart.getTime() <= fetchEnd.getTime()) {
-      const cached = this.cacheOk(cache.get(fetchStart.getTime()));
+      const cacheKey = new Date(fetchStart);
+      cacheKey.setUTCDate(1);
+      cacheKey.setUTCHours(0, 0, 0, 0);
+      const cached = this.cacheOk(cache.get(cacheKey.getTime()));
       if (!cached) break;
       result = result.concat(await this.mapAllRecurrenceInstances(cached));
       fetchStart.setMonth(fetchStart.getMonth() + 1);
     }
 
     while (fetchEnd.getTime() >= fetchStart.getTime()) {
-      const cached = this.cacheOk(cache.get(fetchEnd.getTime()));
+      const cacheKey = new Date(fetchEnd);
+      cacheKey.setUTCDate(1);
+      cacheKey.setUTCHours(0, 0, 0, 0);
+      const cached = this.cacheOk(cache.get(cacheKey.getTime()));
       if (!cached) break;
       result = result.concat(await this.mapAllRecurrenceInstances(cached));
       fetchEnd.setMonth(fetchEnd.getMonth() - 1);
@@ -692,7 +717,7 @@ class Repository {
 
     const stopLoading = getMetadata().startLoadingCalendar(calendar);
 
-    const fetchedEvents = await this.fetchEvents(calendar, start, end).catch((err) => {
+    const fetchedEvents = await this.fetchEvents(calendar, fetchStart, fetchEnd).catch((err) => {
       getMetadata().addFaultyCalendar(calendar, err.message);
       throw err;
     }).finally(() => {
@@ -719,6 +744,7 @@ class Repository {
       calendarEventsCache = new Map();
       this.eventsCache.set(calendar, calendarEventsCache);
     }
+    end.setDate(end.getDate() - 1);
     for (let i = new Date(start); i.getTime() < end.getTime(); i.setMonth(i.getMonth() + 1)) {
       calendarEventsCache.set(i.getTime(), {
         date: Date.now(),
@@ -790,7 +816,7 @@ class Repository {
     this.saveCache();
   };
 
-  async editEvent(modifiedEvent: EventModel, changes: EventModelChanges): Promise<void> {
+  async editEvent(modifiedEvent: EventModel, changes: EventModelChanges, override: boolean): Promise<void> {
     if (!browser) return;
 
     // update in database
@@ -799,11 +825,14 @@ class Repository {
       modifiedEvent.date.end.setHours(0, 0, 0, 0);
     }
 
+    if (override && changes !== NoChangesEvent) changes.color = true; // we have no way to destinguish between "don't change color" and "default color"
     const formData = this.getEventFormData(modifiedEvent, changes);
+    formData.set("overridden", override ? "true" : "false");
 
     await fetchResponse(`/api/events/${modifiedEvent.id}`, { method: "PATCH", body: formData }).catch((err) => { throw err; });
 
     // update in cache
+    modifiedEvent.overridden = override;
     const previousMonths = this.determineEventMonths(this.eventsMap.get(modifiedEvent.id)!);
     const currentMonths = this.determineEventMonths(modifiedEvent);
     this.eventsMap.set(modifiedEvent.id, modifiedEvent);

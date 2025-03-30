@@ -2,7 +2,7 @@ package queries
 
 import (
 	"context"
-	"luna-backend/common"
+	"luna-backend/config"
 	"luna-backend/db/internal/parsing"
 
 	"github.com/jackc/pgx/v5"
@@ -13,7 +13,7 @@ type Queries struct {
 	Tx               pgx.Tx
 	Context          context.Context
 	Logger           *logrus.Entry
-	CommonConfig     *common.CommonConfig
+	CommonConfig     *config.CommonConfig
 	PrimitivesParser *parsing.PrimitivesParser
 }
 

@@ -8,6 +8,7 @@
 
   import { NoOp } from "$lib/client/placeholders";
   import { redrawNotifications } from "$lib/client/notifications";
+  import { isChildOfModal } from "../../lib/common/misc";
 
   interface Props {
     title: string;
@@ -37,8 +38,13 @@
 
   let visible = $state(false);
 
+  let ignoreClickOutside = $state(false);
+  function mouseDown(event: MouseEvent) {
+    ignoreClickOutside = isChildOfModal(event.target as HTMLElement) && event.target !== dialog;
+  }
+
   function clickOutside(event: MouseEvent) {
-    if (!dialog) return;
+    if (!dialog || ignoreClickOutside) return;
     if (event.target === dialog) {
       hideModal();
       event.stopPropagation();
@@ -54,12 +60,14 @@
     else dialog.focus();
   }
   showModal = () => {
+    window.addEventListener("mousedown", mouseDown);
     window.addEventListener("click", clickOutside);
     visible = true
     setTimeout(resetFocus, 0);
     setTimeout(redrawNotifications, 0); // hacky way to make sure that notifications are always on the very top. sometimes has a visible blink. should revisit one day.
   }
   hideModal = () => {
+    window.removeEventListener("mousedown", mouseDown);
     window.removeEventListener("click", clickOutside);
     dialog.close();
     onModalHide();
@@ -79,8 +87,6 @@
 
   dialog {
     border: 0;
-    max-width: 50vw;
-    min-width: 30em;
     border-radius: dimensions.$borderRadius;
     padding: 0;
   }
@@ -100,10 +106,12 @@
     padding: dimensions.$gapLarge dimensions.$gapLarger dimensions.$gapLarger dimensions.$gapLarger;
     border-radius: dimensions.$borderRadius;
     display: flex;
-    width: 100%;
     flex-direction: column;
     flex-wrap: nowrap;
     gap: dimensions.$gapMiddle;
+    box-sizing: content-box;
+    max-width: 50vw;
+    min-width: 30em;
   }
 </style>
 

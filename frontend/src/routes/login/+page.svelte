@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { ActionData } from './$types';
 
-  import CheckboxInput from '../../components/forms/CheckboxInput.svelte';
+  import ToggleInput from '../../components/forms/ToggleInput.svelte';
   import Form from '../../components/forms/Form.svelte';
   import Link from '../../components/forms/Link.svelte';
   import TextInput from '../../components/forms/TextInput.svelte';
@@ -23,7 +23,6 @@
   let alreadyShownError = $state(false);
   $effect(() => {
     ((form) => {
-      console.log(form, page.status);
       if (form?.error && !alreadyShownError) {
         alreadyShownError = true;
         queueNotification("failure", form.error);
@@ -58,7 +57,7 @@
       validation={isValidPassword}
       bind:validity={passwordValidity}
     />
-    <CheckboxInput
+    <ToggleInput
       name="remember"
       description="Remember me"
     />

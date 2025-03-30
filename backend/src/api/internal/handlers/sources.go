@@ -1,14 +1,17 @@
 package handlers
 
 import (
+	"bytes"
+	"io"
 	"net/http"
 
 	"luna-backend/api/internal/util"
 	"luna-backend/auth"
+	"luna-backend/constants"
 	"luna-backend/errors"
-	"luna-backend/interface/primitives"
-	"luna-backend/interface/protocols/caldav"
-	"luna-backend/interface/protocols/ical"
+	"luna-backend/files"
+	"luna-backend/protocols/caldav"
+	"luna-backend/protocols/ical"
 	"luna-backend/types"
 
 	"github.com/gin-gonic/gin"
@@ -29,7 +32,7 @@ type exposedDetailedSource struct {
 	Auth     interface{} `json:"auth"`
 }
 
-func getSources(u *util.HandlerUtility, userId types.ID) ([]primitives.Source, *errors.ErrorTrace) {
+func getSources(u *util.HandlerUtility, userId types.ID) ([]types.Source, *errors.ErrorTrace) {
 	srcs, err := u.Tx.Queries().GetSourcesByUser(userId)
 	if err != nil {
 		return nil, err
@@ -89,14 +92,14 @@ func GetSource(c *gin.Context) {
 	u.Success(&gin.H{"source": exposedSource})
 }
 
-func parseAuthMethod(c *gin.Context) (auth.AuthMethod, *errors.ErrorTrace) {
-	var sourceAuth auth.AuthMethod
+func parseAuthMethod(c *gin.Context) (types.AuthMethod, *errors.ErrorTrace) {
+	var sourceAuth types.AuthMethod
 
 	authType := c.PostForm("auth_type")
 	switch authType {
-	case types.AuthNone:
+	case constants.AuthNone:
 		sourceAuth = auth.NewNoAuth()
-	case types.AuthBasic:
+	case constants.AuthBasic:
 		username := c.PostForm("auth_username")
 		password := c.PostForm("auth_password")
 		if username == "" || password == "" {
@@ -105,7 +108,7 @@ func parseAuthMethod(c *gin.Context) (auth.AuthMethod, *errors.ErrorTrace) {
 		}
 
 		sourceAuth = auth.NewBasicAuth(username, password)
-	case types.AuthBearer:
+	case constants.AuthBearer:
 		token := c.PostForm("auth_token")
 		if token == "" {
 			return nil, errors.New().Status(http.StatusBadRequest).
@@ -124,12 +127,12 @@ func parseAuthMethod(c *gin.Context) (auth.AuthMethod, *errors.ErrorTrace) {
 	return sourceAuth, nil
 }
 
-func parseSource(c *gin.Context, sourceName string, sourceAuth auth.AuthMethod, q types.DatabaseQueries) (primitives.Source, *errors.ErrorTrace) {
-	var source primitives.Source
+func parseSource(c *gin.Context, sourceName string, sourceAuth types.AuthMethod, q types.DatabaseQueries) (types.Source, *errors.ErrorTrace) {
+	var source types.Source
 
 	sourceType := c.PostForm("type")
 	switch sourceType {
-	case types.SourceCaldav:
+	case constants.SourceCaldav:
 		rawUrl := c.PostForm("url")
 		if rawUrl == "" {
 			return nil, errors.New().Status(http.StatusBadRequest).
@@ -147,7 +150,7 @@ func parseSource(c *gin.Context, sourceName string, sourceAuth auth.AuthMethod, 
 		}
 
 		source = caldav.NewCaldavSource(sourceName, sourceUrl, sourceAuth)
-	case types.SourceIcal:
+	case constants.SourceIcal:
 		locationType := c.PostForm("location")
 		if locationType == "" {
 			return nil, errors.New().Status(http.StatusBadRequest).
@@ -173,7 +176,7 @@ func parseSource(c *gin.Context, sourceName string, sourceAuth auth.AuthMethod, 
 			}
 			source = ical.NewRemoteIcalSource(sourceName, sourceUrl, sourceAuth)
 		case "local":
-			if sourceAuth.GetType() != types.AuthNone {
+			if sourceAuth.GetType() != constants.AuthNone {
 				return nil, errors.New().Status(http.StatusBadRequest).
 					Append(errors.LvlPlain, "Local iCal sources do not support authentication")
 			}
@@ -190,7 +193,7 @@ func parseSource(c *gin.Context, sourceName string, sourceAuth auth.AuthMethod, 
 			}
 			source = ical.NewLocalIcalSource(sourceName, sourcePath)
 		case "database":
-			if sourceAuth.GetType() != types.AuthNone {
+			if sourceAuth.GetType() != constants.AuthNone {
 				return nil, errors.New().Status(http.StatusBadRequest).
 					Append(errors.LvlPlain, "Database iCal sources do not support authentication")
 			}
@@ -213,8 +216,16 @@ func parseSource(c *gin.Context, sourceName string, sourceAuth auth.AuthMethod, 
 					Append(errors.LvlPlain, "Could not open iCal file")
 			}
 
+			var contentToSave bytes.Buffer
+			contentToValidate := io.TeeReader(file, &contentToSave)
+
+			fileParseErr := files.IsValidIcalFile(contentToValidate)
+			if fileParseErr != nil {
+				return nil, fileParseErr
+			}
+
 			var tr *errors.ErrorTrace
-			source, tr = ical.NewDatabaseIcalSource(sourceName, file, q)
+			source, tr = ical.NewDatabaseIcalSource(sourceName, fileHeader.Filename, &contentToSave, q)
 			if tr != nil {
 				return nil, tr
 			}
@@ -291,7 +302,7 @@ func PatchSource(c *gin.Context) {
 		return
 	}
 
-	var newAuth auth.AuthMethod = nil
+	var newAuth types.AuthMethod = nil
 	if newAuthType != "" {
 		newAuth, err = parseAuthMethod(c)
 		if err != nil {
@@ -300,7 +311,7 @@ func PatchSource(c *gin.Context) {
 		}
 	}
 
-	var newSourceSettings primitives.SourceSettings = nil
+	var newSourceSettings types.SourceSettings = nil
 	if newType != "" {
 		if newAuth == nil {
 			newAuth = source.GetAuth()
@@ -312,8 +323,8 @@ func PatchSource(c *gin.Context) {
 		}
 		newSourceSettings = newSource.GetSettings()
 	}
-	if source.GetType() == "ical" {
-		if newType == "ical" {
+	if source.GetType() == constants.SourceIcal {
+		if newType == constants.SourceIcal {
 			err = source.Cleanup(u.Tx.Queries())
 		}
 		if err != nil {

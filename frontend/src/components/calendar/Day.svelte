@@ -7,6 +7,8 @@
 
   import { queueNotification } from "$lib/client/notifications";
   import { NoOp } from "$lib/client/placeholders";
+  import { flip } from "svelte/animate";
+  import { fly } from "svelte/transition";
 
   interface Props {
     date: Date;
@@ -35,7 +37,7 @@
   let showCreateEventModal: ((date: Date) => Promise<EventModel>) = getContext("showNewEventModal");
   let createEventButtonClick = () => {
     showCreateEventModal(date).catch((err) => {
-      queueNotification("failure", `Could not create event: ${err.message}`);
+      if (err) queueNotification("failure", `Could not create event: ${err.message}`);
     });
   };
 
@@ -95,7 +97,7 @@
     position: absolute;
     width: calc(1.25 * text.$fontSize);
     aspect-ratio: 1 / 1;
-    border-radius: 50%;
+    border-radius: dimensions.$borderRadius;
     left: calc(50% - 1.25 * 0.5 * #{text.$fontSize});
     top: translateY(1.25 * 0.5 * text.$fontSize - #{dimensions.$gapSmall});
     z-index: -1;
@@ -168,14 +170,19 @@
   <!-- TODO: forcing EventEntry to be unique for each event and i like that
   fixes a few issues but might be less performant. figure out the right
   compromise -->
-  {#each events as event, i ((event?.id || 0) + i.toString())}
-    <Event
-      event={event}
-      isFirstDay={isFirstDay}
-      date={date}
-      visible={i < actualMaxEvents}
-      view={view}
-    />
+  <!-- {#each events as event, i ((event?.id || 0) + i.toString())} -->
+
+  {#each events as event, i ((event?.id || i).toString() + date.getTime())}
+    <!-- TODO: make parameters match css, look into cubic easing, invert fly direction when going back in range -->
+    <div animate:flip={{duration: 300, delay: 300}} in:fly={{duration: 300, x: 200}} out:fly={{duration: 300, x: -200}}>
+      <Event
+        event={event}
+        isFirstDay={isFirstDay}
+        date={date}
+        visible={i < actualMaxEvents}
+        view={view}
+      />
+    </div>
   {/each}
   {#if events.length > maxEvents && actualMaxEvents >= 0}
     <button class="more" class:otherMonth={!isCurrentMonth} onclick={() => showMore(date, events)}>

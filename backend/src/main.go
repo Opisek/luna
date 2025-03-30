@@ -4,12 +4,13 @@ import (
 	"context"
 	"fmt"
 	"luna-backend/api"
-	"luna-backend/common"
+	"luna-backend/config"
 	"luna-backend/db"
 	"luna-backend/errors"
-	"luna-backend/interface/parsing"
 	"luna-backend/log"
+	"luna-backend/parsing"
 	"luna-backend/tasks"
+	"luna-backend/types"
 	"os"
 	"sync"
 	"time"
@@ -20,28 +21,27 @@ import (
 
 var version string
 
-func setupDirs(env *common.Environmental) error {
+func setupDirs(env *config.Environmental) error {
 	err := os.MkdirAll(env.GetKeysPath(), 0660)
 	return fmt.Errorf("could not create %v directory: %v", env.GetKeysPath(), err)
 }
 
-func setupConfig() (*logrus.Logger, *logrus.Entry, *common.CommonConfig, *errors.ErrorTrace) {
+func setupConfig() (*logrus.Logger, *logrus.Entry, *config.CommonConfig, *errors.ErrorTrace) {
 	var err error
 	logger := log.NewLogger()
 	mainLogger := logger.WithField("module", "main")
 
-	env, err := common.ParseEnvironmental(mainLogger)
+	env, err := config.ParseEnvironmental(mainLogger)
 	if err != nil {
 		return nil, nil, nil, errors.New().
 			AddErr(errors.LvlDebug, err).
 			Append(errors.LvlDebug, "Could not parse environmental variables")
 	}
 
-	commonConfig := &common.CommonConfig{
-		Env:         &env,
-		DetailLevel: errors.LvlPlain, // TODO: configurable errors verbosity
+	commonConfig := &config.CommonConfig{
+		Env: &env,
 	}
-	commonConfig.Version, err = common.ParseVersion(version)
+	commonConfig.Version, err = types.ParseVersion(version)
 	if err != nil {
 		return nil, nil, nil, errors.New().
 			AddErr(errors.LvlDebug, err).
@@ -51,7 +51,7 @@ func setupConfig() (*logrus.Logger, *logrus.Entry, *common.CommonConfig, *errors
 	return logger, mainLogger, commonConfig, nil
 }
 
-func setupDb(commonConfig *common.CommonConfig, mainLogger *logrus.Entry, dbLogger *logrus.Entry) (*db.Database, *errors.ErrorTrace) {
+func setupDb(commonConfig *config.CommonConfig, mainLogger *logrus.Entry, dbLogger *logrus.Entry) (*db.Database, *errors.ErrorTrace) {
 	env := commonConfig.Env
 	db := db.NewDatabase(env.DB_HOST, env.DB_PORT, env.DB_USERNAME, env.DB_PASSWORD, env.DB_DATABASE, commonConfig, parsing.GetPrimitivesParser(), dbLogger)
 
@@ -69,6 +69,7 @@ func setupDb(commonConfig *common.CommonConfig, mainLogger *logrus.Entry, dbLogg
 		}
 	}()
 
+	// Verify version integrity
 	err := tx.Tables().InitializeVersionTable()
 	if err != nil {
 		return nil, errors.New().
@@ -85,6 +86,8 @@ func setupDb(commonConfig *common.CommonConfig, mainLogger *logrus.Entry, dbLogg
 			Append(errors.LvlDebug, "Downgrades are not supported")
 		return nil, tr
 	}
+
+	// Run migrations
 	tr = tx.Migrations().RunMigrations(&latestUsedVersion)
 	if tr != nil {
 		return nil, tr
@@ -94,6 +97,12 @@ func setupDb(commonConfig *common.CommonConfig, mainLogger *logrus.Entry, dbLogg
 		if tr != nil {
 			return nil, tr
 		}
+	}
+
+	// Load global settings
+	commonConfig.Settings, tr = tx.Queries().GetGlobalSettings()
+	if tr != nil {
+		return nil, tr
 	}
 
 	return db, tx.Commit(mainLogger)
@@ -119,7 +128,13 @@ func createTask(name string, task func(*db.Transaction, *logrus.Entry) *errors.E
 			return
 		}
 
-		tx.Commit(cronLogger)
+		err = tx.Commit(cronLogger)
+		if err != nil {
+			cronLogger.Errorf("failure committing transaction for cron task %v: %v", name, err)
+			return
+		}
+
+		cronLogger.Infof("successfully finished cron task %v", name)
 	}
 }
 
@@ -146,7 +161,7 @@ func main() {
 	dbLogger := logger.WithField("module", "database")
 	dbReady := false
 	var db *db.Database
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		db, err = setupDb(commonConfig, mainLogger, dbLogger)
 		if err == nil {
 			dbReady = true

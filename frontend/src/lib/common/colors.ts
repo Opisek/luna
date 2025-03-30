@@ -1,3 +1,4 @@
+import { getRepository } from "../client/repository";
 import { getSha1Hash } from "./crypto";
 
 export const parseRGB = (color: string): [number, number, number] => {
@@ -112,10 +113,15 @@ export const GetEventRGB = (event: EventModel | null) => {
 export const GetEventColor = (event: EventModel | null) => {
   if (event && event.color) {
     return event.color;
-  } else if (event && event.calendar) {
-    return serializeRGB(DeterministicColor(event.calendar));
-  } else {
+  } else if (!event) {
     return defaultEventColor;
+  }
+
+  const calendar = getRepository().calendars.getArray().find(calendar => calendar.id === event.calendar);
+  if (calendar && calendar.color) {
+    return calendar.color;
+  } else {
+    return serializeRGB(DeterministicColor(event.calendar));
   }
 }
 export const GetCalendarRGB = (calendar: CalendarModel | null) => {

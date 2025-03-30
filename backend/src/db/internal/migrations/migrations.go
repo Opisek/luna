@@ -1,20 +1,23 @@
 package migrations
 
 import (
-	"luna-backend/common"
+	"context"
+	"luna-backend/config"
 	"luna-backend/db/internal/migrations/internal/registry"
 	_ "luna-backend/db/internal/migrations/internal/versions"
-	"luna-backend/db/internal/migrations/types"
+	migrationTypes "luna-backend/db/internal/migrations/types"
 	"luna-backend/db/internal/tables"
 	"luna-backend/errors"
+	"luna-backend/types"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/sirupsen/logrus"
 )
 
-func NewMigrationQueries(tx pgx.Tx, logger *logrus.Entry, commonConfig *common.CommonConfig, tables *tables.Tables) *types.MigrationQueries {
-	return &types.MigrationQueries{
+func NewMigrationQueries(tx pgx.Tx, context context.Context, logger *logrus.Entry, commonConfig *config.CommonConfig, tables *tables.Tables) *migrationTypes.MigrationQueries {
+	return &migrationTypes.MigrationQueries{
 		Tx:           tx,
+		Context:      context,
 		Logger:       logger,
 		CommonConfig: commonConfig,
 		Tables:       tables,
@@ -22,7 +25,7 @@ func NewMigrationQueries(tx pgx.Tx, logger *logrus.Entry, commonConfig *common.C
 	}
 }
 
-func runMigrations(q *types.MigrationQueries, lastVersion *common.Version) *errors.ErrorTrace {
+func runMigrations(q *migrationTypes.MigrationQueries, lastVersion *types.Version) *errors.ErrorTrace {
 
 	migrations := registry.GetMigrations(*lastVersion)
 

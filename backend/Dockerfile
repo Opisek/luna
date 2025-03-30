@@ -20,4 +20,5 @@ FROM alpine:latest
 WORKDIR /app
 RUN apk add tzdata
 COPY --from=build /app/src/luna-backend .
+HEALTHCHECK --interval=15s --timeout=3s --retries=2 CMD wget -O /dev/null http://localhost:3000/api/health
 ENTRYPOINT [ "/app/luna-backend" ]

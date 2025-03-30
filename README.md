@@ -87,6 +87,25 @@ Luna uses its own (UU)IDs for every resource accessed through it. Therefore, the
 - **Body**: Empty
 - **Purpose**: Determines whether the frontend, the backend, and the database are all functioning correctly.
 
+### User Data
+#### Get User Data
+- **Path**: ``/api/user``
+- **Method**: ``GET``
+- **Body**: Empty
+- **Purpose**: Returns the user's saved data, like username and email address.
+
+#### Patch User Data
+- **Path**: ``/api/user``
+- **Method**: ``PATCH``
+- **Body**: Depending on which the user wants to change: `username`, `new_password`, `email`, `profile_picture`, `searchable`. The old password `password` is required if any of `username`, `new_password`, or `email` are specified.
+- **Purpose**: Changes the user's data.
+
+#### Delete User
+- **Path**: ``/api/user`
+- **Method**: ``DELETE``
+- **Body**: `password`
+- **Purpose**: Deletes the user account.
+
 ### Sources
 #### Get Sources
 - **Path**: ``/api/sources``
@@ -199,3 +218,83 @@ The description field is optional. Either the end date or the event duration is 
 - **Method**: ``DELETE``
 - **Body**: Empty
 - **Purpose**: Deletes the event from the local database and the upstream source.
+
+### Files
+#### Get File
+- **Path**: ``/api/files/<ID>``
+- **Method**: ``GET``
+- **Body**: Empty
+- **Purpose**: Returns a file from the database
+- **Note**: There are currently no mechanisms in place determining which users may download which files. Any authenticated user with knowledge of the file ID can download this file. UUIDs do not provide enough security guarantees in this scenario. This should be revisited in the future.
+
+#### Get File Header
+- **Path**: ``/api/files/<ID>``
+- **Method**: ``HEAD``
+- **Body**: Empty
+- **Purpose**: Returns the name and size of a file in the database
+
+### Settings
+#### Get Global Settings
+- **Path**: ``/api/settings/global``
+- **Method**: ``GET``
+- **Body**: Empty
+- **Purpose**: Returns all key-value pairs from the global settings
+- **Note**: This endpoint is only accessibly by an administrator
+
+#### Get Global Setting
+- **Path**: ``/api/settings/global/<KEY>``
+- **Method**: ``GET``
+- **Body**: Empty
+- **Purpose**: Returns a specific key-value pair from the global settings
+- **Note**: This endpoint is only accessibly by an administrator
+
+#### Patch Global Setting
+- **Path**: ``/api/settings/global/<KEY>``
+- **Method**: ``PATCH``
+- **Body**: `value` as serialized JSON object
+- **Purpose**: Sets a specific key-value pair in the global settings
+- **Note**: This endpoint is only accessibly by an administrator
+
+#### Delete Global Setting
+- **Path**: ``/api/settings/global/<KEY>``
+- **Method**: ``DELETE``
+- **Body**: Empty
+- **Purpose**: Reverts a global setting to its default value
+
+#### Get User Settings
+- **Path**: ``/api/settings/user``
+- **Method**: ``GET``
+- **Body**: Empty
+- **Purpose**: Returns all key-value pairs from the requesting user's settings
+
+#### Get User Setting
+- **Path**: ``/api/settings/user/<KEY>``
+- **Method**: ``GET``
+- **Body**: Empty
+- **Purpose**: Returns a specific key-value pair from the requesting user's settings
+
+#### Patch User Setting
+- **Path**: ``/api/settings/global/<KEY>``
+- **Method**: ``PATCH``
+- **Body**: `value` as serialized JSON object
+- **Purpose**: Sets a specific key-value pair in the requesting user's settings
+
+#### Delete User Setting
+- **Path**: ``/api/settings/user/<KEY>``
+- **Method**: ``DELETE``
+- **Body**: Empty
+- **Purpose**: Reverts the requesting user's setting to its default value
+
+### Miscellaneous
+#### URL Type Check
+- **Path**: ``/api/url``
+- **Method**: ``POST``
+- **Body**: `url`, `auth_type`
+- **Purpose**: Tries to determine if the supplied URL links to an iCal file or a CalDAV server. In case of a CalDAV server, it also returns the principal's base URL.
+
+Depending on the `auth_type` field, additional information may need to be passed:
+- `none`: No additional information
+- `basic`: `username`, `password`
+- `bearer`: `token`
+- `oauth`: Not yet implemented
+

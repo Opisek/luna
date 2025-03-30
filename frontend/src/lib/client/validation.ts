@@ -14,10 +14,10 @@ const invalidResponse = (message: string): Validity => {
   }
 }
 
-export const alwaysValid: InputValidation = () => valid;
-export const alwaysValidFile: FileValidation = () => valid;
+export const alwaysValid: InputValidation = () => Promise.resolve(valid);
+export const alwaysValidFile: FileValidation = () => Promise.resolve(valid);
 
-export const isValidUsername: InputValidation = (username) => {
+export const isValidUsername: InputValidation = async (username) => {
   if (username.length < 3)
     return invalidResponse("Username must be at least 3 characters long.");
   if (username.length > 25)
@@ -27,7 +27,7 @@ export const isValidUsername: InputValidation = (username) => {
   return valid;
 }
 
-export const isValidPassword: InputValidation = (password) => {
+export const isValidPassword: InputValidation = async (password) => {
   if (password.length < 8)
     return invalidResponse("Password must be at least 8 characters long.");
   if (password.length > 50)
@@ -36,14 +36,14 @@ export const isValidPassword: InputValidation = (password) => {
 }
 
 export const isValidRepeatPassword = (repeatPassword: string): InputValidation => {
-  return (password) => {
+  return async (password) => {
     if (password !== repeatPassword)
       return invalidResponse("Passwords do not match.");
     return valid;
   }
 }
 
-export const isValidUrl: InputValidation = (url) => {
+export const isValidUrl: InputValidation = async (url) => {
   if (!url.startsWith("http://") && !url.startsWith("https://"))
     return invalidResponse("URL must start with \"http://\" or \"https://\".");
   if (!urlRegex.test(url))
@@ -51,19 +51,19 @@ export const isValidUrl: InputValidation = (url) => {
   return valid;
 }
 
-export const isValidEmail: InputValidation = (email) => {
+export const isValidEmail: InputValidation = async (email) => {
   if (!emailRegex.test(email))
     return invalidResponse("Invalid email address");
   return valid;
 }
 
-export const isValidPath: InputValidation = (path) => {
+export const isValidPath: InputValidation = async (path) => {
   if (path.length < 1)
     return invalidResponse("Path must be at least 1 character long.");
   return valid;
 }
 
-export const isValidFile: FileValidation = (files) => {
+export const isValidFile: FileValidation = async (files) => {
   if (files.length === 0)
     return invalidResponse("No files selected.");
   if (files.length > 1)
@@ -72,5 +72,23 @@ export const isValidFile: FileValidation = (files) => {
     return invalidResponse("File is null.");
   if ((files.item(0) as File).size > 50000000)
     return invalidResponse("File must not be larger than 50MB.");
+  return valid;
+}
+
+export const isValidIcalFile: FileValidation = async (files) => {
+  const fileValidation = await isValidFile(files);
+  if (!fileValidation.valid)
+    return fileValidation;
+
+  const file = files.item(0) as File;
+
+  if (file.type !== "text/calendar")
+    return invalidResponse("File must be of type text/calendar.");
+  
+  const content = await file.text();
+
+  if (!content.includes("BEGIN:VCALENDAR") || !content.includes("END:VCALENDAR"))
+    return invalidResponse("Invalid file format");
+
   return valid;
 }

@@ -12,6 +12,7 @@
     top: 0;
     transform: translateX(-100%);
     transition: transform animations.$animationSpeedFast linear, background-color 0s linear animations.$animationSpeedFast;
+    z-index: 5;
   }
 
   :global(*:focus-within:not(.clicked)) > div, 

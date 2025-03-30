@@ -13,6 +13,7 @@
     "@sveltejs/vite-plugin-svelte": "^4.0.4",
     "@types/node": "^22.13.10",
     "@types/sha1": "^1.1.5",
+    "@types/sha256": "^0.2.2",
     "lucide-svelte": "^0.367.0",
     "sass": "^1.85.1",
     "svelte": "^5.22.6",
@@ -28,6 +29,7 @@
   "dependencies": {
     "@sveltejs/kit": "^2.19.0",
     "dotenv": "^16.4.7",
-    "sha1": "^1.1.1"
+    "sha1": "^1.1.1",
+    "sha256": "^0.2.0"
   }
 }

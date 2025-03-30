@@ -5,7 +5,7 @@ import (
 	middleware "luna-backend/api/internal"
 	"luna-backend/api/internal/handlers"
 	"luna-backend/api/internal/util"
-	"luna-backend/common"
+	"luna-backend/config"
 	"luna-backend/db"
 	"time"
 
@@ -13,7 +13,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func NewApi(db *db.Database, commonConfig *common.CommonConfig, logger *logrus.Entry) *util.Api {
+func NewApi(db *db.Database, commonConfig *config.CommonConfig, logger *logrus.Entry) *util.Api {
 	return util.NewApi(db, commonConfig, logger, run)
 }
 
@@ -38,7 +38,15 @@ func run(api *util.Api) {
 	endpoints.GET("/health", handlers.GetHealth)
 
 	// everything past here requires the user to be logged in
-	authenticatedEndpoints := endpoints.Group("", middleware.RequestAuth())
+	noDatabaseAuthenticatedEndpoints := noDatabaseEndpoints.Group("", middleware.RequireAuth())
+	authenticatedEndpoints := endpoints.Group("", middleware.RequireAuth())
+	administratorEndpoints := authenticatedEndpoints.Group("", middleware.RequireAdmin())
+
+	// /api/user
+	userEndpoints := authenticatedEndpoints.Group("/user")
+	userEndpoints.GET("", handlers.GetUserData)
+	userEndpoints.PATCH("", handlers.PatchUserData)
+	userEndpoints.DELETE("", handlers.DeleteUser)
 
 	// /api/sources/*
 	sourcesEndpoints := authenticatedEndpoints.Group("/sources")
@@ -64,5 +72,28 @@ func run(api *util.Api) {
 	eventEndpoints.PATCH("/:eventId", handlers.PatchEvent)
 	eventEndpoints.DELETE("/:eventId", handlers.DeleteEvent)
 
+	// /api/files/*
+	fileEndpoints := authenticatedEndpoints.Group("/files")
+	fileEndpoints.GET("/:fileId", handlers.GetFile)
+	fileEndpoints.HEAD("/:fileId", handlers.GetFile)
+
+	// /api/settings
+	userSettingsEndpoints := authenticatedEndpoints.Group("/settings/user")
+	userSettingsEndpoints.GET("", handlers.GetUserSettings)
+	userSettingsEndpoints.GET("/:settingKey", handlers.GetUserSetting)
+	userSettingsEndpoints.PATCH("/:settingKey", handlers.PatchUserSetting)
+	userSettingsEndpoints.DELETE("/:settingKey", handlers.ResetUserSetting)
+
+	globalSettingsEndpoints := administratorEndpoints.Group("/settings/global")
+	globalSettingsEndpointsPublic := authenticatedEndpoints.Group("/settings/global")
+	globalSettingsEndpointsPublic.GET("", handlers.GetGlobalSettings)
+	globalSettingsEndpointsPublic.GET("/:settingKey", handlers.GetGlobalSetting)
+	globalSettingsEndpoints.PATCH("/:settingKey", handlers.PatchGlobalSetting)
+	globalSettingsEndpoints.DELETE("/:settingKey", handlers.ResetGlobalSetting)
+
+	// /api/* the rest
+	noDatabaseAuthenticatedEndpoints.POST("/url", handlers.CheckUrl)
+
+	// Run the server
 	router.Run(fmt.Sprintf(":%d", api.CommonConfig.Env.API_PORT))
 }

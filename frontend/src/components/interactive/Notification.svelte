@@ -35,6 +35,19 @@
   function hideDetails() {
     viewDetails = false;
   }
+
+  let previousCount = $state(notification.count);
+  let counterVisible = $state(false);
+  let counterPop = $state(true);
+  $effect(() => {
+    if (notification.count == 1 || previousCount == notification.count) return;
+    previousCount = notification.count;
+    counterPop = false;
+    setTimeout(() => {
+      counterPop = true;
+      counterVisible = true;
+    }, 10);
+  });
 </script>
 
 <style lang="scss">
@@ -111,6 +124,29 @@
   .info .details {
     color: colors.$foregroundAccentFaded;
   }
+
+  .count {
+    position: absolute;
+    top: dimensions.$gapSmall;
+    right: dimensions.$gapSmall;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 50%;
+    height: 1.4em;
+    aspect-ratio: 1/1;
+    font-size: text.$fontSizeSmall;
+    display: grid;
+    text-align: center;
+    align-items: center;
+    align-content: center;
+    opacity: 0;
+    transition: opacity animations.$animationSpeedFast;
+  }
+  .opaque {
+    opacity: 1;
+  }
+  .pop {
+    animation: pop animations.$cubic animations.$animationSpeed;
+  }
 </style>
 
 <div
@@ -140,6 +176,15 @@
         {/if}
       </span>
     {/if}
-    <div class="timer" onanimationend={removeGracefully}></div>
+
+    {#if notification.count > 1}
+      <div class="count" class:opaque={counterVisible} class:pop={counterPop}>
+        {notification.count}
+      </div>
+    {/if}
+
+    {#if counterPop}
+      <div class="timer" onanimationend={removeGracefully}></div>
+    {/if}
   </div>
 </div>

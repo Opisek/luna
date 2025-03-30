@@ -4,13 +4,15 @@
   import { alwaysValidFile, valid } from "$lib/client/validation";
   import { focusIndicator } from "$lib/client/decoration";
   import IconButton from "../interactive/IconButton.svelte";
-  import { Upload, X } from "lucide-svelte";
+  import { Download, FileEdit, Upload, X } from "lucide-svelte";
+  import { downloadFileToClient } from "../../lib/client/net";
 
   let wrapper: HTMLDivElement | null = $state(null);
   let fileInput: HTMLInputElement | null = $state(null);
 
   interface Props {
     files: FileList | null;
+    fileId?: string;
     placeholder: string;
     name: string;
     editable?: boolean;
@@ -20,11 +22,12 @@
 
   let {
     files = $bindable(null),
+    fileId = $bindable(""),
     placeholder,
     name,
     editable = true,
     validation = alwaysValidFile,
-    validity = $bindable(files ? validation(files) : valid)
+    validity = $bindable(valid)
   }: Props = $props();
 
   function select() {
@@ -38,15 +41,20 @@
     files = null;
   }
 
+  function download() {
+    if (fileId === "") downloadFileToClient(files)
+    else downloadFileToClient(fileId);
+  }
+
   // If the value is set programmatically, update the validity.
   // For example when opening a new form
   let lastValue: FileList | null = $state(null); // TODO: check if still needed in svelte 5
   $effect(() => {
-    ((value) => {
+    (async (value) => {
       if (!value || value === lastValue) return; // prevents some infinite loop that i don't understand, might be a svelte bug
       lastValue = value;
       if (wrapper != null && (document.activeElement === wrapper || wrapper.contains(document.activeElement))) return;
-      validity = value ? validation(value) : valid;
+      validity = value && fileId == "" ? await validation(value) : valid;
     })(files);
   });
 
@@ -55,9 +63,11 @@
   let empty = $derived(files === null);
 
   // Update validity when the file changes
-  function internalOnChange() {
-    if (!files) return;
-    validity = validation(files);
+  async function internalOnChange() {
+    if (files) {
+      fileId = "";
+    }
+    validity = files ? await validation(files) : valid;
   }
 </script>
 
@@ -117,18 +127,25 @@
     --barFocusIndicatorColor: transparent;
   }
 
-  div.button {
+  div.buttons {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
     right: calc(1.5 * dimensions.$gapSmaller);
     color: colors.$foregroundDim;
+    display: flex;
+    flex-direction: row;
+  }
+  div.editable > div.buttons {
+    background-color: colors.$backgroundSecondary;
   }
 
   span.label {
     font-size: text.$fontSizeSmall;
     margin-bottom: -(dimensions.$gapMiddle);
     padding-left: calc(dimensions.$gapSmall * (text.$fontSize / text.$fontSizeSmall));
+    display: flex;
+    justify-content: space-between;
   }
 
   span.errorMessage {
@@ -170,19 +187,28 @@
 />
   {#if editable}
     {#if empty}
-      <div class="upload button">
-        <IconButton click={select} tabindex={editable && empty ? 0 : -1}>
+      <div class="buttons">
+        <IconButton click={select}>
             <!-- Upload, FileUp, MonitorUp, CloudUpload, HardDriveUpload -->
             <Upload size={16}/>
         </IconButton>
       </div>
     {:else}
-      <div class="clear button">
-        <IconButton click={clear} tabindex={editable && !empty ? 0 : -1}>
+      <div class="buttons">
+        <IconButton click={download}>
+          <Download size={16}/>
+        </IconButton>
+        <IconButton click={clear}>
             <X size={16}/>
         </IconButton>
       </div>
     {/if}
+  {:else}
+    <div class="buttons">
+      <IconButton click={download}>
+        <Download size={16}/>
+      </IconButton>
+    </div>
   {/if}
 </div>
 

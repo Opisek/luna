@@ -20,18 +20,32 @@ export const AllChangesSource: SourceModelChanges = {
   auth: true
 }
 
+export const NoChangesSource: SourceModelChanges = {
+  name: false,
+  type: false,
+  settings: false,
+  auth: false
+}
+
 export const EmptyCalendar: CalendarModel = {
   id: "",
   source: "",
   name: "",
   desc: "",
-  color: ""
+  color: "",
+  overridden: false
 }
 
 export const AllChangesCalendar: CalendarModelChanges = {
   name: true,
   desc: true,
   color: true
+}
+
+export const NoChangesCalendar: CalendarModelChanges = {
+  name: false,
+  desc: false,
+  color: false
 }
 
 export const PlaceholderDate = new Date(0);
@@ -47,7 +61,8 @@ export const EmptyEvent: EventModel = {
     end: PlaceholderDate,
     allDay: false,
     recurrence: false
-  }
+  },
+  overridden: false
 }
 
 export const AllChangesEvent: EventModelChanges = {
@@ -55,6 +70,13 @@ export const AllChangesEvent: EventModelChanges = {
   desc: true,
   color: true,
   date: true
+}
+
+export const NoChangesEvent: EventModelChanges = {
+  name: false,
+  desc: false,
+  color: false,
+  date: false
 }
 
 export const NoOp = () => {};

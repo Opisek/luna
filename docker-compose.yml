@@ -12,12 +12,13 @@ services:
   luna-frontend:
     container_name: luna-frontend
     ports:
-      - "3000:3000"
+      - "8080:8080"
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     environment:
-      ORIGIN: http://localhost:3000
+      PORT: 8080
+      PUBLIC_URL: http://localhost:8080
       API_URL: http://luna-backend:3000
     build:
       context: frontend
@@ -25,13 +26,12 @@ services:
 
   luna-backend:
     container_name: luna-backend
-    #ports:
-    #  - "3001:3000"
     volumes:
       - /srv/luna/data:/data
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     environment:
+      PUBLIC_URL: http://localhost:8080
       DB_HOST: luna-postgres
       DB_PORT: 5432
       DB_USERNAME: luna
@@ -46,8 +46,6 @@ services:
   luna-postgres:
     image: postgres:16-alpine
     container_name: luna-postgres
-    ports:
-      - "5432:5432"
     volumes:
       - /srv/luna/postgres:/var/lib/postgresql/data
       - /etc/timezone:/etc/timezone:ro

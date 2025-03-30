@@ -5,29 +5,20 @@ import (
 	"luna-backend/db/internal/parsing"
 	"luna-backend/db/internal/util"
 	"luna-backend/errors"
-	"luna-backend/interface/primitives"
 	"luna-backend/types"
 	"net/http"
+	"strings"
 
 	"github.com/jackc/pgx/v5"
 )
 
-func (q *Queries) insertCalendars(cals []primitives.Calendar) *errors.ErrorTrace {
+func (q *Queries) insertCalendars(cals []types.Calendar) *errors.ErrorTrace {
 	rows := [][]any{}
 
 	for _, cal := range cals {
-		color := cal.GetColor()
-		var colBytes []byte
-		if color.IsEmpty() {
-			colBytes = nil
-		} else {
-			colBytes = color.Bytes()
-		}
-
 		row := []any{
 			cal.GetId(),
 			cal.GetSource().GetId(),
-			colBytes,
 			cal.GetSettings().Bytes(),
 		}
 
@@ -38,8 +29,8 @@ func (q *Queries) insertCalendars(cals []primitives.Calendar) *errors.ErrorTrace
 		q.Tx,
 		q.Context,
 		"calendars",
-		[]string{"id", "source", "color", "settings"},
-		[]string{"color", "settings"},
+		[]string{"id", "source", "settings"},
+		[]string{"settings"},
 		rows,
 	)
 
@@ -51,11 +42,15 @@ func (q *Queries) insertCalendars(cals []primitives.Calendar) *errors.ErrorTrace
 	return nil
 }
 
-func (q *Queries) getCalendarEntries(cals []primitives.Calendar) ([]*types.CalendarDatabaseEntry, *errors.ErrorTrace) {
+func (q *Queries) getCalendarEntries(cals []types.Calendar) ([]*types.CalendarExtendedDatabaseEntry, *errors.ErrorTrace) {
 	query := fmt.Sprintf(
 		`
-		SELECT id, source, color, settings
+		SELECT id, source, settings, COALESCE(title, '') as title, COALESCE(description, '') as description, color, COALESCE(overridden, false) AS overridden
 		FROM calendars
+		LEFT OUTER JOIN (
+			SELECT calendarid, title, description, color, true AS overridden
+			FROM calendar_overrides	
+		) AS overrides ON calendars.id = overrides.calendarid
 		WHERE id IN (
 			%s
 		);
@@ -66,7 +61,7 @@ func (q *Queries) getCalendarEntries(cals []primitives.Calendar) ([]*types.Calen
 	rows, err := q.Tx.Query(
 		q.Context,
 		query,
-		util.JoinIds(cals, func(c primitives.Calendar) types.ID { return c.GetId() })...,
+		util.JoinIds(cals, func(c types.Calendar) types.ID { return c.GetId() })...,
 	)
 	if err != nil {
 		return nil, errors.New().Status(http.StatusInternalServerError).
@@ -75,11 +70,11 @@ func (q *Queries) getCalendarEntries(cals []primitives.Calendar) ([]*types.Calen
 	}
 	defer rows.Close()
 
-	entries := []*types.CalendarDatabaseEntry{}
+	entries := []*types.CalendarExtendedDatabaseEntry{}
 	for rows.Next() {
-		entry := &types.CalendarDatabaseEntry{}
+		entry := &types.CalendarExtendedDatabaseEntry{}
 
-		err := rows.Scan(&entry.Id, &entry.Source, &entry.Color, &entry.Settings)
+		err := rows.Scan(&entry.Id, &entry.Source, &entry.Settings, &entry.Title, &entry.Description, &entry.Color, &entry.Overridden)
 		if err != nil {
 			return nil, errors.New().Status(http.StatusInternalServerError).
 				AddErr(errors.LvlDebug, err).
@@ -92,12 +87,12 @@ func (q *Queries) getCalendarEntries(cals []primitives.Calendar) ([]*types.Calen
 	return entries, nil
 }
 
-func (q *Queries) ReconcileCalendars(cals []primitives.Calendar) ([]primitives.Calendar, *errors.ErrorTrace) {
+func (q *Queries) OverrideCalendars(cals []types.Calendar) ([]types.Calendar, *errors.ErrorTrace) {
 	if len(cals) == 0 {
 		return cals, nil
 	}
 
-	calMap := map[types.ID]primitives.Calendar{}
+	calMap := map[types.ID]types.Calendar{}
 	for _, cal := range cals {
 		calMap[cal.GetId()] = cal
 	}
@@ -111,9 +106,18 @@ func (q *Queries) ReconcileCalendars(cals []primitives.Calendar) ([]primitives.C
 
 	for _, dbCal := range dbCals {
 		if cal, ok := calMap[dbCal.Id]; ok {
-			if cal.GetColor() == nil {
+			if !dbCal.Overridden {
+				continue
+			}
+			cal.SetOverridden(true)
+			if dbCal.Title != "" {
+				cal.SetName(dbCal.Title)
+			}
+			if dbCal.Description != "" {
+				cal.SetDesc(dbCal.Description)
+			}
+			if dbCal.Color != nil {
 				cal.SetColor(types.ColorFromBytes(dbCal.Color))
-				// TODO: if dbCal.Color == nil, either return some default color, or generate a deterministic random one (e.g. calendar id hash -> hue)
 			}
 		}
 	}
@@ -128,7 +132,15 @@ func (q *Queries) ReconcileCalendars(cals []primitives.Calendar) ([]primitives.C
 	return cals, nil
 }
 
-func (q *Queries) GetCalendar(userId types.ID, calendarId types.ID) (primitives.Calendar, *errors.ErrorTrace) {
+func (q *Queries) OverrideCalendar(calendar types.Calendar) (types.Calendar, *errors.ErrorTrace) {
+	cals, tr := q.OverrideCalendars([]types.Calendar{calendar})
+	if tr != nil {
+		return nil, tr
+	}
+	return cals[0], nil
+}
+
+func (q *Queries) GetCalendar(userId types.ID, calendarId types.ID) (types.Calendar, *errors.ErrorTrace) {
 	decryptionKey, tr := util.GetUserDecryptionKey(q.CommonConfig, userId)
 	if tr != nil {
 		return nil, tr.
@@ -185,16 +197,15 @@ func (q *Queries) GetCalendar(userId types.ID, calendarId types.ID) (primitives.
 	return event, nil
 }
 
-func (q *Queries) InsertCalendar(calendar primitives.Calendar) *errors.ErrorTrace {
+func (q *Queries) InsertCalendar(calendar types.Calendar) *errors.ErrorTrace {
 	_, err := q.Tx.Exec(
 		q.Context,
 		`
-		INSERT INTO calendars (id, source, color, settings)
-		VALUES ($1, $2, $3, $4);
+		INSERT INTO calendars (id, source, settings)
+		VALUES ($1, $2, $3);
 		`,
 		calendar.GetId().UUID(),
 		calendar.GetSource().GetId().UUID(),
-		calendar.GetColor().Bytes(),
 		calendar.GetSettings().Bytes(),
 	)
 
@@ -208,16 +219,15 @@ func (q *Queries) InsertCalendar(calendar primitives.Calendar) *errors.ErrorTrac
 	return nil
 }
 
-func (q *Queries) UpdateCalendar(cal primitives.Calendar) *errors.ErrorTrace {
+func (q *Queries) UpdateCalendar(cal types.Calendar) *errors.ErrorTrace {
 	_, err := q.Tx.Exec(
 		q.Context,
 		`
 		UPDATE calendars
-		SET color = $1, settings = $2
-		WHERE id = $3;`,
-		cal.GetColor().Bytes(),
-		cal.GetSettings().Bytes(),
+		SET settings = $2
+		WHERE id = $1;`,
 		cal.GetId(),
+		cal.GetSettings().Bytes(),
 	)
 
 	switch err {
@@ -269,4 +279,69 @@ func (q *Queries) DeleteCalendar(userId types.ID, calendarId types.ID) *errors.E
 			Append(errors.LvlDebug, "Could not delete calendar %v", calendarId).
 			AltStr(errors.LvlBroad, "Could not delete calendar")
 	}
+}
+
+func (q *Queries) SetCalendarOverrides(calendarId types.ID, name string, desc string, color *types.Color) *errors.ErrorTrace {
+	columns := []string{}
+	params := []any{calendarId.UUID()}
+
+	if name != "" {
+		columns = append(columns, "title")
+		params = append(params, name)
+	}
+	if desc != "" {
+		columns = append(columns, "description")
+		params = append(params, desc)
+	}
+	if color != nil {
+		columns = append(columns, "color")
+		params = append(params, color.Bytes())
+	}
+
+	query := fmt.Sprintf(
+		`
+		INSERT INTO calendar_overrides (calendarid, %s)
+		VALUES ($1, %s)
+		ON CONFLICT (calendarid) DO UPDATE
+		SET %s;
+		`,
+		strings.Join(columns, ", "),
+		util.GenerateArgList(2, len(columns)),
+		util.GenerateSetList(2, columns),
+	)
+
+	_, err := q.Tx.Exec(
+		q.Context,
+		query,
+		params...,
+	)
+
+	if err != nil {
+		return errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not set calendar overrides for %v", calendarId).
+			AltStr(errors.LvlWordy, "Could not set calendar overrides for %v", name)
+	}
+
+	return nil
+}
+
+func (q *Queries) DeleteCalendarOverrides(calendarId types.ID) *errors.ErrorTrace {
+	_, err := q.Tx.Exec(
+		q.Context,
+		`
+		DELETE FROM calendar_overrides
+		WHERE calendarid = $1;
+		`,
+		calendarId.UUID(),
+	)
+
+	if err != nil {
+		return errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not delete calendar overrides for %v", calendarId).
+			AltStr(errors.LvlWordy, "Could not delete calendar overrides")
+	}
+
+	return nil
 }

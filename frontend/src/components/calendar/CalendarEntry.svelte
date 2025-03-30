@@ -21,11 +21,13 @@
 
   let hasErrored = $state(false);
   getMetadata().faultyCalendars.subscribe((faulty) => {
+    if (!calendar || !calendar.id) return;
     hasErrored = faulty.has(calendar.id);
   });
 
   let isLoading = $state(false);
   getMetadata().loadingCalendars.subscribe((loading) => {
+    if (!calendar || !calendar.id) return;
     isLoading = loading.has(calendar.id);
   });
 

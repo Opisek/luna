@@ -6,12 +6,13 @@
   import { EmptySource, NoOp } from "$lib/client/placeholders";
   import { getRepository } from "$lib/client/repository";
   import { deepCopy, deepEquality } from "$lib/common/misc";
-  import { isValidFile, isValidPath, isValidUrl, valid } from "$lib/client/validation";
+  import { isValidFile, isValidIcalFile, isValidPath, isValidUrl, valid } from "$lib/client/validation";
   import { queueNotification } from "$lib/client/notifications";
   import FileUpload from "../forms/FileUpload.svelte";
+  import { fetchResponse } from "../../lib/client/net";
 
   interface Props {
-    showCreateModal?: () => any;
+    showCreateModal?: () => Promise<SourceModel>;
     showModal?: (source: SourceModel) => Promise<SourceModel>;
   }
 
@@ -23,11 +24,11 @@
   let sourceDetailed: SourceModel = $state(EmptySource);
   let originalSource: SourceModel;
 
-  let saveSource = (_: SourceModel | PromiseLike<SourceModel>) => {};
-  let cancelSource = (_?: any) => {};
+  let promiseResolve: (value: SourceModel | PromiseLike<SourceModel>) => void = $state(NoOp);
+  let promiseReject: (reason?: any) => void = $state(NoOp);
 
   showCreateModal = () => {
-    cancelSource();
+    promiseReject();
 
     sourceDetailed = {
       id: "",
@@ -36,15 +37,20 @@
       settings: {
         location: "remote",
         file: null,
+        fileId: "",
       },
       auth_type: "none",
       auth: {},
     };
 
     showCreateModalInternal();
+    return new Promise((resolve, reject) => {
+      promiseResolve = resolve;
+      promiseReject = reject;
+    })
   }
   showModal = async (source: SourceModel): Promise<SourceModel> => {
-    cancelSource();
+    promiseReject();
 
     // TODO: this should be a call to repository with force refresh = true
     sourceDetailed = await getRepository().getSourceDetails(source.id).catch(err => {
@@ -56,13 +62,37 @@
     if (sourceDetailed.type !== "ical") sourceDetailed.settings.location = "remote";
 
     if (sourceDetailed.type === "ical" && sourceDetailed.settings.location === "database" && sourceDetailed.settings.file !== null) {
-      // https://stackoverflow.com/questions/52078853/is-it-possible-to-update-filelist
-      const list = new DataTransfer();
-      const file = new File([], `${sourceDetailed.settings.file}.ics`);
-      list.items.add(file);
-      sourceDetailed.settings.file = list.files;
+      const fileId = sourceDetailed.settings.file;
+      sourceDetailed.settings.fileId = fileId;
+
+      const res = await fetchResponse(`/api/files/${fileId}`, { method: "HEAD" }).catch(err => {
+        queueNotification("failure", `Could not get file: ${err.message}`);
+        sourceDetailed.settings.file = null;
+      });
+
+      if (res) {
+        let filename = `${fileId}.ics`;
+
+        const header = res.headers.get("Content-Disposition")
+        if (header) {
+          const remoteFilename = header
+            .split(";")
+            .map(x => x.trim())
+            .filter(x => x.startsWith("filename="))
+            .map(x => x.split("=")[1]);
+          
+          if (remoteFilename.length > 0) filename = remoteFilename[0];
+        }
+
+        // https://stackoverflow.com/questions/52078853/is-it-possible-to-update-filelist
+        const list = new DataTransfer();
+        const file = new File([], filename);
+        list.items.add(file);
+        sourceDetailed.settings.file = list.files;
+      }
     } else {
       sourceDetailed.settings.file = null;
+      sourceDetailed.settings.fileId = "";
     }
 
     originalSource = await deepCopy(sourceDetailed);
@@ -70,8 +100,8 @@
 
     showModalInternal();
     return new Promise((resolve, reject) => {
-      saveSource = resolve;
-      cancelSource = reject;
+      promiseResolve = resolve;
+      promiseReject = reject;
     })
   };
 
@@ -85,15 +115,15 @@
     await getRepository().deleteSource(sourceDetailed.id).catch(err => {
       throw new Error(`Could not delete source ${sourceDetailed.name}: ${err.message}`);
     });
-    cancelSource();
+    promiseReject();
   };
   const onEdit = async () => {
     if (sourceDetailed.id === "") {
       await getRepository().createSource(sourceDetailed).catch(err => {
-        cancelSource();
+        promiseReject();
         throw new Error(`Could not create source ${sourceDetailed.name}: ${err.message}`);
       });
-      saveSource(sourceDetailed);
+      promiseResolve(sourceDetailed);
     } else {
       if (originalSource.settings.file instanceof String && sourceDetailed.settings.file instanceof FileList && sourceDetailed.settings.file.length === 1 && sourceDetailed.settings.file[0].name === originalSource.settings.file) {
         sourceDetailed.settings.file = sourceDetailed.settings.file[0];
@@ -104,11 +134,11 @@
         settings: !deepEquality(sourceDetailed.settings, originalSource.settings),
         auth: sourceDetailed.auth_type != originalSource.auth_type || !deepEquality(sourceDetailed.auth, originalSource.auth)
       }
-      await getRepository().editSource(await deepCopy(sourceDetailed), changes).catch(err => {
-        cancelSource();
+      await getRepository().editSource(sourceDetailed, changes).catch(err => {
+        promiseReject();
         throw new Error(`Could not edit source ${sourceDetailed.name}: ${err.message}`);
       });
-      saveSource(sourceDetailed);
+      promiseResolve(sourceDetailed);
     }
   };
 
@@ -135,6 +165,7 @@
   bind:showModal={showModalInternal}
   onDelete={onDelete}
   onEdit={onEdit}
+  onCancel={promiseReject}
   submittable={canSubmit}
 >
   {#if sourceDetailed}
@@ -176,7 +207,7 @@
       {#if sourceDetailed.settings.location === "remote"}
         <TextInput bind:value={sourceDetailed.settings.url} name="ical_url" placeholder="iCal URL" editable={editMode} validation={isValidUrl} bind:validity={icalLinkValidity} />
       {:else if sourceDetailed.settings.location === "database"}
-        <FileUpload bind:files={sourceDetailed.settings.file} name="ical_file" placeholder="iCal File" editable={editMode} validation={isValidFile} bind:validity={icalFileValidity} />
+          <FileUpload bind:files={sourceDetailed.settings.file} bind:fileId={sourceDetailed.settings.fileId} name="ical_file" placeholder="iCal File" editable={editMode} validation={isValidIcalFile} bind:validity={icalFileValidity} />
       {:else if sourceDetailed.settings.location === "local"}
         <TextInput bind:value={sourceDetailed.settings.path} name="ical_path" placeholder="iCal Path" editable={editMode} validation={isValidPath} bind:validity={icalPathValidity} />
       {/if}

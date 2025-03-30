@@ -2,14 +2,14 @@ package util
 
 import (
 	"encoding/base64"
-	"luna-backend/common"
+	"luna-backend/config"
 	"luna-backend/crypto"
 	"luna-backend/errors"
 	"luna-backend/types"
 	"net/http"
 )
 
-func GetUserEncryptionKey(commonConfig *common.CommonConfig, userId types.ID) (string, *errors.ErrorTrace) {
+func GetUserEncryptionKey(commonConfig *config.CommonConfig, userId types.ID) (string, *errors.ErrorTrace) {
 	masterKey, tr := crypto.GetSymmetricKey(commonConfig, "database")
 	if tr != nil {
 		return "", tr.
@@ -26,6 +26,6 @@ func GetUserEncryptionKey(commonConfig *common.CommonConfig, userId types.ID) (s
 	return encodedKey, nil
 }
 
-func GetUserDecryptionKey(commonConfig *common.CommonConfig, userId types.ID) (string, *errors.ErrorTrace) {
+func GetUserDecryptionKey(commonConfig *config.CommonConfig, userId types.ID) (string, *errors.ErrorTrace) {
 	return GetUserEncryptionKey(commonConfig, userId)
 }

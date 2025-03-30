@@ -3,7 +3,7 @@ package util
 import (
 	"context"
 	"fmt"
-	"luna-backend/common"
+	"luna-backend/config"
 	"luna-backend/db"
 	"luna-backend/errors"
 	"luna-backend/types"
@@ -15,7 +15,7 @@ import (
 )
 
 type HandlerUtility struct {
-	Config       *common.CommonConfig
+	Config       *config.CommonConfig
 	Logger       *logrus.Entry
 	Tx           *db.Transaction
 	Context      context.Context
@@ -27,22 +27,45 @@ type HandlerUtility struct {
 type Response struct {
 	httpCode int
 	msg      *gin.H
+	file     types.File
+	raw      []byte
+	rawType  string
 }
 
 func (r *Response) GetStatus() int {
 	return r.httpCode
 }
 
+func (r *Response) GetRaw() []byte {
+	return r.raw
+}
+
+func (r *Response) GetRawType() string {
+	return r.rawType
+}
+
 func (r *Response) GetMsg() *gin.H {
 	return r.msg
+}
+
+func (r *Response) GetFile() types.File {
+	return r.file
 }
 
 func (u *HandlerUtility) Success(msg *gin.H) {
 	u.ResponseWithStatus(http.StatusOK, msg)
 }
 
+func (u *HandlerUtility) SuccessRawJson(rawJson []byte) {
+	u.ResponseChan <- &Response{http.StatusOK, nil, nil, rawJson, "application/json"}
+}
+
 func (u *HandlerUtility) ResponseWithStatus(httpCode int, msg *gin.H) {
-	u.ResponseChan <- &Response{httpCode, msg}
+	u.ResponseChan <- &Response{httpCode, msg, nil, nil, ""}
+}
+
+func (u *HandlerUtility) ResponseWithFile(file types.File) {
+	u.ResponseChan <- &Response{http.StatusOK, nil, file, nil, ""}
 }
 
 func (u *HandlerUtility) Error(err *errors.ErrorTrace) {

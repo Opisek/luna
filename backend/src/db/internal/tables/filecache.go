@@ -14,6 +14,7 @@ func (q *Tables) InitializeFilecacheTable() error {
 		CREATE TABLE IF NOT EXISTS filecache (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 			date TIMESTAMP NOT NULL,
+			name TEXT NOT NULL,
 			file BYTEA
 		);
 	`)

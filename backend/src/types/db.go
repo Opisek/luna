@@ -10,15 +10,33 @@ import (
 type EventDatabaseEntry struct {
 	Id       ID     `db:"id" encrypted:"false"`
 	Calendar ID     `db:"calendar" encrypted:"false"`
-	Color    []byte `db:"color" encrypted:"false"`
 	Settings []byte `db:"settings" encrypted:"false"`
+}
+
+type EventExtendedDatabaseEntry struct {
+	Id          ID     `db:"id" encrypted:"false"`
+	Calendar    ID     `db:"calendar" encrypted:"false"`
+	Settings    []byte `db:"settings" encrypted:"false"`
+	Title       string `db:"title" encrypted:"false"`
+	Description string `db:"description" encrypted:"false"`
+	Color       []byte `db:"color" encrypted:"false"`
+	Overridden  bool   `db:"overridden" encrypted:"false"`
 }
 
 type CalendarDatabaseEntry struct {
 	Id       ID     `db:"id" encrypted:"false"`
 	Source   ID     `db:"source" encrypted:"false"`
-	Color    []byte `db:"color" encrypted:"false"`
 	Settings []byte `db:"settings" encrypted:"false"`
+}
+
+type CalendarExtendedDatabaseEntry struct {
+	Id          ID     `db:"id" encrypted:"false"`
+	Source      ID     `db:"source" encrypted:"false"`
+	Settings    []byte `db:"settings" encrypted:"false"`
+	Title       string `db:"title" encrypted:"false"`
+	Description string `db:"description" encrypted:"false"`
+	Color       []byte `db:"color" encrypted:"false"`
+	Overridden  bool   `db:"overridden" encrypted:"false"`
 }
 
 type SourceDatabaseEntry struct {
@@ -31,12 +49,18 @@ type SourceDatabaseEntry struct {
 	Auth     []byte `db:"auth" encrypted:"true"`
 }
 
-// Subset of database queries required for e.g. file caching
+// Subset of database queries required for protocol implementations
 // Required to avoid circular dependencies
 type DatabaseQueries interface {
 	GetContext() context.Context
-	GetFilecache(file File) (io.Reader, *time.Time, *errors.ErrorTrace)
+
+	GetFilecache(file File) (string, io.Reader, *time.Time, *errors.ErrorTrace)
 	SetFilecache(file File, content io.Reader) *errors.ErrorTrace
 	SetFilecacheWithoutId(file File, content io.Reader) (ID, *errors.ErrorTrace)
 	DeleteFilecache(file File) *errors.ErrorTrace
+
+	SetCalendarOverrides(calendarId ID, name string, desc string, color *Color) *errors.ErrorTrace
+	DeleteCalendarOverrides(calendarId ID) *errors.ErrorTrace
+	SetEventOverrides(eventId ID, name string, desc string, color *Color) *errors.ErrorTrace
+	DeleteEventOverrides(eventId ID) *errors.ErrorTrace
 }
