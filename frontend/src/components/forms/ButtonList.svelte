@@ -1,4 +1,4 @@
-<script lang="ts">
+<script lang="ts" generics="T">
   import { addRipple, focusIndicator } from "../../lib/client/decoration";
   import { EmptyOption } from "../../lib/client/placeholders";
   import Divider from "../layout/Divider.svelte";
@@ -6,8 +6,8 @@
   // This component is used for category lists (currently only in the settings modal)
 
   interface Props {
-    value: string;
-    options: Option[][];
+    value: T;
+    options: Option<T>[][];
   }
 
   let {
@@ -15,7 +15,7 @@
     options
   }: Props = $props();
 
-  let selected: Option = $derived(options.flat().filter(option => option.value === value)[0] || options[0] || EmptyOption);
+  let selected: Option<T> = $derived(options.flat().filter(option => option.value === value)[0] || options[0] || EmptyOption);
 </script>
 
 <style lang="scss">
