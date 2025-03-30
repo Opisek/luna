@@ -375,6 +375,9 @@
             bind:value={profilePictureRemoteUrl}
           />
         {/if}
+        {#if settings.userData.id && settings.userSettings[UserSettingKeys.DebugMode]}
+          <TextInput bind:value={settings.userData.id} name="id" placeholder="ID" editable={false} />
+        {/if}
       {:else if selectedCategory === "appearance"}
         <ToggleInput
           name={UserSettingKeys.DisplayAllDayEventsFilled}
@@ -472,6 +475,9 @@
           description="Display IDs"
           bind:value={settings.userSettings[UserSettingKeys.DebugMode]}
         />
+        {#if settings.userData.id && settings.userSettings[UserSettingKeys.DebugMode]}
+          <TextInput bind:value={settings.userData.id} name="id" placeholder="User ID" editable={false} />
+        {/if}
       {:else if selectedCategory === "admin"}
         <ToggleInput
           name={GlobalSettingKeys.RegistrationEnabled}
