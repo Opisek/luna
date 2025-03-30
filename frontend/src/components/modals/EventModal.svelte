@@ -12,6 +12,8 @@
   import { isSameDay } from "$lib/common/date";
   import { queueNotification } from "$lib/client/notifications";
   import ToggleInput from "../forms/ToggleInput.svelte";
+  import { getSettings } from "$lib/client/settings.svelte";
+  import { UserSettingKeys } from "../../types/settings";
 
   interface Props {
     showCreateModal?: (date: Date) => Promise<EventModel>;
@@ -22,6 +24,8 @@
     showCreateModal = $bindable(),
     showModal = $bindable(),
   }: Props = $props();
+
+  const settings = getSettings();
 
   let event: EventModel = $state(EmptyEvent);
   let originalEvent: EventModel = $state(EmptyEvent);
@@ -245,10 +249,9 @@
     {#if showEndDate}
       <DateTimeInput bind:value={event.date.end} name="date_end" placeholder="End" editable={editMode} allDay={event.date.allDay} onChange={changeEnd}/>
     {/if}
-    <!-- TODO: show id debug prefence -->
-    <!--
-    <TextInput bind:value={event.id} name="id" placeholder="ID" editable={false} />
-    -->
+    {#if settings.userSettings[UserSettingKeys.DebugMode]}
+      <TextInput bind:value={event.id} name="id" placeholder="ID" editable={false} />
+    {/if}
   {/if}
   {#snippet extraButtonsLeft()}
     {#if event != EmptyEvent && !editMode && event.overridden}

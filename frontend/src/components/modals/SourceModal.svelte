@@ -6,10 +6,12 @@
   import { EmptySource, NoOp } from "$lib/client/placeholders";
   import { getRepository } from "$lib/client/repository";
   import { deepCopy, deepEquality } from "$lib/common/misc";
-  import { isValidFile, isValidIcalFile, isValidPath, isValidUrl, valid } from "$lib/client/validation";
+  import { isValidIcalFile, isValidPath, isValidUrl, valid } from "$lib/client/validation";
   import { queueNotification } from "$lib/client/notifications";
   import FileUpload from "../forms/FileUpload.svelte";
   import { fetchResponse } from "../../lib/client/net";
+  import { UserSettingKeys } from "../../types/settings";
+  import { getSettings } from "$lib/client/settings.svelte";
 
   interface Props {
     showCreateModal?: () => Promise<SourceModel>;
@@ -20,6 +22,8 @@
     showCreateModal = $bindable(),
     showModal = $bindable(),
   }: Props = $props();
+
+  const settings = getSettings();
 
   let sourceDetailed: SourceModel = $state(EmptySource);
   let originalSource: SourceModel;
@@ -237,9 +241,8 @@
       {/if}
     {/if}
 
-    <!-- TODO: show id debug prefence -->
-    <!--
-    <TextInput bind:value={source.id} name="id" placeholder="ID" editable={false} />
-    -->
+    {#if settings.userSettings[UserSettingKeys.DebugMode]}
+      <TextInput bind:value={sourceDetailed.id} name="id" placeholder="ID" editable={false} />
+    {/if}
   {/if}
 </EditableModal>

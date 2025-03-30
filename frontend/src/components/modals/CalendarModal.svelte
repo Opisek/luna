@@ -9,6 +9,8 @@
   import SelectInput from "../forms/SelectInput.svelte";
   import ColorInput from "../forms/ColorInput.svelte";
   import { queueNotification } from "../../lib/client/notifications";
+  import { getSettings } from "$lib/client/settings.svelte";
+  import { UserSettingKeys } from "../../types/settings";
 
   interface Props {
     showCreateModal?: () => any;
@@ -19,6 +21,8 @@
     showCreateModal = $bindable(),
     showModal = $bindable(),
   }: Props = $props();
+
+  const settings = getSettings();
 
   let calendar: CalendarModel = $state(EmptyCalendar);
   let originalCalendar: CalendarModel = $state(EmptyCalendar);
@@ -140,10 +144,9 @@
     {#if editMode || calendar.desc}
       <TextInput bind:value={calendar.desc} name="desc" placeholder="Description" multiline={true} editable={editMode} />
     {/if}
-    <!-- TODO: show id debug prefence -->
-    <!--
-    <TextInput bind:value={source.id} name="id" placeholder="ID" editable={false} />
-    -->
+    {#if settings.userSettings[UserSettingKeys.DebugMode]}
+      <TextInput bind:value={calendar.id} name="id" placeholder="ID" editable={false} />
+    {/if}
   {/if}
   {#snippet extraButtonsLeft()}
     {#if calendar != EmptyCalendar && !editMode && calendar.overridden}
