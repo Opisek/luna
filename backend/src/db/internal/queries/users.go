@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 )
 
 // As with password-related queries, user management errors are kept vague on purpose.
@@ -141,7 +142,14 @@ func (q *Queries) GetUserData(userId types.ID) (*types.User, *errors.ErrorTrace)
 		`,
 		userId.UUID(),
 	).Scan(&user.Id, &user.Username, &user.Email, &user.Admin, &user.Searchable, &rawProfilePicture)
-	if err != nil {
+	switch err {
+	case nil:
+		break
+	case pgx.ErrNoRows:
+		return nil, errors.New().Status(http.StatusNotFound).
+			Append(errors.LvlDebug, "Could not get user %v", userId).
+			AltStr(errors.LvlPlain, "User not found")
+	default:
 		return nil, errors.New().Status(http.StatusInternalServerError).
 			AddErr(errors.LvlDebug, err).
 			Append(errors.LvlDebug, "Could not get user %v", userId).
