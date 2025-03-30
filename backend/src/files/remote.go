@@ -22,8 +22,23 @@ type RemoteFile struct {
 	auth    types.AuthMethod
 }
 
-func NewRemoteFile(url *types.Url, accept string, auth types.AuthMethod) *RemoteFile {
+func GetRemoteFile(url *types.Url, accept string, auth types.AuthMethod) *RemoteFile {
 	return &RemoteFile{url: url, accept: accept, auth: auth}
+}
+
+func NewRemoteFile(url *types.Url, accept string, auth types.AuthMethod, user types.ID, q types.DatabaseQueries) (*RemoteFile, *errors.ErrorTrace) {
+	file := &RemoteFile{url: url, accept: accept, auth: auth}
+
+	content, err := net.FetchFile(file.url, file.auth, file.accept, q.GetContext())
+	if err != nil {
+		return nil, err.
+			Append(errors.LvlDebug, "Could not read from remote").
+			Append(errors.LvlPlain, "Could not read contents of file")
+	}
+
+	q.SetFilecache(file, content, user)
+
+	return file, nil
 }
 
 func (file *RemoteFile) GetId() types.ID {
@@ -51,7 +66,7 @@ func (file *RemoteFile) fetchContentFromRemote(q types.DatabaseQueries) (io.Read
 	// whole file first
 	var buf bytes.Buffer
 	cache := io.TeeReader(content, &buf)
-	err = q.SetFilecache(file, cache)
+	err = q.UpdateFileCache(file, cache)
 	if err != nil {
 		// TODO: Logger.Warnf("could not set remote file cache in database: %v", err)
 	}

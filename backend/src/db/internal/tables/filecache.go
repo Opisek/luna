@@ -15,7 +15,8 @@ func (q *Tables) InitializeFilecacheTable() error {
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 			date TIMESTAMP NOT NULL,
 			name TEXT NOT NULL,
-			file BYTEA
+			file BYTEA,
+			owner UUID REFERENCES users(id) ON DELETE CASCADE
 		);
 	`)
 	if err != nil {

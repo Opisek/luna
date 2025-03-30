@@ -80,7 +80,12 @@ func (source *IcalSource) GetSettings() types.SourceSettings {
 	return source.settings
 }
 
-func NewRemoteIcalSource(name string, url *types.Url, auth types.AuthMethod) *IcalSource {
+func NewRemoteIcalSource(name string, url *types.Url, auth types.AuthMethod, user types.ID, q types.DatabaseQueries) (*IcalSource, *errors.ErrorTrace) {
+	file, err := files.NewRemoteFile(url, "text/calendar", auth, user, q)
+	if err != nil {
+		return nil, err
+	}
+
 	return &IcalSource{
 		id:   types.EmptyId(), // Placeholder until the database assigns an ID
 		name: name,
@@ -88,13 +93,13 @@ func NewRemoteIcalSource(name string, url *types.Url, auth types.AuthMethod) *Ic
 		settings: &IcalSourceSettings{
 			Location: "remote",
 			Url:      url,
-			file:     files.NewRemoteFile(url, "text/calendar", auth), // TDOO: allow remote files and local (uploaded) files
+			file:     file,
 		},
-	}
+	}, nil
 }
 
-func NewDatabaseIcalSource(name string, fileName string, content io.Reader, q types.DatabaseQueries) (*IcalSource, *errors.ErrorTrace) {
-	file, err := files.NewDatabaseFileFromContent(fileName, content, q)
+func NewDatabaseIcalSource(name string, fileName string, content io.Reader, user types.ID, q types.DatabaseQueries) (*IcalSource, *errors.ErrorTrace) {
+	file, err := files.NewDatabaseFileFromContent(fileName, content, user, q)
 	if err != nil {
 		return nil, err
 	}
@@ -127,11 +132,11 @@ func NewLocalIcalSource(name string, path *types.Path) *IcalSource {
 func PackIcalSource(id types.ID, name string, settings *IcalSourceSettings, auth types.AuthMethod) (*IcalSource, *errors.ErrorTrace) {
 	switch settings.Location {
 	case "remote":
-		settings.file = files.NewRemoteFile(settings.Url, "text/calendar", auth)
+		settings.file = files.GetRemoteFile(settings.Url, "text/calendar", auth)
 	case "local":
-		settings.file = files.NewLocalFile(settings.Path)
+		settings.file = files.GetLocalFile(settings.Path)
 	case "database":
-		settings.file = files.NewDatabaseFile(settings.FileId)
+		settings.file = files.GetDatabaseFile(settings.FileId)
 	default:
 		return nil, errors.New().Status(http.StatusInternalServerError).Append(errors.LvlWordy, "Unknown file location type: %v", settings.Location)
 	}
@@ -206,5 +211,9 @@ func (source *IcalSource) DeleteCalendar(calendar types.Calendar, q types.Databa
 }
 
 func (source *IcalSource) Cleanup(q types.DatabaseQueries) *errors.ErrorTrace {
-	return q.DeleteFilecache(source.settings.file)
+	sourceOwner, tr := q.GetSourceOwner(source.id)
+	if tr != nil {
+		return tr.Append(errors.LvlWordy, "Could not get file owner")
+	}
+	return q.DeleteFilecache(source.settings.file, sourceOwner)
 }

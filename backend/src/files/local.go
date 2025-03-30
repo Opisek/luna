@@ -21,6 +21,10 @@ type LocalFile struct {
 	content []byte
 }
 
+func GetLocalFile(path *types.Path) *LocalFile {
+	return &LocalFile{path: path}
+}
+
 func NewLocalFile(path *types.Path) *LocalFile {
 	return &LocalFile{path: path}
 }

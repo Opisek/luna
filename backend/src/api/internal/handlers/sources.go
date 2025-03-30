@@ -127,7 +127,8 @@ func parseAuthMethod(c *gin.Context) (types.AuthMethod, *errors.ErrorTrace) {
 	return sourceAuth, nil
 }
 
-func parseSource(c *gin.Context, sourceName string, sourceAuth types.AuthMethod, q types.DatabaseQueries) (types.Source, *errors.ErrorTrace) {
+func parseSource(c *gin.Context, sourceName string, sourceAuth types.AuthMethod, user types.ID, q types.DatabaseQueries) (types.Source, *errors.ErrorTrace) {
+	var tr *errors.ErrorTrace
 	var source types.Source
 
 	sourceType := c.PostForm("type")
@@ -174,7 +175,10 @@ func parseSource(c *gin.Context, sourceName string, sourceAuth types.AuthMethod,
 					AddErr(errors.LvlDebug, err).
 					Append(errors.LvlPlain, "Invalid iCal url")
 			}
-			source = ical.NewRemoteIcalSource(sourceName, sourceUrl, sourceAuth)
+			source, tr = ical.NewRemoteIcalSource(sourceName, sourceUrl, sourceAuth, user, q)
+			if tr != nil {
+				return nil, tr
+			}
 		case "local":
 			if sourceAuth.GetType() != constants.AuthNone {
 				return nil, errors.New().Status(http.StatusBadRequest).
@@ -225,7 +229,7 @@ func parseSource(c *gin.Context, sourceName string, sourceAuth types.AuthMethod,
 			}
 
 			var tr *errors.ErrorTrace
-			source, tr = ical.NewDatabaseIcalSource(sourceName, fileHeader.Filename, &contentToSave, q)
+			source, tr = ical.NewDatabaseIcalSource(sourceName, fileHeader.Filename, &contentToSave, user, q)
 			if tr != nil {
 				return nil, tr
 			}
@@ -260,7 +264,7 @@ func PutSource(c *gin.Context) {
 		return
 	}
 
-	source, err := parseSource(c, sourceName, sourceAuth, u.Tx.Queries())
+	source, err := parseSource(c, sourceName, sourceAuth, userId, u.Tx.Queries())
 	if err != nil {
 		u.Error(err)
 		return
@@ -316,7 +320,7 @@ func PatchSource(c *gin.Context) {
 		if newAuth == nil {
 			newAuth = source.GetAuth()
 		}
-		newSource, err := parseSource(c, newName, newAuth, u.Tx.Queries())
+		newSource, err := parseSource(c, newName, newAuth, userId, u.Tx.Queries())
 		if err != nil {
 			u.Error(err)
 			return

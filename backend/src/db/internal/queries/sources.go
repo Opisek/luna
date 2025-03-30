@@ -314,3 +314,31 @@ func (q *Queries) DeleteSource(userId types.ID, sourceId types.ID) (bool, *error
 			AltStr(errors.LvlBroad, "Could not delete source")
 	}
 }
+
+func (q *Queries) GetSourceOwner(sourceId types.ID) (types.ID, *errors.ErrorTrace) {
+	var userId uuid.UUID
+	err := q.Tx.QueryRow(
+		q.Context,
+		`
+		SELECT userid
+		FROM sources
+		WHERE id = $1;
+		`,
+		sourceId.UUID(),
+	).Scan(&userId)
+
+	switch err {
+	case nil:
+		return types.IdFromUuid(userId), nil
+	case pgx.ErrNoRows:
+		return types.EmptyId(), errors.New().Status(http.StatusNotFound).
+			Append(errors.LvlDebug, "Source %v not found", sourceId).
+			AltStr(errors.LvlPlain, "Source not found").
+			AltStr(errors.LvlBroad, "Could not get source owner")
+	default:
+		return types.EmptyId(), errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not get source %v", sourceId).
+			AltStr(errors.LvlBroad, "Could not get source owner")
+	}
+}

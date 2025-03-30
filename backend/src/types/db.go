@@ -54,10 +54,13 @@ type SourceDatabaseEntry struct {
 type DatabaseQueries interface {
 	GetContext() context.Context
 
+	GetSourceOwner(sourceId ID) (ID, *errors.ErrorTrace)
+
 	GetFilecache(file File) (string, io.Reader, *time.Time, *errors.ErrorTrace)
-	SetFilecache(file File, content io.Reader) *errors.ErrorTrace
-	SetFilecacheWithoutId(file File, content io.Reader) (ID, *errors.ErrorTrace)
-	DeleteFilecache(file File) *errors.ErrorTrace
+	SetFilecache(file File, content io.Reader, user ID) *errors.ErrorTrace
+	SetFilecacheWithoutId(file File, content io.Reader, user ID) (ID, *errors.ErrorTrace)
+	UpdateFileCache(file File, content io.Reader) *errors.ErrorTrace
+	DeleteFilecache(file File, user ID) *errors.ErrorTrace
 
 	SetCalendarOverrides(calendarId ID, name string, desc string, color *Color) *errors.ErrorTrace
 	DeleteCalendarOverrides(calendarId ID) *errors.ErrorTrace

@@ -16,11 +16,11 @@ type DatabaseFile struct {
 	content []byte
 }
 
-func NewDatabaseFile(id types.ID) *DatabaseFile {
+func GetDatabaseFile(id types.ID) *DatabaseFile {
 	return &DatabaseFile{id: id}
 }
 
-func NewDatabaseFileFromContent(name string, content io.Reader, q types.DatabaseQueries) (*DatabaseFile, *errors.ErrorTrace) {
+func NewDatabaseFileFromContent(name string, content io.Reader, user types.ID, q types.DatabaseQueries) (*DatabaseFile, *errors.ErrorTrace) {
 	buf, err := io.ReadAll(content)
 	file := &DatabaseFile{name: name, content: buf}
 	if err != nil {
@@ -29,7 +29,7 @@ func NewDatabaseFileFromContent(name string, content io.Reader, q types.Database
 			Append(errors.LvlWordy, "Could not read file content").
 			Append(errors.LvlPlain, "Could not upload file")
 	}
-	_, tr := q.SetFilecacheWithoutId(file, bytes.NewReader(buf))
+	_, tr := q.SetFilecacheWithoutId(file, bytes.NewReader(buf), user)
 	if tr != nil {
 		return nil, tr.Append(errors.LvlPlain, "Could not upload file")
 	}

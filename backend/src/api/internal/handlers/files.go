@@ -16,7 +16,7 @@ func GetFile(c *gin.Context) {
 		return
 	}
 
-	file := files.NewDatabaseFile(fileId)
+	file := files.GetDatabaseFile(fileId)
 
 	u.ResponseWithFile(file)
 }

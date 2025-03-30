@@ -43,7 +43,7 @@ func (q *Queries) GetFilecache(file types.File) (string, io.Reader, *time.Time, 
 	return name, bytes.NewReader(content), &date, nil
 }
 
-func (q *Queries) SetFilecache(file types.File, content io.Reader) *errors.ErrorTrace {
+func (q *Queries) SetFilecache(file types.File, content io.Reader, user types.ID) *errors.ErrorTrace {
 	buf, err := io.ReadAll(content)
 	if err != nil {
 		return errors.New().Status(http.StatusInternalServerError).
@@ -55,14 +55,16 @@ func (q *Queries) SetFilecache(file types.File, content io.Reader) *errors.Error
 	_, err = q.Tx.Exec(
 		q.Context,
 		`
-		INSERT INTO filecache (id, file, name, date)
-		VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
+		INSERT INTO filecache (id, file, name, date, owner)
+		VALUES ($1, $2, $3, CURRENT_TIMESTAMP, $4)
 		ON CONFLICT (id) DO UPDATE
-		SET file = $2, name = $3;
+		SET file = $2, name = $3
+		WHERE filecache.owner = $4;
 		`,
 		file.GetId().UUID(),
 		buf,
 		file.GetName(q),
+		user.UUID(),
 	)
 
 	return errors.New().Status(http.StatusInternalServerError).
@@ -71,7 +73,7 @@ func (q *Queries) SetFilecache(file types.File, content io.Reader) *errors.Error
 		Append(errors.LvlPlain, "Database error")
 }
 
-func (q *Queries) SetFilecacheWithoutId(file types.File, content io.Reader) (types.ID, *errors.ErrorTrace) {
+func (q *Queries) SetFilecacheWithoutId(file types.File, content io.Reader, user types.ID) (types.ID, *errors.ErrorTrace) {
 	buf, err := io.ReadAll(content)
 	if err != nil {
 		return types.EmptyId(), errors.New().Status(http.StatusInternalServerError).
@@ -81,15 +83,16 @@ func (q *Queries) SetFilecacheWithoutId(file types.File, content io.Reader) (typ
 	}
 
 	query := `
-		INSERT INTO filecache (file, name, date)
-		VALUES ($1, $2, CURRENT_TIMESTAMP)
+		INSERT INTO filecache (file, name, date, owner)
+		VALUES ($1, $2, CURRENT_TIMESTAMP, $3)
 		ON CONFLICT (id) DO UPDATE
 		SET file = $1, name = $2
+		WHERE filecache.owner = $3
 		RETURNING id;
 	`
 
 	var id types.ID
-	err = q.Tx.QueryRow(q.Context, query, buf, file.GetName(q)).Scan(&id)
+	err = q.Tx.QueryRow(q.Context, query, buf, file.GetName(q), user.UUID()).Scan(&id)
 	if err != nil {
 		return types.EmptyId(), errors.New().Status(http.StatusInternalServerError).
 			AddErr(errors.LvlDebug, err).
@@ -102,14 +105,41 @@ func (q *Queries) SetFilecacheWithoutId(file types.File, content io.Reader) (typ
 	return id, nil
 }
 
-func (q *Queries) DeleteFilecache(file types.File) *errors.ErrorTrace {
+func (q *Queries) UpdateFileCache(file types.File, content io.Reader) *errors.ErrorTrace {
+	buf, err := io.ReadAll(content)
+	if err != nil {
+		return errors.New().Status(http.StatusInternalServerError).
+			Append(errors.LvlDebug, "Could not read from buffer").
+			Append(errors.LvlWordy, "Could not save file cache").
+			Append(errors.LvlPlain, "Database error")
+	}
+
+	_, err = q.Tx.Exec(
+		q.Context,
+		`
+		UPDATE filecache
+		SET file = $1
+		WHERE id = $2;
+		`,
+		buf,
+		file.GetId().UUID(),
+	)
+
+	return errors.New().Status(http.StatusInternalServerError).
+		AddErr(errors.LvlDebug, err).
+		Append(errors.LvlWordy, "Could not save file cache").
+		Append(errors.LvlPlain, "Database error")
+}
+
+func (q *Queries) DeleteFilecache(file types.File, user types.ID) *errors.ErrorTrace {
 	_, err := q.Tx.Exec(
 		q.Context,
 		`
 		DELETE FROM filecache
-		WHERE id = $1;
+		WHERE id = $1 AND owner = $2;
 		`,
 		file.GetId().UUID(),
+		user.UUID(),
 	)
 
 	switch err {
