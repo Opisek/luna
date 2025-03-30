@@ -111,8 +111,8 @@
     grid-template-columns: auto 1fr;
     grid-template-rows: 1fr;
     gap: dimensions.$gapMiddle;
-    min-width: 30vw;
-    min-height: 50vh;
+    width: 40vw;
+    height: 60vh;
   }
 
   main {
@@ -120,6 +120,9 @@
     flex-direction: column;
     flex-wrap: nowrap;
     gap: dimensions.$gapMiddle;
+    overflow: auto;
+    padding-right: calc(dimensions.$gapLarger);
+    margin-right: -(dimensions.$gapLarger);
   }
 
   div.pfpButtons {

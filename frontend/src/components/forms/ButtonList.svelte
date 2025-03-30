@@ -25,6 +25,9 @@
   aside {
     display: flex;
     flex-direction: column;
+    overflow: auto;
+    padding-right: dimensions.$gapSmall;
+    margin-right: -(dimensions.$gapSmall);
   }
 
   .option {
@@ -43,6 +46,7 @@
     position: relative;
     overflow: hidden;
     cursor: pointer;
+    flex-shrink: 0;
   }
 
   .first {
