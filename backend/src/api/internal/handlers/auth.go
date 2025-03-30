@@ -49,6 +49,10 @@ func Login(c *gin.Context) {
 			Append(errors.LvlPlain, "Invalid credentials").
 			Append(errors.LvlBroad, "Could not log in"),
 		)
+
+		// Hash the wrong password to prevent timing attacks
+		_, _ = auth.SecurePassword(credentials.Password)
+
 		return
 	}
 
@@ -60,6 +64,10 @@ func Login(c *gin.Context) {
 			Append(errors.LvlPlain, "Invalid credentials").
 			Append(errors.LvlBroad, "Could not log in"),
 		)
+
+		// Hash the wrong password to prevent timing attacks
+		_, _ = auth.SecurePassword(credentials.Password)
+
 		return
 	}
 
@@ -144,6 +152,17 @@ func Register(c *gin.Context) {
 		return
 	}
 
+	// Hash the password
+	securedPassword, err := auth.SecurePassword(payload.Password)
+	if err != nil {
+		u.Error(err.
+			Append(errors.LvlDebug, "Could not hash password").
+			Append(errors.LvlWordy, "Internal server error").
+			Append(errors.LvlBroad, "Could not register"),
+		)
+		return
+	}
+
 	// Check if any users exist to know if this user should be an admin
 	usersExist, err := u.Tx.Queries().AnyUsersExist()
 	if err != nil {
@@ -178,17 +197,6 @@ func Register(c *gin.Context) {
 	if err != nil {
 		u.Error(err.
 			Append(errors.LvlDebug, "Could not register"),
-		)
-		return
-	}
-
-	// Hash the password
-	securedPassword, err := auth.SecurePassword(payload.Password)
-	if err != nil {
-		u.Error(err.
-			Append(errors.LvlDebug, "Could not hash password").
-			Append(errors.LvlWordy, "Internal server error").
-			Append(errors.LvlBroad, "Could not register"),
 		)
 		return
 	}
