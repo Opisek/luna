@@ -33,7 +33,7 @@ func setupConfig() (*logrus.Logger, *logrus.Entry, *config.CommonConfig, *errors
 
 	env, err := config.ParseEnvironmental(mainLogger)
 	if err != nil {
-		return nil, nil, nil, errors.New().
+		return logger, mainLogger, nil, errors.New().
 			AddErr(errors.LvlDebug, err).
 			Append(errors.LvlDebug, "Could not parse environmental variables")
 	}
@@ -43,7 +43,7 @@ func setupConfig() (*logrus.Logger, *logrus.Entry, *config.CommonConfig, *errors
 	}
 	commonConfig.Version, err = types.ParseVersion(version)
 	if err != nil {
-		return nil, nil, nil, errors.New().
+		return logger, mainLogger, nil, errors.New().
 			AddErr(errors.LvlDebug, err).
 			Append(errors.LvlDebug, "Could not parse binary version %v", version)
 	}
