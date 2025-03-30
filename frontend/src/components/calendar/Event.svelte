@@ -7,6 +7,9 @@
   import { getContext } from "svelte";
   import type { Writable } from "svelte/store";
   import { NoOp } from "$lib/client/placeholders";
+  import ColorCircle from "../misc/ColorCircle.svelte";
+  import { getSettings } from "$lib/client/settings.svelte";
+  import { UserSettingKeys } from "../../types/settings";
 
   interface Props {
     visible?: boolean;
@@ -23,6 +26,12 @@
     date,
     view
   }: Props = $props();
+
+  const settings = getSettings();
+  let showOnlyCircle = $derived(event && (
+    (event.date.allDay && !settings.userSettings[UserSettingKeys.DisplayAllDayEventsFilled]) || 
+    (!event.date.allDay && !settings.userSettings[UserSettingKeys.DisplayNonAllDayEventsFilled])
+  ));
 
   let remainingDays = $derived.by(() => {
     // keep in mind start of the week is monday for now
@@ -176,6 +185,11 @@
     display: flex;
     align-items: center;
   }
+
+  div.onlyCircle {
+    background-color: transparent !important;
+    color: colors.$foregroundDark !important;
+  }
 </style>
 
 {#if event && (isFirstDisplay || date.getDay() == 1)}
@@ -188,6 +202,7 @@
     class:hidden={!visible}
     class:foregroundBright={isBackgroundDark}
     class:foregroundDark={!isBackgroundDark}
+    class:onlyCircle={showOnlyCircle}
     onmouseenter={mouseEnter}
     onmouseleave={mouseLeave}
     onmousedown={mouseDown}
@@ -202,6 +217,12 @@
       width: calc({remainingDaysThisWeek * 100}% - {(isEventStart ? 1 : 0) + (eventEndsThisWeek ? 1 : 0)} * var(--gapBetweenDays));
     "
   >
+    {#if showOnlyCircle}
+      <ColorCircle
+        color={GetEventColor(event)}
+        size="small"
+      />
+    {/if}
     {#if !event.date.allDay && event.date.start >= date}
       <span class="time">
         {event.date.start.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
