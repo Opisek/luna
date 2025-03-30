@@ -109,6 +109,7 @@
       if (urlType === "ical") source.settings.location = "remote";
       source.settings.url = url;
     } else if (inputType === "file") {
+      source.type = "ical";
       source.settings.location = "database";
       source.settings.file = files;
     }
