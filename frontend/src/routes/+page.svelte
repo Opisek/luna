@@ -30,6 +30,11 @@
   import { compareEventsByStartDate } from "../lib/common/comparators";
   import SourceWizardModal from "../components/modals/SourceWizardModal.svelte";
   import SettingsModal from "../components/modals/SettingsModal.svelte";
+  import { getSettings } from "$lib/client/settings.svelte";
+  import { UserSettingKeys } from "../types/settings";
+
+  /* Settings */
+  const settings = getSettings();
 
   /* Reachability */
   let reachability: Reachability = $state(Reachability.Database);
@@ -363,7 +368,9 @@
 <aside>
   <Title>Luna</Title>
 
-  <SmallCalendar date={date} smaller={true} onDayClick={(clickedDate) => smallCalendarClick(clickedDate)}></SmallCalendar>
+  {#if settings.userSettings[UserSettingKeys.DisplaySmallCalendar]}
+    <SmallCalendar date={date} smaller={true} onDayClick={(clickedDate) => smallCalendarClick(clickedDate)}></SmallCalendar>
+  {/if}
 
   <div class="sources">
     {@render sourceEntries(localSources)}

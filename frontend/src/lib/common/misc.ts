@@ -17,7 +17,30 @@ export async function atLeastOnePromise<T>(promises: Promise<T>[]): Promise<[T[]
 }
 
 export async function deepCopy<T>(obj: T): Promise<T> {
-    return JSON.parse(JSON.stringify(obj));
+    if (obj === null || obj === undefined) return obj;
+
+    if (isPrimitive(obj)) return obj;
+
+    if (obj instanceof Date) return new Date(obj.getTime()) as T;
+
+    if (obj instanceof Array) {
+        const arr = obj as Array<any>;
+        const copy = new Array(arr.length);
+        for (let i = 0; i < arr.length; i++) {
+            copy[i] = deepCopy(arr[i]);
+        }
+        return copy as T;
+    }
+
+    if (obj instanceof Object) {
+        const copy = {} as {[key: string]: any };
+        for (let key in obj) {
+            copy[key] = deepCopy((obj as any)[key]);
+        }
+        return copy as T;
+    }
+
+    return JSON.parse(JSON.stringify(obj)) as T;
 }
 
 // https://stackoverflow.com/questions/25456013/javascript-deepequal-comparison

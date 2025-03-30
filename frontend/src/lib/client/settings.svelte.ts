@@ -1,18 +1,39 @@
-import { Dataiku } from "svelte-simples";
-import type { GlobalSettings, UserData, UserSettings } from "../../types/settings";
+import { GlobalSettingKeys, UserSettingKeys, type GlobalSettings, type UserData, type UserSettings } from "../../types/settings";
 import { fetchJson } from "./net";
 import { queueNotification } from "./notifications";
 
 class Settings {
-  private userData: UserData;
-  private userSettings: UserSettings;
-  private globalSettings: GlobalSettings;
+  public userData: UserData = $state({
+    id: "",
+    username: "",
+    email: "",
+    admin: false,
+    searchable: true,
+    profile_picture: ""
+  });
+  public userSettings: UserSettings = $state({
+    [UserSettingKeys.DebugMode]: false,
+    [UserSettingKeys.DisplayAllDayEventsFilled]: true,
+    [UserSettingKeys.DisplayNonAllDayEventsFilled]: false,
+    [UserSettingKeys.DisplayRoundedCorners]: true,
+    [UserSettingKeys.DisplaySmallCalendar]: true,
+    [UserSettingKeys.DisplayWeekNumbers]: false,
+    [UserSettingKeys.DynamicCalendarRows]: true,
+    [UserSettingKeys.DynamicSmallCalendarRows]: false,
+    [UserSettingKeys.FirstDayOfWeek]: 1,
+    [UserSettingKeys.FontText]: "Atkinson Hyperlegible Next",
+    [UserSettingKeys.FontTime]: "Atkinson Hyperlegible Mono",
+    [UserSettingKeys.ThemeLight]: "Luna Light",
+    [UserSettingKeys.ThemeDark]: "Luna Dark",
+    [UserSettingKeys.UiScaling]: 1
+  });
+  public globalSettings: GlobalSettings = $state({
+    [GlobalSettingKeys.LoggingVerbosity]: 2,
+    [GlobalSettingKeys.RegistrationEnabled]: false,
+    [GlobalSettingKeys.UseCdnFonts]: false,
+  });
 
   constructor() {
-    this.userData = {} as UserData;
-    this.userSettings = {} as UserSettings;
-    this.globalSettings = {} as GlobalSettings;
-
     this.fetchSettings();
   }
 
@@ -48,18 +69,6 @@ class Settings {
     ]).catch((err) => {
       queueNotification("failure", "Could not fetch settings: " + err.message);
     });
-  }
-
-  public getUserData() {
-    return this.userData;
-  }
-
-  public getUserSettings() {
-    return this.userSettings;
-  }
-
-  public getGlobalSettings() {
-    return this.globalSettings;
   }
 }
 
