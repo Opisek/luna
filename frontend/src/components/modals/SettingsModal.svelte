@@ -4,7 +4,7 @@
   import ButtonList from "../forms/ButtonList.svelte";
   import Modal from "./Modal.svelte";
   import TextInput from "../forms/TextInput.svelte";
-  import { isValidEmail, isValidPassword, isValidUsername } from "../../lib/client/validation";
+  import { isValidEmail, isValidPassword, isValidRepeatPassword, isValidUsername, valid } from "../../lib/client/validation";
   import ToggleInput from "../forms/ToggleInput.svelte";
   import SelectButtons from "../forms/SelectButtons.svelte";
   import Image from "../layout/Image.svelte";
@@ -14,7 +14,11 @@
   import { GlobalSettingKeys, UserSettingKeys, type GlobalSettings, type UserData, type UserSettings } from "../../types/settings";
   import { getSettings } from "../../lib/client/settings.svelte";
   import { getSha256Hash } from "../../lib/common/crypto";
-  import { deepCopy } from "$lib/common/misc";
+  import { deepCopy, deepEquality } from "$lib/common/misc";
+  import Button from "../interactive/Button.svelte";
+  import Loader from "../decoration/Loader.svelte";
+  import { fetchResponse } from "$lib/client/net";
+  import { queueNotification } from "$lib/client/notifications";
 
   interface Props {
     showModal?: () => any;
@@ -29,6 +33,7 @@
   const settings = getSettings();
 
   showModal = () => {
+    saving = false;
     snapshotSettings();
     settings.fetchSettings().then(() => {
       snapshotSettings();
@@ -64,22 +69,10 @@
     restoreSettings();
   });
 
-  // Interaction with the stores
-  let userDataSnapshot: UserData | null = $state(null);
-  let userSettingsSnapshot: UserSettings | null = $state(null);
-  let globalSettingsSnapshot: GlobalSettings | null = $state(null);
-  async function snapshotSettings() {
-    userDataSnapshot = await deepCopy(settings.userData);
-    userSettingsSnapshot = await deepCopy(settings.userSettings);
-    globalSettingsSnapshot = await deepCopy(settings.globalSettings);
-  }
-  async function restoreSettings() {
-    if (userDataSnapshot) settings.userData = await deepCopy(userDataSnapshot);
-    if (userSettingsSnapshot) settings.userSettings = await deepCopy(userSettingsSnapshot);
-    if (globalSettingsSnapshot) settings.globalSettings = await deepCopy(globalSettingsSnapshot);
-  }
-
   // Account Settings
+  let newPassword = $state("");
+  let oldPassword = $state("");
+
   let profilePictureType = $state("gravatar");
   let profilePictureFiles: FileList | null = $state(null);
   let profilePictureRemoteUrl = $state("");
@@ -110,11 +103,135 @@
     }
   });
 
-  // Appearance Settings
+  // Changes
 
-  // Developer Settings
+  let userDataSnapshot = $state<UserData | null>(null);
+  let userSettingsSnapshot = $state<UserSettings | null>(null);
+  let globalSettingsSnapshot = $state<GlobalSettings | null>(null);
 
-  // Admin Settings
+  let userDataChanged = $derived(
+    !deepEquality(settings.userData, userDataSnapshot) ||
+    newPassword != "" ||
+    effectiveProfilePictureSource != userDataSnapshot?.profile_picture
+  );
+  let userSettingsChanged = $derived(!deepEquality(settings.userSettings, userSettingsSnapshot));
+  let globalSettingsChanged = $derived(!deepEquality(settings.globalSettings, globalSettingsSnapshot));
+  let anyChanged = $derived(userDataChanged || userSettingsChanged || globalSettingsChanged);
+
+  let usernameValidity = $state(valid);
+  let emailValidity = $state(valid);
+  let passwordValidity = $state(valid);
+  let repeatPasswordValidity = $state(valid);
+  let oldPasswordValidity = $state(valid);
+
+  let oldPasswordRequired = $derived(userDataSnapshot && (
+    userDataSnapshot.username != settings.userData.username ||
+    userDataSnapshot.email != settings.userData.email ||
+    newPassword != ""
+  ));
+
+  let submittable = $derived(
+    !userDataSnapshot || !userDataChanged || (
+      (userDataSnapshot.username == settings.userData.username || usernameValidity.valid) &&
+      (userDataSnapshot.email == settings.userData.email || emailValidity.valid) &&
+      (newPassword == "" || passwordValidity.valid) &&
+      (newPassword == "" || repeatPasswordValidity.valid) &&
+      (!oldPasswordRequired || oldPasswordValidity.valid) &&
+      (!oldPasswordRequired || oldPassword != "")
+    )
+  )
+
+  // Interaction with the shared data structures
+
+  async function snapshotSettings() {
+    userDataSnapshot = await deepCopy(settings.userData);
+    userSettingsSnapshot = await deepCopy(settings.userSettings);
+    globalSettingsSnapshot = await deepCopy(settings.globalSettings);
+  }
+
+  async function restoreSettings() {
+    if (userDataSnapshot) settings.userData = await deepCopy(userDataSnapshot);
+    if (userSettingsSnapshot) settings.userSettings = await deepCopy(userSettingsSnapshot);
+    if (globalSettingsSnapshot) settings.globalSettings = await deepCopy(globalSettingsSnapshot);
+  }
+
+  let saving = $state(false);
+  async function saveSettings() {
+    if (saving) return;
+    saving = true;
+
+    if (userDataChanged && userDataSnapshot) {
+      const userDataFormData = new FormData();
+
+      if (settings.userData.username != userDataSnapshot.username)
+        userDataFormData.append("username", settings.userData.username);
+      if (settings.userData.email != userDataSnapshot.email)
+        userDataFormData.append("email", settings.userData.email);
+      if (newPassword != "")
+        userDataFormData.append("new_password", newPassword);
+      if (oldPasswordRequired)
+        userDataFormData.append("password", oldPassword);
+      if (settings.userData.searchable != userDataSnapshot.searchable)
+        userDataFormData.append("searchable", settings.userData.searchable ? "true" : "false");
+      if (effectiveProfilePictureSource != userDataSnapshot.profile_picture)
+        userDataFormData.append("profile_picture", profilePictureType);
+      if (profilePictureType === "database" && profilePictureFiles)
+        userDataFormData.append("pfp_file", profilePictureFiles[0]);
+
+      await fetchResponse("/api/user", {
+        method: "PATCH",
+        body: userDataFormData,
+      }).then(async () => {
+        userDataSnapshot = await deepCopy(settings.userData);
+        oldPassword = "";
+        // TODO: set profile picture correctly
+      }).catch((err) => {
+        queueNotification("failure", "Failed to save user data: " + err);
+      });
+    }
+
+    if (userSettingsChanged && userSettingsSnapshot) {
+      const userSettingsFormData = new FormData();
+
+      for (const [_, key] of Object.entries(UserSettingKeys)) {
+        const originalValue = userSettingsSnapshot[key];
+        const newValue = settings.userSettings[key];
+        if (originalValue !== newValue)
+          userSettingsFormData.append(key, JSON.stringify(newValue));
+      }
+
+      await fetchResponse("/api/user/settings", {
+        method: "PATCH",
+        body: userSettingsFormData,
+      }).then(async () => {
+        userSettingsSnapshot = await deepCopy(settings.userSettings);
+      }).catch((err) => {
+        queueNotification("failure", "Failed to save user settings: " + err);
+      });
+    }
+
+    if (globalSettingsChanged && globalSettingsSnapshot) {
+      const globalSettingsFormData = new FormData();
+
+      for (const [_, key] of Object.entries(GlobalSettingKeys)) {
+        const originalValue = globalSettingsSnapshot[key];
+        const newValue = settings.globalSettings[key];
+        if (originalValue !== newValue)
+          globalSettingsFormData.append(key, JSON.stringify(newValue));
+      }
+
+      await fetchResponse("/api/settings", {
+        method: "PATCH",
+        body: globalSettingsFormData,
+      }).then(async () => {
+        globalSettingsSnapshot = await deepCopy(settings.globalSettings);
+      }).catch((err) => {
+        queueNotification("failure", "Failed to save global settings: " + err);
+      });
+    }
+
+    saving = false;
+  }
 </script>
 
 <style lang="scss">
@@ -159,6 +276,21 @@
   bind:hideModal={hideModalInternal}
   onModalHide={restoreSettings}
 >
+  {#snippet buttons()}
+    {#if anyChanged}
+      <Button type="submit" color="success" enabled={submittable} onClick={saveSettings}>
+        {#if saving}
+          <Loader/>
+        {:else}
+          Save
+        {/if}
+      </Button>
+      <Button color="failure" onClick={restoreSettings}>Cancel</Button>
+    {:else}
+      <Button onClick={hideModalInternal}>Close</Button>
+    {/if}
+  {/snippet}
+
   <div class="container">
     <ButtonList
       bind:value={selectedCategory}
@@ -171,19 +303,42 @@
           placeholder="Username"
           bind:value={settings.userData.username}
           validation={isValidUsername}
+          bind:validity={usernameValidity}
         />
         <TextInput
           name="email"
           placeholder="Email"
           bind:value={settings.userData.email}
           validation={isValidEmail}
+          bind:validity={emailValidity}
         />
         <TextInput
-          name="password"
+          name="new_password"
           placeholder="New Password"
           password={true}
+          bind:value={newPassword}
           validation={isValidPassword}
+          bind:validity={passwordValidity}
         />
+        {#if newPassword != "" && passwordValidity.valid}
+          <TextInput
+            name="new_password_confirm"
+            placeholder="Confirm New Password"
+            password={true}
+            validation={isValidRepeatPassword(newPassword)}
+            bind:validity={repeatPasswordValidity}
+          />
+        {/if}
+        {#if oldPasswordRequired}
+          <TextInput
+            name="password"
+            placeholder="Current Password"
+            password={true}
+            bind:value={oldPassword}
+            validation={isValidPassword}
+            bind:validity={oldPasswordValidity}
+          />
+        {/if}
         <ToggleInput
           name="searchable" 
           description="Allow other users to find me"

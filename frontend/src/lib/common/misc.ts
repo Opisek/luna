@@ -45,6 +45,9 @@ export async function deepCopy<T>(obj: T): Promise<T> {
 
 // https://stackoverflow.com/questions/25456013/javascript-deepequal-comparison
 export function deepEquality<T>(a: T, b: T): boolean {
+    if ( a === null || b === null ) return a === b;
+    if ( a === undefined || b === undefined ) return a === b;
+
     if (a === b)
         return true;
 

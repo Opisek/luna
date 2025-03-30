@@ -27,10 +27,10 @@ func run(api *util.Api) {
 	noDatabaseEndpoints.GET("/version", handlers.GetVersion)
 
 	// /api/* (long-running authentication)
-	authenticationEndpoints := rawEndpoints.Group("", middleware.RequestSetup(30*time.Second, api.Db, true, api.CommonConfig, api.Logger))
+	longRunningEndpoints := rawEndpoints.Group("", middleware.RequestSetup(30*time.Second, api.Db, true, api.CommonConfig, api.Logger))
 
-	authenticationEndpoints.POST("/login", handlers.Login)
-	authenticationEndpoints.POST("/register", handlers.Register)
+	longRunningEndpoints.POST("/login", handlers.Login)
+	longRunningEndpoints.POST("/register", handlers.Register)
 
 	// /api/* the rest
 	endpoints := rawEndpoints.Group("", middleware.RequestSetup(3*time.Second, api.Db, true, api.CommonConfig, api.Logger))
@@ -40,13 +40,15 @@ func run(api *util.Api) {
 	// everything past here requires the user to be logged in
 	noDatabaseAuthenticatedEndpoints := noDatabaseEndpoints.Group("", middleware.RequireAuth())
 	authenticatedEndpoints := endpoints.Group("", middleware.RequireAuth())
+	longRunningAuthenticatedEndpoints := longRunningEndpoints.Group("", middleware.RequireAuth())
 	administratorEndpoints := authenticatedEndpoints.Group("", middleware.RequireAdmin())
 
 	// /api/user
 	userEndpoints := authenticatedEndpoints.Group("/user")
+	longRunningUserEndpoints := longRunningAuthenticatedEndpoints.Group("/user")
 	userEndpoints.GET("", handlers.GetUserData)
-	userEndpoints.PATCH("", handlers.PatchUserData)
-	userEndpoints.DELETE("", handlers.DeleteUser)
+	longRunningUserEndpoints.PATCH("", handlers.PatchUserData)
+	longRunningUserEndpoints.DELETE("", handlers.DeleteUser)
 
 	// /api/sources/*
 	sourcesEndpoints := authenticatedEndpoints.Group("/sources")

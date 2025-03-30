@@ -46,7 +46,7 @@ class Settings {
   }
 
   private async fetchUserSettings() {
-    await fetchJson("/api/settings/user").then((data: UserSettings) => {
+    await fetchJson("/api/user/settings").then((data: UserSettings) => {
       this.userSettings = data;
     }).catch((err) => {
       throw new Error("Could not get user settings: " + err.message);
@@ -54,7 +54,7 @@ class Settings {
   }
 
   private async fetchGlobalSettings() {
-    await fetchJson("/api/settings/global").then((data: GlobalSettings) => {
+    await fetchJson("/api/settings").then((data: GlobalSettings) => {
       this.globalSettings = data;
     }).catch((err) => {
       throw new Error("Could not get global settings: " + err.message);
