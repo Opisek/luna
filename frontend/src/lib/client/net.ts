@@ -17,9 +17,10 @@ export async function fetchResponse(url: string, options: RequestInit = {}): Pro
 
 export async function fetchJson(url: string, options: RequestInit = {}) {
   const json = await (await fetchResponse(url, options).catch(err => { throw err; })).json();
-  if (json.warnings) {
+  if (json?.warnings) {
     // TODO: show warnings as notifications
   }
+  return json;
 }
 
 export function downloadFileToClient(file: FileList | string | null) {
