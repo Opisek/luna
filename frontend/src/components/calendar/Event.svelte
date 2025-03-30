@@ -129,8 +129,6 @@
     flex-shrink: 0;
 
     transition: background-color linear animations.$animationSpeedFast;
-
-    z-index: 10;
   }
 
   div:focus {
@@ -192,7 +190,9 @@
   }
 </style>
 
-{#if event && (isFirstDisplay || date.getDay() == 1)}
+<!-- TODO: the following reduced the amount of divs we need to render but was prone to some edge-case bugs (no.116) -->
+<!--{#if event && (isFirstDisplay || date.getDay() == 1 || showOnlyCircle)}-->
+{#if event}
   <div
     bind:this={element}
     class:start={isEventStart}

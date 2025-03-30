@@ -140,6 +140,10 @@
   .otherMonth {
     background-color: colors.$backgroundSecondaryFaded !important;
   }
+
+  .eventAnimation {
+    z-index: 10;
+  }
 </style>
 
 <div class="day">
@@ -174,7 +178,12 @@
 
   {#each events as event, i ((event?.id || i).toString() + date.getTime())}
     <!-- TODO: make parameters match css, look into cubic easing, invert fly direction when going back in range -->
-    <div animate:flip={{duration: 300, delay: 300}} in:fly={{duration: 300, x: 200}} out:fly={{duration: 300, x: -200}}>
+    <div
+      animate:flip={{duration: 300, delay: 300}}
+      in:fly={{duration: 300, x: 200}}
+      out:fly={{duration: 300, x: -200}}
+      style="z-index: {15 - ((date.getDay() + 6) % 7)}"
+    >
       <Event
         event={event}
         isFirstDay={isFirstDay}
