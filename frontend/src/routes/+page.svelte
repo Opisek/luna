@@ -26,7 +26,7 @@
   import { getConnectivity, Reachability } from "$lib/client/connectivity";
   import Button from "../components/interactive/Button.svelte";
   import DayViewModal from "../components/modals/DayViewModal.svelte";
-  import { isInRange } from "../lib/common/date";
+  import { getDayIndex, isInRange } from "../lib/common/date";
   import { compareEventsByStartDate } from "../lib/common/comparators";
   import SourceWizardModal from "../components/modals/SourceWizardModal.svelte";
   import SettingsModal from "../components/modals/SettingsModal.svelte";
@@ -104,13 +104,13 @@
     switch (view) {
       case "month":
         rangeStart.setDate(1);
-        rangeStart.setDate(rangeStart.getDate() - ((rangeStart.getDay() + 6) % 7));
+        rangeStart.setDate(rangeStart.getDate() - getDayIndex(date));
         rangeEnd.setMonth(rangeEnd.getMonth() + 1);
         rangeEnd.setDate(0);
-        rangeEnd.setDate(rangeEnd.getDate() + 7 - ((rangeEnd.getDay() + 6) % 7));
+        rangeEnd.setDate(rangeEnd.getDate() + 7 - getDayIndex(date));
         break;
       case "week":
-        rangeStart.setDate(date.getDate() - ((date.getDay() + 6) % 7));
+        rangeStart.setDate(date.getDate() - getDayIndex(date));
         rangeEnd.setDate(rangeStart.getDate() + 7);
         break;
       case "day":

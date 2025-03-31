@@ -6,8 +6,10 @@
 
   import { getContext, setContext } from "svelte";
   import { writable } from "svelte/store";
-  import { isSameDay } from "$lib/common/date";
+  import { getDayIndex, isSameDay } from "$lib/common/date";
   import { fade, fly } from "svelte/transition";
+  import { getSettings } from "$lib/client/settings.svelte";
+  import { UserSettingKeys } from "../../types/settings";
 
   interface Props {
     date: Date;
@@ -20,6 +22,8 @@
     view,
     events,
   }: Props = $props();
+
+  const settings = getSettings();
 
   let today = new Date();
 
@@ -34,7 +38,7 @@
         case "month":
           return new Date(date.getFullYear(), date.getMonth(), 1);
         case "week":
-          return new Date(date.getFullYear(), date.getMonth(), date.getDate() - ((date.getDay() + 6) % 7));
+          return new Date(date.getFullYear(), date.getMonth(), date.getDate() - getDayIndex(date));
         case "day":
           return new Date(date.getFullYear(), date.getMonth(), date.getDate());
       }
@@ -46,7 +50,7 @@
         case "month":
           return new Date(date.getFullYear(), date.getMonth() + 1, 0);
         case "week":
-          return new Date(date.getFullYear(), date.getMonth(), date.getDate() - ((date.getDay() + 6) % 7) + 7);
+          return new Date(date.getFullYear(), date.getMonth(), date.getDate() - getDayIndex(date) + 7);
         case "day":
           return new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1);
       }
@@ -55,7 +59,7 @@
 
   let [days, amountOfRows, processedEvents] = $derived((() => {
       // Date calculation
-      const firstDayOfWeek = (startDate.getDay() + 6) % 7;
+      const firstDayOfWeek = getDayIndex(startDate);
 
       const amountOfColumns = view === "day" ? 1 : 7;
       const amountOfRows = view === "month" ? Math.ceil((endDate.getDate() + firstDayOfWeek) / amountOfColumns) : 1;
@@ -184,12 +188,12 @@
     {#if view === "month" || view === "week"}
       {#each Array(7) as _, weekDay}
         <div class="weekday">
-          {getDayName(weekDay)}
+          {getDayName((weekDay + settings.userSettings[UserSettingKeys.FirstDayOfWeek]) % 7)}
         </div>
       {/each}
     {:else}
       <div class="weekday">
-        {getDayName((date.getDay() + 6) % 7)}
+        {getDayName(date.getDay())}
       </div>
     {/if}
   </div>

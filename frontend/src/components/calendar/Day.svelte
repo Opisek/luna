@@ -9,6 +9,7 @@
   import { NoOp } from "$lib/client/placeholders";
   import { flip } from "svelte/animate";
   import { fly } from "svelte/transition";
+  import { getDayIndex } from "$lib/common/date";
 
   interface Props {
     date: Date;
@@ -178,7 +179,7 @@
       animate:flip={{duration: 300, delay: 300}}
       in:fly={{duration: 300, x: 200}}
       out:fly={{duration: 300, x: -200}}
-      style="z-index: {15 - ((date.getDay() + 6) % 7)}"
+      style="z-index: {16 - getDayIndex(date)}"
     >
       <Event
         event={event}

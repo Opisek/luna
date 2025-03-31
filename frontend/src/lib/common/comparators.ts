@@ -7,8 +7,8 @@ export function compareEventsByStartDate(a: EventModel, b: EventModel): number {
   const diff = aDay.getTime() - bDay.getTime();
   if (diff !== 0) return diff;
 
-  const aMultiday = a.date.start.getDay() !== a.date.end.getDay() || a.date.start.getMonth() !== a.date.end.getMonth() || a.date.start.getFullYear() !== a.date.end.getFullYear();
-  const bMultiday = b.date.start.getDay() !== b.date.end.getDay() || b.date.start.getMonth() !== b.date.end.getMonth() || b.date.start.getFullYear() !== b.date.end.getFullYear();
+  const aMultiday = a.date.start.getDate() !== a.date.end.getDate() || a.date.start.getMonth() !== a.date.end.getMonth() || a.date.start.getFullYear() !== a.date.end.getFullYear();
+  const bMultiday = b.date.start.getDate() !== b.date.end.getDate() || b.date.start.getMonth() !== b.date.end.getMonth() || b.date.start.getFullYear() !== b.date.end.getFullYear();
 
   if (aMultiday && !bMultiday) return -1;
   if (!a.date.allDay && bMultiday) return 1;

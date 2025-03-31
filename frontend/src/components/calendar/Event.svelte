@@ -10,6 +10,7 @@
   import ColorCircle from "../misc/ColorCircle.svelte";
   import { getSettings } from "$lib/client/settings.svelte";
   import { UserSettingKeys } from "../../types/settings";
+  import { getDayIndex } from "$lib/common/date";
 
   interface Props {
     visible?: boolean;
@@ -47,8 +48,7 @@
   })
 
   let remainingDaysThisWeek = $derived.by(() => {
-    const myDayIndex = (date.getDay() + 6) % 7;
-    const remainingDaysThisWeek = Math.min(remainingDays, 7 - myDayIndex);
+    const remainingDaysThisWeek = Math.min(remainingDays, 7 - getDayIndex(date));
 
     return Math.max(remainingDaysThisWeek, 1);
   })
@@ -191,7 +191,7 @@
 </style>
 
 <!-- TODO: the following reduced the amount of divs we need to render but was prone to some edge-case bugs (no.116) -->
-<!--{#if event && (isFirstDisplay || date.getDay() == 1 || showOnlyCircle)}-->
+<!--{#if event && (isFirstDisplay || getDayIndex(date) == 0 || showOnlyCircle)}-->
 {#if event}
   <div
     bind:this={element}

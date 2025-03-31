@@ -1,7 +1,7 @@
 <script lang="ts">
   import { NoOp } from "$lib/client/placeholders";
   import { focusIndicator } from "$lib/client/decoration";
-  import { isSameDay } from "$lib/common/date";
+  import { getDayIndex, isSameDay } from "$lib/common/date";
 
   interface Props {
     date: Date;
@@ -21,7 +21,7 @@
     // Date calculation
     const firstMonthDay = new Date(date.getFullYear(), date.getMonth(), 1);
     //const lastMonthDay = new Date(year, month + 2, 0);
-    const firstDayOfWeek = (firstMonthDay.getDay() + 6) % 7;
+    const firstDayOfWeek = getDayIndex(firstMonthDay);
 
     //amountOfRows = Math.ceil((lastMonthDay.getDate() + firstDayOfWeek) / 7);
     const amountOfRows = 6;
