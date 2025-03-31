@@ -6,7 +6,7 @@
 
   import { getContext, setContext } from "svelte";
   import { writable } from "svelte/store";
-  import { getDayIndex, isSameDay } from "$lib/common/date";
+  import { getDayIndex, getWeekNumber, isSameDay } from "$lib/common/date";
   import { fade, fly } from "svelte/transition";
   import { getSettings } from "$lib/client/settings.svelte";
   import { UserSettingKeys } from "../../types/settings";
@@ -142,6 +142,7 @@
 
 <style lang="scss">
   @use "../../styles/dimensions.scss";
+  @use "../../styles/colors.scss";
 
   div.calendar {
     display: flex;
@@ -176,6 +177,28 @@
   div.columns-day {
     grid-template-columns: repeat(1, 1fr);
   }
+
+  div.weekNumbersWrapper {
+    display: flex;
+    flex-direction: row;
+    gap: dimensions.$gapSmaller;
+    flex-grow: 1;
+  }
+
+  div.weekNumbers {
+    display: grid;
+    flex-direction: column;
+    width: 1.7em;
+  }
+  
+  div.weekNumber {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: colors.$backgroundSecondary;
+    margin: dimensions.$gapSmaller 0;
+    border-radius: dimensions.$borderRadiusSmall;
+  }
 </style>
 
 <div class="calendar">
@@ -197,6 +220,26 @@
       </div>
     {/if}
   </div>
+
+  {#if settings.userSettings[UserSettingKeys.DisplayWeekNumbers]}
+    <div class="weekNumbersWrapper">
+      <div
+        class="weekNumbers"
+      >
+        {#each Array(amountOfRows) as _, i}
+        <div class="weekNumber">
+          {getWeekNumber(days[7 * i] || new Date())}
+        </div>
+        {/each}
+      </div>
+      {@render daysGrid()}
+    </div>
+  {:else}
+    {@render daysGrid()}
+  {/if}
+</div>
+
+{#snippet daysGrid()}
   <div
     class="days"
     style="grid-template-rows: repeat({amountOfRows}, 1fr)"
@@ -219,4 +262,4 @@
       </Day>
     {/each}
   </div>
-</div>
+{/snippet}
