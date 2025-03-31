@@ -62,7 +62,12 @@
       const firstDayOfWeek = getDayIndex(startDate);
 
       const amountOfColumns = view === "day" ? 1 : 7;
-      const amountOfRows = view === "month" ? Math.ceil((endDate.getDate() + firstDayOfWeek) / amountOfColumns) : 1;
+      const amountOfRows = 
+        view === "month" ?
+        settings.userSettings[UserSettingKeys.DynamicCalendarRows] ?
+        Math.ceil((endDate.getDate() + firstDayOfWeek) / amountOfColumns)
+        : 6
+        : 1;
 
       const firstViewDay = new Date(startDate);
       if (view === "month") firstViewDay.setDate(startDate.getDate() - firstDayOfWeek);

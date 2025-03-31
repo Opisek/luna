@@ -2,6 +2,8 @@
   import { NoOp } from "$lib/client/placeholders";
   import { focusIndicator } from "$lib/client/decoration";
   import { getDayIndex, isSameDay } from "$lib/common/date";
+  import { UserSettingKeys } from "../../types/settings";
+  import { getSettings } from "$lib/client/settings.svelte";
 
   interface Props {
     date: Date;
@@ -15,16 +17,21 @@
     smaller = false,
   }: Props = $props();
 
+  const settings = getSettings();
+
   let today = new Date();
 
   let [days, amountOfRows] = $derived((() => {
     // Date calculation
     const firstMonthDay = new Date(date.getFullYear(), date.getMonth(), 1);
-    //const lastMonthDay = new Date(year, month + 2, 0);
+    const lastMonthDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
     const firstDayOfWeek = getDayIndex(firstMonthDay);
 
-    //amountOfRows = Math.ceil((lastMonthDay.getDate() + firstDayOfWeek) / 7);
-    const amountOfRows = 6;
+    //amountOfRows = ;
+    const amountOfRows = 
+      settings.userSettings[UserSettingKeys.DynamicSmallCalendarRows] ?
+      Math.ceil((lastMonthDay.getDate() + firstDayOfWeek) / 7)
+      : 6;
 
     const firstViewDay = new Date(firstMonthDay);
     firstViewDay.setDate(firstMonthDay.getDate() - firstDayOfWeek);
@@ -92,7 +99,7 @@
 </style>
 
 <div class="calendar" class:smaller={smaller} style="grid-template-rows: repeat({amountOfRows}, 1fr)">
-  {#each days as day, i}
+  {#each days as day}
     <button
       class="day"
       class:sunday={day.getDay() == 0}
