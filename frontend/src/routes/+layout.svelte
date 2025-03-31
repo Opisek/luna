@@ -2,12 +2,17 @@
   import Notification from "../components/interactive/Notification.svelte";
 
   import { notificationExpireTime, notifications, queueNotification } from "$lib/client/notifications";
+  import { getSettings } from "$lib/client/settings.svelte";
+  import { browser } from "$app/environment";
+  import { UserSettingKeys } from "../types/settings";
 
   interface Props {
     children?: import('svelte').Snippet;
   }
 
   let { children }: Props = $props();
+
+  const settings = getSettings();
 
   let notifsWrapper: HTMLDivElement;
 
@@ -51,6 +56,12 @@
       notifsWrapper.showPopover();
     }
   });
+
+  $effect(() => {
+    if (!browser) return;
+    const root = document.documentElement;
+    root.setAttribute("data-style-rounded-corners", settings.userSettings[UserSettingKeys.DisplayRoundedCorners] ? "true" : "false");
+  })
 </script>
 
 <style lang="scss">
