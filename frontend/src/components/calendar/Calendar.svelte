@@ -156,18 +156,21 @@
   div.weekdays {
     display: grid;
     gap: dimensions.$gapSmall;
+    margin: 0 dimensions.$gapSmaller;
   }
-  //div.weekdays-day {
-  //  grid-template-columns: repeat(1, 1fr);
-  //}
   div.weekday {
     text-align: center;
+  }
+  div.weekdays.padded {
+    padding-left: calc(1.7em + dimensions.$gapSmaller);
   }
 
   div.days {
     display: grid;
     gap: 0;
     flex-grow: 1;
+    padding: 0;
+    margin: 0;
   }
   
   div.columns-month,
@@ -207,6 +210,7 @@
     class:columns-month={view === "month"}
     class:columns-week={view === "week"}
     class:columns-day={view === "day"}
+    class:padded={settings.userSettings[UserSettingKeys.DisplayWeekNumbers]}
   >
     {#if view === "month" || view === "week"}
       {#each Array(7) as _, weekDay}
