@@ -510,6 +510,8 @@
         {#if settings.userData.id && settings.userSettings[UserSettingKeys.DebugMode]}
           <TextInput bind:value={settings.userData.id} name="id" placeholder="User ID" editable={false} />
         {/if}
+      {:else if selectedCategory === "users"}
+        <Button color="accent">Invite a user</Button>
       {:else if selectedCategory === "admin"}
         <ToggleInput
           name={GlobalSettingKeys.RegistrationEnabled}
@@ -534,6 +536,15 @@
             { name: "Debug", value: 0 }
           ]}
         />
+      {:else if selectedCategory === "danger"}
+        <Button color="failure">Reset all my preferences</Button>
+        {#if settings.userData.admin}
+          <Button color="failure">Reset all global settings</Button>
+        {/if}
+        <Button color="failure">Delete my account</Button>
+      {:else if selectedCategory === "logout"}
+        <Button color="failure">Log out of my account</Button>
+        <Button color="failure">Deauthorize all sessions</Button>
       {/if}
     </main>
   </div>
