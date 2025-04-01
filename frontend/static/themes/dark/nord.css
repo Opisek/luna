@@ -50,4 +50,6 @@ html[data-theme="dark"] {
   --colorForegroundAccentFaded: var(--nord3);
   
   --colorForegroundSunday: var(--nord15);
+  
+  --colorRipple: var(--colorForegroundDark);
 }
