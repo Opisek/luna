@@ -158,10 +158,12 @@
     display: none;
   }
 
-  div.foregroundBright {
+  html[data-theme="light"] div.foregroundBright,
+  html[data-theme="dark"] div.foregroundDark {
     color: colors.$foregroundBright;
   }
-  div.foregroundDark {
+  html[data-theme="dark"] div.foregroundDark,
+  html[data-theme="light"] div.foregroundBright {
     color: colors.$foregroundDark;
   }
 
