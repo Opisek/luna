@@ -1,7 +1,6 @@
 <script lang="ts" generics="T">
   import { addRipple, focusIndicator } from "../../lib/client/decoration";
   import { EmptyOption } from "../../lib/client/placeholders";
-  import Divider from "../layout/Divider.svelte";
 
   // This component is used for category lists (currently only in the settings modal)
 
