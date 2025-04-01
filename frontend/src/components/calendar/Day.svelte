@@ -124,6 +124,23 @@
     background-color: colors.$backgroundSecondary;
     margin: 0 var(--gapBetweenDays);
     padding: dimensions.$gapSmaller 0;
+    position: relative;
+  }
+
+  button.otherMonth {
+    background-color: colors.$backgroundPrimary;
+  }
+
+  button.more.otherMonth::before {
+    content: "";
+    background-color: colors.$backgroundSecondary;
+    opacity: 0.5;
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    left: 0;
+    top: 0;
+    pointer-events: none;
   }
 
   div.events {
@@ -139,7 +156,7 @@
   }
 
   .otherMonth {
-    background-color: colors.$backgroundSecondary50Percent !important;
+    opacity: 0.5;
   }
 
   div.eventAnimation.hidden {
