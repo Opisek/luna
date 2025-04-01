@@ -217,7 +217,7 @@ func Register(c *gin.Context) {
 	if err != nil {
 		u.Error(err.
 			Append(errors.LvlWordy, "Could not generate token").
-			Append(errors.LvlBroad, "Could not log in"),
+			Append(errors.LvlBroad, "Could not register"),
 		)
 	}
 
