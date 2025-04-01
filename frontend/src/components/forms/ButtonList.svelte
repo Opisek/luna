@@ -60,6 +60,11 @@
     border-bottom-right-radius: dimensions.$borderRadius;
   }
 
+
+  :not(.option:last-child).last {
+    margin-bottom: dimensions.$gapSmall;
+  }
+
   .selected {
     background-color: colors.$backgroundAccent;
     color: colors.$foregroundAccent;
@@ -79,10 +84,7 @@
 </style>
 
 <aside>
-  {#each options as block, i}
-    {#if i > 0}
-      <Divider/>
-    {/if}
+  {#each options as block}
     {#each block as option, i}
       {@const Icon = option.icon}
       <button
