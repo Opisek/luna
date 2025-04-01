@@ -219,13 +219,18 @@
   }
 
   div.picker {
-    grid-area: hSL;
-    width: 100%;
-    height: 0;
     mask: linear-gradient(270deg, white, transparent);
-    padding-bottom: 100%;
-    border-radius: dimensions.$borderRadius;
     cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+  div.pickerBackground {
+    grid-area: hSL;
+    background-color: #ffffff;
+    width: 100%;
+    height: 100%;
+    border-radius: dimensions.$borderRadius;
+    overflow: hidden;
   }
 
   div.hue {
@@ -241,14 +246,16 @@
 <Modal title="Pick Color" bind:showModal={showModalInternal} bind:hideModal={hideModalInternal} onModalSubmit={confirm}>
   <div class="grid">
     <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div
-      bind:this={picker}
-      class="picker"
-      style="background: linear-gradient(0deg, hsl({currentHSL[0]} 0 0), hsl({currentHSL[0]} 100% 50%))"
-      onmousedown={pickerDown}
-      onmousemove={pickerMove}
-      onmouseup={pickerUp}
-    ></div>
+    <div class="pickerBackground">
+      <div
+        bind:this={picker}
+        class="picker"
+        style="background: linear-gradient(0deg, hsl({currentHSL[0]} 0 0), hsl({currentHSL[0]} 100% 50%))"
+        onmousedown={pickerDown}
+        onmousemove={pickerMove}
+        onmouseup={pickerUp}
+      ></div>
+    </div>
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div
       bind:this={hue}
