@@ -158,12 +158,12 @@
     display: none;
   }
 
-  html[data-theme="light"] div.foregroundBright,
-  html[data-theme="dark"] div.foregroundDark {
+  :global(html[data-theme="light"]) div.foregroundBright,
+  :global(html[data-theme="dark"]) div.foregroundDark {
     color: colors.$foregroundBright;
   }
-  html[data-theme="dark"] div.foregroundDark,
-  html[data-theme="light"] div.foregroundBright {
+  :global(html[data-theme="dark"]) div.foregroundBright,
+  :global(html[data-theme="light"]) div.foregroundDark {
     color: colors.$foregroundDark;
   }
 
