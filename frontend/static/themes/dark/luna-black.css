@@ -34,6 +34,4 @@ html[data-theme="dark"] {
   --colorForegroundAccentFaded: var(--colorForegroundFaded);
   
   --colorForegroundSunday: hsl(0, 71%, 58%);
-
-  --colorRipple: var(--colorForegroundDark);
 }

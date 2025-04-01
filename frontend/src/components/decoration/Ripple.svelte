@@ -51,7 +51,6 @@
 
     animation: ripple animations.$animationSpeedVerySlow animations.$cubic forwards;
 
-    background-color: colors.$ripple;
     opacity: 0.5;
     transition: opacity animations.$animationSpeed;
     transform: scale(0);
@@ -62,6 +61,13 @@
   div.ripple.disappear {
     transition: opacity animations.$animationSpeedSlow !important;
     opacity: 0;
+  }
+
+  :global(html[data-theme="light"]) div.ripple {
+    background-color: colors.$foregroundBright;
+  }
+  :global(html[data-theme="dark"]) div.ripple {
+    background-color: colors.$foregroundDark;
   }
 </style>
 

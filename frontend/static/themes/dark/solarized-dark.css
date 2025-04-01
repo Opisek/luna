@@ -50,6 +50,4 @@ html[data-theme="dark"] {
   --colorForegroundAccentFaded: var(--solarizedBase2);
   
   --colorForegroundSunday: var(--solarizedMagenta);
-
-  --colorRipple: var(--colorForegroundDark);
 }
