@@ -16,13 +16,14 @@ export const GET = async ({ params, request, url }: RequestEvent) => {
   }
 
   // Open the /static/resource directory
-  const resourcePath = process.env.DEVELOPMENT == "true" ? `./static/${requestedResource}` : `./build/client/${requestedResource}`;
-  const resources = recursivelyFindFiles(resourcePath);
+  const resourceDir = process.env.DEVELOPMENT == "true" ? `static` : `build/client`;
+  const resourcePath = `./${resourceDir}/${requestedResource}`;
+  const resources = recursivelyFindFiles(resourceDir, resourcePath);
 
   return json(resources);
 };
 
-function recursivelyFindFiles(dir: string) {
+function recursivelyFindFiles(baseDir: string, dir: string) {
   const found = {} as any;
 
   const files = fs.readdirSync(dir);
@@ -31,9 +32,9 @@ function recursivelyFindFiles(dir: string) {
     const stat = fs.statSync(filePath);
 
     if (stat.isDirectory()) {
-      found[file] = recursivelyFindFiles(filePath);
+      found[file] = recursivelyFindFiles(baseDir, filePath);
     } else {
-      found[file.split(".")[0]] = filePath.split(".")[0].substring("static".length);
+      found[file.split(".")[0]] = filePath.split(".")[0].substring(baseDir.length);
     }
   }
 
