@@ -24,8 +24,8 @@ class Settings {
     [UserSettingKeys.FirstDayOfWeek]: 1,
     [UserSettingKeys.FontText]: "Atkinson Hyperlegible Next",
     [UserSettingKeys.FontTime]: "Atkinson Hyperlegible Mono",
-    [UserSettingKeys.ThemeLight]: "Luna Light",
-    [UserSettingKeys.ThemeDark]: "Luna Dark",
+    [UserSettingKeys.ThemeLight]: "luna-light",
+    [UserSettingKeys.ThemeDark]: "luna-dark",
     [UserSettingKeys.UiScaling]: 1
   });
   public globalSettings: GlobalSettings = $state({

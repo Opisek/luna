@@ -17,7 +17,7 @@
   import { deepCopy, deepEquality } from "$lib/common/misc";
   import Button from "../interactive/Button.svelte";
   import Loader from "../decoration/Loader.svelte";
-  import { fetchResponse } from "$lib/client/net";
+  import { fetchJson, fetchResponse } from "$lib/client/net";
   import { queueNotification } from "$lib/client/notifications";
 
   interface Props {
@@ -35,6 +35,7 @@
   showModal = () => {
     saving = false;
     snapshotSettings();
+    fetchThemes();
     settings.fetchSettings().then(() => {
       snapshotSettings();
     });
@@ -68,6 +69,28 @@
     previousCategory = selectedCategory;
     restoreSettings();
   });
+
+  // Themes and Fonts
+  let lightThemes = $state<Option<string>[]>([{ name: "Luna Light", value: "luna-light" }]);
+  let darkThemes = $state<Option<string>[]>([{ name: "Luna Dark", value: "luna-dark" }]);
+
+  function formatThemeOption(theme: string): Option<string> {
+    const formattedName = theme
+      .split("-")
+      .map(x => x.charAt(0).toUpperCase() + x.slice(1))
+      .join(" ");
+
+    return { name: formattedName, value: theme };
+  }
+
+  function fetchThemes() {
+    fetchJson("/installed/themes").then((response) => {
+      lightThemes = Object.keys(response.light).map(formatThemeOption);
+      darkThemes = Object.keys(response.dark).map(formatThemeOption);
+    }).catch((err) => {
+      queueNotification("failure", "Failed to fetch themes: " + err);
+    });
+  }
 
   // Account Settings
   let newPassword = $state("");
@@ -150,6 +173,9 @@
   }
 
   async function restoreSettings() {
+    newPassword = "";
+    oldPassword = "";
+
     if (userDataSnapshot) settings.userData = await deepCopy(userDataSnapshot);
     if (userSettingsSnapshot) settings.userSettings = await deepCopy(userSettingsSnapshot);
     if (globalSettingsSnapshot) settings.globalSettings = await deepCopy(globalSettingsSnapshot);
@@ -432,20 +458,13 @@
           name={UserSettingKeys.ThemeLight}
           placeholder="Light Theme"
           bind:value={settings.userSettings[UserSettingKeys.ThemeLight]}
-          options={[
-            { name: "Luna Light", value: "luna-light" },
-            { name: "Solarized Light", value: "solarized-light" },
-          ]}
+          options={lightThemes}
         />
         <SelectInput
           name={UserSettingKeys.ThemeDark}
           placeholder="Dark Theme"
           bind:value={settings.userSettings[UserSettingKeys.ThemeDark]}
-          options={[
-            { name: "Luna Dark", value: "luna-dark" },
-            { name: "Solarized Dark", value: "solarized-dark" },
-            { name: "Nord", value: "nord" },
-          ]}
+          options={darkThemes}
         />
         <SelectInput
           name={UserSettingKeys.FontText}

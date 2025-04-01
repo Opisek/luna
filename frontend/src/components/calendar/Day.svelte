@@ -139,7 +139,7 @@
   }
 
   .otherMonth {
-    background-color: colors.$backgroundSecondaryFaded !important;
+    opacity: 0.5;
   }
 </style>
 

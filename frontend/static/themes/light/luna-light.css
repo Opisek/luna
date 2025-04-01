@@ -1,7 +1,7 @@
 html[data-theme="light"] {
   --colorForegroundDark: #000000;
   --colorForegroundBright: #ffffff;
-  --colorForegroundFaded: #e6e6e6e6;
+  --colorForegroundFaded: #e6e6e6;
   --colorForegroundDim: #6b6b6b;
 
   --colorForegroundLink: hsl(213, 69%, 42%);
@@ -10,7 +10,6 @@ html[data-theme="light"] {
 
   --colorBackgroundSecondary: #f0f0f0;
   --colorBackgroundSecondaryActive: #e0e0e0;
-  --colorBackgroundSecondaryFaded: #f7f7f7;
 
   --colorBackgroundSuccess: hsl(107, 53%, 47%);
   --colorBackgroundSuccessActive: hsl(107, 53%, 57%);

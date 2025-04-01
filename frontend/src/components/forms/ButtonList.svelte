@@ -37,6 +37,7 @@
     font-size: inherit;
     width: 100%;
     background-color: colors.$backgroundSecondary;
+    color: colors.$foregroundSecondary;
     padding: dimensions.$gapSmall;
     display: flex;
     flex-direction: row;

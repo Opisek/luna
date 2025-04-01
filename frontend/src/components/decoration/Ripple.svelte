@@ -51,7 +51,7 @@
 
     animation: ripple animations.$animationSpeedVerySlow animations.$cubic forwards;
 
-    background-color: colors.$backgroundPrimary;
+    background-color: colors.$ripple;
     opacity: 0.5;
     transition: opacity animations.$animationSpeed;
     transform: scale(0);
