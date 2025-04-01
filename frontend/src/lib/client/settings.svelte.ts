@@ -1,3 +1,4 @@
+import { browser } from "$app/environment";
 import { GlobalSettingKeys, UserSettingKeys, type GlobalSettings, type UserData, type UserSettings } from "../../types/settings";
 import { fetchJson } from "./net";
 import { queueNotification } from "./notifications";
@@ -62,6 +63,7 @@ class Settings {
   }
 
   public async fetchSettings() {
+    if (!browser || !document.cookie.includes("tokenPresent")) return;
     await Promise.all([
       this.fetchUserData(),
       this.fetchUserSettings(),

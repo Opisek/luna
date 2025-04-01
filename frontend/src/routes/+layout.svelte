@@ -5,6 +5,7 @@
   import { getSettings } from "$lib/client/settings.svelte";
   import { browser } from "$app/environment";
   import { UserSettingKeys } from "../types/settings";
+  import { afterNavigate } from "$app/navigation";
 
   interface Props {
     children?: import('svelte').Snippet;
@@ -61,6 +62,10 @@
     if (!browser) return;
     const root = document.documentElement;
     root.setAttribute("data-style-rounded-corners", settings.userSettings[UserSettingKeys.DisplayRoundedCorners] ? "true" : "false");
+  })
+
+  afterNavigate(() => {
+    settings.fetchSettings();
   })
 </script>
 
