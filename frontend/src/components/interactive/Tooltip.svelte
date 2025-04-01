@@ -2,15 +2,20 @@
   import { CircleAlert, Info } from "lucide-svelte";
 
   import TooltipPopup from "../popups/TooltipPopup.svelte";
+  import type { Snippet } from "svelte";
 
   interface Props {
-    msg: string;
     error?: boolean;
+    children?: Snippet;
+    tight?: boolean;
+    tiny?: boolean;
   }
 
   let {
-    msg,
-    error = false
+    error = false,
+    tight = false,
+    tiny = false,
+    children
   }: Props = $props();
 </script>
 
@@ -24,28 +29,33 @@
     cursor: help;
     display: flex;
     justify-content: center;
-    padding: dimensions.$gapSmaller;
     outline: 0;
+    padding: dimensions.$gapSmaller;
   }
 
   div.error {
     color: colors.$backgroundFailure;
+  }
+
+  div.tight {
+    padding: 0
   }
 </style>
 
 <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 <div
   class:error={error}
+  class:tight={tight}
   role="tooltip"
   tabindex="0"
 >
   {#if error}
-    <CircleAlert size={16}/>
+    <CircleAlert size={tiny ? 14 : 16}/>
   {:else}
-    <Info size={16}/>
+    <Info size={tiny ? 14 : 16}/>
   {/if}
 
   <TooltipPopup>
-    {msg}
+    {@render children?.()}
   </TooltipPopup>
 </div>

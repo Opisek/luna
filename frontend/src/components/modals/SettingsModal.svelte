@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Code, LockKeyhole, LogOut, Monitor, User } from "lucide-svelte";
+  import { Code, LockKeyhole, LogOut, Monitor, TriangleAlert, User, Users } from "lucide-svelte";
   import { NoOp } from "../../lib/client/placeholders";
   import ButtonList from "../forms/ButtonList.svelte";
   import Modal from "./Modal.svelte";
@@ -19,6 +19,8 @@
   import Loader from "../decoration/Loader.svelte";
   import { fetchJson, fetchResponse } from "$lib/client/net";
   import { queueNotification } from "$lib/client/notifications";
+  import TooltipPopup from "../popups/TooltipPopup.svelte";
+  import Tooltip from "../interactive/Tooltip.svelte";
 
   interface Props {
     showModal?: () => any;
@@ -49,6 +51,21 @@
   let showModalInternal = $state(NoOp);
   let hideModalInternal = $state(NoOp);
 
+  const categoriesAdmin: Option<string>[][] = [
+    [
+      { name: "Account", value: "account", icon: User },
+      { name: "Appearance", value: "appearance", icon: Monitor },
+      { name: "Developer", value: "developer", icon: Code }
+    ],
+    [
+      { name: "Users", value: "users", icon: Users },
+      { name: "Administrative", value: "admin", icon: LockKeyhole },
+    ],
+    [
+      { name: "Danger Zone", value: "danger", icon: TriangleAlert },
+      { name: "Logout", value: "logout", icon: LogOut },
+    ],
+  ]
   const categories: Option<string>[][] = [
     [
       { name: "Account", value: "account", icon: User },
@@ -56,12 +73,11 @@
       { name: "Developer", value: "developer", icon: Code }
     ],
     [
-      { name: "Administrative", value: "admin", icon: LockKeyhole },
-    ],
-    [
+      { name: "Danger Zone", value: "danger", icon: TriangleAlert },
       { name: "Logout", value: "logout", icon: LogOut },
     ],
   ]
+
   let selectedCategory = $state("account");
   let previousCategory = $state("account");
   $effect(() => {
@@ -320,7 +336,7 @@
   <div class="container">
     <ButtonList
       bind:value={selectedCategory}
-      options={categories} 
+      options={settings.userData.admin ? categoriesAdmin : categories} 
     />
     <main>
       {#if selectedCategory === "account"}
@@ -497,7 +513,8 @@
       {:else if selectedCategory === "admin"}
         <ToggleInput
           name={GlobalSettingKeys.RegistrationEnabled}
-          description="Enable Registration"
+          description="Enable Open Registration"
+          info={"Allows anyone to create an account.\nIf you just want to invite a few people, head to the \"Users\" tab."}
           bind:value={settings.globalSettings[GlobalSettingKeys.RegistrationEnabled]}
         />
         <ToggleInput
@@ -509,6 +526,7 @@
           name={GlobalSettingKeys.LoggingVerbosity}
           bind:value={settings.globalSettings[GlobalSettingKeys.LoggingVerbosity]}
           placeholder="Error Messages Verbosity"
+          info={"How much information about errors is returned to the user.\nThis setting applies to all users.\n\"Debug\" should never be used in production."}
           options={[
             { name: "Broad", value: 3 },
             { name: "Plain", value: 2 },

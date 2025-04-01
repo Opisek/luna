@@ -3,11 +3,12 @@
   import Horizontal from "../layout/Horizontal.svelte";
   import Loader from "../decoration/Loader.svelte";
   import Title from "../layout/Title.svelte";
+  import type { Snippet } from "svelte";
 
   interface Props {
     title: string;
     submittable?: boolean;
-    children?: import('svelte').Snippet;
+    children?: Snippet;
   }
 
   let { title, submittable = true, children }: Props = $props();

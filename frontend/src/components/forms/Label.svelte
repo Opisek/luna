@@ -1,14 +1,17 @@
 <script lang="ts">
   import type { Snippet } from "svelte";
+  import Tooltip from "../interactive/Tooltip.svelte";
 
   interface Props {
     name: string;
+    info?: string;
     ownPositioning?: boolean;
     children?: Snippet;
   }
 
   let {
     name,
+    info = "",
     ownPositioning = true,
     children
   }: Props = $props();
@@ -23,6 +26,10 @@
     color: colors.$foregroundDim;
     font-size: text.$fontSizeSmall;
     cursor: text;
+    display: flex;
+    flex-direction: row;
+    gap: dimensions.$gapSmaller;
+    align-items: center;
   }
 
   .ownPositioning {
@@ -33,4 +40,9 @@
 
 <label for={name} tabindex="-1" class:ownPositioning={ownPositioning}>
   {@render children?.()}
+  {#if info}
+    <Tooltip tight tiny>
+      {info}
+    </Tooltip>
+  {/if}
 </label>

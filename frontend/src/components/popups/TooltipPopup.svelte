@@ -43,6 +43,7 @@
   @use "../../styles/colors.scss";
   @use "../../styles/decorations.scss";
   @use "../../styles/dimensions.scss";
+  @use "../../styles/text.scss";
 
   span.popup {
     position: absolute;
@@ -83,6 +84,8 @@
     width: fit-content;
     max-width: 30em;
     box-shadow: decorations.$boxShadow;
+    font-size: text.$fontSize;
+    white-space: pre-wrap;
   }
   :global(*:hover) > span.popup > span.contents,
   :global(*:focus-within) > span.popup > span.contents {

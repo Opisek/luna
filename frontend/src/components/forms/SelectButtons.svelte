@@ -8,6 +8,7 @@
     value: T | null;
     name: string;
     placeholder?: string;
+    info?: string;
     label?: boolean;
     editable?: boolean;
     compact?: boolean;
@@ -18,6 +19,7 @@
     value = $bindable(),
     name,
     placeholder = "",
+    info = "",
     label = true,
     editable = true,
     compact = false,
@@ -84,7 +86,7 @@
 </style>
 
 {#if label && placeholder}
-  <Label name={name}>{placeholder}</Label>
+  <Label name={name} info={info}>{placeholder}</Label>
 {/if}
 {#if editable}
   <div

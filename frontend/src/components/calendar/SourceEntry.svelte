@@ -109,7 +109,7 @@
       <CollapseToggle bind:collapsed={sourceCollapsed}/>
     {/if}
     {#if hasErrored}
-      <Tooltip msg="An error occurred trying to retrieve calendars from this source." error={true}/>
+      <Tooltip error={true}>An error occurred trying to retrieve calendars from this source.</Tooltip>
     {/if}
   </span>
   <!--

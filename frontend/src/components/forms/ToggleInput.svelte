@@ -1,11 +1,13 @@
 <script lang="ts">
   import Toggle from "../interactive/Toggle.svelte";
+  import Tooltip from "../interactive/Tooltip.svelte";
 
   import { NoOp } from "$lib/client/placeholders";
 
   interface Props {
     value?: boolean;
     description: string;
+    info?: string;
     name: string;
     editable?: boolean;
     onChange?: (value: boolean) => any;
@@ -14,6 +16,7 @@
   let {
     value = $bindable(false),
     description,
+    info,
     name,
     editable = true,
     onChange = NoOp,
@@ -63,4 +66,9 @@
   <label for={name}>
     {description}
   </label>
+  {#if info}
+    <Tooltip tight={true}>
+      {info}
+    </Tooltip>
+  {/if}
 </div>

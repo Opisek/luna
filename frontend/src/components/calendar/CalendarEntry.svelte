@@ -101,7 +101,7 @@
     {/if}
     <VisibilityToggle bind:visible={calendarVisible}/>
     {#if hasErrored}
-      <Tooltip msg="An error occurred trying to retrieve events from this calendar." error={true}/>
+      <Tooltip error={true}>An error occurred trying to retrieve events from this calendar.</Tooltip>
     {/if}
   </span>
 </div>
