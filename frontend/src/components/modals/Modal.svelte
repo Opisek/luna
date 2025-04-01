@@ -89,6 +89,8 @@
     border: 0;
     border-radius: dimensions.$borderRadius;
     padding: 0;
+    background-color: colors.$backgroundPrimary;
+    color: colors.$foregroundPrimary;
   }
   dialog::backdrop {
     backdrop-filter: blur(dimensions.$blur);

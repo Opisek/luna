@@ -1,0 +1,37 @@
+/* https://ethanschoonover.com/solarized/ */
+html[data-theme="light"] {
+  --colorForegroundDark: #657b83;
+  --colorForegroundBright: #839496;
+  --colorForegroundFaded: #586e75;
+  --colorForegroundDim: #93a1a1;
+
+  --colorForegroundLink: #268bd2;
+
+  --colorBackgroundPrimary: #fdf6e3;
+
+  --colorBackgroundSecondary: #eee8d5;
+  --colorBackgroundSecondaryActive: hsl(46, 42%, 75%);
+  --colorBackgroundSecondaryFaded: hsl(46, 42%, 90%);
+
+  --colorBackgroundSuccess: #859900;
+  --colorBackgroundSuccessActive: hsl(68, 100%, 40%);
+  --colorForegroundSuccess: #fdf6e3;
+  --colorForegroundSuccessFaded: #eee8d5;
+
+  --colorBackgroundWarning: #b58900;
+  --colorBackgroundWarningActive: hsl(45, 100%, 45%);
+  --colorForegroundWarning: #fdf6e3;
+  --colorForegroundWarningFaded: #eee8d5;
+
+  --colorBackgroundDanger: #dc322f;
+  --colorBackgroundDangerActive: hsl(1, 71%, 62%);
+  --colorForegroundDanger: #fdf6e3;
+  --colorForegroundDangerFaded: #eee8d5;
+
+  --colorBackgroundAccent: #2aa198;
+  --colorBackgroundAccentActive: hsl(175, 59%, 50%);
+  --colorForegroundAccent: #fdf6e3;
+  --colorForegroundAccentFaded: #eee8d5;
+  
+  --colorForegroundSunday: #dc322f;
+}

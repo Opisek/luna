@@ -70,6 +70,7 @@
 </script>
 
 <style lang="scss">
+  @use "../styles/colors.scss";
   @use "../styles/dimensions.scss";
   @use "../styles/text.scss";
 
@@ -87,6 +88,9 @@
 
     font-family: text.$fontFamilyText;
     font-size: text.$fontSize;
+
+    background-color: colors.$backgroundPrimary;
+    color: colors.$foregroundPrimary;
   }
 
   div.notifications {
@@ -101,6 +105,11 @@
     overflow: visible;
   }
 </style>
+
+<svelte:head>
+  <link rel="stylesheet" href="/themes/light/{settings.userSettings[UserSettingKeys.ThemeLight]}.css">
+  <link rel="stylesheet" href="/themes/dark/{settings.userSettings[UserSettingKeys.ThemeDark]}.css">
+</svelte:head>
 
 {@render children?.()}
 

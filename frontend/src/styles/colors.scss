@@ -1,37 +1,42 @@
 /* Main colors */
-$foregroundDark: #000000;
-$foregroundBright: #ffffff;
-$foregroundFaded: #e6e6e6;
-$foregroundDim: #6b6b6b;
+$foregroundDark: var(--colorForegroundDark, #000000);
+$foregroundBright: var(--colorForegroundBright, #ffffff);
+$foregroundFaded: var(--colorForegroundFaded, #e6e6e6);
+$foregroundDim: var(--colorForegroundDim, #6b6b6b);
 
-$foregroundLink: hsl(213, 69%, 42%);
+$foregroundLink: var(--colorForegroundLink, hsl(213, 69%, 42%));
 
-$backgroundPrimary: #ffffff;
-$foregroundPrimary: $foregroundDark;
+$backgroundPrimary: var(--colorBackgroundPrimary, #ffffff);
+$foregroundPrimary: var(--colorForegroundPrimary, $foregroundDark);
 
-$backgroundSecondary: #f0f0f0;
-$backgroundSecondaryActive: #e0e0e0;
-$foregroundSecondary: $foregroundDark;
+$backgroundSecondary: var(--colorBackgroundSecondary, #f0f0f0);
+$backgroundSecondaryActive: var(--colorBackgroundSecondaryActive, #e0e0e0);
+$backgroundSecondaryFaded: var(--colorBackgroundSecondaryFaded, #f7f7f7);
+$foregroundSecondary: var(--colorForegroundSecondary, $foregroundDark);
+$foregroundSecondaryFaded: var(--colorForegroundSecondaryFaded, $foregroundFaded);
 
-$backgroundSecondaryFaded: #f7f7f7;
+$backgroundSuccess: var(--colorBackgroundSuccess, hsl(107, 53%, 47%));
+$backgroundSuccessActive: var(--colorBackgroundSuccessActive, hsl(107, 53%, 57%));
+$foregroundSuccess: var(--colorForegroundSuccess, $foregroundBright);
+$foregroundSuccessFaded: var(--colorForegroundSuccessFaded, $foregroundFaded);
 
-$backgroundSuccess: hsl(107, 53%, 57%);
-$backgroundSuccessActive: hsl(107, 53%, 67%);
-$foregroundSuccess: $foregroundBright;
-$foregroundSuccessFaded: $foregroundFaded;
+$backgroundWarning: var(--colorBackgroundWarning, hsl(39, 100%, 50%));
+$backgroundWarningActive: var(--colorBackgroundWarningActive, hsl(39, 100%, 40%));
+$foregroundWarning: $foregroundBright;
+$foregroundWarningFaded: $foregroundFaded;
 
-$backgroundFailure: hsl(0, 69%, 62%);
-$backgroundFailureActive: hsl(0, 69%, 72%);
-$foregroundFailure: $foregroundBright;
-$foregroundFailureFaded: $foregroundFaded;
+$backgroundFailure: var(--colorBackgroundDanger, hsl(0, 69%, 62%));
+$backgroundFailureActive: var(--colorBackgroundDangerActive, hsl(0, 69%, 72%));
+$foregroundFailure: var(--colorForegroundDanger, $foregroundBright);
+$foregroundFailureFaded: var(--colorForegroundDangerFaded, $foregroundFaded);
 
-$backgroundAccent: hsl(213, 69%, 62%);
-$backgroundAccentActive: hsl(213, 69%, 72%);
-$foregroundAccent: $foregroundBright;
-$foregroundAccentFaded: $foregroundFaded;
+$backgroundAccent: var(--colorBackgroundAccent, hsl(213, 69%, 62%));
+$backgroundAccentActive: var(--colorBackgroundAccentActive, hsl(213, 69%, 72%));
+$foregroundAccent: var(--colorForegroundAccent, $foregroundBright);
+$foregroundAccentFaded: var(--colorForegroundAccentFaded, $foregroundFaded);
 
 /* Calendar colors */
-$foregroundSunday: hsl(0, 71%, 58%);
+$foregroundSunday: var(--colorForegroundSunday, hsl(0, 71%, 58%));
 
 /* Notification and button colors */
 $specialColors: (
@@ -39,6 +44,11 @@ $specialColors: (
     background: $backgroundSuccess,
     backgroundActive: $backgroundSuccessActive,
     foreground: $foregroundSuccess,
+  ),
+  warning: (
+    background: $backgroundWarning,
+    backgroundActive: $backgroundWarningActive,
+    foreground: $foregroundWarning,
   ),
   failure: (
     background: $backgroundFailure,

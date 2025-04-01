@@ -1,0 +1,28 @@
+html[data-theme="light"] {
+  --colorForegroundDark: #000000;
+  --colorForegroundBright: #ffffff;
+  --colorForegroundFaded: #e6e6e6e6;
+  --colorForegroundDim: #6b6b6b;
+
+  --colorForegroundLink: hsl(213, 69%, 42%);
+
+  --colorBackgroundPrimary: #ffffff;
+
+  --colorBackgroundSecondary: #f0f0f0;
+  --colorBackgroundSecondaryActive: #e0e0e0;
+  --colorBackgroundSecondaryFaded: #f7f7f7;
+
+  --colorBackgroundSuccess: hsl(107, 53%, 47%);
+  --colorBackgroundSuccessActive: hsl(107, 53%, 57%);
+
+  --colorBackgroundWarning: hsl(39, 100%, 50%);
+  --colorBackgroundWarningActive: hsl(39, 100%, 60%);
+
+  --colorBackgroundDanger: hsl(0, 69%, 62%);
+  --colorBackgroundDangerActive: hsl(0, 69%, 72%);
+
+  --colorBackgroundAccent: hsl(213, 69%, 62%);
+  --colorBackgroundAccentActive: hsl(213, 69%, 72%);
+  
+  --colorForegroundSunday: hsl(0, 71%, 58%);
+}

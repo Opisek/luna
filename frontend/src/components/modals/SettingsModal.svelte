@@ -435,8 +435,6 @@
           options={[
             { name: "Luna Light", value: "luna-light" },
             { name: "Solarized Light", value: "solarized-light" },
-            { name: "Nord Light", value: "nord-light" },
-            { name: "High Constrast Light", value: "high-contrast-light" },
           ]}
         />
         <SelectInput
@@ -446,8 +444,7 @@
           options={[
             { name: "Luna Dark", value: "luna-dark" },
             { name: "Solarized Dark", value: "solarized-dark" },
-            { name: "Nord Dark", value: "Nord Dark" },
-            { name: "High Contrast Light", value: "high-contrast-light" },
+            { name: "Nord", value: "nord" },
           ]}
         />
         <SelectInput

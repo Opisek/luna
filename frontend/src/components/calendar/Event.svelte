@@ -186,7 +186,7 @@
 
   div.onlyCircle {
     background-color: transparent !important;
-    color: colors.$foregroundDark !important;
+    color: colors.$foregroundSecondary !important;
   }
 </style>
 
