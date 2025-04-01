@@ -91,6 +91,7 @@
   button.day.today {
     background-color: colors.$backgroundAccent;
     color: colors.$foregroundAccent;
+    --barFocusIndicatorColor: #{colors.$barFocusIndicatorColorAlt};
   }
 
   button.day.otherMonth {
