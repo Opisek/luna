@@ -22,8 +22,7 @@ func GenerateSymmetricKey(commonConfig *config.CommonConfig, name string) ([]byt
 
 	encodedSecret := base64.StdEncoding.EncodeToString(secret)
 
-	fileName := "%s/%s.key"
-	path := fmt.Sprintf(fileName, commonConfig.Env.GetKeysPath(), name)
+	path := fmt.Sprintf("%s/%s.key", commonConfig.Env.GetKeysPath(), name)
 	err := os.WriteFile(path, []byte(encodedSecret), 0660)
 	if err != nil {
 		return nil, errors.New().Status(http.StatusInternalServerError).
@@ -38,8 +37,7 @@ func GenerateSymmetricKey(commonConfig *config.CommonConfig, name string) ([]byt
 }
 
 func GetSymmetricKey(commonConfig *config.CommonConfig, name string) ([]byte, *errors.ErrorTrace) {
-	fileName := "%s/%s.key"
-	path := fmt.Sprintf(fileName, commonConfig.Env.GetKeysPath(), name)
+	path := fmt.Sprintf("%s/%s.key", commonConfig.Env.GetKeysPath(), name)
 
 	_, err := os.Stat(path)
 	if err == nil {
