@@ -17,7 +17,6 @@ export const GET = async ({ params, request, url }: RequestEvent) => {
 
   // Open the /static/resource directory
   const resourcePath = process.env.DEVELOPMENT == "true" ? `./static/${requestedResource}` : `./build/client/${requestedResource}`;
-  console.log(path.resolve("./"));
   const resources = recursivelyFindFiles(resourcePath);
 
   return json(resources);
