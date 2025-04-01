@@ -6,6 +6,7 @@
   import { browser } from "$app/environment";
   import { UserSettingKeys } from "../types/settings";
   import { afterNavigate } from "$app/navigation";
+  import { getTheme } from "$lib/client/theme.svelte";
 
   interface Props {
     children?: import('svelte').Snippet;
@@ -14,6 +15,7 @@
   let { children }: Props = $props();
 
   const settings = getSettings();
+  const theme = getTheme();
 
   let notifsWrapper: HTMLDivElement;
 
@@ -62,6 +64,7 @@
     if (!browser) return;
     const root = document.documentElement;
     root.setAttribute("data-style-rounded-corners", settings.userSettings[UserSettingKeys.DisplayRoundedCorners] ? "true" : "false");
+    root.setAttribute("data-theme", theme.isLightMode() ? "light" : "dark");
   })
 
   afterNavigate(() => {

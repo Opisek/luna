@@ -32,6 +32,7 @@
   import SettingsModal from "../components/modals/SettingsModal.svelte";
   import { getSettings } from "$lib/client/settings.svelte";
   import { UserSettingKeys } from "../types/settings";
+  import ThemeToggle from "../components/interactive/ThemeToggle.svelte";
 
   /* Settings */
   const settings = getSettings();
@@ -409,7 +410,7 @@
           <WifiOff size={20}/>
         </span>
       {/if}
-      
+
       <IconButton click={forceRefresh}>
         <span class="refreshButtonWrapper" class:spin={loaderAnimation} onanimationiteration={() => { if (!isLoading) loaderAnimation = false; }}>
           <RefreshCw size={20}/>
@@ -421,6 +422,8 @@
           Today
         </Button>
       {/if}
+
+      <ThemeToggle/>
 
       <SelectButtons
         name="layout"
