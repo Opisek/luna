@@ -165,7 +165,7 @@
 
   div.options {
     position: absolute;
-    background-color: colors.$backgroundPrimary;
+    background-color: colors.$backgroundSecondary;
     width: 100%;
     left: 0;
     box-shadow: decorations.$boxShadow;
@@ -189,7 +189,7 @@
   }
 
   button.option:hover, button.option:focus {
-    background-color: colors.$backgroundSecondary;
+    background-color: colors.$backgroundSecondaryActive;
   }
 
   div.wrapper {

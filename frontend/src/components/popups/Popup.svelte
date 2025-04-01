@@ -90,6 +90,8 @@
     box-shadow: decorations.$boxShadow;
     position: absolute !important;
     z-index: 50;
+    background-color: colors.$backgroundSecondary;
+    color: colors.$foregroundSecondary;
   }
 
   dialog[open] {

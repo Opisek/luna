@@ -74,8 +74,8 @@
     opacity: 0;
     border-radius: dimensions.$borderRadius;
     padding: dimensions.$gapSmall;
-    background-color: colors.$backgroundPrimary;
-    color: colors.$foregroundPrimary;
+    background-color: colors.$backgroundSecondary;
+    color: colors.$foregroundSecondary;
     transition: opacity animations.$animationSpeed animations.$cubic;
     z-index: 10;
     pointer-events: none;
