@@ -28,7 +28,7 @@ func GenerateSymmetricKey(commonConfig *config.CommonConfig, name string) ([]byt
 	if err != nil {
 		return nil, errors.New().Status(http.StatusInternalServerError).
 			AddErr(errors.LvlDebug, err).
-			Append(errors.LvlDebug, "Could not write key file %v at %v", fileName, commonConfig.Env.GetKeysPath()).
+			Append(errors.LvlDebug, "Could not write key file %v at %v", path, commonConfig.Env.GetKeysPath()).
 			AltStr(errors.LvlWordy, "Could not write key file").
 			Append(errors.LvlDebug, "Could not generate symmetric key %v", name).
 			AltStr(errors.LvlWordy, "Could not generate symmetric key")
@@ -47,7 +47,7 @@ func GetSymmetricKey(commonConfig *config.CommonConfig, name string) ([]byte, *e
 		if err != nil {
 			return nil, errors.New().Status(http.StatusInternalServerError).
 				AddErr(errors.LvlDebug, err).
-				Append(errors.LvlDebug, "Could not read key file %v at %v", fileName, commonConfig.Env.GetKeysPath()).
+				Append(errors.LvlDebug, "Could not read key file %v at %v", path, commonConfig.Env.GetKeysPath()).
 				AltStr(errors.LvlWordy, "Could not read key file").
 				Append(errors.LvlDebug, "Could not get symmetric key %v", name).
 				AltStr(errors.LvlWordy, "Could not get symmetric key")
@@ -57,7 +57,7 @@ func GetSymmetricKey(commonConfig *config.CommonConfig, name string) ([]byte, *e
 		if err != nil {
 			return nil, errors.New().Status(http.StatusInternalServerError).
 				AddErr(errors.LvlDebug, err).
-				Append(errors.LvlDebug, "Could not decode key file %v at %v", fileName, commonConfig.Env.GetKeysPath()).
+				Append(errors.LvlDebug, "Could not decode key file %v at %v", path, commonConfig.Env.GetKeysPath()).
 				AltStr(errors.LvlWordy, "Could not decode key file").
 				Append(errors.LvlDebug, "Could not get symmetric key %v", name).
 				AltStr(errors.LvlWordy, "Could not get symmetric key")
@@ -69,7 +69,7 @@ func GetSymmetricKey(commonConfig *config.CommonConfig, name string) ([]byte, *e
 	} else {
 		return nil, errors.New().Status(http.StatusInternalServerError).
 			AddErr(errors.LvlDebug, err).
-			Append(errors.LvlDebug, "Could not access key file %v at %v", fileName, commonConfig.Env.GetKeysPath()).
+			Append(errors.LvlDebug, "Could not access key file %v at %v", path, commonConfig.Env.GetKeysPath()).
 			AltStr(errors.LvlWordy, "Could not access key file").
 			Append(errors.LvlDebug, "Could not get symmetric key %v", name).
 			AltStr(errors.LvlWordy, "Could not get symmetric key")
