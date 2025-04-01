@@ -1,7 +1,7 @@
 import { browser } from "$app/environment";
 
 class Theme {
-  private lightMode: boolean = $state(false);
+  private lightMode: boolean = $state(true);
   
   constructor() {
     if (!browser) return;
@@ -12,7 +12,7 @@ class Theme {
   private fetchFromStorage() {
     const theme = localStorage.getItem("theme");
     if (theme != null) {
-      this.lightMode = theme === "light";
+      this.lightMode = theme !== "dark";
     }
   }
 
