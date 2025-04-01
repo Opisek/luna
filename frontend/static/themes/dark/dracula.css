@@ -1,0 +1,28 @@
+/* https://www.nordtheme.com/ */
+html[data-theme="dark"] {
+  --colorForegroundDark: #F8F8F2;
+  --colorForegroundBright: #282A36;
+  --colorForegroundFaded: hsl(60, 10%, 86%);
+  --colorForegroundDim: hsl(60, 10%, 76%);
+
+  --colorForegroundLink: #6272A4;
+
+  --colorBackgroundPrimary: #282A36;
+
+  --colorBackgroundSecondary: #44475A;
+  --colorBackgroundSecondaryActive: hsl(232, 14%, 41%);
+
+  --colorBackgroundSuccess: #50FA7B;
+  --colorBackgroundSuccessActive: hsl(135, 94%, 75%);
+
+  --colorBackgroundWarning: #F1FA8C;
+  --colorBackgroundWarningActive: hsl(65, 92%, 66%);
+
+  --colorBackgroundDanger: #FF5555;
+  --colorBackgroundDangerActive: hsl(0, 100%, 77%);
+
+  --colorBackgroundAccent: #BD93F9;
+  --colorBackgroundAccentActive: hsl(265, 89%, 88%);
+  
+  --colorForegroundSunday: #BD93F9;
+}

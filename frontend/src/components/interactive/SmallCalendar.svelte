@@ -90,7 +90,7 @@
 
   button.day.today {
     background-color: colors.$backgroundAccent;
-    color: colors.$foregroundAccent;
+    color: colors.$foregroundAccent !important;
     --barFocusIndicatorColor: #{colors.$barFocusIndicatorColorAlt};
   }
 
