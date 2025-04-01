@@ -139,7 +139,11 @@
   }
 
   .otherMonth {
-    opacity: 0.5;
+    background-color: colors.$backgroundSecondary50Percent !important;
+  }
+
+  div.eventAnimation.hidden {
+    display: none;
   }
 </style>
 
@@ -176,10 +180,12 @@
   {#each events as event, i ((event?.id || i).toString() + date.getTime())}
     <!-- TODO: make parameters match css, look into cubic easing, invert fly direction when going back in range -->
     <div
+      class="eventAnimation"
       animate:flip={{duration: 300, delay: 300}}
       in:fly={{duration: 300, x: 200}}
       out:fly={{duration: 300, x: -200}}
       style="z-index: {16 - getDayIndex(date)}"
+      class:hidden={i >= actualMaxEvents}
     >
       <Event
         event={event}

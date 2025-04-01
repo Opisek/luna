@@ -9,6 +9,7 @@ html[data-theme="dark"] {
   --colorBackgroundPrimary: hsl(220, 10%, 12%);
 
   --colorBackgroundSecondary: hsl(220, 10%, 22%);
+  --colorBackgroundSecondary50Percent: hsl(220, 10%, 11%);
   --colorBackgroundSecondaryActive: hsl(220, 10%, 32%);
   --colorForegroundSecondary: var(--colorForegroundDark);
   --colorForegroundSecondaryFaded: var(--colorForegroundFaded);

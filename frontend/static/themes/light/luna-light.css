@@ -9,6 +9,7 @@ html[data-theme="light"] {
   --colorBackgroundPrimary: #ffffff;
 
   --colorBackgroundSecondary: #f0f0f0;
+  --colorBackgroundSecondary50Percent: hsl(0, 0%, 47%);
   --colorBackgroundSecondaryActive: #e0e0e0;
 
   --colorBackgroundSuccess: hsl(107, 53%, 47%);

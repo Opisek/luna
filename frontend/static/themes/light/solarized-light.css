@@ -27,6 +27,7 @@ html[data-theme="light"] {
   --colorBackgroundPrimary: var(--solarizedBase3);
 
   --colorBackgroundSecondary: var(--solarizedBase2);
+  --colorBackgroundSecondary50Percent: hsl(46, 42%, 44%);
   --colorBackgroundSecondaryActive: hsl(46, 42%, 75%);
 
   --colorBackgroundSuccess: var(--solarizedGreen);

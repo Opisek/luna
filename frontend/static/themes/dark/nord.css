@@ -27,6 +27,7 @@ html[data-theme="dark"] {
   --colorBackgroundPrimary: var(--nord0);
 
   --colorBackgroundSecondary: var(--nord1);
+  --colorBackgroundSecondary50Percent: hsl(222, 16%, 14%);
   --colorBackgroundSecondaryActive: var(--nord2);
 
   --colorBackgroundSuccess: var(--nord14);
