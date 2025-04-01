@@ -81,7 +81,7 @@ export const NoChangesEvent: EventModelChanges = {
 
 export const NoOp = () => {};
 
-export const EmptyOption: Option = {
+export const EmptyOption: Option<string> = {
   value: '',
   name: ''
 }
