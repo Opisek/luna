@@ -9,8 +9,6 @@ import (
 	"net/http"
 	"os"
 
-	goErrors "errors"
-
 	"golang.org/x/crypto/hkdf"
 )
 
@@ -64,7 +62,7 @@ func GetSymmetricKey(commonConfig *config.CommonConfig, name string) ([]byte, *e
 		}
 
 		return secret, nil
-	} else if goErrors.Is(err, os.ErrNotExist) {
+	} else if os.IsNotExist(err) {
 		return GenerateSymmetricKey(commonConfig, name)
 	} else {
 		return nil, errors.New().Status(http.StatusInternalServerError).
