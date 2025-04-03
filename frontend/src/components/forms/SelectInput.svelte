@@ -189,7 +189,8 @@
   }
 
   button.option:hover, button.option:focus {
-    background-color: colors.$backgroundSecondaryActive;
+    color: colors.$foregroundTertiary;
+    background-color: colors.$backgroundTertiary;
   }
 
   div.wrapper {
@@ -202,7 +203,7 @@
   }
 
   .placeholder {
-    color: colors.$foregroundDim;
+    color: color-mix(in srgb, colors.$foregroundSecondary 50%, transparent);
   }
 </style>
 

@@ -12,6 +12,7 @@
   import { fetchResponse } from "../../lib/client/net";
   import { UserSettingKeys } from "../../types/settings";
   import { getSettings } from "$lib/client/settings.svelte";
+  import { ColorKeys } from "../../types/colors";
 
   interface Props {
     showCreateModal?: () => Promise<SourceModel>;
@@ -58,7 +59,7 @@
 
     // TODO: this should be a call to repository with force refresh = true
     sourceDetailed = await getRepository().getSourceDetails(source.id).catch(err => {
-      queueNotification("failure", `Could not get source details: ${err.message}`);
+      queueNotification(ColorKeys.Danger, `Could not get source details: ${err.message}`);
       return Promise.reject();
     });
 
@@ -70,7 +71,7 @@
       sourceDetailed.settings.fileId = fileId;
 
       const res = await fetchResponse(`/api/files/${fileId}`, { method: "HEAD" }).catch(err => {
-        queueNotification("failure", `Could not get file: ${err.message}`);
+        queueNotification(ColorKeys.Danger, `Could not get file: ${err.message}`);
         sourceDetailed.settings.file = null;
       });
 

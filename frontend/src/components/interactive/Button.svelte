@@ -1,10 +1,11 @@
 <script lang="ts">
   import type { Snippet } from "svelte";
+  import { ColorKeys } from "../../types/colors";
+  import { addRipple, focusIndicator } from "../../lib/client/decoration";
 
   interface Props {
     onClick?: () => void;
-    // TODO: could not figure out enums for this, try again later
-    color?: string;
+    color?: ColorKeys;
     type?: "button" | "submit";
     compact?: boolean;
     enabled?: boolean;
@@ -14,7 +15,7 @@
 
   let {
     onClick = () => {},
-    color = "neutral",
+    color = ColorKeys.Neutral,
     type = "button",
     compact = false,
     enabled = true,
@@ -54,7 +55,10 @@
     position: relative;
     overflow: hidden; 
 
-    transition: background-color animations.$cubic animations.$animationSpeed;
+  }
+
+  button:not(.neutral) {
+    --barFocusIndicatorColor: #{colors.$barFocusIndicatorColorAlt};
   }
 
   button.compact, a.compact {
@@ -70,38 +74,45 @@
       background-color: map.get($val, "background");
       color: map.get($val, "foreground");
     }
-    button.#{$key}:hover:not(.disabled), button.#{$key}:focus:not(.disabled),
-    a.#{$key}:hover:not(.disabled), a.#{$key}:focus:not(.disabled) {
-      background-color: map.get($val, "backgroundActive");
+    button.#{$key}.disabled, a.#{$key}.disabled {
+      color: color-mix(in srgb, map.get($val, "foreground") 50%, transparent);
     }
   }
 </style>
 
 {#if href !== ""}
   <a
-    class:success={color == "success"}
-    class:failure={color == "failure"}
-    class:accent={color == "accent"}
-    class:neutral={color == "neutral"}
+    class:success={color == ColorKeys.Success}
+    class:warning={color == ColorKeys.Warning}
+    class:danger={color == ColorKeys.Danger}
+    class:accent={color == ColorKeys.Accent}
+    class:neutral={color == ColorKeys.Neutral}
+    class:inherit={color == ColorKeys.Inherit}
     class:compact={compact}
     onmouseleave={(e) => {(e.target as HTMLButtonElement).blur()}}
     class:disabled={!enabled}
     href={enabled ? href : "#"}
+    onmousedown={addRipple}
+    use:focusIndicator
   >
     {@render children?.()}
   </a>
 {:else}
   <button
-    class:success={color == "success"}
-    class:failure={color == "failure"}
-    class:accent={color == "accent"}
-    class:neutral={color == "neutral"}
+    class:success={color == ColorKeys.Success}
+    class:warning={color == ColorKeys.Warning}
+    class:danger={color == ColorKeys.Danger}
+    class:accent={color == ColorKeys.Accent}
+    class:neutral={color == ColorKeys.Neutral}
+    class:inherit={color == ColorKeys.Inherit}
     class:compact={compact}
     onclick={onClick}
     onmouseleave={(e) => {(e.target as HTMLButtonElement).blur()}}
     type={type}
     disabled={!enabled}
     class:disabled={!enabled}
+    onmousedown={addRipple}
+    use:focusIndicator
   >
     {@render children?.()}
   </button>

@@ -25,7 +25,7 @@
 
   div {
     position: relative;
-    color: colors.$foregroundDim;
+    color: color-mix(in srgb, colors.$foregroundPrimary 50%, transparent);
     cursor: help;
     display: flex;
     justify-content: center;

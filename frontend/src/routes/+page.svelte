@@ -218,7 +218,7 @@
     const range = getVisibleRange(date, view);
 
     getRepository().getAllEvents(range.start, range.end, force).catch((err) => {
-      queueNotification("failure", `Failed to fetch events: ${err.message}`);
+      queueNotification(ColorKeys.Danger, `Failed to fetch events: ${err.message}`);
     });
 
     if (force) getConnectivity().check().then((res) => reachability = res);

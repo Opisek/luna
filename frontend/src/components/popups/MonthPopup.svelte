@@ -112,7 +112,7 @@
     align-items: center;
     border-radius: dimensions.$borderRadiusSmall;
     color: colors.$foregroundSecondary;
-    background-color: colors.$backgroundSecondaryActive;
+    //background-color: colors.$backgroundSecondaryActive;
     padding: dimensions.$gapSmall;
     cursor: pointer;
     user-select: none;

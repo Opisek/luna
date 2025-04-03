@@ -69,7 +69,7 @@ class Settings {
       this.fetchUserSettings(),
       this.fetchGlobalSettings()
     ]).catch((err) => {
-      queueNotification("failure", "Could not fetch settings: " + err.message);
+      queueNotification(ColorKeys.Danger, "Could not fetch settings: " + err.message);
     });
   }
 }

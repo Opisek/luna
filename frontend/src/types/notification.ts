@@ -1,9 +1,11 @@
-type NotificationModel = {
+import type { ColorKeys } from "./colors";
+
+export type NotificationModel = {
   created: Date;
   message: string;
   details: string;
   count: number;
-  type: "info" | "success" | "failure";
+  color: ColorKeys; 
   disappear: boolean;
   remove: () => void;
 };

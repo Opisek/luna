@@ -17,37 +17,31 @@ html[data-theme="dark"] {
   --solarizedCyan: #2aa198;
   --solarizedGreen: #859900;
 
-  --colorForegroundDark: var(--solarizedBase0);
-  --colorForegroundBright: var(--solarizedBase00);
-  --colorForegroundFaded: var(--solarizedBase1);
-  --colorForegroundDim: var(--solarizedBase01);
+  --colorForegroundDark: var(--solarizedBase00);
+  --colorForegroundBright: var(--solarizedBase0);
 
   --colorForegroundLink: var(--solarizedBlue);
 
   --colorBackgroundPrimary: var(--solarizedBase03);
+  --colorForegroundPrimary: var(--colorForegroundBright);
 
   --colorBackgroundSecondary: var(--solarizedBase02);
-  --colorBackgroundSecondaryActive: hsl(192, 81%, 27%);
+  --colorForegroundSecondary: var(--colorForegroundBright);
+
+  --colorBackgroundTertiary: hsl(192, 81%, 27%);
+  --colorForegroundTertiary: var(--colorForegroundBright);
 
   --colorBackgroundSuccess: var(--solarizedGreen);
-  --colorBackgroundSuccessActive: hsl(68, 100%, 40%);
   --colorForegroundSuccess: var(--solarizedBase3);
-  --colorForegroundSuccessFaded: var(--solarizedBase2);
 
   --colorBackgroundWarning: var(--solarizedYellow);
-  --colorBackgroundWarningActive: hsl(45, 100%, 45%);
   --colorForegroundWarning: var(--solarizedBase3);
-  --colorForegroundWarningFaded: var(--solarizedBase2);
 
   --colorBackgroundDanger: var(--solarizedRed);
-  --colorBackgroundDangerActive: hsl(1, 71%, 62%);
   --colorForegroundDanger: var(--solarizedBase3);
-  --colorForegroundDangerFaded: var(--solarizedBase2);
 
   --colorBackgroundAccent: var(--solarizedCyan);
-  --colorBackgroundAccentActive: hsl(175, 59%, 50%);
   --colorForegroundAccent: var(--solarizedBase3);
-  --colorForegroundAccentFaded: var(--solarizedBase2);
   
   --colorForegroundSunday: var(--solarizedMagenta);
 }

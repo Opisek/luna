@@ -43,6 +43,8 @@
     extraButtonsLeft,
     extraButtonsRight,
   }: Props = $props(); import Modal from "./Modal.svelte";
+  import { ColorKeys } from "../../types/colors";
+  import { D } from "svelte-simples";
 
   let creating = false;
 
@@ -85,10 +87,10 @@
     awaitingEdit = true;
     onEdit().then(() => {
       editMode = false;
-      queueNotification("success", "Saved successfully")
+      queueNotification(ColorKeys.Success, "Saved successfully")
       hideModal()
     }).catch((err) => {
-      queueNotification("failure", err)
+      queueNotification(ColorKeys.Danger, err)
     }).finally(() => {
       awaitingEdit = false;
     });
@@ -96,10 +98,10 @@
 
   const confirmDelete = async () => {
     await onDelete().then(() => {
-      queueNotification("success", "Deleted successfully")
+      queueNotification(ColorKeys.Success, "Deleted successfully")
       hideModal();
     }).catch((err) => {
-      queueNotification("failure", err)
+      queueNotification(ColorKeys.Danger, err)
     });
   }
 </script>
@@ -109,20 +111,20 @@
   {#snippet buttons()}
     {@render extraButtonsLeft?.()}
     {#if editMode}
-      <Button onClick={saveEdit} color="success" enabled={submittable} type="submit">
+      <Button onClick={saveEdit} color={ColorKeys.Success} enabled={submittable} type="submit">
         {#if awaitingEdit}
           <Loader/>
         {:else}
           Save
         {/if}
       </Button>
-      <Button onClick={cancelEdit} color="failure">Cancel</Button>
+      <Button onClick={cancelEdit} color={ColorKeys.Danger}>Cancel</Button>
     {:else}
       {#if editable}
-        <Button onClick={startEditMode} color="accent">Edit</Button>
+        <Button onClick={startEditMode} color={ColorKeys.Accent}>Edit</Button>
       {/if}
       {#if deletable}
-        <Button onClick={showDeleteModal} color="failure">Delete</Button>
+        <Button onClick={showDeleteModal} color={ColorKeys.Danger}>Delete</Button>
       {/if}
       {#if !editable && !deletable}
         <Button onClick={hideModal}>Close</Button>

@@ -19,35 +19,29 @@ html[data-theme="light"] {
 
   --colorForegroundDark: var(--solarizedBase00);
   --colorForegroundBright: var(--solarizedBase0);
-  --colorForegroundFaded: var(--solarizedBase01);
-  --colorForegroundDim: var(--solarizedBase1);
 
   --colorForegroundLink: var(--solarizedBlue);
 
   --colorBackgroundPrimary: var(--solarizedBase3);
+  --colorForegroundPrimary: var(--colorForegroundDark);
 
   --colorBackgroundSecondary: var(--solarizedBase2);
-  --colorBackgroundSecondaryActive: hsl(46, 42%, 75%);
+  --colorForegroundSecondary: var(--colorForegroundDark);
+
+  --colorBackgroundTertiary: hsl(46, 42%, 75%);
+  --colorForegroundTertiary: var(--colorForegroundDark);
 
   --colorBackgroundSuccess: var(--solarizedGreen);
-  --colorBackgroundSuccessActive: hsl(68, 100%, 40%);
   --colorForegroundSuccess: var(--solarizedBase3);
-  --colorForegroundSuccessFaded: var(--solarizedBase2);
 
   --colorBackgroundWarning: var(--solarizedYellow);
-  --colorBackgroundWarningActive: hsl(45, 100%, 45%);
   --colorForegroundWarning: var(--solarizedBase3);
-  --colorForegroundWarningFaded: var(--solarizedBase2);
 
   --colorBackgroundDanger: var(--solarizedRed);
-  --colorBackgroundDangerActive: hsl(1, 71%, 62%);
   --colorForegroundDanger: var(--solarizedBase3);
-  --colorForegroundDangerFaded: var(--solarizedBase2);
 
   --colorBackgroundAccent: var(--solarizedCyan);
-  --colorBackgroundAccentActive: hsl(175, 59%, 50%);
   --colorForegroundAccent: var(--solarizedBase3);
-  --colorForegroundAccentFaded: var(--solarizedBase2);
   
   --colorForegroundSunday: var(--solarizedMagenta);
 }

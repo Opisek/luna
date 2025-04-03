@@ -17,37 +17,30 @@ html[data-theme="dark"] {
   --nord14: #a3be8c;
   --nord15: #b48ead;
 
-  --colorForegroundDark: var(--nord6);
-  --colorForegroundBright: var(--nord0);
-  --colorForegroundFaded: var(--nord5);
-  --colorForegroundDim: var(--nord4);
-
+  --colorForegroundBright: var(--nord6);
+  --colorForegroundDark: var(--nord0);
   --colorForegroundLink: var(--nord10);
 
   --colorBackgroundPrimary: var(--nord0);
+  --colorForegroundPrimary: var(--colorForegroundBright);
 
   --colorBackgroundSecondary: var(--nord1);
-  --colorBackgroundSecondaryActive: var(--nord2);
+  --colorForegroundPrimary: var(--colorForegroundBright);
+
+  --colorBackgroundTertiary: var(--nord2);
+  --colorForegroundPrimary: var(--colorForegroundBright);
 
   --colorBackgroundSuccess: var(--nord14);
-  --colorBackgroundSuccessActive: #bed1ad;
-  --colorForegroundSuccess: var(--nord0);
-  --colorForegroundSuccessFaded: var(--nord3);
+  --colorForegroundSuccess: var(--colorForegroundDark);
 
   --colorBackgroundWarning: var(--nord13);
-  --colorBackgroundWarningActive: #f2deb5;
-  --colorForegroundWarning: var(--nord0);
-  --colorForegroundWarningFaded: var(--nord3);
+  --colorForegroundWarning: var(--colorForegroundDark);
 
   --colorBackgroundDanger: var(--nord11);
-  --colorBackgroundDangerActive: #cd848b;
-  --colorForegroundDanger: var(--nord0);
-  --colorForegroundDangerFaded: var(--nord3);
+  --colorForegroundDanger: var(--colorForegroundDark);
 
   --colorBackgroundAccent: var(--nord7);
-  --colorBackgroundAccentActive: #afcfcf;
-  --colorForegroundAccent: var(--nord0);
-  --colorForegroundAccentFaded: var(--nord3);
+  --colorForegroundAccent: var(--colorForegroundDark);
   
   --colorForegroundSunday: var(--nord15);
 }

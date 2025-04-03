@@ -14,6 +14,7 @@
   import ToggleInput from "../forms/ToggleInput.svelte";
   import { getSettings } from "$lib/client/settings.svelte";
   import { UserSettingKeys } from "../../types/settings";
+  import { ColorKeys } from "../../types/colors";
 
   interface Props {
     showCreateModal?: (date: Date) => Promise<EventModel>;
@@ -183,12 +184,12 @@
     event.overridden = false;
     getRepository().editEvent(event, NoChangesEvent, true).catch(err => {
       event.overridden = true;
-      queueNotification("failure", `Could not reset event ${event.name}: ${err.message}`);
+      queueNotification(ColorKeys.Danger, `Could not reset event ${event.name}: ${err.message}`);
       return;
     }).then(async () => {
       getRepository().getEvent(event.id, true).catch(err => {
         event.overridden = true;
-        queueNotification("failure", `Could not reset event ${event.name}: ${err.message}`);
+        queueNotification(ColorKeys.Danger, `Could not reset event ${event.name}: ${err.message}`);
         return;
       }).then((fetched) => {
         event = fetched as EventModel;
@@ -255,7 +256,7 @@
   {/if}
   {#snippet extraButtonsLeft()}
     {#if event != EmptyEvent && !editMode && event.overridden}
-      <Button color="accent" onClick={resetOverrides}>Reset</Button>
+      <Button color={ColorKeys.Accent} onClick={resetOverrides}>Reset</Button>
     {/if}
   {/snippet}
 </EditableModal>

@@ -21,6 +21,7 @@
   import { queueNotification } from "$lib/client/notifications";
   import TooltipPopup from "../popups/TooltipPopup.svelte";
   import Tooltip from "../interactive/Tooltip.svelte";
+  import { ColorKeys } from "../../types/colors";
 
   interface Props {
     showModal?: () => any;
@@ -104,7 +105,7 @@
       lightThemes = Object.keys(response.light).map(formatThemeOption);
       darkThemes = Object.keys(response.dark).map(formatThemeOption);
     }).catch((err) => {
-      queueNotification("failure", "Failed to fetch themes: " + err);
+      queueNotification(ColorKeys.Danger, "Failed to fetch themes: " + err);
     });
   }
 
@@ -228,7 +229,7 @@
         oldPassword = "";
         // TODO: set profile picture correctly
       }).catch((err) => {
-        queueNotification("failure", "Failed to save user data: " + err);
+        queueNotification(ColorKeys.Danger, "Failed to save user data: " + err);
       });
     }
 
@@ -248,7 +249,7 @@
       }).then(async () => {
         userSettingsSnapshot = await deepCopy(settings.userSettings);
       }).catch((err) => {
-        queueNotification("failure", "Failed to save user settings: " + err);
+        queueNotification(ColorKeys.Danger, "Failed to save user settings: " + err);
       });
     }
 
@@ -268,7 +269,7 @@
       }).then(async () => {
         globalSettingsSnapshot = await deepCopy(settings.globalSettings);
       }).catch((err) => {
-        queueNotification("failure", "Failed to save global settings: " + err);
+        queueNotification(ColorKeys.Danger, "Failed to save global settings: " + err);
       });
     }
 
@@ -320,14 +321,14 @@
 >
   {#snippet buttons()}
     {#if anyChanged}
-      <Button type="submit" color="success" enabled={submittable} onClick={saveSettings}>
+      <Button type="submit" color={ColorKeys.Success} enabled={submittable} onClick={saveSettings}>
         {#if saving}
           <Loader/>
         {:else}
           Save
         {/if}
       </Button>
-      <Button color="failure" onClick={restoreSettings}>Cancel</Button>
+      <Button color={ColorKeys.Danger} onClick={restoreSettings}>Cancel</Button>
     {:else}
       <Button onClick={hideModalInternal}>Close</Button>
     {/if}
@@ -511,7 +512,7 @@
           <TextInput bind:value={settings.userData.id} name="id" placeholder="User ID" editable={false} />
         {/if}
       {:else if selectedCategory === "users"}
-        <Button color="accent">Invite a user</Button>
+        <Button color={ColorKeys.Accent}>Invite a user</Button>
       {:else if selectedCategory === "admin"}
         <ToggleInput
           name={GlobalSettingKeys.RegistrationEnabled}
@@ -537,14 +538,14 @@
           ]}
         />
       {:else if selectedCategory === "danger"}
-        <Button color="failure">Reset all my preferences</Button>
+        <Button color={ColorKeys.Danger}>Reset all my preferences</Button>
         {#if settings.userData.admin}
-          <Button color="failure">Reset all global settings</Button>
+          <Button color={ColorKeys.Danger}>Reset all global settings</Button>
         {/if}
-        <Button color="failure">Delete my account</Button>
+        <Button color={ColorKeys.Danger}>Delete my account</Button>
       {:else if selectedCategory === "logout"}
-        <Button color="failure">Log out of my account</Button>
-        <Button color="failure">Deauthorize all sessions</Button>
+        <Button color={ColorKeys.Danger}>Log out of my account</Button>
+        <Button color={ColorKeys.Danger}>Deauthorize all sessions</Button>
       {/if}
     </main>
   </div>

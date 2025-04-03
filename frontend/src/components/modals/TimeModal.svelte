@@ -5,6 +5,7 @@
 
   import { NoOp } from '$lib/client/placeholders';
   import { untrack } from "svelte";
+  import { ColorKeys } from "../../types/colors";
 
   interface Props {
     date: Date;
@@ -265,7 +266,7 @@
   </div>
   <SelectButtons bind:value={amPm} name="AM/PM" placeholder="AM/PM" editable={true} options={[{name: "AM", value: "am"}, {name: "PM", value: "pm"}]} label={false}/>
   {#snippet buttons()}
-      <Button onClick={dateSelected} color="success">Confirm</Button>
-      <Button onClick={hideModalInternal} color="failure">Cancel</Button>
+      <Button onClick={dateSelected} color={ColorKeys.Success}>Confirm</Button>
+      <Button onClick={hideModalInternal} color={ColorKeys.Danger}>Cancel</Button>
   {/snippet}
 </Modal>

@@ -10,6 +10,7 @@
   import { flip } from "svelte/animate";
   import { fly } from "svelte/transition";
   import { getDayIndex } from "$lib/common/date";
+  import { ColorKeys } from "../../types/colors";
 
   interface Props {
     date: Date;
@@ -38,7 +39,7 @@
   let showCreateEventModal: ((date: Date) => Promise<EventModel>) = getContext("showNewEventModal");
   let createEventButtonClick = () => {
     showCreateEventModal(date).catch((err) => {
-      if (err) queueNotification("failure", `Could not create event: ${err.message}`);
+      if (err) queueNotification(ColorKeys.Danger, `Could not create event: ${err.message}`);
     });
   };
 
@@ -118,10 +119,10 @@
   button.more {
     all: unset;
     text-align: center;
-    color: colors.$foregroundDim;
+    color: color-mix(in srgb, colors.$foregroundSecondary 50%, transparent);
+    background-color: colors.$backgroundSecondary;
     cursor: pointer;
     z-index: 20;
-    background-color: colors.$backgroundSecondary;
     margin: 0 var(--gapBetweenDays);
     padding: dimensions.$gapSmaller 0;
     position: relative;

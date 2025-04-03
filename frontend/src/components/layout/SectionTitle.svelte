@@ -13,7 +13,7 @@
   span {
     margin: 0;
     padding: dimensions.$gapSmall;
-    color: colors.$foregroundDim;
+    color: color-mix(in srgb, colors.$foregroundPrimary 50%, transparent);
   }
 </style>
 

@@ -9,6 +9,7 @@
 
   import { HSLtoRGB, isValidColor, parseRGB, recommendedColors, RGBtoHSL, serializeRGB } from "$lib/common/colors";
   import { NoOp } from "$lib/client/placeholders";
+  import { ColorKeys } from "../../types/colors";
 
   interface Props {
     color: string | null;
@@ -288,7 +289,7 @@
     {/each}
   </div>
   {#snippet buttons()}
-      <Button onClick={confirm} color="success">Confirm</Button>
-      <Button onClick={cancel} color="failure">Cancel</Button>
+      <Button onClick={confirm} color={ColorKeys.Success}>Confirm</Button>
+      <Button onClick={cancel} color={ColorKeys.Danger}>Cancel</Button>
   {/snippet}
 </Modal>

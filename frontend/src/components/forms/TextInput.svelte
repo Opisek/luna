@@ -138,7 +138,7 @@
     top: 50%;
     transform: translateY(-50%);
     right: calc(1.5 * dimensions.$gapSmaller);
-    color: colors.$foregroundDim;
+    color: color-mix(in srgb, colors.$foregroundSecondary 50%, transparent);
     background-color: colors.$backgroundSecondary;
   }
 

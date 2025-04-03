@@ -1,13 +1,14 @@
 <script lang="ts">
   import type { Snippet } from "svelte";
+  import { ColorKeys } from "../../types/colors";
 
   interface Props {
-    color?: "inherit" | "success" | "failure" | "accent";
+    color?: ColorKeys; 
     children?: Snippet;
   }
 
   let {
-    color = "inherit",
+    color = ColorKeys.Inherit,
     children
   }: Props = $props();
 </script>
@@ -30,9 +31,12 @@
 </style>
 
 <b
-  class:success={color == "success"}
-  class:failure={color == "failure"}
-  class:accent={color == "accent"}
+  class:success={color == ColorKeys.Success}
+  class:danger={color == ColorKeys.Danger}
+  class:accent={color == ColorKeys.Accent}
+  class:neutral={color == ColorKeys.Neutral}
+  class:warning={color == ColorKeys.Warning}
+  class:inherit={color == ColorKeys.Inherit}
 >
   {@render children?.()}
 </b>

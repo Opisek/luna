@@ -4,6 +4,7 @@
   import Loader from "../decoration/Loader.svelte";
   import Title from "../layout/Title.svelte";
   import type { Snippet } from "svelte";
+  import { ColorKeys } from "../../types/colors";
 
   interface Props {
     title: string;
@@ -48,7 +49,7 @@
   <Title>{title}</Title>
   {@render children?.()}
   <Horizontal position="right">
-    <Button type="submit" color="success" enabled={submittable}>
+    <Button type="submit" color={ColorKeys.Success} enabled={submittable}>
       {#if loading}
         <Loader/>
       {:else}

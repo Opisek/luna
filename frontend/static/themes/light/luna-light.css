@@ -1,27 +1,28 @@
 html[data-theme="light"] {
   --colorForegroundDark: #000000;
   --colorForegroundBright: #ffffff;
-  --colorForegroundFaded: #e6e6e6;
-  --colorForegroundDim: #6b6b6b;
-
   --colorForegroundLink: hsl(213, 69%, 42%);
 
   --colorBackgroundPrimary: #ffffff;
+  --colorForegroundPrimary: var(--colorForegroundDark);
 
   --colorBackgroundSecondary: #f0f0f0;
-  --colorBackgroundSecondaryActive: #e0e0e0;
+  --colorForegroundSecondary: var(--colorForegroundDark);
+  
+  --colorBackgroundTertiary: #e0e0e0;
+  --colorForegroundTertiary: var(--colorForegroundDark);
 
   --colorBackgroundSuccess: hsl(107, 53%, 47%);
-  --colorBackgroundSuccessActive: hsl(107, 53%, 57%);
+  --colorForegroundSuccess: var(--colorForegroundBright);
 
   --colorBackgroundWarning: hsl(39, 100%, 50%);
-  --colorBackgroundWarningActive: hsl(39, 100%, 60%);
+  --colorForegroundWarning: var(--colorForegroundBright);
 
   --colorBackgroundDanger: hsl(0, 69%, 62%);
-  --colorBackgroundDangerActive: hsl(0, 69%, 72%);
+  --colorForegroundDanger: var(--colorForegroundBright);
 
   --colorBackgroundAccent: hsl(213, 69%, 62%);
-  --colorBackgroundAccentActive: hsl(213, 69%, 72%);
+  --colorForegroundAccent: var(--colorForegroundBright);
   
   --colorForegroundSunday: hsl(0, 71%, 58%);
 }

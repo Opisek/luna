@@ -13,6 +13,7 @@
   import { fetchJson } from "../../lib/client/net";
   import { queueNotification } from "../../lib/client/notifications";
   import { getRepository } from "../../lib/client/repository";
+  import { ColorKeys } from "../../types/colors";
 
   interface Props {
     showModal?: () => Promise<SourceModel>;
@@ -118,7 +119,7 @@
     getRepository().createSource(source).then(() => {
       saveInternal(source);
     }).catch(err => {
-      queueNotification("failure", `Could not create source ${source.name}: ${err.message}`);
+      queueNotification(ColorKeys.Danger, `Could not create source ${source.name}: ${err.message}`);
     }).finally(() => {
       awaitingEdit = false;
     });
@@ -224,7 +225,7 @@
                 };
             }
           }).catch((err) => {
-            queueNotification("failure", `Could not find calendars: ${err.message}`);
+            queueNotification(ColorKeys.Danger, `Could not find calendars: ${err.message}`);
             return {
               valid: false,
               message: "Could not find calendars. Are you sure this URL is correct?",
@@ -298,13 +299,13 @@
     <Link onClick={advanced}>Click to enter advanced mode</Link>
   </Horizontal>
   {#snippet buttons()}
-    <Button onClick={save} color="success" enabled={submittable} type="submit">
+    <Button onClick={save} color={ColorKeys.Success} enabled={submittable} type="submit">
       {#if awaitingEdit}
         <Loader/>
       {:else}
         Save
       {/if}
     </Button>
-    <Button onClick={cancel} color="failure">Cancel</Button>
+    <Button onClick={cancel} color={ColorKeys.Danger}>Cancel</Button>
   {/snippet}
 </Modal>

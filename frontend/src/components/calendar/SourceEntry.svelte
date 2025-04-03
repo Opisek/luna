@@ -63,7 +63,7 @@
   @use "../../styles/colors.scss";
 
   div {
-    color: colors.$foregroundDim;
+    color: color-mix(in srgb, colors.$foregroundPrimary 50%, transparent);
     height: 1.25em;
     display: flex;
     justify-content: space-between;

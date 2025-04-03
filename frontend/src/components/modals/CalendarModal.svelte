@@ -11,6 +11,7 @@
   import { queueNotification } from "../../lib/client/notifications";
   import { getSettings } from "$lib/client/settings.svelte";
   import { UserSettingKeys } from "../../types/settings";
+  import { ColorKeys } from "../../types/colors";
 
   interface Props {
     showCreateModal?: () => any;
@@ -107,12 +108,12 @@
     calendar.overridden = false;
     getRepository().editCalendar(calendar, NoChangesCalendar, true).catch(err => {
       calendar.overridden = true;
-      queueNotification("failure", `Could not reset calendar ${calendar.name}: ${err.message}`);
+      queueNotification(ColorKeys.Danger, `Could not reset calendar ${calendar.name}: ${err.message}`);
       return;
     }).then(async () => {
       getRepository().getCalendar(calendar.id, true).catch(err => {
         calendar.overridden = true;
-        queueNotification("failure", `Could not reset event ${calendar.name}: ${err.message}`);
+        queueNotification(ColorKeys.Danger, `Could not reset event ${calendar.name}: ${err.message}`);
         return;
       }).then((fetched) => {
         calendar = fetched as CalendarModel;
@@ -150,7 +151,7 @@
   {/if}
   {#snippet extraButtonsLeft()}
     {#if calendar != EmptyCalendar && !editMode && calendar.overridden}
-      <Button color="accent" onClick={resetOverrides}>Reset</Button>
+      <Button color={ColorKeys.Accent} onClick={resetOverrides}>Reset</Button>
     {/if}
   {/snippet}
 </EditableModal>

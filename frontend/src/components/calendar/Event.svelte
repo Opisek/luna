@@ -158,12 +158,10 @@
     display: none;
   }
 
-  :global(html[data-theme="light"]) div.foregroundBright,
-  :global(html[data-theme="dark"]) div.foregroundDark {
+  div.foregroundBright {
     color: colors.$foregroundBright;
   }
-  :global(html[data-theme="dark"]) div.foregroundBright,
-  :global(html[data-theme="light"]) div.foregroundDark {
+  div.foregroundDark {
     color: colors.$foregroundDark;
   }
 

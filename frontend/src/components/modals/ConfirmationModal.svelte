@@ -5,6 +5,7 @@
 
   import { queueNotification } from "$lib/client/notifications";
   import { NoOp } from "../../lib/client/placeholders";
+  import { ColorKeys } from "../../types/colors";
 
   interface Props {
     confirmCallback: () => Promise<void>;
@@ -26,7 +27,7 @@
   function confirm() {
     awaitingConfirm = true;
     confirmCallback().catch(err => {
-      queueNotification("failure", err)
+      queueNotification(ColorKeys.Danger, err)
     }).finally(() => {
       awaitingConfirm = false;
       hideModal()
@@ -42,13 +43,13 @@
 <Modal title="Confirmation" bind:showModal={showModal} bind:hideModal={hideModal}>
   {@render children?.()}
   {#snippet buttons()}
-      <Button onClick={confirm} color="success" type="submit">
+      <Button onClick={confirm} color={ColorKeys.Success} type="submit">
         {#if awaitingConfirm}
           <Loader/>
         {:else}
           Confirm
         {/if}
       </Button>
-      <Button onClick={cancel} color="failure">Cancel</Button>
+      <Button onClick={cancel} color={ColorKeys.Danger}>Cancel</Button>
   {/snippet}
 </Modal>

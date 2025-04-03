@@ -23,7 +23,7 @@
   @use "../../styles/text.scss";
 
   label {
-    color: colors.$foregroundDim;
+    color: color-mix(in srgb, colors.$foregroundPrimary 50%, transparent);
     font-size: text.$fontSizeSmall;
     cursor: text;
     display: flex;

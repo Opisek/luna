@@ -7,6 +7,7 @@ import { queueNotification } from "./notifications";
 
 import { atLeastOnePromise, deepCopy } from "$lib/common/misc";
 import { SubscribeableArray } from "./reactivity";
+import { ColorKeys } from "../../types/colors";
 
 class Repository {
   //
@@ -344,14 +345,14 @@ class Repository {
       });
       errors.forEach((err) => {
         queueNotification(
-          "failure",
+          ColorKeys.Danger,
           `Failed to fetch events from ${cals[err[0]].name}: ${err[1].message}`
         );
       });
       this.compileEvents(this.eventsRangeStart, this.eventsRangeEnd);
     }).catch((err) => {
       queueNotification(
-        "failure",
+        ColorKeys.Danger,
         `Failed to fetch calendars from ${newSource.name}: ${err.message}`
       );
     });
@@ -378,14 +379,14 @@ class Repository {
       });
       errors.forEach((err) => {
         queueNotification(
-          "failure",
+          ColorKeys.Danger,
           `Failed to fetch events from ${cals[err[0]].name}: ${err[1].message}`
         );
       });
       this.compileEvents(this.eventsRangeStart, this.eventsRangeEnd);
     }).catch((err) => {
       queueNotification(
-        "failure",
+        ColorKeys.Danger,
         `Failed to fetch calendars from ${modifiedSource.name}: ${err.message}`
       );
     });
@@ -427,7 +428,7 @@ class Repository {
 
     errors.forEach((err) => {
       queueNotification(
-        "failure",
+        ColorKeys.Danger,
         `Failed to fetch calendars from ${allSources[err[0]].name}: ${err[1].message}`
       );
     });
@@ -646,7 +647,7 @@ class Repository {
     });
     errors.forEach((err) => {
       queueNotification(
-        "failure",
+        ColorKeys.Danger,
         `Failed to fetch events from ${allSources[err[0]].name}: ${err[1].message}`
       );
     });
@@ -675,7 +676,7 @@ class Repository {
     })
     errors.forEach((err) => {
       queueNotification(
-        "failure",
+        ColorKeys.Danger,
         `Failed to fetch events from ${cals[err[0]].name}: ${err[1].message}`
       );
     });
@@ -776,7 +777,7 @@ class Repository {
     this.getEventsFromCalendar(calendar, this.eventsRangeStart, this.eventsRangeEnd).catch((err) => {
       const calendarName = this.calendarsMap.get(this.calendarsCache.get(calendar)?.value?.find((cal) => cal === calendar) || "")?.name;
       queueNotification(
-        "failure",
+        ColorKeys.Danger,
         `Failed to fetch events from calendar${calendarName ? " " + calendarName : ""}: ${err.message}`
       );
     });
@@ -808,7 +809,7 @@ class Repository {
     // info if the event is hidden
     if (isHidden) {
       queueNotification(
-        "info",
+        ColorKeys.Accent,
         `Event ${newEvent.name} was added to a hidden calendar.`
       );
     }

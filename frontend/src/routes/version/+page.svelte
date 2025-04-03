@@ -14,6 +14,7 @@
   import Divider from "../../components/layout/Divider.svelte";
   import Loader from "../../components/decoration/Loader.svelte";
   import { getRedirectPage } from "../../lib/common/parsing";
+  import { ColorKeys } from "../../types/colors";
 
   let versions: ({ frontend: string, backend: string, compatibility: VersionCompatibility } | undefined) = $state();
   let isCompatible = $derived(versions !== undefined && ![VersionCompatibility.BackendOutdatedMajor, VersionCompatibility.FrontendOutdatedMajor].includes(versions.compatibility));
@@ -58,19 +59,19 @@
         {/if}
 
         {#if versions.compatibility === VersionCompatibility.BackendOutdatedMajor}
-          The backend server is <Bold color="failure">outdated</Bold> and <Bold color="failure">incompatible</Bold> with the frontend server.<br>
+          The backend server is <Bold color={ColorKeys.Danger}>outdated</Bold> and <Bold color={ColorKeys.Danger}>incompatible</Bold> with the frontend server.<br>
           Please <Bold>update</Bold> the backend server.
         {:else if versions.compatibility === VersionCompatibility.BackendOutdatedMinor}
-          The backend server is <Bold color="accent">outdated</Bold> and might be missing some features.<br>
+          The backend server is <Bold color={ColorKeys.Warning}>outdated</Bold> and might be missing some features.<br>
           Consider to <Bold>update</Bold> the backend server.
         {:else if versions.compatibility === VersionCompatibility.FrontendOutdatedMajor}
-          The frontend server is <Bold color="failure">outdated</Bold> and <Bold color="failure">incompatible</Bold> with the backend server.<br>
+          The frontend server is <Bold color={ColorKeys.Danger}>outdated</Bold> and <Bold color={ColorKeys.Danger}>incompatible</Bold> with the backend server.<br>
           Please <Bold>update</Bold> the frontend server.
         {:else if versions.compatibility === VersionCompatibility.FrontendOutdatedMinor}
-          The frontend server is <Bold color="accent">outdated</Bold> and might be missing some features.<br>
+          The frontend server is <Bold color={ColorKeys.Warning}>outdated</Bold> and might be missing some features.<br>
           Consider to <Bold>update</Bold> the frontend server.
         {:else if versions.compatibility === VersionCompatibility.Compatible}
-          The frontend and backend servers are <Bold color="success">compatible</Bold>.<br>
+          The frontend and backend servers are <Bold color={ColorKeys.Warning}>compatible</Bold>.<br>
           Luna is <Bold>ready</Bold> to be used.
         {/if}
       {/if}
@@ -87,9 +88,9 @@
 
       {#if isCompatible}
         {#if !browser || redirectPage === "/"}
-          <Button color="success" href="/">Home</Button>
+          <Button color={ColorKeys.Success} href="/">Home</Button>
         {:else}
-          <Button color="success" href={redirectPage}>Continue</Button>
+          <Button color={ColorKeys.Success} href={redirectPage}>Continue</Button>
         {/if}
       {/if}
     </Horizontal>

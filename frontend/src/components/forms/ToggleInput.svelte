@@ -45,7 +45,7 @@
     cursor: pointer;
     width: max-content;
     user-select: none;
-    color: colors.$foregroundDim;
+    color: color-mix(in srgb, colors.$foregroundPrimary 50%, transparent);
   }
 </style>
 

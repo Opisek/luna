@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { ColorKeys } from "../../types/colors";
+  import type { NotificationModel } from "../../types/notification";
+
   interface Props {
     notification: NotificationModel;
     height: number;
@@ -51,6 +54,8 @@
 </script>
 
 <style lang="scss">
+  @use "sass:map";
+
   @use "../../styles/animations.scss";
   @use "../../styles/colors.scss";
   @use "../../styles/dimensions.scss";
@@ -75,19 +80,14 @@
     white-space: pre-wrap;
   }
 
-  .success {
-    background-color: colors.$backgroundSuccess;
-    color: colors.$foregroundSuccess;
-  }
-
-  .failure {
-    background-color: colors.$backgroundFailure;
-    color: colors.$foregroundFailure;
-  }
-
-  .info {
-    background-color: colors.$backgroundAccent;
-    color: colors.$foregroundAccent;
+  @each $key, $val in colors.$specialColors {
+    .#{$key} {
+      background-color: map.get($val, "background");
+      color: map.get($val, "foreground");
+    }
+    .#{$key} .details {
+      color: color-mix(in srgb, map.get($val, "foreground"), 50%, transparent);
+    }
   }
 
   .disappear {
@@ -111,18 +111,6 @@
     font-size: text.$fontSizeSmall;
     cursor: pointer;
     display: inline-block;
-  }
-
-  .success .details {
-    color: colors.$foregroundSuccessFaded;
-  }
-  
-  .failure .details {
-    color: colors.$foregroundFailureFaded;
-  }
-
-  .info .details {
-    color: colors.$foregroundAccentFaded;
   }
 
   .count {
@@ -159,9 +147,12 @@
 <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div
     class="box"
-    class:success={notification.type === "success"}
-    class:failure={notification.type === "failure"}
-    class:info={notification.type === "info"}
+    class:success={notification.color === ColorKeys.Success}
+    class:warning={notification.color === ColorKeys.Warning}
+    class:danger={notification.color === ColorKeys.Danger}
+    class:accent={notification.color === ColorKeys.Accent}
+    class:neutral={notification.color === ColorKeys.Accent}
+    class:inherit={notification.color === ColorKeys.Inherit}
     onclick={notification.remove}
     onkeypress={notification.remove}
   >

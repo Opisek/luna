@@ -1,13 +1,15 @@
 import { writable } from "svelte/store";
+import type { ColorKeys } from "../../types/colors";
+import type { NotificationModel } from "../../types/notification";
 
 export const notificationExpireTime = 5000;
 
 export const notifications = writable([] as NotificationModel[]);
 
-let queue = [] as { type: "info" | "success" | "failure", message: string, details: string }[];
+let queue = [] as { color: ColorKeys, message: string, details: string }[];
 
-export const queueNotification = (type: "info" | "success" | "failure", message: string, details = "") => {
-  queue.push({ type, message, details });
+export const queueNotification = (color: ColorKeys, message: string, details = "") => {
+  queue.push({ color, message, details });
   if (queue.length === 1) {
     setTimeout(showNotification, 10);
   }
@@ -21,7 +23,7 @@ function showNotification() {
     const duplicate = currentNotifications.filter(n =>
       n.message == nextNotification.message &&
       n.details == nextNotification.details &&
-      n.type == nextNotification.type &&
+      n.color == nextNotification.color &&
       n.disappear == false
     );
 
@@ -36,7 +38,7 @@ function showNotification() {
         message: nextNotification.message,
         details: nextNotification.details,
         count: 1,
-        type: nextNotification.type,
+        color: nextNotification.color,
         disappear: false,
         remove: () => {
           if (notification.disappear) return;

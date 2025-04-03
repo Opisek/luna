@@ -1,37 +1,29 @@
 html[data-theme="dark"] {
-  --colorForegroundDark: hsl(220, 10%, 80%);
-  --colorForegroundBright: #000000;
-  --colorForegroundFaded: #1a1a1a;
-  --colorForegroundDim: #949494;
-
+  --colorForegroundDark: #000000;
+  --colorForegroundBright: hsl(220, 10%, 80%);
   --colorForegroundLink: hsl(213, 69%, 42%);
 
   --colorBackgroundPrimary: #000000;
+  --colorForegroundPrimary: var(--colorForegroundBright);
 
   --colorBackgroundSecondary: hsl(220, 10%, 12%);
-  --colorBackgroundSecondaryActive: hsl(220, 10%, 22%);
-  --colorForegroundSecondary: var(--colorForegroundDark);
-  --colorForegroundSecondaryFaded: var(--colorForegroundFaded);
+  --colorForegroundSecondary: var(--colorForegroundBright);
+
+  --colorBackgroundTertiary: hsl(220, 10%, 22%);
+  --colorForegroundTertiary: var(--colorForegroundBright);
 
   --colorBackgroundSuccess: hsl(107, 53%, 37%);
-  --colorBackgroundSuccessActive: hsl(107, 53%, 47%);
   --colorForegroundSuccess: var(--colorForegroundDark);
-  --colorForegroundSuccessFaded: var(--colorForegroundFaded);
 
   --colorBackgroundWarning: hsl(39, 100%, 40%);
-  --colorBackgroundWarningActive: hsl(39, 100%, 50%);
   --colorForegroundWarning: var(--colorForegroundDark);
-  --colorForegroundWarningFaded: var(--colorForegroundFaded);
 
   --colorBackgroundDanger: hsl(0, 69%, 52%);
-  --colorBackgroundDangerActive: hsl(0, 69%, 62%);
   --colorForegroundDanger: var(--colorForegroundDark);
-  --colorForegroundDangerFaded: var(--colorForegroundFaded);
 
   --colorBackgroundAccent: hsl(213, 69%, 52%);
-  --colorBackgroundAccentActive: hsl(213, 69%, 62%);
   --colorForegroundAccent: var(--colorForegroundDark);
-  --colorForegroundAccentFaded: var(--colorForegroundFaded);
   
   --colorForegroundSunday: hsl(0, 71%, 58%);
+
 }

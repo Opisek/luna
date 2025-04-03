@@ -45,7 +45,7 @@
     cursor: pointer;
 
     border-radius: 0.5 * text.$lineHeightParagraph;
-    background-color: colors.$backgroundSecondaryActive;
+    background-color: colors.$backgroundTertiary;
     overflow: hidden;
   }
 

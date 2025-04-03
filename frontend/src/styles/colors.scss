@@ -1,38 +1,28 @@
 /* Main colors */
 $foregroundDark: var(--colorForegroundDark, #000000);
 $foregroundBright: var(--colorForegroundBright, #ffffff);
-$foregroundFaded: var(--colorForegroundFaded, #e6e6e6);
-$foregroundDim: var(--colorForegroundDim, #6b6b6b);
-
 $foregroundLink: var(--colorForegroundLink, hsl(213, 69%, 42%));
 
 $backgroundPrimary: var(--colorBackgroundPrimary, #ffffff);
 $foregroundPrimary: var(--colorForegroundPrimary, $foregroundDark);
 
 $backgroundSecondary: var(--colorBackgroundSecondary, #f0f0f0);
-$backgroundSecondaryActive: var(--colorBackgroundSecondaryActive, #e0e0e0);
-$foregroundSecondary: var(--colorForegroundSecondary, $foregroundDark);
-$foregroundSecondaryFaded: var(--colorForegroundSecondaryFaded, $foregroundFaded);
+$foregroundSecondary: var(--colorForegroundSecondary, $foregroundPrimary);
+
+$backgroundTertiary: var(--colorBackgroundTertiary, #e0e0e0);
+$foregroundTertiary: var(--colorForegroundTertiary, $foregroundSecondary);
 
 $backgroundSuccess: var(--colorBackgroundSuccess, hsl(107, 53%, 47%));
-$backgroundSuccessActive: var(--colorBackgroundSuccessActive, hsl(107, 53%, 57%));
 $foregroundSuccess: var(--colorForegroundSuccess, $foregroundBright);
-$foregroundSuccessFaded: var(--colorForegroundSuccessFaded, $foregroundFaded);
 
 $backgroundWarning: var(--colorBackgroundWarning, hsl(39, 100%, 50%));
-$backgroundWarningActive: var(--colorBackgroundWarningActive, hsl(39, 100%, 40%));
 $foregroundWarning: $foregroundBright;
-$foregroundWarningFaded: $foregroundFaded;
 
 $backgroundFailure: var(--colorBackgroundDanger, hsl(0, 69%, 62%));
-$backgroundFailureActive: var(--colorBackgroundDangerActive, hsl(0, 69%, 72%));
 $foregroundFailure: var(--colorForegroundDanger, $foregroundBright);
-$foregroundFailureFaded: var(--colorForegroundDangerFaded, $foregroundFaded);
 
 $backgroundAccent: var(--colorBackgroundAccent, hsl(213, 69%, 62%));
-$backgroundAccentActive: var(--colorBackgroundAccentActive, hsl(213, 69%, 72%));
 $foregroundAccent: var(--colorForegroundAccent, $foregroundBright);
-$foregroundAccentFaded: var(--colorForegroundAccentFaded, $foregroundFaded);
 
 /* Calendar colors */
 $foregroundSunday: var(--colorForegroundSunday, hsl(0, 71%, 58%));
@@ -41,28 +31,27 @@ $foregroundSunday: var(--colorForegroundSunday, hsl(0, 71%, 58%));
 $specialColors: (
   success: (
     background: $backgroundSuccess,
-    backgroundActive: $backgroundSuccessActive,
     foreground: $foregroundSuccess,
   ),
   warning: (
     background: $backgroundWarning,
-    backgroundActive: $backgroundWarningActive,
     foreground: $foregroundWarning,
   ),
-  failure: (
+  danger: (
     background: $backgroundFailure,
-    backgroundActive: $backgroundFailureActive,
     foreground: $foregroundFailure,
   ),
   accent: (
     background: $backgroundAccent,
-    backgroundActive: $backgroundAccentActive,
     foreground: $foregroundAccent,
   ),
   neutral: (
     background: $backgroundSecondary,
-    backgroundActive: $backgroundSecondaryActive,
     foreground: $foregroundSecondary,
+  ),
+  inherit: (
+    background: inherit,
+    foreground: inherit,
   ),
 );
 

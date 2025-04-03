@@ -25,7 +25,7 @@
     ((form) => {
       if (form?.error && !alreadyShownError) {
         alreadyShownError = true;
-        queueNotification("failure", form.error);
+        queueNotification(ColorKeys.Danger, form.error);
       }
     })(form)
   });
