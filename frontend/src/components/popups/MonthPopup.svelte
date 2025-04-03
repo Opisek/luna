@@ -111,8 +111,8 @@
     justify-content: center;
     align-items: center;
     border-radius: dimensions.$borderRadiusSmall;
-    color: colors.$foregroundSecondary;
-    //background-color: colors.$backgroundSecondaryActive;
+    //color: colors.$foregroundTertiary;
+    //background-color: colors.$backgroundTertiary;
     padding: dimensions.$gapSmall;
     cursor: pointer;
     user-select: none;
