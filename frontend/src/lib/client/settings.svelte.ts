@@ -42,7 +42,7 @@ class Settings {
   }
 
   private async fetchUserData() {
-    await fetchJson("/api/user").then((data: { user: UserData }) => {
+    await fetchJson("/api/users/self").then((data: { user: UserData }) => {
       this.userData = data.user;
     }).catch((err) => {
       throw new Error("Could not get user data: " + err.message);
@@ -50,7 +50,7 @@ class Settings {
   }
 
   private async fetchUserSettings() {
-    await fetchJson("/api/user/settings").then((data: UserSettings) => {
+    await fetchJson("/api/users/self/settings").then((data: UserSettings) => {
       this.userSettings = data;
     }).catch((err) => {
       throw new Error("Could not get user settings: " + err.message);

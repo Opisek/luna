@@ -43,12 +43,12 @@ func run(api *util.Api) {
 	longRunningAuthenticatedEndpoints := longRunningEndpoints.Group("", middleware.RequireAuth())
 	administratorEndpoints := authenticatedEndpoints.Group("", middleware.RequireAdmin())
 
-	// /api/user
-	userEndpoints := authenticatedEndpoints.Group("/user")
-	longRunningUserEndpoints := longRunningAuthenticatedEndpoints.Group("/user")
-	userEndpoints.GET("", handlers.GetUserData)
-	longRunningUserEndpoints.PATCH("", handlers.PatchUserData)
-	longRunningUserEndpoints.DELETE("", handlers.DeleteUser)
+	// /api/users
+	userEndpoints := authenticatedEndpoints.Group("/users")
+	longRunningUserEndpoints := longRunningAuthenticatedEndpoints.Group("/users")
+	userEndpoints.GET("/:userId", handlers.GetUserData)
+	longRunningUserEndpoints.PATCH("/:userId", handlers.PatchUserData)
+	longRunningUserEndpoints.DELETE("/:userId", handlers.DeleteUser)
 
 	// /api/sources/*
 	sourcesEndpoints := authenticatedEndpoints.Group("/sources")
@@ -80,7 +80,7 @@ func run(api *util.Api) {
 	fileEndpoints.HEAD("/:fileId", handlers.GetFile)
 
 	// /api/settings
-	userSettingsEndpoints := userEndpoints.Group("/settings")
+	userSettingsEndpoints := userEndpoints.Group("/:userId/settings")
 	userSettingsEndpoints.GET("", handlers.GetUserSettings)
 	userSettingsEndpoints.GET("/:settingKey", handlers.GetUserSetting)
 	userSettingsEndpoints.PATCH("", handlers.PatchUserSettings)

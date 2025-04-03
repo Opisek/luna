@@ -221,7 +221,7 @@
       if (profilePictureType === "database" && profilePictureFiles)
         userDataFormData.append("pfp_file", profilePictureFiles[0]);
 
-      await fetchResponse("/api/user", {
+      await fetchResponse("/api/users/self", {
         method: "PATCH",
         body: userDataFormData,
       }).then(async () => {
@@ -243,7 +243,7 @@
           userSettingsFormData.append(key, JSON.stringify(newValue));
       }
 
-      await fetchResponse("/api/user/settings", {
+      await fetchResponse("/api/users/self/settings", {
         method: "PATCH",
         body: userSettingsFormData,
       }).then(async () => {

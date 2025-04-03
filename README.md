@@ -41,6 +41,7 @@ The current frontend does not implement all functionality provided by the backen
 - All bodies are to be passed as `multipart/form-data`.
 - All endpoints except [unauthenticated ones](#unauthenticated) require an access token received from the [Login](#login) endpoint. It is to be passed in the request header as a *bearer token* or as the cookie *token*.
 - Parameters passed via the URL are indicated with angular brackets, e.g. `<ID>`
+- In case of users, `self` can be used in place of `<ID>` to indicate the calling user.
 
 ## Design Decisions
 ### Separation of Concerns
@@ -89,19 +90,19 @@ Luna uses its own (UU)IDs for every resource accessed through it. Therefore, the
 
 ### User Data
 #### Get User Data
-- **Path**: ``/api/user``
+- **Path**: ``/api/users/<ID>``
 - **Method**: ``GET``
 - **Body**: Empty
 - **Purpose**: Returns the user's saved data, like username and email address.
 
 #### Patch User Data
-- **Path**: ``/api/user``
+- **Path**: ``/api/users/<ID>``
 - **Method**: ``PATCH``
 - **Body**: Depending on which the user wants to change: `username`, `new_password`, `email`, `profile_picture`, `searchable`. The old password `password` is required if any of `username`, `new_password`, or `email` are specified.
 - **Purpose**: Changes the user's data.
 
 #### Delete User
-- **Path**: ``/api/user`
+- **Path**: ``/api/users/<ID>`
 - **Method**: ``DELETE``
 - **Body**: `password`
 - **Purpose**: Deletes the user account.
@@ -266,31 +267,31 @@ The description field is optional. Either the end date or the event duration is 
 - **Purpose**: Reverts a global setting to its default value
 
 #### Get User Settings
-- **Path**: ``/api/user/settings``
+- **Path**: ``/api/users/<ID>/settings``
 - **Method**: ``GET``
 - **Body**: Empty
 - **Purpose**: Returns all key-value pairs from the requesting user's settings
 
 #### Get User Setting
-- **Path**: ``/api/user/settings/<KEY>``
+- **Path**: ``/api/users/<ID>/settings/<KEY>``
 - **Method**: ``GET``
 - **Body**: Empty
 - **Purpose**: Returns a specific key-value pair from the requesting user's settings
 
 #### Patch User Settings
-- **Path**: ``/api/user/settings``
+- **Path**: ``/api/users/<ID>/settings``
 - **Method**: ``PATCH``
 - **Body**: Key-value pairs to change with value as a serialized JSON object
 - **Purpose**: Sets specific key-value pairs in the global settings
 
 #### Delete User Settings
-- **Path**: ``/api/user/settings``
+- **Path**: ``/api/users/<ID>/settings``
 - **Method**: ``DELETE``
 - **Body**: Empty
 - **Purpose**: Reverts all of the requesting user's settings to their default values
 
 #### Delete User Setting
-- **Path**: ``/api/user/settings/<KEY>``
+- **Path**: ``/api/users/<ID>/settings/<KEY>``
 - **Method**: ``DELETE``
 - **Body**: Empty
 - **Purpose**: Reverts the requesting user's setting to its default value
