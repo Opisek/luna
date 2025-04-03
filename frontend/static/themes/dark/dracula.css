@@ -25,6 +25,5 @@ html[data-theme="dark"] {
   --colorBackgroundAccent: #BD93F9;
   --colorForegroundAccent: var(--colorForegroundDark);
 
-
   --colorForegroundSunday: #BD93F9;
 }
