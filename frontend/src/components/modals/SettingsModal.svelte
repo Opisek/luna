@@ -273,6 +273,7 @@
       });
     }
 
+    settings.saveSettings();
     saving = false;
   }
 </script>

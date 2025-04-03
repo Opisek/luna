@@ -1,4 +1,5 @@
 import { browser } from "$app/environment";
+import { ColorKeys } from "../../types/colors";
 import { GlobalSettingKeys, UserSettingKeys, type GlobalSettings, type UserData, type UserSettings } from "../../types/settings";
 import { fetchJson } from "./net";
 import { queueNotification } from "./notifications";
@@ -35,6 +36,8 @@ class Settings {
   });
 
   constructor() {
+    this.fetchFromStorage();
+    if (browser) window.addEventListener("storage", () => this.fetchFromStorage());
     this.fetchSettings();
   }
 
@@ -71,6 +74,31 @@ class Settings {
     ]).catch((err) => {
       queueNotification(ColorKeys.Danger, "Could not fetch settings: " + err.message);
     });
+  }
+
+  // This only saves the settings to the local storage.
+  // Saving to the database must be done separately by the caller.
+  public saveSettings() {
+    if (!browser) return;
+    localStorage.setItem("userData", JSON.stringify(this.userData));
+    localStorage.setItem("userSettings", JSON.stringify(this.userSettings));
+    localStorage.setItem("globalSettings", JSON.stringify(this.globalSettings));
+  }
+
+  private fetchFromStorage() {
+    if (!browser) return;
+    const userData = localStorage.getItem("userData");
+    if (userData != null) {
+      this.userData = JSON.parse(userData);
+    }
+    const userSettings = localStorage.getItem("userSettings");
+    if (userSettings != null) {
+      this.userSettings = JSON.parse(userSettings);
+    }
+    const globalSettings = localStorage.getItem("globalSettings");
+    if (globalSettings != null) {
+      this.globalSettings = JSON.parse(globalSettings);
+    }
   }
 }
 
