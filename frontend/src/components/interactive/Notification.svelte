@@ -151,7 +151,7 @@
     class:warning={notification.color === ColorKeys.Warning}
     class:danger={notification.color === ColorKeys.Danger}
     class:accent={notification.color === ColorKeys.Accent}
-    class:neutral={notification.color === ColorKeys.Accent}
+    class:neutral={notification.color === ColorKeys.Neutral}
     class:inherit={notification.color === ColorKeys.Inherit}
     onclick={notification.remove}
     onkeypress={notification.remove}
