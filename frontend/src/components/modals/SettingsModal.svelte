@@ -20,6 +20,7 @@
   import { fetchFileById, fetchJson, fetchResponse } from "$lib/client/net";
   import { queueNotification } from "$lib/client/notifications";
   import { ColorKeys } from "../../types/colors";
+  import type { Option } from "../../types/options";
 
   interface Props {
     showModal?: () => any;
@@ -74,8 +75,8 @@
       { name: "Administrative", value: "admin", icon: LockKeyhole },
     ],
     [
-      { name: "Danger Zone", value: "danger", icon: TriangleAlert },
-      { name: "Logout", value: "logout", icon: LogOut },
+      { name: "Danger Zone", value: "danger", icon: TriangleAlert, color: ColorKeys.Danger },
+      { name: "Logout", value: "logout", icon: LogOut, color: ColorKeys.Danger },
     ],
   ]
   const categories: Option<string>[][] = [
@@ -85,8 +86,8 @@
       { name: "Developer", value: "developer", icon: Code }
     ],
     [
-      { name: "Danger Zone", value: "danger", icon: TriangleAlert },
-      { name: "Logout", value: "logout", icon: LogOut },
+      { name: "Danger Zone", value: "danger", icon: TriangleAlert, color: ColorKeys.Danger },
+      { name: "Logout", value: "logout", icon: LogOut, color: ColorKeys.Danger },
     ],
   ]
 

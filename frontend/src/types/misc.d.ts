@@ -1,9 +1,3 @@
-type Option<T> = {
-  value: T;
-  name: string;
-  icon?: any;
-}
-
 type FocusIndicatorSettings = {
   type: "bar" | "underline";
   ignoreParent?: boolean;

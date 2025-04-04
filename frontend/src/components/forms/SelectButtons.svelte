@@ -3,6 +3,7 @@
 
   import { addRipple, focusIndicator } from "$lib/client/decoration";
   import { EmptyOption } from "../../lib/client/placeholders";
+  import type { Option } from "../../types/options";
 
   interface Props {
     value: T | null;

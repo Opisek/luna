@@ -1,3 +1,5 @@
+import type { Option } from "../../types/options"
+
 export const EmptySource: SourceModel = {
   id: '',
   name: '',

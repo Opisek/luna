@@ -7,6 +7,7 @@
 
   import { calculateOptimalPopupPosition } from "$lib/common/calculations";
   import { focusIndicator } from "$lib/client/decoration";
+  import type { Option } from "../../types/options";
 
   let active = $state(false);
   let optionsAbove = $state(false);

@@ -1,6 +1,8 @@
 <script lang="ts" generics="T">
   import { addRipple, focusIndicator } from "../../lib/client/decoration";
   import { EmptyOption } from "../../lib/client/placeholders";
+  import { ColorKeys } from "../../types/colors";
+  import type { Option } from "../../types/options";
 
   // This component is used for category lists (currently only in the settings modal)
 
@@ -18,6 +20,8 @@
 </script>
 
 <style lang="scss">
+  @use "sass:map";
+
   @use "../../styles/colors.scss";
   @use "../../styles/dimensions.scss";
 
@@ -64,10 +68,12 @@
     margin-bottom: dimensions.$gapSmall;
   }
 
-  .selected {
-    background-color: colors.$backgroundAccent;
-    color: colors.$foregroundAccent;
-    --barFocusIndicatorColor: #{colors.$barFocusIndicatorColorAlt};
+  @each $key, $val in colors.$specialColors {
+    .selected.#{$key} {
+      background-color: map.get($val, "background");
+      color: map.get($val, "foreground");
+      --barFocusIndicatorColor: #{colors.$barFocusIndicatorColorAlt};
+    }
   }
 
   .option :global(*) {
@@ -91,6 +97,12 @@
         class:first={i === 0}
         class:last={i === block.length - 1}
         class:selected={option.value === value}
+        class:success={option.color === ColorKeys.Success}
+        class:warning={option.color === ColorKeys.Warning}
+        class:danger={option.color === ColorKeys.Danger}
+        class:accent={!option.color || option.color === ColorKeys.Accent}
+        class:neutral={option.color === ColorKeys.Neutral}
+        class:inherit={option.color === ColorKeys.Inherit}
         onclick={() => value = option.value}
         onmousedown={addRipple}
         use:focusIndicator
