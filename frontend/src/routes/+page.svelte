@@ -33,6 +33,7 @@
   import { getSettings } from "$lib/client/settings.svelte";
   import { UserSettingKeys } from "../types/settings";
   import ThemeToggle from "../components/interactive/ThemeToggle.svelte";
+  import { ColorKeys } from "../types/colors";
 
   /* Settings */
   const settings = getSettings();
