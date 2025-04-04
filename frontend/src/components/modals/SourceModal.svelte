@@ -9,7 +9,7 @@
   import { isValidIcalFile, isValidPath, isValidUrl, valid } from "$lib/client/validation";
   import { queueNotification } from "$lib/client/notifications";
   import FileUpload from "../forms/FileUpload.svelte";
-  import { fetchResponse } from "../../lib/client/net";
+  import { fetchFileById, fetchResponse } from "../../lib/client/net";
   import { UserSettingKeys } from "../../types/settings";
   import { getSettings } from "$lib/client/settings.svelte";
   import { ColorKeys } from "../../types/colors";
@@ -70,31 +70,12 @@
       const fileId = sourceDetailed.settings.file;
       sourceDetailed.settings.fileId = fileId;
 
-      const res = await fetchResponse(`/api/files/${fileId}`, { method: "HEAD" }).catch(err => {
+      await fetchFileById(fileId).then(fileList => {
+        sourceDetailed.settings.file = fileList;
+      }).catch(err => {
         queueNotification(ColorKeys.Danger, `Could not get file: ${err.message}`);
         sourceDetailed.settings.file = null;
       });
-
-      if (res) {
-        let filename = `${fileId}.ics`;
-
-        const header = res.headers.get("Content-Disposition")
-        if (header) {
-          const remoteFilename = header
-            .split(";")
-            .map(x => x.trim())
-            .filter(x => x.startsWith("filename="))
-            .map(x => x.split("=")[1]);
-          
-          if (remoteFilename.length > 0) filename = remoteFilename[0];
-        }
-
-        // https://stackoverflow.com/questions/52078853/is-it-possible-to-update-filelist
-        const list = new DataTransfer();
-        const file = new File([], filename);
-        list.items.add(file);
-        sourceDetailed.settings.file = list.files;
-      }
     } else {
       sourceDetailed.settings.file = null;
       sourceDetailed.settings.fileId = "";
@@ -212,7 +193,10 @@
       {#if sourceDetailed.settings.location === "remote"}
         <TextInput bind:value={sourceDetailed.settings.url} name="ical_url" placeholder="iCal URL" editable={editMode} validation={isValidUrl} bind:validity={icalLinkValidity} />
       {:else if sourceDetailed.settings.location === "database"}
-          <FileUpload bind:files={sourceDetailed.settings.file} bind:fileId={sourceDetailed.settings.fileId} name="ical_file" placeholder="iCal File" editable={editMode} validation={isValidIcalFile} bind:validity={icalFileValidity} />
+        <FileUpload bind:files={sourceDetailed.settings.file} bind:fileId={sourceDetailed.settings.fileId} name="ical_file" placeholder="iCal File" accept=".ical,.ics,.ifb,.icalendar" editable={editMode} validation={isValidIcalFile} bind:validity={icalFileValidity} />
+        {#if sourceDetailed.settings.fileId && sourceDetailed.settings.file && settings.userSettings[UserSettingKeys.DebugMode]}
+          <TextInput value={sourceDetailed.settings.fileId} name="id" placeholder="File ID" editable={false} />
+        {/if}
       {:else if sourceDetailed.settings.location === "local"}
         <TextInput bind:value={sourceDetailed.settings.path} name="ical_path" placeholder="iCal Path" editable={editMode} validation={isValidPath} bind:validity={icalPathValidity} />
       {/if}
@@ -243,7 +227,7 @@
     {/if}
 
     {#if sourceDetailed.id && settings.userSettings[UserSettingKeys.DebugMode]}
-      <TextInput bind:value={sourceDetailed.id} name="id" placeholder="ID" editable={false} />
+      <TextInput value={sourceDetailed.id} name="id" placeholder="Source ID" editable={false} />
     {/if}
   {/if}
 </EditableModal>

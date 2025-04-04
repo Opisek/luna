@@ -738,7 +738,7 @@ class Repository {
     const localEnd = new Date(end);
     localEnd.setHours(23, 59, 59, 999);
 
-    const fetched: EventModel[] = (await fetchJson(`/api/calendars/${calendar}/events?start=${encodeURIComponent(localStart.toISOString())}&end=${encodeURIComponent(localEnd.toISOString())}`)).events;
+    const fetched: EventModel[] = (await fetchJson(`/api/calendars/${calendar}/events?start=${encodeURIComponent(localStart.toISOString())}&end=${encodeURIComponent(localEnd.toISOString())}`).catch((err) => { throw err; })).events;
 
     let calendarEventsCache = this.eventsCache.get(calendar);
     if (!calendarEventsCache) {

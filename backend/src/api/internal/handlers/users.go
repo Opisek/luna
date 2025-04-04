@@ -1,9 +1,11 @@
 package handlers
 
 import (
+	"fmt"
 	"luna-backend/api/internal/util"
 	"luna-backend/auth"
 	"luna-backend/errors"
+	"luna-backend/files"
 	"luna-backend/types"
 	"net/http"
 
@@ -28,14 +30,26 @@ func PatchUserData(c *gin.Context) {
 
 	userId := util.GetUserId(c)
 
-	// Parse the request
+	// Parse data to change
 	newUsername := c.PostForm("username")
 	newEmail := c.PostForm("email")
 	newPassword := c.PostForm("new_password")
-	rawNewProfilePicture := c.PostForm("profile_picture")
+	rawNewProfilePicture := c.PostForm("pfp_url")
+	pfpFileHeader, pfpFileErr := c.FormFile("pfp_file")
 	rawNewSearchable := c.PostForm("searchable")
 
-	if newUsername == "" && newEmail == "" && newPassword == "" && rawNewProfilePicture == "" && rawNewSearchable == "" {
+	switch pfpFileErr {
+	case nil:
+		break
+	case http.ErrMissingFile:
+		pfpFileHeader = nil
+	default:
+		u.Error(errors.New().Status(http.StatusBadRequest).
+			AddErr(errors.LvlDebug, pfpFileErr).
+			Append(errors.LvlPlain, "Invalid form data"))
+	}
+
+	if newUsername == "" && newEmail == "" && newPassword == "" && rawNewProfilePicture == "" && rawNewSearchable == "" && pfpFileHeader == nil {
 		u.Error(errors.New().Status(http.StatusBadRequest).
 			Append(errors.LvlPlain, "Nothing to change"))
 		return
@@ -81,6 +95,53 @@ func PatchUserData(c *gin.Context) {
 				Append(errors.LvlPlain, "Invalid profile picture url"))
 			return
 		}
+	} else if pfpFileHeader != nil {
+		pfpFile, err := pfpFileHeader.Open()
+		if err != nil {
+			u.Error(errors.New().Status(http.StatusBadRequest).
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlPlain, "Could not open profile picture file"))
+			return
+		}
+
+		uploadedFile, tr := files.NewDatabaseFileFromContent(pfpFileHeader.Filename, pfpFile, userId, u.Tx.Queries())
+		if tr != nil {
+			u.Error(tr.
+				Append(errors.LvlDebug, "Could not create file from content").
+				Append(errors.LvlPlain, "Could not upload profile picture"))
+			return
+		}
+
+		fileId := uploadedFile.GetId()
+		fileUrl := fmt.Sprintf("/api/files/%s", fileId.String())
+		newProfilePicture, err = types.NewUrl(fileUrl)
+		if err != nil {
+			u.Error(errors.New().Status(http.StatusInternalServerError).
+				Append(errors.LvlDebug, "Could not create file url").
+				Append(errors.LvlPlain, "Could not upload profile picture"))
+			return
+		}
+	}
+
+	// Delete old profile picture if applicable
+	oldUserStruct, tr := u.Tx.Queries().GetUserData(userId)
+	if tr != nil {
+		u.Error(tr)
+		return
+	}
+
+	if newProfilePicture != nil {
+		// Check if the old profile picture is a database file
+		oldFileId, err := util.IsDatabaseFileUrl(oldUserStruct.ProfilePicture)
+		// Delete if it is
+		if err == nil {
+			oldFile := files.GetDatabaseFile(oldFileId)
+			tr := u.Tx.Queries().DeleteFilecache(oldFile, userId)
+			if tr != nil {
+				tr = tr.Append(errors.LvlWordy, "Could not delete old profile picture")
+				u.Warn(tr)
+			}
+		}
 	}
 
 	// Reauthenticate if needed
@@ -115,7 +176,7 @@ func PatchUserData(c *gin.Context) {
 	}
 
 	// Update the user
-	if newUsername != "" || newEmail != "" || rawNewSearchable != "" || rawNewProfilePicture != "" {
+	if newUsername != "" || newEmail != "" || rawNewSearchable != "" || newProfilePicture != nil {
 		newUserStruct := &types.User{
 			Id:             userId,
 			Username:       newUsername,
@@ -124,11 +185,6 @@ func PatchUserData(c *gin.Context) {
 			ProfilePicture: newProfilePicture,
 		}
 
-		oldUserStruct, tr := u.Tx.Queries().GetUserData(userId)
-		if tr != nil {
-			u.Error(tr)
-			return
-		}
 		newUserStruct.Admin = oldUserStruct.Admin
 
 		if newUsername == "" {
@@ -140,7 +196,7 @@ func PatchUserData(c *gin.Context) {
 		if rawNewSearchable == "" {
 			newUserStruct.Searchable = oldUserStruct.Searchable
 		}
-		if rawNewProfilePicture == "" {
+		if newProfilePicture == nil {
 			newUserStruct.ProfilePicture = oldUserStruct.ProfilePicture
 		}
 
@@ -169,7 +225,15 @@ func PatchUserData(c *gin.Context) {
 		}
 	}
 
-	u.Success(nil)
+	response := &gin.H{
+		"status": "ok",
+	}
+
+	if newProfilePicture != nil {
+		(*response)["profile_picture"] = newProfilePicture.String()
+	}
+
+	u.Success(response)
 }
 
 func DeleteUser(c *gin.Context) {

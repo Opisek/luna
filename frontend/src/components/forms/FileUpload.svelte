@@ -4,7 +4,7 @@
   import { alwaysValidFile, valid } from "$lib/client/validation";
   import { focusIndicator } from "$lib/client/decoration";
   import IconButton from "../interactive/IconButton.svelte";
-  import { Download, FileEdit, Upload, X } from "lucide-svelte";
+  import { Download, Upload, X } from "lucide-svelte";
   import { downloadFileToClient } from "../../lib/client/net";
 
   let wrapper: HTMLDivElement | null = $state(null);
@@ -15,6 +15,7 @@
     fileId?: string;
     placeholder: string;
     name: string;
+    accept: string;
     editable?: boolean;
     validation?: FileValidation;
     validity?: any;
@@ -25,6 +26,7 @@
     fileId = $bindable(""),
     placeholder,
     name,
+    accept,
     editable = true,
     validation = alwaysValidFile,
     validity = $bindable(valid)
@@ -175,7 +177,7 @@
 >
 <input
     type="file"
-    accept=".ical,.ics,.ifb,.icalendar"
+    accept={accept}
     onchange={internalOnChange}
     name={name}
     disabled={!editable}

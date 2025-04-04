@@ -43,3 +43,28 @@ export function downloadFileToClient(file: FileList | string | null) {
   URL.revokeObjectURL(url);
   a.remove();
 }
+
+export async function fetchFileById(fileId: string) {
+  const res = await fetchResponse(`/api/files/${fileId}`, { method: "HEAD" }).catch(err => {
+    throw err;
+  });
+
+  let filename = `${fileId}`;
+
+  const header = res.headers.get("Content-Disposition")
+  if (header) {
+    const remoteFilename = header
+      .split(";")
+      .map(x => x.trim())
+      .filter(x => x.startsWith("filename="))
+      .map(x => x.split("=")[1]);
+    
+    if (remoteFilename.length > 0) filename = remoteFilename[0];
+  }
+
+  // https://stackoverflow.com/questions/52078853/is-it-possible-to-update-filelist
+  const list = new DataTransfer();
+  const file = new File([], filename);
+  list.items.add(file);
+  return list.files;
+}

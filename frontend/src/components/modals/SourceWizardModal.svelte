@@ -290,7 +290,7 @@
       </Horizontal>
     {/if}
   {:else if inputType === "file"}
-    <FileUpload bind:files={files} name="file" placeholder="File" validation={isValidIcalFile} bind:validity={fileValid} />
+    <FileUpload bind:files={files} name="file" placeholder="File" accept=".ical,.ics,.ifb,.icalendar" validation={isValidIcalFile} bind:validity={fileValid} />
   {:else if inputType === "holidays"}
       Feature not yet available
   {/if}

@@ -170,7 +170,8 @@
     refresh();
   });
 
-  beforeNavigate(() => {
+  beforeNavigate((args) => {
+    if (args.to === null) return;
     pageLoaded = false;
     clearTimeout(spooledRefresh);
     spooledRefresh = undefined; 

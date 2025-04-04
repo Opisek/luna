@@ -17,10 +17,8 @@
   import { deepCopy, deepEquality } from "$lib/common/misc";
   import Button from "../interactive/Button.svelte";
   import Loader from "../decoration/Loader.svelte";
-  import { fetchJson, fetchResponse } from "$lib/client/net";
+  import { fetchFileById, fetchJson, fetchResponse } from "$lib/client/net";
   import { queueNotification } from "$lib/client/notifications";
-  import TooltipPopup from "../popups/TooltipPopup.svelte";
-  import Tooltip from "../interactive/Tooltip.svelte";
   import { ColorKeys } from "../../types/colors";
 
   interface Props {
@@ -41,6 +39,7 @@
     fetchThemes();
     settings.fetchSettings().then(() => {
       snapshotSettings();
+      refetchProfilePicture();
     });
     showModalInternal();
   };
@@ -48,6 +47,18 @@
   hideModal = () => {
     hideModalInternal();
   };
+
+  function refetchProfilePicture() {
+    const profilePictureUrl = settings.userData.profile_picture || "";
+    profilePictureFileId = profilePictureUrl.match(/\/api\/files\/([a-f0-9-]{36})/)?.[1] || "";
+    if (profilePictureFileId != "") {
+      fetchFileById(profilePictureFileId).then(fileList => {
+        profilePictureFiles = fileList;
+      }).catch(err => {
+        queueNotification(ColorKeys.Danger, `Could not download profile picture: ${err.message}`);
+      });
+    }
+  }
 
   let showModalInternal = $state(NoOp);
   let hideModalInternal = $state(NoOp);
@@ -115,6 +126,7 @@
 
   let profilePictureType = $state("gravatar");
   let profilePictureFiles: FileList | null = $state(null);
+  let profilePictureFileId = $state("");
   let profilePictureRemoteUrl = $state("");
   let profilePictureGravatarUrl = $derived.by(() => {
     const email = settings.userData.email || "";
@@ -123,11 +135,30 @@
     return `https://www.gravatar.com/avatar/${emailHash}`;
   })
 
-  let effectiveProfilePictureSource = $derived.by(() => {
-    if (profilePictureType === "gravatar") return profilePictureGravatarUrl;
-    else if (profilePictureType === "database") return "TODO"
-    else if (profilePictureType === "remote") return profilePictureRemoteUrl;
-    else return "";
+  let effectiveProfilePictureSource = $state("");
+  
+  $effect(() => {
+    (async () => {
+      if (profilePictureType === "gravatar") return profilePictureGravatarUrl;
+      else if (profilePictureType === "database") {
+        if (profilePictureFileId != "") return `/api/files/${profilePictureFileId}`
+        else if (profilePictureFiles) {
+          const file = profilePictureFiles[0];
+          const reader = new FileReader();
+          return new Promise<string>((resolve) => {
+            reader.onload = () => {
+              resolve(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+          });
+        }
+        else return "";
+      }
+      else if (profilePictureType === "remote") return profilePictureRemoteUrl;
+      else return "";
+    })().then((url) => {
+      effectiveProfilePictureSource = url;
+    });
   });
 
   $effect(() => {
@@ -135,7 +166,7 @@
 
     if (/https:\/\/www\.gravatar\.com\/avatar\/[a-z0-9]{32}/.test(loadedProfilePictureUrl)) {
       profilePictureType = "gravatar";
-    } else if (1 != 1) { // TODO: need current domain to compare
+    } else if (/\/api\/files\/([a-f0-9-]{36})/.test(loadedProfilePictureUrl)) {
       profilePictureType = "database";
     } else {
       profilePictureType = "remote";
@@ -216,18 +247,22 @@
         userDataFormData.append("password", oldPassword);
       if (settings.userData.searchable != userDataSnapshot.searchable)
         userDataFormData.append("searchable", settings.userData.searchable ? "true" : "false");
-      if (effectiveProfilePictureSource != userDataSnapshot.profile_picture)
-        userDataFormData.append("profile_picture", profilePictureType);
+      if (profilePictureType !== "database" && effectiveProfilePictureSource != userDataSnapshot.profile_picture)
+        userDataFormData.append("pfp_url", effectiveProfilePictureSource);
       if (profilePictureType === "database" && profilePictureFiles)
         userDataFormData.append("pfp_file", profilePictureFiles[0]);
 
-      await fetchResponse("/api/users/self", {
+      await fetchJson("/api/users/self", {
         method: "PATCH",
         body: userDataFormData,
-      }).then(async () => {
-        userDataSnapshot = await deepCopy(settings.userData);
+      }).then(async (response) => {
+        if ("profile_picture" in response) {
+          settings.userData.profile_picture = response.profile_picture;
+          profilePictureFiles = null;
+        }
         oldPassword = "";
-        // TODO: set profile picture correctly
+        userDataSnapshot = await deepCopy(settings.userData);
+        refetchProfilePicture();
       }).catch((err) => {
         queueNotification(ColorKeys.Danger, "Failed to save user data: " + err);
       });
@@ -410,8 +445,13 @@
           <FileUpload
             name="pfp_file"
             placeholder="Profile Picture File"
-            files={profilePictureFiles}
+            bind:files={profilePictureFiles}
+            bind:fileId={profilePictureFileId}
+            accept={"image/*"}
           />
+          {#if profilePictureFileId != "" && profilePictureFiles && settings.userSettings[UserSettingKeys.DebugMode]}
+            <TextInput value={profilePictureFileId} name="id" placeholder="File ID" editable={false} />
+          {/if}
         {:else if profilePictureType === "remote"}
           <TextInput
             name="pfp_link"
@@ -420,7 +460,7 @@
           />
         {/if}
         {#if settings.userData.id && settings.userSettings[UserSettingKeys.DebugMode]}
-          <TextInput bind:value={settings.userData.id} name="id" placeholder="ID" editable={false} />
+          <TextInput value={settings.userData.id} name="id" placeholder="User ID" editable={false} />
         {/if}
       {:else if selectedCategory === "appearance"}
         <ToggleInput
