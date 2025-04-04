@@ -250,7 +250,7 @@
         userDataFormData.append("searchable", settings.userData.searchable ? "true" : "false");
       if (profilePictureType !== "database" && effectiveProfilePictureSource != userDataSnapshot.profile_picture)
         userDataFormData.append("pfp_url", effectiveProfilePictureSource);
-      if (profilePictureType === "database" && profilePictureFiles)
+      if (profilePictureType === "database" && profilePictureFiles && profilePictureFileId === "")
         userDataFormData.append("pfp_file", profilePictureFiles[0]);
 
       await fetchJson("/api/users/self", {
