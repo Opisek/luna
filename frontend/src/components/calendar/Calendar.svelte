@@ -6,7 +6,7 @@
 
   import { getContext, setContext } from "svelte";
   import { writable } from "svelte/store";
-  import { getDayIndex, getWeekNumber, isSameDay } from "$lib/common/date";
+  import { getDayIndex, getWeekNumber, getWeekMonth, isSameDay } from "$lib/common/date";
   import { fade, fly } from "svelte/transition";
   import { getSettings } from "$lib/client/settings.svelte";
   import { UserSettingKeys } from "../../types/settings";
@@ -207,6 +207,10 @@
     margin: dimensions.$gapSmaller 0;
     border-radius: dimensions.$borderRadiusSmall;
   }
+
+  div.weekNumber.otherMonth {
+    opacity: 0.5;
+  }
 </style>
 
 <div class="calendar">
@@ -236,8 +240,9 @@
         class="weekNumbers"
       >
         {#each Array(amountOfRows) as _, i}
-        <div class="weekNumber">
-          {getWeekNumber(days[7 * i] || new Date())}
+        {@const weekNumber = getWeekNumber(days[7 * i] || new Date())}
+        <div class="weekNumber" class:otherMonth={view !== "day" && getWeekMonth(weekNumber, (days[7 * i] || new Date()).getFullYear()) !== date.getMonth()}>
+          {weekNumber}
         </div>
         {/each}
       </div>

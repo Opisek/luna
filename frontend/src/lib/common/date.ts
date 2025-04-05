@@ -41,3 +41,19 @@ export function getWeekNumber(date: Date) {
 
   return weekNumber;
 }
+
+export function getWeekMonth(weekNumber: number, year: number) {
+  // Get first monday of first week of the year
+  const januaryFirst = new Date(Date.UTC(year, 0, 1));
+  const januaryFirstDay = (januaryFirst.getDay() + 6) % 7;
+  const firstMonday = new Date(januaryFirst);
+  if (januaryFirstDay < 4) firstMonday.setDate(firstMonday.getDate() - januaryFirstDay);
+  else firstMonday.setDate(firstMonday.getDate() - januaryFirstDay + 7);
+
+  // Get the thruesday of the requested week
+  const thursday = new Date(firstMonday);
+  thursday.setDate(thursday.getDate() + (weekNumber - 1) * 7 + 3);
+
+  // If the majority of the days is in some month, then they include thursday
+  return thursday.getMonth();
+}
