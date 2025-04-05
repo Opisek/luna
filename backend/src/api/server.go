@@ -7,7 +7,6 @@ import (
 	"luna-backend/api/internal/util"
 	"luna-backend/config"
 	"luna-backend/db"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -22,18 +21,18 @@ func run(api *util.Api) {
 	rawEndpoints := router.Group("/api")
 
 	// /api/* (with no transactions)
-	noDatabaseEndpoints := rawEndpoints.Group("", middleware.RequestSetup(3*time.Second, api.Db, false, api.CommonConfig, api.Logger))
+	noDatabaseEndpoints := rawEndpoints.Group("", middleware.RequestSetup(api.CommonConfig.Env.REQUEST_TIMEOUT_DEFAULT, api.Db, false, api.CommonConfig, api.Logger))
 
 	noDatabaseEndpoints.GET("/version", handlers.GetVersion)
 
 	// /api/* (long-running authentication)
-	longRunningEndpoints := rawEndpoints.Group("", middleware.RequestSetup(30*time.Second, api.Db, true, api.CommonConfig, api.Logger))
+	longRunningEndpoints := rawEndpoints.Group("", middleware.RequestSetup(api.CommonConfig.Env.REQUEST_TIMEOUT_AUTHENTICATION, api.Db, true, api.CommonConfig, api.Logger))
 
 	longRunningEndpoints.POST("/login", handlers.Login)
 	longRunningEndpoints.POST("/register", handlers.Register)
 
 	// /api/* the rest
-	endpoints := rawEndpoints.Group("", middleware.RequestSetup(3*time.Second, api.Db, true, api.CommonConfig, api.Logger))
+	endpoints := rawEndpoints.Group("", middleware.RequestSetup(api.CommonConfig.Env.REQUEST_TIMEOUT_DEFAULT, api.Db, true, api.CommonConfig, api.Logger))
 
 	endpoints.GET("/health", handlers.GetHealth)
 

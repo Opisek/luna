@@ -5,6 +5,7 @@ import (
 	"os"
 	"reflect"
 	"strconv"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
@@ -21,11 +22,16 @@ type Environmental struct {
 
 	DATA_PATH string
 	API_PORT  uint16
+
+	REQUEST_TIMEOUT_DEFAULT        time.Duration
+	REQUEST_TIMEOUT_AUTHENTICATION time.Duration
 }
 
 var defaultEnv = Environmental{
-	DATA_PATH: "/data",
-	API_PORT:  3000,
+	DATA_PATH:                      "/data",
+	API_PORT:                       3000,
+	REQUEST_TIMEOUT_DEFAULT:        5 * time.Second,
+	REQUEST_TIMEOUT_AUTHENTICATION: 30 * time.Second,
 }
 
 func ParseEnvironmental(logger *logrus.Entry) (Environmental, error) {
@@ -64,6 +70,14 @@ func ParseEnvironmental(logger *logrus.Entry) (Environmental, error) {
 				return env, err
 			}
 			reflected.Field(i).SetUint(fieldValue)
+		case "Duration":
+			fieldValue, err := strconv.ParseUint(fieldValueRaw, 10, 32)
+			if err != nil {
+				err := fmt.Errorf("environmental variable %v is malformed", fieldName)
+				return env, err
+			}
+			duration := time.Duration(fieldValue * uint64(time.Second))
+			reflected.Field(i).SetInt(duration.Nanoseconds())
 		default:
 			err := fmt.Errorf("unsupported type %v for environmental variable %v", fieldType, fieldName)
 			return env, err
