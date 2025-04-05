@@ -7,9 +7,9 @@
   import { getContext, setContext } from "svelte";
   import { writable } from "svelte/store";
   import { getDayIndex, getWeekNumber, getWeekMonth, isSameDay } from "$lib/common/date";
-  import { fade, fly } from "svelte/transition";
   import { getSettings } from "$lib/client/settings.svelte";
   import { UserSettingKeys } from "../../types/settings";
+  import { svelteFlyInHorizontal, svelteFlyOutHorizontal } from "../../lib/client/animations";
 
   interface Props {
     date: Date;
@@ -32,15 +32,25 @@
   setContext("currentlyHoveredEvent", currentlyHoveredEvent);
   setContext("currentlyClickedEvent", currentlyClickedEvent);
 
+  /* Animation */
+  let currentDate = $state(new Date(date));
+  $effect(() => {
+    if (date.getTime() === currentDate.getTime()) return;
+    setContext("calendarFlyDirection", currentDate.getTime() <= date.getTime() ? "left" : "right");
+    currentDate = new Date(date);
+  });
+
+  /* View Calculation */
+
   let startDate = $derived(
     (() => {
       switch (view) {
         case "month":
-          return new Date(date.getFullYear(), date.getMonth(), 1);
+          return new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
         case "week":
-          return new Date(date.getFullYear(), date.getMonth(), date.getDate() - getDayIndex(date));
+          return new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() - getDayIndex(currentDate));
         case "day":
-          return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+          return new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
       }
     })()
   );
@@ -48,89 +58,89 @@
     (() => {
       switch (view) {
         case "month":
-          return new Date(date.getFullYear(), date.getMonth() + 1, 0);
+          return new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
         case "week":
-          return new Date(date.getFullYear(), date.getMonth(), date.getDate() - getDayIndex(date) + 7);
+          return new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() - getDayIndex(currentDate) + 7);
         case "day":
-          return new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1);
+          return new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() + 1);
       }
     })()
   );
 
-  let [days, amountOfRows, processedEvents] = $derived((() => {
-      // Date calculation
-      const firstDayOfWeek = getDayIndex(startDate);
+  let [days, amountOfRows, processedEvents] = $derived.by(() => {
+    // Date calculation
+    const firstDayOfWeek = getDayIndex(startDate);
 
-      const amountOfColumns = view === "day" ? 1 : 7;
-      const amountOfRows = 
-        view === "month" ?
-        settings.userSettings[UserSettingKeys.DynamicCalendarRows] ?
-        Math.ceil((endDate.getDate() + firstDayOfWeek) / amountOfColumns)
-        : 6
-        : 1;
+    const amountOfColumns = view === "day" ? 1 : 7;
+    const amountOfRows = 
+      view === "month" ?
+      settings.userSettings[UserSettingKeys.DynamicCalendarRows] ?
+      Math.ceil((endDate.getDate() + firstDayOfWeek) / amountOfColumns)
+      : 6
+      : 1;
 
-      const firstViewDay = new Date(startDate);
-      if (view === "month") firstViewDay.setDate(startDate.getDate() - firstDayOfWeek);
-      const lastViewDay = new Date(endDate);
-      if (view === "month") lastViewDay.setDate(firstViewDay.getDate() + amountOfColumns * amountOfRows - 1);
-      const nextViewDay = new Date(lastViewDay);
-      nextViewDay.setDate(nextViewDay.getDate() + 1);
+    const firstViewDay = new Date(startDate);
+    if (view === "month") firstViewDay.setDate(startDate.getDate() - firstDayOfWeek);
+    const lastViewDay = new Date(endDate);
+    if (view === "month") lastViewDay.setDate(firstViewDay.getDate() + amountOfColumns * amountOfRows - 1);
+    const nextViewDay = new Date(lastViewDay);
+    nextViewDay.setDate(nextViewDay.getDate() + 1);
 
-      // Event pre-processing
-      const filteredEvents = events.filter(e => e.date.end.getTime() >= firstViewDay.getTime() && e.date.start.getTime() < nextViewDay.getTime());
-      filteredEvents.sort(compareEventsByStartDate);
+    // Event pre-processing
+    const filteredEvents = events.filter(e => e.date.end.getTime() >= firstViewDay.getTime() && e.date.start.getTime() < nextViewDay.getTime());
+    filteredEvents.sort(compareEventsByStartDate);
 
-      // Fill
-      const days: Date[] = [];
-      const processedEvents: (EventModel | null)[][] = [];
+    // Fill
+    const days: Date[] = [];
+    const processedEvents: (EventModel | null)[][] = [];
 
-      const dateIterator = new Date(firstViewDay);
-      let eventIterator = 0;
+    const dateIterator = new Date(firstViewDay);
+    let eventIterator = 0;
 
-      // Long events from previous view should be added to the current view
-      const pastViewEvents = [];
-      while (eventIterator < filteredEvents.length && filteredEvents[eventIterator].date.start.getTime() < dateIterator.getTime()) {
-        pastViewEvents.push(filteredEvents[eventIterator]);
+    // Long events from previous view should be added to the current view
+    const pastViewEvents = [];
+    while (eventIterator < filteredEvents.length && filteredEvents[eventIterator].date.start.getTime() < dateIterator.getTime()) {
+      pastViewEvents.push(filteredEvents[eventIterator]);
+      eventIterator++;
+    }
+
+    for (let i = 0; i < amountOfColumns * amountOfRows; i++) {
+      // Copy events from previous day and remove whichever are over
+      const dayEvents =
+        i == 0
+          ? pastViewEvents
+          : processedEvents[i - 1]
+            .map(
+              e => e === null || e.date.end.getTime() <= dateIterator.getTime()
+                ? null
+                : e
+            );
+            
+      
+      days.push(new Date(dateIterator));
+      dateIterator.setDate(dateIterator.getDate() + 1);
+      
+      // Fit new events in fitting slots
+      let emptyIterator = 0;
+      while (
+        eventIterator < filteredEvents.length &&
+        filteredEvents[eventIterator].date.start.getTime() < dateIterator.getTime() &&
+        filteredEvents[eventIterator].date.start.getTime() >= days[days.length - 1].getTime()
+      ) {
+        while (emptyIterator < dayEvents.length && dayEvents[emptyIterator] != null) emptyIterator++;
+        if (emptyIterator < dayEvents.length) dayEvents[emptyIterator] = filteredEvents[eventIterator];
+        else dayEvents.push(filteredEvents[eventIterator]);
+        emptyIterator++;
         eventIterator++;
       }
 
-      for (let i = 0; i < amountOfColumns * amountOfRows; i++) {
-        // Copy events from previous day and remove whichever are over
-        const dayEvents =
-          i == 0
-            ? pastViewEvents
-            : processedEvents[i - 1]
-              .map(
-                e => e === null || e.date.end.getTime() <= dateIterator.getTime()
-                  ? null
-                  : e
-              );
-              
-        
-        days.push(new Date(dateIterator));
-        dateIterator.setDate(dateIterator.getDate() + 1);
-        
-        // Fit new events in fitting slots
-        let emptyIterator = 0;
-        while (
-          eventIterator < filteredEvents.length &&
-          filteredEvents[eventIterator].date.start.getTime() < dateIterator.getTime() &&
-          filteredEvents[eventIterator].date.start.getTime() >= days[days.length - 1].getTime()
-        ) {
-          while (emptyIterator < dayEvents.length && dayEvents[emptyIterator] != null) emptyIterator++;
-          if (emptyIterator < dayEvents.length) dayEvents[emptyIterator] = filteredEvents[eventIterator];
-          else dayEvents.push(filteredEvents[eventIterator]);
-          emptyIterator++;
-          eventIterator++;
-        }
+      // Remove unnecessary nulls
+      while(dayEvents.length > 0 && dayEvents[dayEvents.length - 1] == null) dayEvents.pop();
+      processedEvents.push(dayEvents);
+    }
 
-        // Remove unnecessary nulls
-        while(dayEvents.length > 0 && dayEvents[dayEvents.length - 1] == null) dayEvents.pop();
-        processedEvents.push(dayEvents);
-      }
-
-      return [days, amountOfRows, processedEvents];
-  })());
+    return [days, amountOfRows, processedEvents];
+  });
 
   let containerHeight: number = $state(0);
   // TODO: figure out how to do this without hard-coded values
@@ -170,7 +180,17 @@
     padding-left: calc(1.7em + dimensions.$gapSmaller);
   }
 
+  div.monthAnimation {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+  }
+
   div.days {
+    position: absolute;
+    width: 100%;
+    height: 100%;
     display: grid;
     gap: 0;
     flex-grow: 1;
@@ -254,26 +274,32 @@
 </div>
 
 {#snippet daysGrid()}
-  <div
-    class="days"
-    style="grid-template-rows: repeat({amountOfRows}, 1fr)"
-    class:columns-month={view === "month"}
-    class:columns-week={view === "week"}
-    class:columns-day={view === "day"}
-  >
-    {#each days as day, i}
-      <Day
-        date={day}
-        isCurrentMonth={day.getMonth() === date.getMonth()} 
-        events={processedEvents[i]}
-        isFirstDay={i == 0}
-        isToday={isSameDay(day, today)}
-        maxEvents={maxEvents}
-        bind:containerHeight={containerHeight}
-        view={view}
-        showMore={showMore}
+  <div class="monthAnimation">
+    {#each [ days ] as currentDays (currentDays[0].getTime())}
+      <div
+        class="days"
+        style="grid-template-rows: repeat({amountOfRows}, 1fr)"
+        class:columns-month={view === "month"}
+        class:columns-week={view === "week"}
+        class:columns-day={view === "day"}
+        in:svelteFlyInHorizontal={{duration: 500}}
+        out:svelteFlyOutHorizontal={{duration: 500}}
       >
-      </Day>
+        {#each currentDays as day, i}
+          <Day
+            date={day}
+            isCurrentMonth={day.getMonth() === date.getMonth()} 
+            events={processedEvents[i]}
+            isFirstDay={i == 0}
+            isToday={isSameDay(day, today)}
+            maxEvents={maxEvents}
+            bind:containerHeight={containerHeight}
+            view={view}
+            showMore={showMore}
+          >
+          </Day>
+        {/each}
+      </div>
     {/each}
   </div>
 {/snippet}

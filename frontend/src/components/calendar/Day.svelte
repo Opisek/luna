@@ -7,9 +7,6 @@
 
   import { queueNotification } from "$lib/client/notifications";
   import { NoOp } from "$lib/client/placeholders";
-  import { flip } from "svelte/animate";
-  import { fly } from "svelte/transition";
-  import { getDayIndex } from "$lib/common/date";
   import { ColorKeys } from "../../types/colors";
 
   interface Props {
@@ -160,9 +157,9 @@
     opacity: 0.5;
   }
 
-  div.eventAnimation.hidden {
-    display: none;
-  }
+  //div.eventAnimation.hidden {
+  //  display: none;
+  //}
 </style>
 
 <div class="day">
@@ -197,14 +194,14 @@
 
   {#each events as event, i ((event?.id || i).toString() + date.getTime())}
     <!-- TODO: make parameters match css, look into cubic easing, invert fly direction when going back in range -->
-    <div
+    <!--<div
       class="eventAnimation"
       animate:flip={{duration: 300, delay: 300}}
       in:fly={{duration: 300, x: 200}}
       out:fly={{duration: 300, x: -200}}
       style="z-index: {16 - getDayIndex(date)}"
       class:hidden={i >= actualMaxEvents}
-    >
+    >-->
       <Event
         event={event}
         isFirstDay={isFirstDay}
@@ -212,7 +209,7 @@
         visible={i < actualMaxEvents}
         view={view}
       />
-    </div>
+    <!--</div>-->
   {/each}
   {#if events.length > maxEvents && actualMaxEvents >= 0}
     <button class="more" class:otherMonth={!isCurrentMonth} onclick={() => showMore(date, events)}>
