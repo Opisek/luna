@@ -8,7 +8,7 @@
   import ToggleInput from '../../components/forms/ToggleInput.svelte';
   import { ColorKeys } from '../../types/colors';
 
-  import { beforeNavigate } from '$app/navigation';
+  import { afterNavigate } from '$app/navigation';
   import { page } from '$app/state';
 
   import { isValidEmail, isValidPassword, isValidRepeatPassword, isValidUsername, valid } from '$lib/client/validation';
@@ -20,19 +20,8 @@
 
   let { form = $bindable() }: Props = $props();
 
-  // TODO: easier way to prevent double notifications?
-  let alreadyShownError = $state(false);
-  $effect(() => {
-    ((form) => {
-      if (form?.error && !alreadyShownError) {
-        alreadyShownError = true;
-        queueNotification(ColorKeys.Danger, form.error);
-      }
-    })(form)
-  });
-  beforeNavigate(() => {
-    form = null;
-    alreadyShownError = false;
+  afterNavigate(() => {
+    if (form?.error) queueNotification(ColorKeys.Danger, form.error);
   });
 
   const redirect = $derived(page.url.searchParams.get('redirect') || "/");
