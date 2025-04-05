@@ -215,6 +215,7 @@
     style="
       background-color:{$currentlyHoveredEvent == event ? GetEventHoverColor(event) : GetEventColor(event)};
       width: calc({(showOnlyCircle ? 1 : remainingDaysThisWeek) * 100}% - {((isEventStart ? 1 : 0) + (eventEndsThisWeek ? 1 : 0)) * (showOnlyCircle ? 0 : 1)} * var(--gapBetweenDays));
+      z-index: {16 - getDayIndex(date)};
     "
   >
     {#if showOnlyCircle}
