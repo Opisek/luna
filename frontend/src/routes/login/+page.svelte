@@ -1,17 +1,18 @@
 <script lang="ts">
   import type { ActionData } from './$types';
 
-  import ToggleInput from '../../components/forms/ToggleInput.svelte';
   import Form from '../../components/forms/Form.svelte';
   import Link from '../../components/forms/Link.svelte';
+  import SimplePage from '../../components/layout/SimplePage.svelte';
   import TextInput from '../../components/forms/TextInput.svelte';
+  import ToggleInput from '../../components/forms/ToggleInput.svelte';
+  import { ColorKeys } from '../../types/colors';
 
   import { beforeNavigate } from '$app/navigation';
   import { page } from '$app/state';
 
   import { isValidPassword, isValidUsername, valid } from '$lib/client/validation';
   import { queueNotification } from '$lib/client/notifications';
-  import SimplePage from '../../components/layout/SimplePage.svelte';
 
   interface Props {
     form: ActionData;
