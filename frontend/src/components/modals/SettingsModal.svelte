@@ -228,6 +228,8 @@
     if (userDataSnapshot) settings.userData = await deepCopy(userDataSnapshot);
     if (userSettingsSnapshot) settings.userSettings = await deepCopy(userSettingsSnapshot);
     if (globalSettingsSnapshot) settings.globalSettings = await deepCopy(globalSettingsSnapshot);
+
+    refetchProfilePicture();
   }
 
   let saving = $state(false);
