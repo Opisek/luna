@@ -288,7 +288,7 @@
         {#each currentDays as day, i}
           <Day
             date={day}
-            isCurrentMonth={day.getMonth() === date.getMonth()} 
+            isCurrentMonth={day.getMonth() === currentDate.getMonth()} 
             events={processedEvents[i]}
             isFirstDay={i == 0}
             isToday={isSameDay(day, today)}
