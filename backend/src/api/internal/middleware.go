@@ -80,10 +80,14 @@ func RequestSetup(timeout time.Duration, database *db.Database, withTransaction 
 		ctx, cancel := context.WithTimeout(c.Request.Context(), timeout)
 		defer cancel()
 
+		// Timeout to be used by the database transaction (longer than usual timeout to allow for rollback)
+		dbCtx, dbCancel := context.WithTimeout(c.Request.Context(), timeout+10*time.Second)
+		defer dbCancel()
+
 		// If the request uses the database at all, we create a transaction for it.
 		var tx *db.Transaction
 		if withTransaction {
-			tx, responseErr = database.BeginTransaction(ctx)
+			tx, responseErr = database.BeginTransaction(dbCtx)
 			if responseErr != nil {
 				return
 			}
@@ -179,6 +183,14 @@ func RequestSetup(timeout time.Duration, database *db.Database, withTransaction 
 
 			if responseErr == nil {
 				responseErr = errors.New()
+			}
+
+			// Rollback if the database was used
+			if withTransaction {
+				rollbackErr := tx.Rollback(logger)
+				if rollbackErr != nil {
+					logger.Error(rollbackErr.Serialize(errors.LvlDebug))
+				}
 			}
 
 			if ctx.Err() == context.DeadlineExceeded {
