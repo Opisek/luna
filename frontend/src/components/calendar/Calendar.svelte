@@ -33,10 +33,12 @@
   setContext("currentlyClickedEvent", currentlyClickedEvent);
 
   /* Animation */
+  let viewIteration = $state(0);
   let currentDate = $state(new Date(date));
   $effect(() => {
     if (date.getTime() === currentDate.getTime()) return;
     setContext("calendarFlyDirection", currentDate.getTime() <= date.getTime() ? "left" : "right");
+    viewIteration++;
     currentDate = new Date(date);
   });
 
@@ -275,7 +277,7 @@
 
 {#snippet daysGrid()}
   <div class="monthAnimation">
-    {#each [ days ] as currentDays (currentDays[0].getTime())}
+    {#each [ days ] as currentDays (viewIteration)}
       <div
         class="days"
         style="grid-template-rows: repeat({amountOfRows}, 1fr)"
