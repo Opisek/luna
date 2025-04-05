@@ -38,6 +38,7 @@
 
 {#if href === ""}
   <button
+    type="button"
     onclick={onClick}
     use:focusIndicator={{ type: "underline", ignoreParent: true }}
   >
