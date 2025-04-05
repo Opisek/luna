@@ -133,7 +133,7 @@
   })());
 
   let containerHeight: number = $state(0);
-  // TODO: figure out how to do this without hard-codeds
+  // TODO: figure out how to do this without hard-coded values
   // 9: gap between events
   // 27: height of an event
   let maxEvents: number = $derived(containerHeight === 0 ? 0 : Math.max(Math.floor((containerHeight + 9) / 27), 0));
