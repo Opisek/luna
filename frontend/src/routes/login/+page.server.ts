@@ -18,6 +18,7 @@ export const actions = {
         httpOnly: false,
         maxAge: undefined as number | undefined,
         sameSite: "strict" as boolean | "strict" | "lax" | "none",
+        secure: !(process.env.PUBLIC_URL?.startsWith("http://") || false),
       };
 
       if (formData.get("remember") === "true") {
