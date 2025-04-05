@@ -1,6 +1,6 @@
-import { fail, redirect, type Actions } from "@sveltejs/kit";
+import { redirect, type Actions } from "@sveltejs/kit";
 
-import { COOKIE_MAX_AGE } from "$lib/server/constants";
+import { COOKIE_MAX_AGE } from "$lib/server/constants.server";
 import { callApi } from "$lib/server/api.server";
 import { getRedirectPage } from "$lib/common/parsing";
 
@@ -18,7 +18,7 @@ export const actions = {
       };
     }
 
-    const res = await callApi("register", { method: "POST", body: formData });
+    const res = await callApi(request, "register", { method: "POST", body: formData });
 
     if (res.ok) {
       const body = await res.json();

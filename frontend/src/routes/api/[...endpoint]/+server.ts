@@ -3,18 +3,8 @@ import type { RequestEvent } from "./$types";
 import { error } from "@sveltejs/kit";
 
 const proxy = (async ({ params, request, url }: RequestEvent) => {
-  // CSRF protection
-  if (request.method !== "GET" && request.method !== "HEAD") {
-    const origin = request.headers.get("Origin");
-    const publicUrl = process.env.PUBLIC_URL
-    if (publicUrl === null || publicUrl === undefined || publicUrl === "" || origin !== publicUrl) {
-    // @ts-ignore
-      return new error(403, { message: "Origin not allowed. Was PUBLIC_URL set correctly in the frontend?" });
-    }
-  }
-
   // API call to the backend
-  const response = await callApi(params.endpoint + url.search, request).catch((err) => {
+  const response = await callApi(request, params.endpoint + url.search, request).catch((err) => {
     let errorMessage = "Internal Server Error";
 
     if (err.cause && err.cause.code === "ECONNREFUSED") {
@@ -22,19 +12,8 @@ const proxy = (async ({ params, request, url }: RequestEvent) => {
     }
 
     // @ts-ignore
-    return new error(500, { message: errorMessage } );
+    return new error(err.status || 500, { message: errorMessage } );
   });
-
-  if (!response.ok) {
-    return response;
-  }
-
-  // CORS check
-  const corsHeader = response.headers.get("Access-Control-Allow-Origin")
-  if (corsHeader === null || corsHeader === undefined || corsHeader === "" || corsHeader === "*" || corsHeader !== process.env.PUBLIC_URL) {
-    // @ts-ignore
-    return new error(403, { message: "Unexpected CORS header. Was PUBLIC_URL set correctly in the backend?" });
-  }
 
   return response;
 })
