@@ -43,7 +43,6 @@ func run(api *util.Api) {
 	endpoints.GET("/health", handlers.GetHealth)
 
 	// everything past here requires the user to be logged in
-	noDatabaseAuthenticatedEndpoints := noDatabaseEndpoints.Group("", middleware.RequireAuth())
 	authenticatedEndpoints := endpoints.Group("", middleware.RequireAuth())
 	longRunningAuthenticatedEndpoints := longRunningEndpoints.Group("", middleware.RequireAuth())
 	administratorEndpoints := authenticatedEndpoints.Group("", middleware.RequireAdmin())
@@ -108,7 +107,7 @@ func run(api *util.Api) {
 	sessionEndpoints.DELETE("", handlers.NotImplemented)
 
 	// /api/* the rest
-	noDatabaseAuthenticatedEndpoints.POST("/url", handlers.CheckUrl)
+	authenticatedEndpoints.POST("/url", handlers.CheckUrl)
 
 	// Run the server
 	router.Run(fmt.Sprintf(":%d", api.CommonConfig.Env.API_PORT))
