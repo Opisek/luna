@@ -270,6 +270,10 @@
   }
 </style>
 
+<svelte:window
+  onresize={recalculateBackgroundPercentage}
+/>
+
 <Label name={name}>{title}</Label>
 <div class="container"
   onmousedown={mouseDown}
