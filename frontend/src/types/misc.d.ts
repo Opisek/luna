@@ -1,5 +1,5 @@
 type FocusIndicatorSettings = {
-  type: "bar" | "underline";
+  type: "bar" | "underline" | "custom";
   ignoreParent?: boolean;
 }
 

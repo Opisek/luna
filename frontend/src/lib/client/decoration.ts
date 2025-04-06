@@ -13,20 +13,6 @@ export const addRipple = (e: MouseEvent, addToParent: boolean = true) => {
   mount(Ripple, { target: addToParent ? parent : e.target as HTMLElement, props: { event: e, parent: parent } });
 }
 
-//export const removeRipple = (e: MouseEvent) => {
-//  if (!e.target) return;
-//
-//  const parent = e.target as HTMLElement;
-//
-//  const ripple = parent.querySelector(".ripple");
-//
-//  if (ripple) {
-//    ripple.remove();
-//  }
-//
-//  return;
-//}
-
 export const focusIndicator = (node: HTMLElement, settings: FocusIndicatorSettings = { type: "bar" }) => {
   const mouseDown = () => {
     node.classList.add("clicked");
@@ -46,6 +32,8 @@ export const focusIndicator = (node: HTMLElement, settings: FocusIndicatorSettin
       break;
     case "underline":
       mount(UnderlineFocusIndicator, { target: node });
+      break;
+    case "custom":
       break;
   }
 

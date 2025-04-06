@@ -1,5 +1,7 @@
 <script lang="ts">
   import { browser } from "$app/environment";
+  import { untrack } from "svelte";
+  import { focusIndicator } from "../../lib/client/decoration";
   import Label from "./Label.svelte";
 
   interface Props {
@@ -9,7 +11,6 @@
     max?: number;
     step?: number | number[];
 
-    transform?: (number: number) => number;
     detentTransform?: (number: number) => string;
 
     title: string;
@@ -22,7 +23,6 @@
     max = 100,
     step = 1,
 
-    transform = (number: number) => number,
     detentTransform = (number: number) => `${(number - min) / (max-min) * 100}%`,
 
     title,
@@ -48,7 +48,6 @@
       return rawValue;
     }
   });
-  let transformedValue = $derived(transform(steppedValue));
 
   let slider = $state<HTMLDivElement | null>(null);
   let handle = $state<HTMLDivElement | null>(null);
@@ -62,6 +61,7 @@
     if (!slider) return;
     if (!browser) return;
 
+    slider.parentElement?.focus();
     window.addEventListener("mousemove", adjustValue);
     window.addEventListener("mouseup", mouseUp, { once: true });
 
@@ -72,10 +72,10 @@
     adjustValue(e);
     const percentualChange = Math.abs((rawValue - oldValue) / (max - min));
     if (percentualChange < 0.2) animationMultiplier = 0.2;
-    else rawValue = transformedValue;
+    else rawValue = steppedValue;
     setTimeout(() => {
       if (mouseDownSince == 0) return;
-      if (rawValue != transformedValue) return;
+      if (rawValue != steppedValue) return;
       adjustValue(e);
     }, 150);
   }
@@ -85,8 +85,8 @@
     adjustValue(e);
     mouseDownFor = 0;
     mouseDownSince = 0 ;
-    rawValue = transformedValue;
-    value = transformedValue;
+    rawValue = steppedValue;
+    value = steppedValue;
   }
   function adjustValue(e: MouseEvent) {
     if (!slider || !handle) return;
@@ -100,12 +100,46 @@
     const newValue = min + (max - min) * percent;
     rawValue = Math.max(min, Math.min(max, newValue));
   }
+  function keyPress(e: KeyboardEvent) {
+    switch (e.key) {
+      case "ArrowLeft":
+        if (rawValue - steppedValue > 0.0001) {
+          rawValue = steppedValue;
+        } else if (typeof step === "number" && step > 0) {
+          rawValue = Math.max(min, rawValue - step);
+        } else if (Array.isArray(step) && step.length > 0) {
+          let currentIndex = step.findIndex((s) => s == rawValue);
+          rawValue = step[Math.max(currentIndex - 1, 0)];
+        } else {
+          rawValue = Math.max(min, rawValue - 1);
+        }
+        break;
+      case "ArrowRight":
+        if (steppedValue - rawValue > 0.0001) {
+          rawValue = steppedValue;
+        } else if (typeof step === "number" && step > 0) {
+          rawValue = Math.min(max, rawValue + step);
+        } else if (Array.isArray(step) && step.length > 0) {
+          let currentIndex = step.findIndex((s) => s == rawValue);
+          rawValue = step[Math.min(currentIndex + 1, step.length - 1)];
+        } else {
+          rawValue = Math.min(max, rawValue + 1);
+        }
+        break;
+      case "Home":
+        rawValue = min;
+        break;
+      case "End":
+        rawValue = max;
+        break;
+    }
+    value = steppedValue;
+  }
 
   let backgroundPercentage = $state(0);
   let backgroundPertentageInterval = $state<ReturnType<typeof setInterval> | null>(null);
   function recalculateBackgroundPercentage() {
     if (!slider || !handle) return 0;
-    rawValue;
     const sliderRect = slider.getBoundingClientRect();
     const handleRect = handle.getBoundingClientRect();
     const handleCenter = handleRect.left + handleRect.width / 2;
@@ -128,6 +162,13 @@
     // @ts-ignore
     rawValue, value, recalculateBackgroundPercentage();
   });
+  $effect(() => {
+    // @ts-ignore
+    value, untrack(() => {
+      if (value != rawValue && value != steppedValue) rawValue = value;
+      recalculateBackgroundPercentage();
+    });
+  })
 </script>
 
 <style lang="scss">
@@ -138,6 +179,7 @@
 
   div.container {
     --barSize: 0.4em;
+    --barSizeFocus: 0.7em;
     --handleSize: 1em;
     --detentSize: 1em;
     --detentWidth: 0.2em;
@@ -154,6 +196,7 @@
     position: relative;
 
     cursor: pointer;
+    outline: 0 !important;
   }
 
   input {
@@ -166,7 +209,9 @@
     border-radius: calc(var(--barSize) / 2);
     position: absolute;
     pointer-events: none;
-    top: calc(var(--detentSize) / 2 - var(--barSize) / 2);
+    margin-top: calc(var(--barSize) / -2);
+    top: 50%;
+    transition: height animations.$animationSpeedFast linear, margin-top animations.$animationSpeedFast linear, border-radius animations.$animationSpeedFast linear;
   }
 
   div.handle {
@@ -216,16 +261,22 @@
   div.detent:last-child span {
     margin-right: -1em !important;
   }
+
+  .container:focus-within:not(:global(.clicked)) > .slider {
+    --barSize: var(--barSizeFocus);
+  }
 </style>
 
 <Label name={name}>{title}</Label>
 <div class="container"
   onmousedown={mouseDown}
+  onkeydown={keyPress}
   tabindex="0"
   role="slider"
   aria-valuemin={min}
-  aria-valuenow={transformedValue}
+  aria-valuenow={steppedValue}
   aria-valuemax={max}
+  use:focusIndicator={{ type: "custom" }}
 >
   <input type="hidden" name={name} bind:value={rawValue} />
   {#if step != 0}
@@ -248,17 +299,16 @@
   <div class="slider"
     bind:this={slider}
     style="background: linear-gradient(to right, var(--backgroundFilled) {backgroundPercentage}%, var(--backgroundBase) {backgroundPercentage}%);"
+  ></div>
+  <div class="handle"
+    bind:this={handle}
+    ontransitionstart={transitionStart}
+    ontransitionend={transitionEnd}
+    ontransitioncancel={transitionEnd}
+    style={`
+      transition: left max(${mouseDownSince == 0 ? animationLength : animationMultiplier * (animationLength - mouseDownFor)}s, 0s) ease-in-out;
+      left: calc((100% - var(--handleSize)) * ${(rawValue - min) / (max - min)});
+    `}
   >
-    <div class="handle"
-      bind:this={handle}
-      ontransitionstart={transitionStart}
-      ontransitionend={transitionEnd}
-      ontransitioncancel={transitionEnd}
-      style={`
-        transition: left max(${mouseDownSince == 0 ? animationLength : animationMultiplier * (animationLength - mouseDownFor)}s, 0s) ease-in-out;
-        left: calc((100% - var(--handleSize)) * ${(rawValue - min) / (max - min)});
-      `}
-    >
-    </div>
   </div>
 </div>

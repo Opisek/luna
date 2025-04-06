@@ -379,7 +379,7 @@
       bind:value={selectedCategory}
       options={settings.userData.admin ? categoriesAdmin : categories} 
     />
-    <main>
+    <main tabindex="-1">
       {#if selectedCategory === "account"}
         <TextInput
           name="username"
