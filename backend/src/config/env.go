@@ -25,6 +25,8 @@ type Environmental struct {
 
 	REQUEST_TIMEOUT_DEFAULT        time.Duration
 	REQUEST_TIMEOUT_AUTHENTICATION time.Duration
+
+	DEVELOPMENT bool
 }
 
 var defaultEnv = Environmental{
@@ -32,6 +34,7 @@ var defaultEnv = Environmental{
 	API_PORT:                       3000,
 	REQUEST_TIMEOUT_DEFAULT:        5 * time.Second,
 	REQUEST_TIMEOUT_AUTHENTICATION: 30 * time.Second,
+	DEVELOPMENT:                    false,
 }
 
 func ParseEnvironmental(logger *logrus.Entry) (Environmental, error) {
@@ -39,7 +42,7 @@ func ParseEnvironmental(logger *logrus.Entry) (Environmental, error) {
 
 	err := godotenv.Load()
 	if err != nil {
-		logger.Warnf("could not load .env file: %v", err)
+		logger.Infof("could not load .env file: %v", err)
 	}
 
 	reflected := reflect.Indirect(reflect.ValueOf(&env))
@@ -51,7 +54,7 @@ func ParseEnvironmental(logger *logrus.Entry) (Environmental, error) {
 		fieldValueRaw := os.Getenv(fieldName)
 
 		if fieldValueRaw == "" {
-			if reflected.Field(i).IsZero() {
+			if reflected.Field(i).IsZero() && fieldType != "bool" {
 				err := fmt.Errorf("environmental variable %v is missing", fieldName)
 				return env, err
 			} else {
@@ -78,6 +81,13 @@ func ParseEnvironmental(logger *logrus.Entry) (Environmental, error) {
 			}
 			duration := time.Duration(fieldValue * uint64(time.Second))
 			reflected.Field(i).SetInt(duration.Nanoseconds())
+		case "bool":
+			fieldValue, err := strconv.ParseBool(fieldValueRaw)
+			if err != nil {
+				err := fmt.Errorf("environmental variable %v is malformed", fieldName)
+				return env, err
+			}
+			reflected.Field(i).SetBool(fieldValue)
 		default:
 			err := fmt.Errorf("unsupported type %v for environmental variable %v", fieldType, fieldName)
 			return env, err

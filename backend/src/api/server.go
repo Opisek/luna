@@ -17,7 +17,13 @@ func NewApi(db *db.Database, commonConfig *config.CommonConfig, logger *logrus.E
 }
 
 func run(api *util.Api) {
+	if api.CommonConfig.Env.DEVELOPMENT {
+		gin.SetMode(gin.DebugMode)
+	} else {
+		gin.SetMode(gin.ReleaseMode)
+	}
 	router := gin.Default()
+	router.SetTrustedProxies([]string{"127.0.0.1", "localhost", "::1", "192.168.0.0/16", "172.16.0.0/12", "172.17.0.0/16", "172.18.0.0/16", "10.0.0.8/8"})
 	rawEndpoints := router.Group("/api")
 
 	// /api/* (with no transactions)
