@@ -51,6 +51,7 @@
 
   let slider = $state<HTMLDivElement | null>(null);
   let handle = $state<HTMLDivElement | null>(null);
+  let exampleDetent = $state<HTMLSpanElement | null>(null);
 
   let animationLength = 0.25;
   let animationMultiplier = $state(1);
@@ -144,6 +145,7 @@
     const handleRect = handle.getBoundingClientRect();
     const handleCenter = handleRect.left + handleRect.width / 2;
     backgroundPercentage =  ((handleCenter - sliderRect.left) / sliderRect.width) * 100
+    recalculateAllowedDetentCount();
   }
 
   function transitionStart() {
@@ -169,6 +171,13 @@
       recalculateBackgroundPercentage();
     });
   })
+
+  let detents = $derived(Array.isArray(step) ? step : Array.from({ length: Math.floor((max - min) / step) + 1 }, (_, i) => min + i * step));
+  let detentModulo = $state(1);
+  function recalculateAllowedDetentCount() {
+    const maxDetentCount = Math.floor((slider?.getBoundingClientRect().width || 0) / (exampleDetent?.getBoundingClientRect().width || 1) * 1.6)
+    detentModulo = Math.max(Math.ceil(detents.length / maxDetentCount), 1);
+  }
 </script>
 
 <style lang="scss">
@@ -253,6 +262,7 @@
     margin-left: -2em;
     margin-right: -2em;
     transform: translateX(0.5ch);
+    box-sizing: content-box;
   }
 
   .container:focus-within:not(:global(.clicked)) > .slider {
@@ -270,20 +280,27 @@
   aria-valuenow={steppedValue}
   aria-valuemax={max}
   use:focusIndicator={{ type: "custom" }}
+  onresize={recalculateAllowedDetentCount}
 >
   <input type="hidden" name={name} bind:value={rawValue} />
   {#if step != 0}
-    {@const detents = Array.isArray(step) ? step : Array.from({ length: Math.floor((max - min) / step) + 1 }, (_, i) => min + i * step)}
-    {@const showAllDetentLabels = detents.length <= 7}
+    {@const centerIndex = Math.floor((detents.length - 1) / 2)}
     <div class="detents">
       {#each detents as detent, i}
+        {@const offsetFromCenter = Math.abs(i - centerIndex)}
         <div class="detent"
           style="left: calc(({(detent - min) / (max - min) * 100}%));"
         >
-          {#if i == 0 || i == detents.length - 1 || showAllDetentLabels || i % 2 == 0}
-            <span>
-              {detentTransform(detent)}
-            </span>
+          {#if offsetFromCenter % detentModulo == 0}
+            {#if i == centerIndex}
+              <span bind:this={exampleDetent}>
+                {detentTransform(detent)}
+              </span>
+            {:else}
+              <span>
+                {detentTransform(detent)}
+              </span>
+            {/if}
           {/if}
         </div>
       {/each}
