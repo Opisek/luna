@@ -139,6 +139,13 @@ func init() {
 			return tr
 		}
 
+		err = q.Tables.InitializeSessionsTable()
+		if err != nil {
+			return errors.New().
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlDebug, "Could not initialize sessions table")
+		}
+
 		return nil
 	})
 }
