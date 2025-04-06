@@ -83,7 +83,7 @@ func run(api *util.Api) {
 	fileEndpoints.GET("/:fileId", handlers.GetFile)
 	fileEndpoints.HEAD("/:fileId", handlers.GetFile)
 
-	// /api/settings
+	// /api/settings/*
 	userSettingsEndpoints := userEndpoints.Group("/:userId/settings")
 	userSettingsEndpoints.GET("", handlers.GetUserSettings)
 	userSettingsEndpoints.GET("/:settingKey", handlers.GetUserSetting)
@@ -99,7 +99,7 @@ func run(api *util.Api) {
 	globalSettingsEndpoints.DELETE("", handlers.ResetGlobalSettings)
 	globalSettingsEndpoints.DELETE("/:settingKey", handlers.ResetGlobalSetting)
 
-	// /api/sessions
+	// /api/sessions/*
 	sessionEndpoints := authenticatedEndpoints.Group("/sessions")
 	sessionEndpoints.GET("", handlers.NotImplemented)
 	sessionEndpoints.PUT("", handlers.NotImplemented)
