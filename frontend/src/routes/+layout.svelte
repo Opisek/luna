@@ -66,7 +66,7 @@
     const root = document.documentElement;
     root.setAttribute("data-style-rounded-corners", settings.userSettings[UserSettingKeys.DisplayRoundedCorners] ? "true" : "false");
     root.setAttribute("data-theme", theme.isLightMode() ? "light" : "dark");
-    root.setAttribute("data-ui-scaling", (settings.userSettings[UserSettingKeys.UiScaling] * 100).toString());
+    root.setAttribute("data-ui-scaling", (Math.round(settings.userSettings[UserSettingKeys.UiScaling] * 100)).toString());
   })
 
   afterNavigate(() => {
