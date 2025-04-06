@@ -6,13 +6,13 @@ func (q *Tables) InitializeSessionsTable() error {
 	_, err := q.Tx.Exec(
 		q.Context,
 		`
-		CREATE TABLE IF NOT EXISTS passwords (
+		CREATE TABLE sessions (
 			sessionid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 			userid UUID REFERENCES users(id) ON DELETE CASCADE,
 			created_at TIMESTAMP NOT NULL DEFAULT NOW(),
 			last_seen TIMESTAMP NOT NULL DEFAULT NOW(),
 			user_agent TEXT,
-			is_api BOOLEAN DEFAULT FALSE,
+			is_api BOOLEAN DEFAULT FALSE
 		);
 		`,
 	)

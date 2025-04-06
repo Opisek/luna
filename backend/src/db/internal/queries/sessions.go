@@ -20,8 +20,8 @@ func (q *Queries) InsertSession(session *types.Session) *errors.ErrorTrace {
 	`
 
 	err := q.Tx.
-		QueryRow(q.Context, query, session.User.UUID(), session.UserAgent, session.IsApi).
-		Scan(&session.Id, &session.CreatedAt, &session.LastSeen)
+		QueryRow(q.Context, query, session.UserId.UUID(), session.UserAgent, session.IsApi).
+		Scan(&session.SessionId, &session.CreatedAt, &session.LastSeen)
 
 	if err != nil {
 		return errors.New().Status(http.StatusInternalServerError).

@@ -11,7 +11,7 @@ func (q *Tables) InitializeCalendarsTable() error {
 	_, err = q.Tx.Exec(
 		q.Context,
 		`
-		CREATE TABLE IF NOT EXISTS calendars (
+		CREATE TABLE calendars (
 			id UUID PRIMARY KEY,
 			source UUID REFERENCES sources(id) ON DELETE CASCADE,
 			settings JSONB NOT NULL
@@ -31,7 +31,7 @@ func (q *Tables) InitializeCalendarOverridesTable() error {
 	_, err = q.Tx.Exec(
 		q.Context,
 		`
-		CREATE TABLE IF NOT EXISTS calendar_overrides (
+		CREATE TABLE calendar_overrides (
 			calendarid UUID UNIQUE REFERENCES calendars(id) ON DELETE CASCADE,
 			title TEXT,
 			description TEXT,

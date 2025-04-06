@@ -11,7 +11,7 @@ func (q *Tables) InitializeFilecacheTable() error {
 	_, err = q.Tx.Exec(
 		q.Context,
 		`
-		CREATE TABLE IF NOT EXISTS filecache (
+		CREATE TABLE filecache (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 			date TIMESTAMP NOT NULL,
 			name TEXT NOT NULL,

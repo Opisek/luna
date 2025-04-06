@@ -15,7 +15,7 @@ func (q *Tables) InitializeUserSettingsTable() error {
 	_, err := q.Tx.Exec(
 		q.Context,
 		`
-		CREATE TABLE IF NOT EXISTS user_settings (
+		CREATE TABLE user_settings (
 			userid UUID REFERENCES users(id) ON DELETE CASCADE,
 			key VARCHAR(64) NOT NULL,
 			value JSONB NOT NULL,
@@ -33,7 +33,7 @@ func (q *Tables) InitializeGlobalSettingsTable() error {
 	_, err := q.Tx.Exec(
 		q.Context,
 		`
-		CREATE TABLE IF NOT EXISTS global_settings (
+		CREATE TABLE global_settings (
 			key VARCHAR(64) PRIMARY KEY,
 			value JSONB NOT NULL
 		);

@@ -6,7 +6,7 @@ func (q *Tables) InitializePasswordsTable() error {
 	_, err := q.Tx.Exec(
 		q.Context,
 		`
-		CREATE TABLE IF NOT EXISTS passwords (
+		CREATE TABLE passwords (
 			userid UUID UNIQUE REFERENCES users(id) ON DELETE CASCADE,
 			hash BYTEA NOT NULL,
 			salt BYTEA NOT NULL,

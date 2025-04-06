@@ -104,8 +104,22 @@ func Login(c *gin.Context) {
 		}
 	}
 
+	// Create new session
+	session := &types.Session{
+		UserId:    userId,
+		UserAgent: c.Request.UserAgent(),
+		IsApi:     false,
+	}
+	err = u.Tx.Queries().InsertSession(session)
+	if err != nil {
+		u.Error(err.
+			Append(errors.LvlBroad, "Could not log in"),
+		)
+		return
+	}
+
 	// Generate the token
-	token, err := auth.NewToken(u.Config, userId)
+	token, err := auth.NewToken(u.Config, u.Tx, userId, session.SessionId)
 	if err != nil {
 		u.Error(err.
 			Append(errors.LvlWordy, "Could not generate token").
@@ -212,8 +226,22 @@ func Register(c *gin.Context) {
 		return
 	}
 
+	// Create new session
+	session := &types.Session{
+		UserId:    userId,
+		UserAgent: c.Request.UserAgent(),
+		IsApi:     false,
+	}
+	err = u.Tx.Queries().InsertSession(session)
+	if err != nil {
+		u.Error(err.
+			Append(errors.LvlBroad, "Could not register"),
+		)
+		return
+	}
+
 	// Generate the token
-	token, err := auth.NewToken(u.Config, userId)
+	token, err := auth.NewToken(u.Config, u.Tx, userId, session.SessionId)
 	if err != nil {
 		u.Error(err.
 			Append(errors.LvlWordy, "Could not generate token").

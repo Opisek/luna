@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/mileusna/useragent"
 	"github.com/sirupsen/logrus"
 )
 
@@ -229,9 +230,29 @@ func RequireAuth() gin.HandlerFunc {
 			token = cookieToken
 		}
 
+		// Parse the token => Verifies that it was signed by the server
 		parsedToken, err := auth.ParseToken(u.Config, token)
 		if err != nil {
 			u.Error(err)
+			c.Abort()
+			return
+		}
+
+		// Find the session in the database => Verifies that the session has not been revoked and that the user exists
+		session, err := u.Tx.Queries().GetSessionAndUpdateLastSeen(parsedToken.UserId, parsedToken.SessionId)
+		if err != nil {
+			u.Error(err)
+			c.Abort()
+			return
+		}
+
+		// Compare the user agents => Verifies that the token was not stolen and used from another device (not a 100% guarantee)
+		associatedUserAgent := useragent.Parse(session.UserAgent)
+		currentUserAgent := useragent.Parse(c.Request.UserAgent())
+		if associatedUserAgent.OS != currentUserAgent.OS || associatedUserAgent.Name != currentUserAgent.Name || associatedUserAgent.Device != currentUserAgent.Device {
+			u.Error(errors.New().Status(http.StatusUnauthorized).
+				Append(errors.LvlWordy, "User agent mismatch"),
+			)
 			c.Abort()
 			return
 		}

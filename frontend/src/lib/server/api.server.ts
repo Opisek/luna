@@ -10,6 +10,9 @@ export async function callApi(request: Request, endpoint: string, init?: Request
     }
   }
 
+  if (!init) init = {};
+  if (!init.headers) init.headers = [ [ "User-Agent", request.headers.get("User-Agent") || "" ] ];
+
   const response = await fetch(`${process.env.API_URL}/api/${endpoint}`, init).catch((error) => {
     throw error; // TODO: maybe format as return json(...) too?
   });
