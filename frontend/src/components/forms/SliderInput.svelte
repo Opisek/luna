@@ -194,6 +194,7 @@
     border-radius: calc(var(--detentWidth) / 2);
     height: 100%;
     margin-left: calc(var(--detentWidth) / -2);
+    pointer-events: none;
   }
 
   div.detent span {
