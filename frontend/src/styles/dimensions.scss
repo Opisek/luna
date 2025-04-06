@@ -4,38 +4,45 @@
   --borderRadiusLarge: 0;
 }
 
+@for $i from 10 through 30 {
+  :global(html[data-ui-scaling="#{$i * 5}"]) {
+    --uiScaling: #{$i / 20};
+  }
+}
+
 /* Multiplier */
-$multiplier: 1;
+$multiplier: var(--uiScaling, 1);
+$test: 1;
 
 /* Gaps */
-$gapTiny: 0.2em * $multiplier;
-$gapSmaller: 0.25em * $multiplier;
-$gapSmall: 0.5em * $multiplier;
-$gapMiddle: 0.75em * $multiplier;
-$gapLarge: 1em * $multiplier;
-$gapLarger: 2em * $multiplier;
+$gapTiny: 0.2em;
+$gapSmaller: 0.25em;
+$gapSmall: 0.5em;
+$gapMiddle: 0.75em;
+$gapLarge: 1em;
+$gapLarger: 2em;
 
 /* Border Radius */
-$borderRadiusSmall: calc(var(--borderRadiusSmall, .25em) * #{$multiplier});
-$borderRadius: calc(var(--borderRadius, .5em) * #{$multiplier});
-$borderRadiusLarge: calc(var(--borderRadiusLarge, 1em) * #{$multiplier});
+$borderRadiusSmall: var(--borderRadiusSmall, .25em);
+$borderRadius: var(--borderRadius, .5em);
+$borderRadiusLarge: var(--borderRadiusLarge, 1em);
 
 /* Navbar */
-$navbarHeight: 3em * $multiplier;
-$navbarHeightSmall: 2em * $multiplier;
+$navbarHeight: 3em;
+$navbarHeightSmall: 2em;
 
 /* Images */
-$imageHeightSmall: 3em * $multiplier;
-$imageHeight: 5em * $multiplier;
+$imageHeightSmall: 3em;
+$imageHeight: 5em;
 
 /* Blur */
-$blur: 0.15em * $multiplier;
+$blur: 0.15em;
 
 /* Lines */
-$borderWidth: .1em * $multiplier;
-$underlineWidth: .15em * $multiplier;
-$barFocusIndicatorWidth: .3em * $multiplier;
+$borderWidth: .1em;
+$underlineWidth: .15em;
+$barFocusIndicatorWidth: .3em;
 
 /* Buttons */
-$buttonMinWidth: 5em * $multiplier;
-$buttonMinWidthCompact: 3em * $multiplier
+$buttonMinWidth: 5em;
+$buttonMinWidthCompact: 3em;

@@ -7,6 +7,7 @@
   import { UserSettingKeys } from "../types/settings";
   import { afterNavigate } from "$app/navigation";
   import { getTheme } from "$lib/client/theme.svelte";
+  import type { NotificationModel } from "../types/notification";
 
   interface Props {
     children?: import('svelte').Snippet;
@@ -65,6 +66,7 @@
     const root = document.documentElement;
     root.setAttribute("data-style-rounded-corners", settings.userSettings[UserSettingKeys.DisplayRoundedCorners] ? "true" : "false");
     root.setAttribute("data-theme", theme.isLightMode() ? "light" : "dark");
+    root.setAttribute("data-ui-scaling", (settings.userSettings[UserSettingKeys.UiScaling] * 100).toString());
   })
 
   afterNavigate(() => {
@@ -106,6 +108,10 @@
     outline: 0;
     border: 0;
     overflow: visible;
+  }
+
+  :global(.lucide-icon) {
+    scale: var(--uiScaling, 1);
   }
 </style>
 

@@ -5,23 +5,23 @@ $fontFamilyText: "Atkinson Hyperlegible Next", sans-serif;
 $fontFamilyTime: "Atkinson Hyperlegible Mono", sans-serif;
 
 /* Font size */
-$fontSizeSmaller: 0.6rem * dimensions.$multiplier;
-$fontSizeSmall: 0.8rem * dimensions.$multiplier;
-$fontSize: 1rem * dimensions.$multiplier;
-$fontSizeLarge: 1.5rem * dimensions.$multiplier;
-$fontSizeLarger: 2rem * dimensions.$multiplier;
+$fontSizeSmaller: calc(0.6rem * #{dimensions.$multiplier});
+$fontSizeSmall: calc(0.8rem * #{dimensions.$multiplier});
+$fontSize: calc(1rem * #{dimensions.$multiplier});
+$fontSizeLarge: calc(1.5rem * #{dimensions.$multiplier});
+$fontSizeLarger: calc(2rem * #{dimensions.$multiplier});
 
 $fontSizeTitle: $fontSizeLarger;
 $fontSizeSubtitle: $fontSizeLarge;
 
 /* Font weight */
-$fontWeightLight: 300 * dimensions.$multiplier;
-$fontWeight: 400 * dimensions.$multiplier;
-$fontWeightSemiBold: 500 * dimensions.$multiplier;
-$fontWeightBold: 700 * dimensions.$multiplier;
-$fontWeightEmphasis: 350 * dimensions.$multiplier;
-$fontWeightTitle: 600 * dimensions.$multiplier;
+$fontWeightLight: calc(300 * #{dimensions.$multiplier});
+$fontWeight: calc(400 * #{dimensions.$multiplier});
+$fontWeightSemiBold: calc(500 * #{dimensions.$multiplier});
+$fontWeightBold: calc(700 * #{dimensions.$multiplier});
+$fontWeightEmphasis: calc(350 * #{dimensions.$multiplier});
+$fontWeightTitle: calc(600 * #{dimensions.$multiplier});
 
 /* Line height */
-$lineHeightParagraph: $fontSize * 1.4;
+$lineHeightParagraph: calc($fontSize * 1.4);
 

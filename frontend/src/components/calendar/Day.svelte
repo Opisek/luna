@@ -98,7 +98,7 @@
     aspect-ratio: 1 / 1;
     border-radius: dimensions.$borderRadius;
     left: calc(50% - 1.25 * 0.5 * #{text.$fontSize});
-    top: translateY(1.25 * 0.5 * text.$fontSize - #{dimensions.$gapSmall});
+    top: translateY(calc(1.25 * 0.5 * text.$fontSize - #{dimensions.$gapSmall}));
     z-index: -1;
   }
   span.add {

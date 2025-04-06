@@ -33,7 +33,7 @@
   button {
     all: unset;
 
-    width: 2 * text.$lineHeightParagraph;
+    width: calc(2 * text.$lineHeightParagraph);
     height: text.$lineHeightParagraph;
 
     position: relative;
@@ -44,7 +44,7 @@
 
     cursor: pointer;
 
-    border-radius: 0.5 * text.$lineHeightParagraph;
+    border-radius: calc(0.5 * text.$lineHeightParagraph);
     background-color: colors.$backgroundTertiary;
     overflow: hidden;
   }
@@ -62,7 +62,7 @@
     height: 100%;
 
     background-color: colors.$backgroundAccent;
-    border-radius: 0.5 * text.$lineHeightParagraph;
+    border-radius: calc(0.5 * text.$lineHeightParagraph);
 
     transition: transform animations.$animationSpeed;
 

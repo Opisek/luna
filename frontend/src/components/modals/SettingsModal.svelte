@@ -21,6 +21,7 @@
   import { queueNotification } from "$lib/client/notifications";
   import { ColorKeys } from "../../types/colors";
   import type { Option } from "../../types/options";
+  import SliderInput from "../forms/SliderInput.svelte";
 
   interface Props {
     showModal?: () => any;
@@ -336,7 +337,7 @@
     gap: dimensions.$gapMiddle;
     overflow-y: auto;
     overflow-x: hidden;
-    padding-right: calc(dimensions.$gapLarger);
+    padding-right: dimensions.$gapLarger;
     margin-right: -(dimensions.$gapLarger);
   }
 
@@ -515,6 +516,15 @@
           description="Rounded Corners"
           bind:value={settings.userSettings[UserSettingKeys.DisplayRoundedCorners]}
         />
+        <SliderInput
+          name={UserSettingKeys.UiScaling}
+          title="Scaling"
+          bind:value={settings.userSettings[UserSettingKeys.UiScaling]}
+          min={0.5}
+          max={1.5}
+          step={0.05}
+          detentTransform={(value) => `${Math.round(value * 100)}%`}
+        />
         <SelectInput
           name={UserSettingKeys.ThemeLight}
           placeholder="Light Theme"
@@ -545,7 +555,6 @@
             { name: "Atkinson Hyperlegible Mono", value: "Atkinson Hyperlegible Mono" }
           ]}
         />
-        TODO: scaling slider
       {:else if selectedCategory === "developer"}
         <ToggleInput
           name={UserSettingKeys.DebugMode}
