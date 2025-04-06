@@ -252,14 +252,7 @@
     text-align: center;
     margin-left: -2em;
     margin-right: -2em;
-  }
-
-  div.detent:first-child span {
-    margin-left: -1em !important;
-  }
-
-  div.detent:last-child span {
-    margin-right: -1em !important;
+    transform: translateX(0.5ch);
   }
 
   .container:focus-within:not(:global(.clicked)) > .slider {
