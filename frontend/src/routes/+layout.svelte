@@ -110,7 +110,7 @@
     overflow: visible;
   }
 
-  :global(.lucide-icon) {
+  :global(.lucide-icon, svg:has(title)) {
     scale: var(--uiScaling, 1);
   }
 </style>
