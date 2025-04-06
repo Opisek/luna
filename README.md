@@ -296,6 +296,32 @@ The description field is optional. Either the end date or the event duration is 
 - **Body**: Empty
 - **Purpose**: Reverts the requesting user's setting to its default value
 
+### Sessions
+#### Get Sessions
+- **Path**: ``/api/sessions``
+- **Method**: ``GET``
+- **Body**: Empty
+- **Purpose**: Returns all currently authorized session of the calling user
+
+#### Put Session
+- **Path**: `/api/sessions/<ID>``
+- **Method**: `PUT`
+- **Body**: `name`
+- **Purpose** Creates a return new API token
+
+#### Delete Session
+- **Path**: ``/api/sessions/<ID>``
+- **Method**: ``DELETE``
+- **Body**: Empty
+- **Purpose**: Unauthorizes a specific session
+- **Note**: The `<ID>` parameter can be set to `current` to refer to the currently used session.
+
+#### Delete Sessions
+- **Path**: ``/api/sessions``
+- **Method**: ``DELETE`
+- **Body**: Empty
+- **Purpose**: Unauthorizes all sessions of the calling user
+
 ### Miscellaneous
 #### URL Type Check
 - **Path**: ``/api/url``
@@ -308,4 +334,3 @@ Depending on the `auth_type` field, additional information may need to be passed
 - `basic`: `username`, `password`
 - `bearer`: `token`
 - `oauth`: Not yet implemented
-

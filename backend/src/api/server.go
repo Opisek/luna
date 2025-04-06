@@ -100,6 +100,13 @@ func run(api *util.Api) {
 	globalSettingsEndpoints.DELETE("", handlers.ResetGlobalSettings)
 	globalSettingsEndpoints.DELETE("/:settingKey", handlers.ResetGlobalSetting)
 
+	// /api/sessions
+	sessionEndpoints := authenticatedEndpoints.Group("/sessions")
+	sessionEndpoints.GET("", handlers.NotImplemented)
+	sessionEndpoints.PUT("", handlers.NotImplemented)
+	sessionEndpoints.DELETE("/:sessionId", handlers.NotImplemented)
+	sessionEndpoints.DELETE("", handlers.NotImplemented)
+
 	// /api/* the rest
 	noDatabaseAuthenticatedEndpoints.POST("/url", handlers.CheckUrl)
 
