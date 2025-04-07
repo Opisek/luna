@@ -143,6 +143,8 @@
   tabindex="0"
   onmouseenter={show}
   onmouseleave={hide}
+  onfocus={show}
+  onblur={hide}
   bind:this={icon}
 >
   {#if error}
