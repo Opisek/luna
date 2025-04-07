@@ -306,7 +306,7 @@ The description field is optional. Either the end date or the event duration is 
 #### Put Session
 - **Path**: `/api/sessions/<ID>``
 - **Method**: `PUT`
-- **Body**: `name`
+- **Body**: `name`, `password`
 - **Purpose** Creates a return new API token
 
 #### Delete Session

@@ -101,10 +101,10 @@ func run(api *util.Api) {
 
 	// /api/sessions/*
 	sessionEndpoints := authenticatedEndpoints.Group("/sessions")
-	sessionEndpoints.GET("", handlers.NotImplemented)
-	sessionEndpoints.PUT("", handlers.NotImplemented)
-	sessionEndpoints.DELETE("/:sessionId", handlers.NotImplemented)
-	sessionEndpoints.DELETE("", handlers.NotImplemented)
+	sessionEndpoints.GET("", handlers.GetSessions)
+	sessionEndpoints.PUT("", handlers.PutSession)
+	sessionEndpoints.DELETE("/:sessionId", handlers.DeleteSession)
+	sessionEndpoints.DELETE("", handlers.DeleteSessions)
 
 	// /api/* the rest
 	authenticatedEndpoints.POST("/url", handlers.CheckUrl)

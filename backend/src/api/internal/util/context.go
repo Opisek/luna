@@ -84,6 +84,10 @@ func GetUserId(c *gin.Context) types.ID {
 	return c.MustGet("user_id").(types.ID)
 }
 
+func GetSessionId(c *gin.Context) types.ID {
+	return c.MustGet("session_id").(types.ID)
+}
+
 func GetId(c *gin.Context, primitive string) (types.ID, *errors.ErrorTrace) {
 	rawId := c.Param(fmt.Sprintf("%sId", primitive))
 

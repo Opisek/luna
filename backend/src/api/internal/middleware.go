@@ -260,6 +260,7 @@ func RequireAuth() gin.HandlerFunc {
 		}
 
 		c.Set("user_id", parsedToken.UserId)
+		c.Set("session_id", parsedToken.SessionId)
 
 		c.Next()
 	}
