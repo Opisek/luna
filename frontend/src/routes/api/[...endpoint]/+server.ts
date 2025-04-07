@@ -2,9 +2,9 @@ import { callApi } from "../../../lib/server/api.server";
 import type { RequestEvent } from "./$types";
 import { error } from "@sveltejs/kit";
 
-const proxy = (async ({ params, request, url }: RequestEvent) => {
+const proxy = (async ({ params, request, url, getClientAddress }: RequestEvent) => {
   // API call to the backend
-  const response = await callApi(request, params.endpoint + url.search, request).catch((err) => {
+  const response = await callApi(request, getClientAddress(), params.endpoint + url.search, { method: request.method, body: request.body }).catch((err) => {
     let errorMessage = "Internal Server Error";
 
     if (err.cause && err.cause.code === "ECONNREFUSED") {

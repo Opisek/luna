@@ -67,13 +67,13 @@ Luna uses its own (UU)IDs for every resource accessed through it. Therefore, the
 
 - **Path**: ``/api/login``
 - **Method**: ``POST``
-- **Body**: `username`, `password`
+- **Body**: `username`, `password`, `remember`
 - **Purpose**: Returns an authorization token
 
 #### Register
 - **Path**: ``/api/register``
 - **Method**: ``POST``
-- **Body**: `username`, `password`, `email`
+- **Body**: `username`, `password`, `email`, `remember`
 - **Purpose**: Creates a new user
 
 #### Version

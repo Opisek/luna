@@ -1,6 +1,6 @@
 import { json } from "@sveltejs/kit";
 
-export async function callApi(request: Request, endpoint: string, init?: RequestInit): Promise<Response> {
+export async function callApi(request: Request, clientAddress: string, endpoint: string, init?: RequestInit): Promise<Response> {
   // CSRF protection
   if (request.method !== "GET" && request.method !== "HEAD") {
     const origin = request.headers.get("Origin");
@@ -10,8 +10,13 @@ export async function callApi(request: Request, endpoint: string, init?: Request
     }
   }
 
+  const originalHeaders: HeadersInit = [ ...request.headers ];
   if (!init) init = {};
-  if (!init.headers) init.headers = [ [ "User-Agent", request.headers.get("User-Agent") || "" ] ];
+  init.headers = [
+    ...originalHeaders.filter(entry => !["content-length", "content-type"].includes(entry[0].toLowerCase())),
+    [ "Accept", "application/json" ],
+    [ "X-Forwarded-For", clientAddress ],
+  ];
 
   const response = await fetch(`${process.env.API_URL}/api/${endpoint}`, init).catch((error) => {
     throw error; // TODO: maybe format as return json(...) too?

@@ -5,7 +5,7 @@ import { callApi } from "$lib/server/api.server";
 import { getRedirectPage } from "$lib/common/parsing";
 
 export const actions = {
-  default: async ({cookies, request}) => {
+  default: async ({cookies, request, getClientAddress}) => {
     const formData = await request.formData();
 
     const password = formData.get("password");
@@ -18,7 +18,7 @@ export const actions = {
       };
     }
 
-    const res = await callApi(request, "register", { method: "POST", body: formData });
+    const res = await callApi(request, getClientAddress(), "register", { method: "POST", body: formData });
 
     if (res.ok) {
       const body = await res.json();

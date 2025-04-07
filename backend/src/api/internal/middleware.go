@@ -246,15 +246,17 @@ func RequireAuth() gin.HandlerFunc {
 			return
 		}
 
-		// Compare the user agents => Verifies that the token was not stolen and used from another device (not a 100% guarantee)
-		associatedUserAgent := useragent.Parse(session.UserAgent)
-		currentUserAgent := useragent.Parse(c.Request.UserAgent())
-		if associatedUserAgent.OS != currentUserAgent.OS || associatedUserAgent.Name != currentUserAgent.Name || associatedUserAgent.Device != currentUserAgent.Device {
-			u.Error(errors.New().Status(http.StatusUnauthorized).
-				Append(errors.LvlWordy, "User agent mismatch"),
-			)
-			c.Abort()
-			return
+		if !session.IsApi {
+			// Compare the user agents => Verifies that the token was not stolen and used from another device (not a 100% guarantee)
+			associatedUserAgent := useragent.Parse(session.UserAgent)
+			currentUserAgent := useragent.Parse(c.Request.UserAgent())
+			if associatedUserAgent.OS != currentUserAgent.OS || associatedUserAgent.Name != currentUserAgent.Name || associatedUserAgent.Device != currentUserAgent.Device {
+				u.Error(errors.New().Status(http.StatusUnauthorized).
+					Append(errors.LvlWordy, "User agent mismatch"),
+				)
+				c.Abort()
+				return
+			}
 		}
 
 		c.Set("user_id", parsedToken.UserId)

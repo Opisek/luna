@@ -5,6 +5,7 @@ import (
 	"luna-backend/auth"
 	"luna-backend/errors"
 	"luna-backend/types"
+	"net"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -106,9 +107,11 @@ func Login(c *gin.Context) {
 
 	// Create new session
 	session := &types.Session{
-		UserId:    userId,
-		UserAgent: c.Request.UserAgent(),
-		IsApi:     false,
+		UserId:       userId,
+		UserAgent:    c.Request.UserAgent(),
+		IpAddress:    net.ParseIP(c.ClientIP()),
+		IsShortLived: c.PostForm("remember") != "true",
+		IsApi:        false,
 	}
 	err = u.Tx.Queries().InsertSession(session)
 	if err != nil {
@@ -228,9 +231,11 @@ func Register(c *gin.Context) {
 
 	// Create new session
 	session := &types.Session{
-		UserId:    userId,
-		UserAgent: c.Request.UserAgent(),
-		IsApi:     false,
+		UserId:       userId,
+		UserAgent:    c.Request.UserAgent(),
+		IpAddress:    net.ParseIP(c.ClientIP()),
+		IsShortLived: c.PostForm("remember") != "true",
+		IsApi:        false,
 	}
 	err = u.Tx.Queries().InsertSession(session)
 	if err != nil {
