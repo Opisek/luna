@@ -102,7 +102,7 @@ func hashPassword(password string, algInfo *types.PasswordEntry) ([]byte, *error
 				Append(errors.LvlDebug, "Missing keylen parameter")
 		}
 
-		return argon2.IDKey([]byte(password), algInfo.Salt, params.Memory, params.Time, params.Threads, params.KeyLen), nil
+		return argon2.IDKey([]byte(password), algInfo.Salt, params.Time, params.Memory, params.Threads, params.KeyLen), nil
 	default:
 		return nil, errors.New().Status(http.StatusInternalServerError).
 			Append(errors.LvlDebug, "Unknown algorithm")
