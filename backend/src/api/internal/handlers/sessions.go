@@ -132,7 +132,18 @@ func DeleteSessions(c *gin.Context) {
 
 	userId := util.GetUserId(c)
 
-	tr := u.Tx.Queries().DeleteSessions(userId)
+	var tr *errors.ErrorTrace
+	switch c.Query("type") {
+	case "all":
+		tr = u.Tx.Queries().DeleteSessions(userId)
+	case "api":
+		tr = u.Tx.Queries().DeleteApiSessions(userId)
+	case "user":
+		fallthrough
+	default:
+		tr = u.Tx.Queries().DeleteUserSessions(userId)
+	}
+
 	if tr != nil {
 		u.Error(tr)
 		return

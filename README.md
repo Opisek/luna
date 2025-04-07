@@ -317,10 +317,11 @@ The description field is optional. Either the end date or the event duration is 
 - **Note**: The `<ID>` parameter can be set to `current` to refer to the currently used session.
 
 #### Delete Sessions
-- **Path**: ``/api/sessions``
+- **Path**: ``/api/sessions?type=<TYPE>``
 - **Method**: ``DELETE`
 - **Body**: Empty
 - **Purpose**: Unauthorizes all sessions of the calling user
+- **Note**: The `<TYPE>` parametert should be set to `user`, `api`, or `all`, indicating which types of sessions should be revoked.
 
 ### Miscellaneous
 #### URL Type Check

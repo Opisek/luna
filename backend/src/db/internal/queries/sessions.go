@@ -130,6 +130,42 @@ func (q *Queries) DeleteSessions(userid types.ID) *errors.ErrorTrace {
 	return nil
 }
 
+func (q *Queries) DeleteUserSessions(userid types.ID) *errors.ErrorTrace {
+	query := `
+		DELETE FROM sessions
+		WHERE userid = $1
+		AND is_api = false;
+	`
+
+	_, err := q.Tx.Exec(q.Context, query, userid)
+	if err != nil {
+		return errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not execute query").
+			Append(errors.LvlWordy, "Could not delete sessions").
+			Append(errors.LvlPlain, "Database error")
+	}
+	return nil
+}
+
+func (q *Queries) DeleteApiSessions(userid types.ID) *errors.ErrorTrace {
+	query := `
+		DELETE FROM sessions
+		WHERE userid = $1
+		AND is_api = true;
+	`
+
+	_, err := q.Tx.Exec(q.Context, query, userid)
+	if err != nil {
+		return errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not execute query").
+			Append(errors.LvlWordy, "Could not delete sessions").
+			Append(errors.LvlPlain, "Database error")
+	}
+	return nil
+}
+
 func (q *Queries) DeleteExpiredSessions(deleteBefore time.Time) *errors.ErrorTrace {
 	query := `
 		DELETE FROM sessions
