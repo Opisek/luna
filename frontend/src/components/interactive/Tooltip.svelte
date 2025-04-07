@@ -24,10 +24,12 @@
   let popover = $state<HTMLElement>();
   let popoverTop = $state(0);
   let popoverLeft = $state(0);
+  let popoverOpen = $state(false);
 
   function show() {
     if (!popover || !icon) return;
     popover.showPopover();
+    popoverOpen = true;
 
     const popoverRect = popover.getBoundingClientRect();
     const iconRect = icon.getBoundingClientRect();
@@ -61,11 +63,16 @@
 
   function hide() {
     if (!popover) return;
-    popover.hidePopover();
+    popoverOpen = false;
+  }
+
+  function transitionEnd() {
+    if (popover && !popoverOpen) popover.hidePopover();
   }
 </script>
 
 <style lang="scss">
+  @use "../../styles/animations.scss";
   @use "../../styles/colors.scss";
   @use "../../styles/dimensions.scss";
   @use "../../styles/decorations.scss";
@@ -117,6 +124,13 @@
     border: 0;
     margin: dimensions.$gapSmaller;
     box-sizing: border-box;
+
+    opacity: 0;
+    transition: opacity animations.$animationSpeed;
+  }
+
+  .popover.visible {
+    opacity: 1;
   }
 </style>
 
@@ -139,9 +153,11 @@
 
   <span
     class="popover" 
+    class:visible={popoverOpen}
     bind:this={popover}
     popover="manual"
     style="top: {popoverTop}px; left: {popoverLeft}px"
+    ontransitionend={transitionEnd}
   >
     {@render children?.()}
   </span>
