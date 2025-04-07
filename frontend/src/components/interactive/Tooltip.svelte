@@ -36,7 +36,10 @@
 
     const optimalPosition = calculateOptimalPopupPosition(icon, 3);
 
-    if (optimalPosition.bottom) {
+    if (!optimalPosition.center) {
+      // The popover is not centered vertically with respect to the icon
+      popoverTop = iconRect.top + (iconRect.height - popoverRect.height) / 2 - marginSize;
+    } else if (optimalPosition.bottom) {
       // The bottom edge of the popover is above the top edge of the icon
       popoverTop = iconRect.top - popoverRect.height - 2 * marginSize;
     } else {
@@ -46,13 +49,13 @@
 
     if (optimalPosition.center) {
       // The popover is centered horizontally with respect to the icon
-      popoverLeft = iconRect.left + (iconRect.width - popoverRect.width) / 2;
+      popoverLeft = iconRect.left + (iconRect.width - popoverRect.width) / 2 - marginSize;
     } else if (optimalPosition.right) {
-      // The left edge of the popover is to the right of the right edge of the icon
-      popoverLeft = iconRect.right;
-    } else {
       // The right edge of the popover is to the left of the left edge of the icon
       popoverLeft = iconRect.left - popoverRect.width - 2 * marginSize;
+    } else {
+      // The left edge of the popover is to the right of the right edge of the icon
+      popoverLeft = iconRect.right;
     }
   }
 
