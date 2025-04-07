@@ -26,6 +26,7 @@ export const actions = {
       }
 
       cookies.set("tokenPresent", "true", opts);
+      opts.httpOnly = true;
       cookies.set("token", body.token, opts);
 
       redirect(302, getRedirectPage(new URL(request.url)));

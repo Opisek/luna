@@ -1,3 +1,5 @@
+import { clearSession } from "./sessions";
+
 export async function fetchResponse(url: string, options: RequestInit = {}): Promise<Response> {
   const response = await fetch(url, options).catch((err) => {
     if (!err) err = new Error("Could not contact server");
@@ -11,6 +13,7 @@ export async function fetchResponse(url: string, options: RequestInit = {}): Pro
     if (!err && json != null) err = json.error;
     if (!err && json != null) err = json.message;
     if (!err) err = `${response.statusText ? response.statusText : "Could not contact server"} (${response.status})`;
+    if (err.includes("Session expired")) clearSession();
     throw new Error(err);
   }
 }

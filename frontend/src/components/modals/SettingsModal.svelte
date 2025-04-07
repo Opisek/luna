@@ -22,6 +22,8 @@
   import { ColorKeys } from "../../types/colors";
   import type { Option } from "../../types/options";
   import SliderInput from "../forms/SliderInput.svelte";
+  import ConfirmationModal from "./ConfirmationModal.svelte";
+  import { clearSession } from "../../lib/client/sessions";
 
   interface Props {
     showModal?: () => any;
@@ -315,6 +317,25 @@
     settings.saveSettings();
     saving = false;
   }
+
+  // Session management actions
+  function logout() {
+    showConfirmation("Are you sure you want to log out?", async () => {
+      console.log("logging out");
+      await fetchResponse("/api/sessions/current", { method: "DELETE" }); // We don't need to check for errors, because the cookie is deleted either way
+      clearSession();
+    });
+  }
+
+  // Confirmation dialog
+  let internalShowConfirmation = $state(NoOp);
+  let confirmationCallback = $state(async () => {});
+  let confirmationMessage = $state("");
+  function showConfirmation(message: string, callback: () => Promise<void>) {
+    confirmationMessage = message;
+    confirmationCallback = callback;
+    internalShowConfirmation();
+  }
 </script>
 
 <style lang="scss">
@@ -597,9 +618,16 @@
         {/if}
         <Button color={ColorKeys.Danger}>Delete my account</Button>
       {:else if selectedCategory === "logout"}
-        <Button color={ColorKeys.Danger}>Log out of my account</Button>
+        <Button color={ColorKeys.Danger} onClick={logout}>Log out of my account</Button>
         <Button color={ColorKeys.Danger}>Deauthorize all sessions</Button>
       {/if}
     </main>
   </div>
 </Modal>
+
+<ConfirmationModal
+  bind:showModal={internalShowConfirmation}
+  confirmCallback={confirmationCallback}
+>
+  {confirmationMessage}
+</ConfirmationModal>
