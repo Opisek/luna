@@ -301,7 +301,7 @@ The description field is optional. Either the end date or the event duration is 
 - **Path**: ``/api/sessions``
 - **Method**: ``GET``
 - **Body**: Empty
-- **Purpose**: Returns all currently authorized session of the calling user
+- **Purpose**: Returns all currently authorized sessions of the calling user
 
 #### Put Session
 - **Path**: `/api/sessions/<ID>``
