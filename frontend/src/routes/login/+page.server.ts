@@ -1,14 +1,14 @@
 import { redirect, type Actions } from "@sveltejs/kit";
 
 import { COOKIE_MAX_AGE } from "$lib/server/constants.server";
-import { callApi } from "$lib/server/api.server";
+import { apiProxy } from "$lib/server/api.server";
 import { getRedirectPage } from "$lib/common/parsing";
 
 export const actions = {
   default: async ({cookies, request, getClientAddress}) => {
     const formData = await request.formData();
 
-    const res = await callApi(request, getClientAddress(), "login", { method: "POST", body: formData }, false);
+    const res = await apiProxy(request, getClientAddress(), "login", { method: "POST", body: formData }, false);
 
     if (res.ok) {
       const body = await res.json();

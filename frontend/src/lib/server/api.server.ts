@@ -1,6 +1,6 @@
 import { json } from "@sveltejs/kit";
 
-export async function callApi(request: Request, clientAddress: string, endpoint: string, init?: RequestInit, stream?: boolean): Promise<Response> {
+export async function apiProxy(request: Request, clientAddress: string, endpoint: string, init?: RequestInit, stream?: boolean): Promise<Response> {
   // CSRF protection
   if (request.method !== "GET" && request.method !== "HEAD") {
     const origin = request.headers.get("Origin");
