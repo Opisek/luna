@@ -8,7 +8,7 @@ export const actions = {
   default: async ({cookies, request, getClientAddress}) => {
     const formData = await request.formData();
 
-    const res = await callApi(request, getClientAddress(), "login", { method: "POST", body: formData });
+    const res = await callApi(request, getClientAddress(), "login", { method: "POST", body: formData }, false);
 
     if (res.ok) {
       const body = await res.json();

@@ -18,7 +18,7 @@ export const actions = {
       };
     }
 
-    const res = await callApi(request, getClientAddress(), "register", { method: "POST", body: formData });
+    const res = await callApi(request, getClientAddress(), "register", { method: "POST", body: formData }, false);
 
     if (res.ok) {
       const body = await res.json();
