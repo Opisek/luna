@@ -33,7 +33,7 @@ var defaultEnv = Environmental{
 	DATA_PATH:                      "/data",
 	API_PORT:                       3000,
 	REQUEST_TIMEOUT_DEFAULT:        5 * time.Second,
-	REQUEST_TIMEOUT_AUTHENTICATION: 30 * time.Second,
+	REQUEST_TIMEOUT_AUTHENTICATION: 5 * time.Second,
 	DEVELOPMENT:                    false,
 }
 
