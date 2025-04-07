@@ -24,6 +24,7 @@
   import SliderInput from "../forms/SliderInput.svelte";
   import ConfirmationModal from "./ConfirmationModal.svelte";
   import { clearSession } from "../../lib/client/sessions";
+  import Tooltip from "../interactive/Tooltip.svelte";
 
   interface Props {
     showModal?: () => any;
@@ -321,18 +322,25 @@
   // Session management actions
   function logout() {
     showConfirmation("Are you sure you want to log out?", async () => {
-      console.log("logging out");
       await fetchResponse("/api/sessions/current", { method: "DELETE" }); // We don't need to check for errors, because the cookie is deleted either way
       clearSession();
     });
+  }
+  function deauthorizeSessions() {
+    showConfirmation("Are you sure you want to deauthorize all sessions?\nThis will log you out of all your devices.", async () => {
+      await fetchResponse("/api/sessions?type=user", { method: "DELETE" });
+      clearSession();
+    }, "Your API tokens will remain valid.\nTo deauthorize those, head to the \"Developer\" tab.");
   }
 
   // Confirmation dialog
   let internalShowConfirmation = $state(NoOp);
   let confirmationCallback = $state(async () => {});
   let confirmationMessage = $state("");
-  function showConfirmation(message: string, callback: () => Promise<void>) {
+  let confirmationDetails = $state("");
+  function showConfirmation(message: string, callback: () => Promise<void>, details: string = "") {
     confirmationMessage = message;
+    confirmationDetails = details;
     confirmationCallback = callback;
     internalShowConfirmation();
   }
@@ -371,6 +379,10 @@
     flex-direction: column;
     gap: dimensions.$gapMiddle;
     width: 100%;
+  }
+
+  .confirmation {
+    white-space: pre-wrap;
   }
 </style>
 
@@ -619,7 +631,7 @@
         <Button color={ColorKeys.Danger}>Delete my account</Button>
       {:else if selectedCategory === "logout"}
         <Button color={ColorKeys.Danger} onClick={logout}>Log out of my account</Button>
-        <Button color={ColorKeys.Danger}>Deauthorize all sessions</Button>
+        <Button color={ColorKeys.Danger} onClick={deauthorizeSessions}>Deauthorize all sessions</Button>
       {/if}
     </main>
   </div>
@@ -629,5 +641,10 @@
   bind:showModal={internalShowConfirmation}
   confirmCallback={confirmationCallback}
 >
-  {confirmationMessage}
+  <span class="confirmation">
+    {confirmationMessage}
+    {#if confirmationDetails != ""}
+      <Tooltip inline>{confirmationDetails}</Tooltip>
+    {/if}
+  </span>
 </ConfirmationModal>
