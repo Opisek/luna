@@ -417,6 +417,11 @@
     align-items: center;
   }
 
+  .session.showId {
+    grid-template-rows: auto auto auto;
+    grid-template-areas: "device agent buttons" "device details buttons" "device id buttons";
+  }
+
   .session > .device {
     grid-area: device;
     display: flex;
@@ -433,6 +438,13 @@
     display: flex;
     flex-direction: row;
     gap: dimensions.$gapSmall;
+  }
+  .session > .id {
+    grid-area: id;
+    font-size: text.$fontSizeSmall;
+  }
+  .session:not(.showId) > .id {
+    display: none;
   }
 
   .session.active {
@@ -717,7 +729,7 @@
   {@const deviceName=`${userAgent.os.name || ""} ${userAgent.browser.name || ""}`.trim()}
   {@const isActive=s.session_id === sessions.currentSession}
 
-  <div class="session" class:active={isActive}>
+  <div class="session" class:active={isActive} class:showId={settings.userSettings[UserSettingKeys.DebugMode]}>
     <div class="device">
       {#if s.is_api}
         <Bot size={20}/>
@@ -775,6 +787,10 @@
         <LogOut size={20}/>
       </IconButton>
     </div>
+
+    <span class="id">
+      ID: {s.session_id}
+    </span>
   </div>
 {/snippet}
 
