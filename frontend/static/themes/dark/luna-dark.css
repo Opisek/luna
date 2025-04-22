@@ -1,6 +1,6 @@
 html[data-theme="dark"] {
   --colorForegroundDark: #000000;
-  --colorForegroundBright: hsl(220, 10%, 80%);;
+  --colorForegroundBright: hsl(220, 10%, 80%);
   --colorForegroundLink: hsl(213, 69%, 42%);
 
   --colorBackgroundPrimary: hsl(220, 10%, 12%);
@@ -9,7 +9,7 @@ html[data-theme="dark"] {
   --colorBackgroundSecondary: hsl(220, 10%, 22%);
   --colorForegroundSecondary: var(--colorForegroundBright);
 
-  --colorBackgroundTertiary: hsl(220, 10%, 22%);
+  --colorBackgroundTertiary: hsl(220, 10%, 32%);
   --colorForegroundTertiary: var(--colorForegroundBright);
 
   --colorBackgroundSuccess: hsl(107, 53%, 37%);
