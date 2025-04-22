@@ -41,6 +41,7 @@
 
   const settings = getSettings();
   const activeSessions = getActiveSessions();
+  const today = new Date();
 
   showModal = () => {
     saving = false;
@@ -730,8 +731,10 @@
                 •
                 {#if isActive}
                   Current session
+                {:else if today.getDate() == s.last_seen.getDate() && today.getMonth() == s.last_seen.getMonth() && today.getFullYear() == s.last_seen.getFullYear()}
+                  Last active {s.last_seen.toLocaleTimeString()}
                 {:else}
-                  Last active {s.last_seen.toLocaleString()}
+                  Last active {s.last_seen.toLocaleDateString()} {s.last_seen.toLocaleTimeString()}
                 {/if}
               </span>
 

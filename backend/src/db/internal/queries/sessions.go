@@ -72,7 +72,8 @@ func (q *Queries) GetSessions(userId types.ID) ([]types.Session, *errors.ErrorTr
 	query := `
 		SELECT *
 		FROM sessions
-		WHERE userid = $1;
+		WHERE userid = $1
+		ORDER BY last_seen DESC;
 	`
 
 	rows, err := q.Tx.Query(q.Context, query, userId)
