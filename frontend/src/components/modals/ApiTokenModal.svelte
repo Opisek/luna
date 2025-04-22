@@ -10,6 +10,7 @@
   import { getActiveSessions } from "../../lib/client/sessions.svelte";
   import PasswordPromptModal from "./PasswordPromptModal.svelte";
   import { queueNotification } from "../../lib/client/notifications";
+  import { ColorKeys } from "../../types/colors";
   
   interface Props {
     showCreateModal?: () => Promise<Session>;
@@ -84,6 +85,7 @@
         throw new Error(`Could not create API token ${session.user_agent}: ${err.message}`);
       }) === null) return;
 
+      queueNotification(ColorKeys.Success, `API token copied to clipboard.`);
       promiseResolve(tokenResponse.session);
     } else  {
       promiseResolve(await sessions.updateSession(session, password).catch(err => {
