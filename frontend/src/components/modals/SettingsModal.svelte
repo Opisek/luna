@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Code, LockKeyhole, LogOut, Monitor, TriangleAlert, User, Users } from "lucide-svelte";
+  import { Bot, Code, Gamepad2, Laptop, LockKeyhole, LogOut, Microchip, Monitor, RectangleGoggles, Smartphone, Tablet, TriangleAlert, TvMinimal, User, Users, Watch } from "lucide-svelte";
   import { NoOp } from "../../lib/client/placeholders";
   import ButtonList from "../forms/ButtonList.svelte";
   import Modal from "./Modal.svelte";
@@ -23,8 +23,11 @@
   import type { Option } from "../../types/options";
   import SliderInput from "../forms/SliderInput.svelte";
   import ConfirmationModal from "./ConfirmationModal.svelte";
-  import { clearSession } from "../../lib/client/sessions";
+  import { clearSession, getActiveSessions } from "../../lib/client/sessions.svelte";
   import Tooltip from "../interactive/Tooltip.svelte";
+  import List from "../forms/List.svelte";
+  import { UAParser } from "ua-parser-js";
+  import IconButton from "../interactive/IconButton.svelte";
 
   interface Props {
     showModal?: () => any;
@@ -37,11 +40,13 @@
   }: Props = $props();
 
   const settings = getSettings();
+  const activeSessions = getActiveSessions();
 
   showModal = () => {
     saving = false;
     snapshotSettings();
     fetchThemes();
+    activeSessions.fetch();
     settings.fetchSettings().then(() => {
       snapshotSettings();
       refetchProfilePicture();
@@ -328,9 +333,20 @@
   }
   function deauthorizeSessions() {
     showConfirmation("Are you sure you want to deauthorize all sessions?\nThis will log you out of all your devices.", async () => {
-      await fetchResponse("/api/sessions?type=user", { method: "DELETE" });
-      clearSession();
+      fetchResponse("/api/sessions?type=user", { method: "DELETE" }).then(() => {
+        clearSession();
+      }).catch((err) => {
+        queueNotification(ColorKeys.Danger, err);
+      });
     }, "Your API tokens will remain valid.\nTo deauthorize those, head to the \"Developer\" tab.");
+  }
+  function deauthorizeSession(id: string) {
+    if (id === activeSessions.currentSession) return logout();
+    fetchResponse("/api/sessions?type=user", { method: "DELETE" }).then(() => {
+      activeSessions.activeSessions = activeSessions.activeSessions.filter(x => x.session_id != id);
+    }).catch((err) => {
+      queueNotification(ColorKeys.Danger, err);
+    });
   }
 
   // Confirmation dialog
@@ -347,7 +363,9 @@
 </script>
 
 <style lang="scss">
+  @use "../../styles/colors.scss";
   @use "../../styles/dimensions.scss";
+  @use "../../styles/text.scss";
 
   div.container {
     box-sizing: border-box;
@@ -383,6 +401,42 @@
 
   .confirmation {
     white-space: pre-wrap;
+  }
+
+  .session {
+    padding: dimensions.$gapMiddle;
+    background-color: colors.$backgroundSecondary;
+    color: colors.$foregroundSecondary;
+    border-radius: dimensions.$borderRadius;
+
+    display: grid;
+    gap: dimensions.$gapSmall;
+    row-gap: 0;
+    grid-template-columns: auto 1fr auto;
+    grid-template-rows: auto auto;
+    grid-template-areas: "device agent buttons" "device details buttons";
+    justify-content: center;
+    align-items: center;
+  }
+
+  .session > .device {
+    grid-area: device;
+    display: flex;
+  }
+  .session > .agent {
+    grid-area: agent;
+  }
+  .session > .details {
+    grid-area: details;
+    font-size: text.$fontSizeSmall;
+  }
+  .session > .buttons {
+    grid-area: buttons;
+  }
+
+  .session.active {
+    background-color: colors.$backgroundAccent;
+    color: colors.$foregroundAccent;
   }
 </style>
 
@@ -632,6 +686,63 @@
       {:else if selectedCategory === "logout"}
         <Button color={ColorKeys.Danger} onClick={logout}>Log out of my account</Button>
         <Button color={ColorKeys.Danger} onClick={deauthorizeSessions}>Deauthorize all sessions</Button>
+
+        <List label="Active Sessions" info={"To see your API sessions, head to the \"Developer\" tab."} items={activeSessions.activeSessions.filter(x => !x.is_api)}>
+          {#snippet template(s: Session)}
+            {@const userAgent=UAParser(s.user_agent)}
+            {@const deviceName=`${userAgent.os.name || ""} ${userAgent.browser.name || ""}`.trim()}
+            {@const isActive=s.session_id === activeSessions.currentSession}
+
+            <div class="session" class:active={isActive}>
+              <div class="device">
+                {#if userAgent.device.type === UAParser.DEVICE.CONSOLE}
+                  <Gamepad2 size={20}/>
+                {:else if userAgent.device.type === UAParser.DEVICE.EMBEDDED}
+                  <Microchip size={20}/>
+                {:else if userAgent.device.type === UAParser.DEVICE.MOBILE}
+                  <Smartphone size={20}/>
+                {:else if userAgent.device.type === UAParser.DEVICE.SMARTTV}
+                  <TvMinimal size={20}/>
+                {:else if userAgent.device.type === UAParser.DEVICE.TABLET}
+                  <Tablet size={20}/>
+                {:else if userAgent.device.type === UAParser.DEVICE.WEARABLE}
+                  <Watch size={20}/>
+                <!--{:else if userAgent.device.type === UAParser.DEVICE.XR}-->
+                {:else if userAgent.device.type === "xr"}
+                  <RectangleGoggles size={20}/>
+                {:else if deviceName === ""}
+                  <Bot size={20}/>
+                {:else}
+                  <Laptop size={20}/>
+                {/if}
+              </div>
+
+              <span class="agent">
+                {#if deviceName === ""}
+                  {s.user_agent}
+                {:else}
+                  {deviceName}
+                {/if}
+              </span>
+
+              <span class="details">
+                {s.location}
+                •
+                {#if isActive}
+                  Current session
+                {:else}
+                  Last active {s.last_seen.toLocaleString()}
+                {/if}
+              </span>
+
+              <div class="buttons">
+                <IconButton click={() => deauthorizeSession(s.session_id)}>
+                  <LogOut size={20}/>
+                </IconButton>
+              </div>
+            </div>
+          {/snippet}
+        </List>
       {/if}
     </main>
   </div>

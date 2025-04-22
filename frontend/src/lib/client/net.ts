@@ -1,4 +1,4 @@
-import { clearSession } from "./sessions";
+import { clearSession } from "./sessions.svelte";
 
 export async function fetchResponse(url: string, options: RequestInit = {}): Promise<Response> {
   const response = await fetch(url, options).catch((err) => {
