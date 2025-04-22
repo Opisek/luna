@@ -70,11 +70,11 @@
     promiseResolve(originalSession);
   };
   const onEdit = async () => {
-    if (session.session_id === "") {
-      const password = await passwordPrompt().catch(() => {
-        throw new Error(`You must provide your password to create an API token.`);
-      });
+    const password = await passwordPrompt().catch(() => {
+      throw new Error(`You must provide your password to create an API token.`);
+    });
 
+    if (session.session_id === "") {
       const tokenResponse = await sessions.requestToken(session, password).catch(err => {
         throw new Error(`Could not create API token ${session.user_agent}: ${err.message}`);
       });
@@ -86,7 +86,9 @@
 
       promiseResolve(tokenResponse.session);
     } else  {
-      // TODO
+      promiseResolve(await sessions.updateSession(session, password).catch(err => {
+        throw new Error(`Could not update API token ${session.user_agent}: ${err.message}`);
+      }));
     }
   };
 

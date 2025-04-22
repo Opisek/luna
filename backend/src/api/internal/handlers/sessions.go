@@ -64,7 +64,7 @@ func PutSession(c *gin.Context) {
 	// Create the API token
 	apiTokenName := c.Request.FormValue("name")
 	if apiTokenName == "" {
-		u.Error(errors.New().Status(400).
+		u.Error(errors.New().Status(http.StatusBadRequest).
 			Append(errors.LvlPlain, "Name may not be empty"),
 		)
 		return
@@ -98,6 +98,91 @@ func PutSession(c *gin.Context) {
 	u.Success(&gin.H{
 		"token": token,
 	})
+}
+
+func PatchSession(c *gin.Context) {
+	u := util.GetUtil(c)
+
+	userId := util.GetUserId(c)
+
+	// Parse the supplied password
+	password := c.PostForm("password")
+	if password == "" {
+		u.Error(errors.New().Status(http.StatusBadRequest).
+			Append(errors.LvlPlain, "Missing password"),
+		)
+		return
+	}
+	// Get the user's password
+	savedPassword, err := u.Tx.Queries().GetPassword(userId)
+	if err != nil {
+		u.Error(err.Status(http.StatusUnauthorized).
+			Append(errors.LvlDebug, "Could not get password for user %v", userId.String()).
+			Append(errors.LvlPlain, "Invalid credentials"),
+		)
+		return
+	}
+
+	// Verify the password
+	if !auth.VerifyPassword(password, savedPassword) {
+		u.Error(errors.New().Status(http.StatusUnauthorized).
+			Append(errors.LvlDebug, "Wrong password").
+			Append(errors.LvlPlain, "Invalid credentials"),
+		)
+		return
+	}
+
+	currentSessionId := util.GetSessionId(c)
+
+	var sessionId types.ID
+	var tr *errors.ErrorTrace
+	if c.Param("sessionId") == "current" {
+		sessionId = currentSessionId
+	} else {
+		sessionId, tr = util.GetId(c, "session")
+		if tr != nil {
+			u.Error(tr)
+			return
+		}
+	}
+
+	session, tr := u.Tx.Queries().GetSession(userId, sessionId)
+	if tr != nil {
+		u.Error(tr)
+		return
+	}
+
+	if !session.IsApi {
+		u.Error(errors.New().Status(http.StatusBadRequest).
+			Append(errors.LvlPlain, "Cannot modify user sessions"),
+		)
+		return
+	}
+
+	apiTokenName := c.Request.FormValue("name")
+	if apiTokenName == "" {
+		u.Error(errors.New().Status(http.StatusBadRequest).
+			Append(errors.LvlPlain, "Name may not be empty"),
+		)
+		return
+	}
+
+	if session.UserAgent == apiTokenName {
+		u.Error(errors.New().Status(http.StatusBadRequest).
+			Append(errors.LvlPlain, "Nothing to change"),
+		)
+		return
+	}
+
+	session.UserAgent = apiTokenName
+
+	tr = u.Tx.Queries().UpdateSession(session)
+	if tr != nil {
+		u.Error(tr)
+		return
+	}
+
+	u.Success(nil)
 }
 
 func DeleteSession(c *gin.Context) {

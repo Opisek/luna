@@ -33,6 +33,63 @@ func (q *Queries) InsertSession(session *types.Session) *errors.ErrorTrace {
 	return nil
 }
 
+func (q *Queries) UpdateSession(session *types.Session) *errors.ErrorTrace {
+	query := `
+		UPDATE sessions
+		SET user_agent = $1, ip_address = $2, is_short_lived = $3, is_api = $4
+		WHERE sessionid = $5;
+	`
+
+	_, err := q.Tx.Exec(q.Context, query, session.UserAgent, session.IpAddress, session.IsShortLived, session.IsApi, session.SessionId)
+	switch err {
+	case nil:
+		return nil
+	case pgx.ErrNoRows:
+		return errors.New().Status(http.StatusNotFound).
+			Append(errors.LvlPlain, "Session not found")
+	default:
+		return errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not execute query").
+			Append(errors.LvlWordy, "Could not update session").
+			Append(errors.LvlPlain, "Database error")
+	}
+}
+
+func (q *Queries) GetSession(userid types.ID, sessionId types.ID) (*types.Session, *errors.ErrorTrace) {
+	query := `
+		SELECT *
+		FROM sessions
+		WHERE userid = $1 AND sessionid = $2;
+	`
+
+	rows, err := q.Tx.Query(q.Context, query, userid, sessionId)
+	if err != nil {
+		return nil, errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not execute query").
+			Append(errors.LvlWordy, "Could not get session").
+			Append(errors.LvlPlain, "Database error")
+	}
+
+	session, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[types.Session])
+	switch err {
+	case nil:
+		break
+	case pgx.ErrNoRows:
+		return nil, errors.New().Status(http.StatusUnauthorized).
+			Append(errors.LvlPlain, "Session expired")
+	default:
+		return nil, errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not scan session").
+			Append(errors.LvlWordy, "Could not get session").
+			Append(errors.LvlPlain, "Database error")
+	}
+
+	return &session, nil
+}
+
 func (q *Queries) GetSessionAndUpdateLastSeen(userId types.ID, sessionId types.ID) (*types.Session, *errors.ErrorTrace) {
 	query := `
 		UPDATE sessions

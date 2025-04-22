@@ -55,6 +55,17 @@ class ActiveSessions {
     };
   }
 
+  public async updateSession(session: Session, password: string): Promise<Session> {
+    const body = new FormData();
+    body.append("name", session.user_agent);
+    body.append("password", password);
+
+    const token = (await fetchJson(`/api/sessions/${session.session_id}`, { method: "PATCH", body: body })).token;
+    await this.fetch();
+
+    return this.activeSessions.filter(x => x.session_id === session.session_id)[0]
+  }
+
   public async deauthorizeSession(id: string) {
     return fetchResponse(`/api/sessions/${id}`, { method: "DELETE" }).then(() => {
       this.activeSessions = this.activeSessions.filter(x => x.session_id != id);

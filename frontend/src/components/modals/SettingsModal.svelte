@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Bot, Code, Gamepad2, Laptop, LockKeyhole, LogOut, Microchip, Monitor, RectangleGoggles, Smartphone, Tablet, TriangleAlert, TvMinimal, User, Users, Watch } from "lucide-svelte";
+  import { Bot, Code, Gamepad2, Laptop, LockKeyhole, LogOut, Microchip, Monitor, Pencil, RectangleGoggles, Smartphone, Tablet, TriangleAlert, TvMinimal, User, Users, Watch } from "lucide-svelte";
   import { NoOp } from "../../lib/client/placeholders";
   import ButtonList from "../forms/ButtonList.svelte";
   import Modal from "./Modal.svelte";
@@ -344,6 +344,7 @@
     if (id === sessions.currentSession) return logout();
     sessions.deauthorizeSession(id);
   }
+  let editApiToken = $state<(session: Session) => Promise<Session>>(Promise.reject);
   let createApiToken = $state<() => Promise<Session>>(Promise.reject);
 
   // Confirmation dialog
@@ -429,6 +430,9 @@
   }
   .session > .buttons {
     grid-area: buttons;
+    display: flex;
+    flex-direction: row;
+    gap: dimensions.$gapSmall;
   }
 
   .session.active {
@@ -762,6 +766,11 @@
     </span>
 
     <div class="buttons">
+      {#if s.is_api}
+        <IconButton click={() => editApiToken(s)}>
+          <Pencil size={20}/>
+        </IconButton>
+      {/if}
       <IconButton click={() => deauthorizeSession(s.session_id)}>
         <LogOut size={20}/>
       </IconButton>
@@ -770,6 +779,7 @@
 {/snippet}
 
 <ApiTokenModal
+  bind:showModal={editApiToken}
   bind:showCreateModal={createApiToken}
 />
 

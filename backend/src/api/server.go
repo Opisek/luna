@@ -103,6 +103,7 @@ func run(api *util.Api) {
 	sessionEndpoints := authenticatedEndpoints.Group("/sessions")
 	sessionEndpoints.GET("", handlers.GetSessions)
 	sessionEndpoints.PUT("", handlers.PutSession)
+	sessionEndpoints.PATCH("/:sessionId", handlers.PatchSession)
 	sessionEndpoints.DELETE("/:sessionId", handlers.DeleteSession)
 	sessionEndpoints.DELETE("", handlers.DeleteSessions)
 

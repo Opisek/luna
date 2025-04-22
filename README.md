@@ -304,10 +304,16 @@ The description field is optional. Either the end date or the event duration is 
 - **Purpose**: Returns all currently authorized sessions of the calling user
 
 #### Put Session
-- **Path**: `/api/sessions/<ID>``
+- **Path**: `/api/sessions``
 - **Method**: `PUT`
 - **Body**: `name`, `password`
 - **Purpose** Creates a return new API token
+
+#### Patch Session
+- **Path**: `/api/sessions/<ID>``
+- **Method**: `PUT`
+- **Body**: `name`, `password`
+- **Purpose** Modifies an API token
 
 #### Delete Session
 - **Path**: ``/api/sessions/<ID>``
