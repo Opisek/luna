@@ -207,10 +207,12 @@
   let passwordValidity = $state(valid);
   let repeatPasswordValidity = $state(valid);
 
+  let requirePasswordForAccountDeletion = $state(false);
   let oldPasswordRequired = $derived(userDataSnapshot && (
     userDataSnapshot.username != settings.userData.username ||
     userDataSnapshot.email != settings.userData.email ||
-    newPassword != ""
+    newPassword != "" ||
+    requirePasswordForAccountDeletion
   ));
 
   let submittable = $derived(
@@ -348,6 +350,38 @@
   }
   let editApiToken = $state<(session: Session) => Promise<Session>>(Promise.reject);
   let createApiToken = $state<() => Promise<Session>>(Promise.reject);
+
+  // Danger zone actions
+  function deleteAccount() {
+    showConfirmation("Are you sure you want to delete your account?\nThis action is irreversible.", async () => {
+      requirePasswordForAccountDeletion = true;
+      const password = await new Promise<string>(resolve => setTimeout(async () => resolve(await passwordPrompt().catch(() => "")), 0));
+      requirePasswordForAccountDeletion = false;
+      if (password == "") return;
+      const body = new FormData();
+      body.append("password", password);
+      await fetchResponse("/api/users/self", { method: "DELETE", body: body });
+      clearSession();
+    }, "All your data will be deleted.");
+  }
+  function resetPreferences() {
+    showConfirmation("Are you sure you want to reset all your preferences?\nThis action is irreversible.", async () => {
+      await fetchResponse("/api/users/self/settings", { method: "DELETE" });
+      settings.fetchSettings().then(() => {
+        snapshotSettings();
+        refetchProfilePicture();
+      });
+    }, "Your account will remain intact.");
+  }
+  function resetGlobalSettings() {
+    showConfirmation("Are you sure you want to reset all global settings?\nThis action is irreversible.", async () => {
+      await fetchResponse("/api/settings", { method: "DELETE" });
+      settings.fetchSettings().then(() => {
+        snapshotSettings();
+        refetchProfilePicture();
+      });
+    });
+  }
 
   // Confirmation dialog
   let internalShowConfirmation = $state(NoOp);
@@ -695,11 +729,11 @@
           ]}
         />
       {:else if selectedCategory === "danger"}
-        <Button color={ColorKeys.Danger}>Reset all my preferences</Button>
+        <Button color={ColorKeys.Danger} onClick={resetPreferences}>Reset all my preferences</Button>
         {#if settings.userData.admin}
-          <Button color={ColorKeys.Danger}>Reset all global settings</Button>
+          <Button color={ColorKeys.Danger} onClick={resetGlobalSettings}>Reset all global settings</Button>
         {/if}
-        <Button color={ColorKeys.Danger}>Delete my account</Button>
+        <Button color={ColorKeys.Danger} onClick={deleteAccount}>Delete my account</Button>
       {:else if selectedCategory === "logout"}
         <Button color={ColorKeys.Danger} onClick={logout}>Log out of my account</Button>
         <Button color={ColorKeys.Danger} onClick={deauthorizeSessions}>Deauthorize all sessions</Button>
