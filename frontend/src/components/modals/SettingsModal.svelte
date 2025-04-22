@@ -343,7 +343,7 @@
   }
   function deauthorizeSession(id: string) {
     if (id === activeSessions.currentSession) return logout();
-    fetchResponse("/api/sessions?type=user", { method: "DELETE" }).then(() => {
+    fetchResponse(`/api/sessions/${id}`, { method: "DELETE" }).then(() => {
       activeSessions.activeSessions = activeSessions.activeSessions.filter(x => x.session_id != id);
     }).catch((err) => {
       queueNotification(ColorKeys.Danger, err);
@@ -688,7 +688,7 @@
         <Button color={ColorKeys.Danger} onClick={logout}>Log out of my account</Button>
         <Button color={ColorKeys.Danger} onClick={deauthorizeSessions}>Deauthorize all sessions</Button>
 
-        <List label="Active Sessions" info={"To see your API sessions, head to the \"Developer\" tab."} items={activeSessions.activeSessions.filter(x => !x.is_api)}>
+        <List label="Active Sessions" info={"To see your API sessions, head to the \"Developer\" tab."} items={activeSessions.activeSessions.filter(x => !x.is_api)} id={item => item.session_id}>
           {#snippet template(s: Session)}
             {@const userAgent=UAParser(s.user_agent)}
             {@const deviceName=`${userAgent.os.name || ""} ${userAgent.browser.name || ""}`.trim()}

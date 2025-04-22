@@ -8,6 +8,7 @@
     info?: string;
     items: T[];
     template: Snippet<[T]>;
+    id: (item: T) => string;
   }
 
   let {
@@ -15,6 +16,7 @@
     info = "",
     items,
     template,
+    id,
   }: Props = $props();
 </script>
 
@@ -37,7 +39,7 @@
   {/if}
 </Label>
 <div>
-  {#each items as item}
+  {#each items as item (id(item))}
     {@render template(item)}
   {/each}
 </div>
