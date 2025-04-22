@@ -38,6 +38,18 @@ export const EmptyCalendar: CalendarModel = {
   overridden: false
 }
 
+export const EmptySession: Session = {
+  session_id: "",
+  user_id: "",
+  created_at: new Date(0),
+  last_seen: new Date(0),
+  user_agent: "",
+  ip_address: "",
+  is_short_lived: false,
+  is_api: false,
+  location: ""
+}
+
 export const AllChangesCalendar: CalendarModelChanges = {
   name: true,
   desc: true,

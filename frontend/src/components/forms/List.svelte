@@ -41,5 +41,7 @@
 <div>
   {#each items as item (id(item))}
     {@render template(item)}
+  {:else}
+  Nothing to show
   {/each}
 </div>

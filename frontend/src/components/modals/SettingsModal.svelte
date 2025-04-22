@@ -28,6 +28,7 @@
   import List from "../forms/List.svelte";
   import { UAParser } from "ua-parser-js";
   import IconButton from "../interactive/IconButton.svelte";
+  import ApiTokenModal from "./ApiTokenModal.svelte";
 
   interface Props {
     showModal?: () => any;
@@ -40,14 +41,14 @@
   }: Props = $props();
 
   const settings = getSettings();
-  const activeSessions = getActiveSessions();
+  const sessions = getActiveSessions();
   const today = new Date();
 
   showModal = () => {
     saving = false;
     snapshotSettings();
     fetchThemes();
-    activeSessions.fetch();
+    sessions.fetch();
     settings.fetchSettings().then(() => {
       snapshotSettings();
       refetchProfilePicture();
@@ -334,21 +335,16 @@
   }
   function deauthorizeSessions() {
     showConfirmation("Are you sure you want to deauthorize all sessions?\nThis will log you out of all your devices.", async () => {
-      fetchResponse("/api/sessions?type=user", { method: "DELETE" }).then(() => {
-        clearSession();
-      }).catch((err) => {
+      sessions.deauthorizeUserSessions().catch((err) => {
         queueNotification(ColorKeys.Danger, err);
       });
     }, "Your API tokens will remain valid.\nTo deauthorize those, head to the \"Developer\" tab.");
   }
   function deauthorizeSession(id: string) {
-    if (id === activeSessions.currentSession) return logout();
-    fetchResponse(`/api/sessions/${id}`, { method: "DELETE" }).then(() => {
-      activeSessions.activeSessions = activeSessions.activeSessions.filter(x => x.session_id != id);
-    }).catch((err) => {
-      queueNotification(ColorKeys.Danger, err);
-    });
+    if (id === sessions.currentSession) return logout();
+    sessions.deauthorizeSession(id);
   }
+  let createApiToken = $state<() => Promise<Session>>(Promise.reject);
 
   // Confirmation dialog
   let internalShowConfirmation = $state(NoOp);
@@ -652,6 +648,18 @@
         {#if settings.userData.id && settings.userSettings[UserSettingKeys.DebugMode]}
           <TextInput bind:value={settings.userData.id} name="id" placeholder="User ID" editable={false} />
         {/if}
+
+        <Button color={ColorKeys.Accent} onClick={() => createApiToken().catch(err => { if (err) queueNotification(ColorKeys.Danger, err.message); } )}>Create an API token</Button>
+
+        {@const apiSessions = sessions.activeSessions.filter(x => x.is_api)}
+        {#if apiSessions.length !== 0}
+          <List
+            label="API Tokens"
+            items={apiSessions}
+            id={item => item.session_id}
+            template={sessionTemplate}
+          />
+        {/if}
       {:else if selectedCategory === "users"}
         <Button color={ColorKeys.Accent}>Invite a user</Button>
       {:else if selectedCategory === "admin"}
@@ -688,68 +696,82 @@
         <Button color={ColorKeys.Danger} onClick={logout}>Log out of my account</Button>
         <Button color={ColorKeys.Danger} onClick={deauthorizeSessions}>Deauthorize all sessions</Button>
 
-        <List label="Active Sessions" info={"To see your API sessions, head to the \"Developer\" tab."} items={activeSessions.activeSessions.filter(x => !x.is_api)} id={item => item.session_id}>
-          {#snippet template(s: Session)}
-            {@const userAgent=UAParser(s.user_agent)}
-            {@const deviceName=`${userAgent.os.name || ""} ${userAgent.browser.name || ""}`.trim()}
-            {@const isActive=s.session_id === activeSessions.currentSession}
-
-            <div class="session" class:active={isActive}>
-              <div class="device">
-                {#if userAgent.device.type === UAParser.DEVICE.CONSOLE}
-                  <Gamepad2 size={20}/>
-                {:else if userAgent.device.type === UAParser.DEVICE.EMBEDDED}
-                  <Microchip size={20}/>
-                {:else if userAgent.device.type === UAParser.DEVICE.MOBILE}
-                  <Smartphone size={20}/>
-                {:else if userAgent.device.type === UAParser.DEVICE.SMARTTV}
-                  <TvMinimal size={20}/>
-                {:else if userAgent.device.type === UAParser.DEVICE.TABLET}
-                  <Tablet size={20}/>
-                {:else if userAgent.device.type === UAParser.DEVICE.WEARABLE}
-                  <Watch size={20}/>
-                <!--{:else if userAgent.device.type === UAParser.DEVICE.XR}-->
-                {:else if userAgent.device.type === "xr"}
-                  <RectangleGoggles size={20}/>
-                {:else if deviceName === ""}
-                  <Bot size={20}/>
-                {:else}
-                  <Laptop size={20}/>
-                {/if}
-              </div>
-
-              <span class="agent">
-                {#if deviceName === ""}
-                  {s.user_agent}
-                {:else}
-                  {deviceName}
-                {/if}
-              </span>
-
-              <span class="details">
-                {s.location}
-                •
-                {#if isActive}
-                  Current session
-                {:else if today.getDate() == s.last_seen.getDate() && today.getMonth() == s.last_seen.getMonth() && today.getFullYear() == s.last_seen.getFullYear()}
-                  Last active {s.last_seen.toLocaleTimeString()}
-                {:else}
-                  Last active {s.last_seen.toLocaleDateString()} {s.last_seen.toLocaleTimeString()}
-                {/if}
-              </span>
-
-              <div class="buttons">
-                <IconButton click={() => deauthorizeSession(s.session_id)}>
-                  <LogOut size={20}/>
-                </IconButton>
-              </div>
-            </div>
-          {/snippet}
-        </List>
+        <List
+          label="Active Sessions"
+          info={"To see your API sessions, head to the \"Developer\" tab."}
+          items={sessions.activeSessions.filter(x => !x.is_api)}
+          id={item => item.session_id}
+          template={sessionTemplate}
+        />
       {/if}
     </main>
   </div>
 </Modal>
+
+{#snippet sessionTemplate(s: Session)}
+  {@const userAgent=UAParser(s.is_api ? "" : s.user_agent)}
+  {@const deviceName=`${userAgent.os.name || ""} ${userAgent.browser.name || ""}`.trim()}
+  {@const isActive=s.session_id === sessions.currentSession}
+
+  <div class="session" class:active={isActive}>
+    <div class="device">
+      {#if s.is_api}
+        <Bot size={20}/>
+      {:else if userAgent.device.type === UAParser.DEVICE.CONSOLE}
+        <Gamepad2 size={20}/>
+      {:else if userAgent.device.type === UAParser.DEVICE.EMBEDDED}
+        <Microchip size={20}/>
+      {:else if userAgent.device.type === UAParser.DEVICE.MOBILE}
+        <Smartphone size={20}/>
+      {:else if userAgent.device.type === UAParser.DEVICE.SMARTTV}
+        <TvMinimal size={20}/>
+      {:else if userAgent.device.type === UAParser.DEVICE.TABLET}
+        <Tablet size={20}/>
+      {:else if userAgent.device.type === UAParser.DEVICE.WEARABLE}
+        <Watch size={20}/>
+      <!--{:else if userAgent.device.type === UAParser.DEVICE.XR}-->
+      {:else if userAgent.device.type === "xr"}
+        <RectangleGoggles size={20}/>
+      {:else if deviceName === ""}
+        <Bot size={20}/>
+      {:else}
+        <Laptop size={20}/>
+      {/if}
+    </div>
+
+    <span class="agent">
+      {#if deviceName === ""}
+        {s.user_agent}
+      {:else}
+        {deviceName}
+      {/if}
+    </span>
+
+    <span class="details">
+      {#if !s.is_api}
+        {s.location}
+        •
+      {/if}
+      {#if isActive}
+        Current session
+      {:else if today.getDate() == s.last_seen.getDate() && today.getMonth() == s.last_seen.getMonth() && today.getFullYear() == s.last_seen.getFullYear()}
+        Last active {s.last_seen.toLocaleTimeString()}
+      {:else}
+        Last active {s.last_seen.toLocaleDateString()} {s.last_seen.toLocaleTimeString()}
+      {/if}
+    </span>
+
+    <div class="buttons">
+      <IconButton click={() => deauthorizeSession(s.session_id)}>
+        <LogOut size={20}/>
+      </IconButton>
+    </div>
+  </div>
+{/snippet}
+
+<ApiTokenModal
+  bind:showCreateModal={createApiToken}
+/>
 
 <ConfirmationModal
   bind:showModal={internalShowConfirmation}

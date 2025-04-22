@@ -1,6 +1,8 @@
 import { browser } from "$app/environment";
 import ipLocation from "iplocation";
-import { fetchJson } from "./net";
+import { fetchJson, fetchResponse } from "./net";
+import { queueNotification } from "./notifications";
+import { ColorKeys } from "../../types/colors";
 
 export function clearSession() {
   if (!browser) return;
@@ -36,6 +38,38 @@ class ActiveSessions {
         x.last_seen = new Date((x.last_seen as unknown as string).replace("Z", ""));
       });
       this.activeSessions = data.sessions;
+    });
+  }
+
+  public async requestToken(session: Session, password: string): Promise<{ token: string, session: Session }> {
+    const body = new FormData();
+    body.append("name", session.user_agent);
+    body.append("password", password);
+
+    const token = (await fetchJson(`/api/sessions`, { method: "PUT", body: body })).token;
+    await this.fetch();
+
+    return {
+      token: token,
+      session: this.activeSessions.filter(x => x.is_api).sort((a, b) => a.created_at.getTime() - b.created_at.getTime())[0]
+    };
+  }
+
+  public async deauthorizeSession(id: string) {
+    return fetchResponse(`/api/sessions/${id}`, { method: "DELETE" }).then(() => {
+      this.activeSessions = this.activeSessions.filter(x => x.session_id != id);
+    });
+  }
+
+  public async deauthorizeUserSessions() {
+    return fetchResponse("/api/sessions?type=user", { method: "DELETE" }).then(() => {
+      clearSession();
+    });
+  }
+
+  public async deauthorizeApiSessions() {
+    return fetchResponse("/api/sessions?type=api", { method: "DELETE" }).then(() => {
+      clearSession();
     });
   }
 }
