@@ -29,6 +29,7 @@
   import { UAParser } from "ua-parser-js";
   import IconButton from "../interactive/IconButton.svelte";
   import ApiTokenModal from "./ApiTokenModal.svelte";
+  import PasswordPromptModal from "./PasswordPromptModal.svelte";
 
   interface Props {
     showModal?: () => any;
@@ -134,7 +135,7 @@
 
   // Account Settings
   let newPassword = $state("");
-  let oldPassword = $state("");
+  let passwordPrompt = $state<() => Promise<string>>(() => Promise.reject(""));
 
   let profilePictureType = $state("gravatar");
   let profilePictureFiles: FileList | null = $state(null);
@@ -205,7 +206,6 @@
   let emailValidity = $state(valid);
   let passwordValidity = $state(valid);
   let repeatPasswordValidity = $state(valid);
-  let oldPasswordValidity = $state(valid);
 
   let oldPasswordRequired = $derived(userDataSnapshot && (
     userDataSnapshot.username != settings.userData.username ||
@@ -218,9 +218,7 @@
       (userDataSnapshot.username == settings.userData.username || usernameValidity.valid) &&
       (userDataSnapshot.email == settings.userData.email || emailValidity.valid) &&
       (newPassword == "" || passwordValidity.valid) &&
-      (newPassword == "" || repeatPasswordValidity.valid) &&
-      (!oldPasswordRequired || oldPasswordValidity.valid) &&
-      (!oldPasswordRequired || oldPassword != "")
+      (newPassword == "" || repeatPasswordValidity.valid)
     )
   )
 
@@ -234,7 +232,6 @@
 
   async function restoreSettings() {
     newPassword = "";
-    oldPassword = "";
 
     if (userDataSnapshot) settings.userData = await deepCopy(userDataSnapshot);
     if (userSettingsSnapshot) settings.userSettings = await deepCopy(userSettingsSnapshot);
@@ -250,6 +247,12 @@
 
     if (userDataChanged && userDataSnapshot) {
       const userDataFormData = new FormData();
+
+      let oldPassword = "";
+      if (oldPasswordRequired) {
+        oldPassword = await passwordPrompt().catch(() => "");
+        if (oldPassword == "") return;
+      }
 
       if (settings.userData.username != userDataSnapshot.username)
         userDataFormData.append("username", settings.userData.username);
@@ -274,7 +277,6 @@
           settings.userData.profile_picture = response.profile_picture;
           profilePictureFiles = null;
         }
-        oldPassword = "";
         userDataSnapshot = await deepCopy(settings.userData);
         refetchProfilePicture();
       }).catch((err) => {
@@ -510,16 +512,6 @@
             password={true}
             validation={isValidRepeatPassword(newPassword)}
             bind:validity={repeatPasswordValidity}
-          />
-        {/if}
-        {#if oldPasswordRequired}
-          <TextInput
-            name="password"
-            placeholder="Current Password"
-            password={true}
-            bind:value={oldPassword}
-            validation={isValidPassword}
-            bind:validity={oldPasswordValidity}
           />
         {/if}
         <ToggleInput
@@ -798,6 +790,10 @@
   bind:showModal={editApiToken}
   bind:showCreateModal={createApiToken}
 />
+
+{#if submittable && oldPasswordRequired}
+  <PasswordPromptModal bind:prompt={passwordPrompt}/>
+{/if}
 
 <ConfirmationModal
   bind:showModal={internalShowConfirmation}
