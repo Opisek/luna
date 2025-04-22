@@ -159,7 +159,7 @@ func Register(c *gin.Context) {
 	usernameErr := util.IsValidUsername(payload.Username)
 	passwordErr := util.IsValidPassword(payload.Password)
 	emailErr := util.IsValidEmail(payload.Email)
-	if usernameErr != nil && passwordErr != nil && emailErr != nil {
+	if usernameErr != nil || passwordErr != nil || emailErr != nil {
 		u.Error(errors.New().Status(http.StatusBadRequest).
 			AddErr(errors.LvlDebug, usernameErr).AndErr(passwordErr).AndErr(emailErr).
 			Append(errors.LvlDebug, "Input did not pass validation").
