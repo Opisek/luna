@@ -145,7 +145,6 @@
   span.label {
     font-size: text.$fontSizeSmall;
     margin-bottom: -(dimensions.$gapMiddle);
-    padding-left: calc(dimensions.$gapSmall * (text.$fontSize / text.$fontSizeSmall));
     display: flex;
     justify-content: space-between;
   }

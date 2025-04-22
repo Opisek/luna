@@ -30,11 +30,11 @@
     flex-direction: row;
     gap: dimensions.$gapSmaller;
     align-items: center;
+    padding-left: calc(dimensions.$gapSmall / text.$fontSizeSmallRatio);
   }
 
   .ownPositioning {
     margin-bottom: -(dimensions.$gapMiddle);
-    padding-left: calc(dimensions.$gapSmall * (text.$fontSize / text.$fontSizeSmall));
   }
 </style>
 

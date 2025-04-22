@@ -4,6 +4,12 @@
 $fontFamilyText: "Atkinson Hyperlegible Next", sans-serif;
 $fontFamilyTime: "Atkinson Hyperlegible Mono", sans-serif;
 
+/* Font size ratios */
+$fontSizeSmallerRatio: 0.6;
+$fontSizeSmallRatio: 0.8;
+$fontSizeLargeRatio: 1.5;
+$fontSizeLargerRatio: 2;
+
 /* Font size */
 $fontSizeSmaller: calc(0.6rem * #{dimensions.$multiplier});
 $fontSizeSmall: calc(0.8rem * #{dimensions.$multiplier});
