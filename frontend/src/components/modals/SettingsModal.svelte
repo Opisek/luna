@@ -728,11 +728,9 @@
             { name: "Debug", value: 0 }
           ]}
         />
+        <Button color={ColorKeys.Danger} onClick={resetGlobalSettings}>Reset all global settings</Button>
       {:else if selectedCategory === "danger"}
         <Button color={ColorKeys.Danger} onClick={resetPreferences}>Reset all my preferences</Button>
-        {#if settings.userData.admin}
-          <Button color={ColorKeys.Danger} onClick={resetGlobalSettings}>Reset all global settings</Button>
-        {/if}
         <Button color={ColorKeys.Danger} onClick={deleteAccount}>Delete my account</Button>
       {:else if selectedCategory === "logout"}
         <Button color={ColorKeys.Danger} onClick={logout}>Log out of my account</Button>
