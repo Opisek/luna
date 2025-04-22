@@ -1,0 +1,55 @@
+html[data-theme="light"] {
+  --ctp-latte-rosewater: #dc8a78;
+  --ctp-latte-flamingo: #dd7878;
+  --ctp-latte-pink: #ea76cb;
+  --ctp-latte-mauve: #8839ef;
+  --ctp-latte-red: #d20f39;
+  --ctp-latte-maroon: #e64553;
+  --ctp-latte-peach: #fe640b;
+  --ctp-latte-yellow: #df8e1d;
+  --ctp-latte-green: #40a02b;
+  --ctp-latte-teal: #179299;
+  --ctp-latte-sky: #04a5e5;
+  --ctp-latte-sapphire: #209fb5;
+  --ctp-latte-blue: #1e66f5;
+  --ctp-latte-lavender: #7287fd;
+  --ctp-latte-text: #4c4f69;
+  --ctp-latte-subtext1: #5c5f77;
+  --ctp-latte-subtext0: #6c6f85;
+  --ctp-latte-overlay2: #7c7f93;
+  --ctp-latte-overlay1: #8c8fa1;
+  --ctp-latte-overlay0: #9ca0b0;
+  --ctp-latte-surface2: #acb0be;
+  --ctp-latte-surface1: #bcc0cc;
+  --ctp-latte-surface0: #ccd0da;
+  --ctp-latte-base: #eff1f5;
+  --ctp-latte-mantle: #e6e9ef;
+  --ctp-latte-crust: #dce0e8;
+
+  --colorForegroundDark: var(--ctp-latte-text);
+  --colorForegroundBright: var(--ctp-latte-base);
+  --colorForegroundLink: var(--ctp-latte-blue);
+
+  --colorBackgroundPrimary: var(--ctp-latte-base);
+  --colorForegroundPrimary: var(--colorForegroundDark);
+
+  --colorBackgroundSecondary: var(--ctp-latte-mantle);
+  --colorForegroundSecondary: var(--colorForegroundDark);
+  
+  --colorBackgroundTertiary: var(--ctp-latte-crust);
+  --colorForegroundTertiary: var(--colorForegroundDark);
+
+  --colorBackgroundSuccess: var(--ctp-green);
+  --colorForegroundSuccess: var(--colorForegroundBright);
+
+  --colorBackgroundWarning: var(--ctp-latte-yellow);
+  --colorForegroundWarning: var(--colorForegroundBright);
+
+  --colorBackgroundDanger: var(--ctp-latte-red);
+  --colorForegroundDanger: var(--colorForegroundBright);
+
+  --colorBackgroundAccent: var(--ctp-latte-rosewater);
+  --colorForegroundAccent: var(--colorForegroundBright);
+  
+  --colorForegroundSunday: var(--ctp-latte-maroon);
+}

@@ -1,0 +1,55 @@
+html[data-theme="dark"] {
+  --ctp-frappe-rosewater: #f2d5cf;
+  --ctp-frappe-flamingo: #eebebe;
+  --ctp-frappe-pink: #f4b8e4;
+  --ctp-frappe-mauve: #ca9ee6;
+  --ctp-frappe-red: #e78284;
+  --ctp-frappe-maroon: #ea999c;
+  --ctp-frappe-peach: #ef9f76;
+  --ctp-frappe-yellow: #e5c890;
+  --ctp-frappe-green: #a6d189;
+  --ctp-frappe-teal: #81c8be;
+  --ctp-frappe-sky: #99d1db;
+  --ctp-frappe-sapphire: #85c1dc;
+  --ctp-frappe-blue: #8caaee;
+  --ctp-frappe-lavender: #babbf1;
+  --ctp-frappe-text: #c6d0f5;
+  --ctp-frappe-subtext1: #b5bfe2;
+  --ctp-frappe-subtext0: #a5adce;
+  --ctp-frappe-overlay2: #949cbb;
+  --ctp-frappe-overlay1: #838ba7;
+  --ctp-frappe-overlay0: #737994;
+  --ctp-frappe-surface2: #626880;
+  --ctp-frappe-surface1: #51576d;
+  --ctp-frappe-surface0: #414559;
+  --ctp-frappe-base: #303446;
+  --ctp-frappe-mantle: #292c3c;
+  --ctp-frappe-crust: #232634;
+
+  --colorForegroundDark: var(--ctp-frappe-base);
+  --colorForegroundBright: var(--ctp-frappe-text);
+  --colorForegroundLink: var(--ctp-frappe-blue);
+
+  --colorBackgroundPrimary: var(--ctp-frappe-base);
+  --colorForegroundPrimary: var(--colorForegroundBright);
+
+  --colorBackgroundSecondary: var(--ctp-frappe-mantle);
+  --colorForegroundSecondary: var(--colorForegroundBright);
+  
+  --colorBackgroundTertiary: var(--ctp-frappe-crust);
+  --colorForegroundTertiary: var(--colorForegroundBright);
+
+  --colorBackgroundSuccess: var(--ctp-green);
+  --colorForegroundSuccess: var(--colorForegroundDark);
+
+  --colorBackgroundWarning: var(--ctp-frappe-yellow);
+  --colorForegroundWarning: var(--colorForegroundDark);
+
+  --colorBackgroundDanger: var(--ctp-frappe-red);
+  --colorForegroundDanger: var(--colorForegroundDark);
+
+  --colorBackgroundAccent: var(--ctp-frappe-rosewater);
+  --colorForegroundAccent: var(--colorForegroundDark);
+  
+  --colorForegroundSunday: var(--ctp-frappe-maroon);
+}
