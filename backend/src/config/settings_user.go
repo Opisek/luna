@@ -13,6 +13,7 @@ const (
 	KeyFirstDayOfWeek               = "first_day_of_week"
 	KeyThemeLight                   = "theme_light"
 	KeyThemeDark                    = "theme_dark"
+	KeyThemeSynchronize             = "theme_sync"
 	KeyFontText                     = "font_text"
 	KeyFontTime                     = "font_time"
 	KeyDisplayAllDayEventsFilled    = "display_all_day_events_filled"
@@ -34,6 +35,7 @@ func AllDefaultUserSettings() []SettingsEntry {
 		&FirstDayOfWeek{},
 		&ThemeLight{},
 		&ThemeDark{},
+		&ThemeSynchronize{},
 		&FontText{},
 		&FontTime{},
 		&DisplayAllDayEventsFilled{},
@@ -67,6 +69,8 @@ func GetMatchingUserSettingStruct(key string) (SettingsEntry, *errors.ErrorTrace
 		return &ThemeLight{}, nil
 	case KeyThemeDark:
 		return &ThemeDark{}, nil
+	case KeyThemeSynchronize:
+		return &ThemeSynchronize{}, nil
 	case KeyFontText:
 		return &FontText{}, nil
 	case KeyFontTime:
@@ -228,6 +232,26 @@ func (entry *ThemeDark) MarshalJSON() ([]byte, error) {
 }
 func (entry *ThemeDark) UnmarshalJSON(data []byte) (err error) {
 	entry.Theme, err = common.UnmarshalString(data)
+	return err
+}
+
+// Whether to synchronize theme with the system
+// Should default to true
+type ThemeSynchronize struct {
+	Enabled bool `json:"value"`
+}
+
+func (entry *ThemeSynchronize) Key() string {
+	return KeyThemeSynchronize
+}
+func (entry *ThemeSynchronize) Default() {
+	entry.Enabled = true
+}
+func (entry *ThemeSynchronize) MarshalJSON() ([]byte, error) {
+	return common.MarshalBool(entry.Enabled), nil
+}
+func (entry *ThemeSynchronize) UnmarshalJSON(data []byte) (err error) {
+	entry.Enabled, err = common.UnmarshalBool(data)
 	return err
 }
 

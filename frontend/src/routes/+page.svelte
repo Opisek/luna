@@ -425,7 +425,9 @@
         </Button>
       {/if}
 
-      <ThemeToggle/>
+      {#if !settings.userSettings[UserSettingKeys.ThemeSynchronize]}
+        <ThemeToggle/>
+      {/if}
 
       <SelectButtons
         name="layout"

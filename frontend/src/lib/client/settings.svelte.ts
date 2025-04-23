@@ -27,6 +27,7 @@ class Settings {
     [UserSettingKeys.FontTime]: "Atkinson Hyperlegible Mono",
     [UserSettingKeys.ThemeLight]: "luna-light",
     [UserSettingKeys.ThemeDark]: "luna-dark",
+    [UserSettingKeys.ThemeSynchronize]: true,
     [UserSettingKeys.UiScaling]: 1,
     [UserSettingKeys.AnimateCalendarSwipe]: true,
     [UserSettingKeys.AnimateSmallCalendarSwipe]: false,

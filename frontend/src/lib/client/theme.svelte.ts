@@ -1,19 +1,30 @@
 import { browser } from "$app/environment";
+import { UserSettingKeys } from "../../types/settings";
+import { getSettings } from "./settings.svelte";
 
 class Theme {
   private lightMode: boolean = $state(true);
+  private settings = getSettings();
   
   constructor() {
     if (!browser) return;
     this.fetchFromStorage();
+    this.fetchFromSystem();
     window.addEventListener("storage", () => this.fetchFromStorage());
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => this.fetchFromSystem());
   }
 
   private fetchFromStorage() {
+    if (this.settings.userSettings[UserSettingKeys.ThemeSynchronize]) return;
     const theme = localStorage.getItem("theme");
     if (theme != null) {
       this.lightMode = theme !== "dark";
     }
+  }
+
+  private fetchFromSystem() {
+    if (!this.settings.userSettings[UserSettingKeys.ThemeSynchronize]) return;
+    this.lightMode = !(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
   }
 
   private saveToStorage() {
@@ -38,6 +49,12 @@ class Theme {
 
   public isLightMode() {
     return this.lightMode;
+  }
+
+  public refetchTheme() {
+    if (!browser) return;
+    this.fetchFromStorage();
+    this.fetchFromSystem();
   }
 }
 

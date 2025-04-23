@@ -4,6 +4,7 @@ export enum UserSettingKeys {
   FirstDayOfWeek = "first_day_of_week",
   ThemeLight = "theme_light",
   ThemeDark = "theme_dark",
+  ThemeSynchronize = "theme_sync",
   FontText = "font_text",
   FontTime = "font_time",
   DisplayAllDayEventsFilled = "display_all_day_events_filled",
@@ -32,6 +33,7 @@ export type UserSettings = {
   [UserSettingKeys.ThemeDark]: string;
   [UserSettingKeys.FontText]: string;
   [UserSettingKeys.FontTime]: string;
+  [UserSettingKeys.ThemeSynchronize]: boolean;
   [UserSettingKeys.DisplayAllDayEventsFilled]: boolean;
   [UserSettingKeys.DisplayNonAllDayEventsFilled]: boolean;
   [UserSettingKeys.DisplaySmallCalendar]: boolean;

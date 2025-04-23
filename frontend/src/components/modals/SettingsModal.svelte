@@ -31,6 +31,7 @@
   import ApiTokenModal from "./ApiTokenModal.svelte";
   import PasswordPromptModal from "./PasswordPromptModal.svelte";
   import SectionDivider from "../layout/SectionDivider.svelte";
+  import { getTheme } from "../../lib/client/theme.svelte";
 
   interface Props {
     showModal?: () => any;
@@ -384,6 +385,11 @@
     });
   }
 
+  // Appearance
+  $effect(() => {
+    settings.userSettings[UserSettingKeys.ThemeSynchronize], setTimeout(() => getTheme().refetchTheme(), 0);
+  });
+
   // Confirmation dialog
   let internalShowConfirmation = $state(NoOp);
   let confirmationCallback = $state(async () => {});
@@ -666,6 +672,11 @@
           placeholder="Dark Theme"
           bind:value={settings.userSettings[UserSettingKeys.ThemeDark]}
           options={darkThemes}
+        />
+        <ToggleInput
+          name={UserSettingKeys.ThemeSynchronize}
+          description="Synchronize Theme with System"
+          bind:value={settings.userSettings[UserSettingKeys.ThemeSynchronize]}
         />
         <SelectInput
           name={UserSettingKeys.FontText}
