@@ -3,7 +3,7 @@ import { clearSession } from "./sessions.svelte";
 export async function fetchResponse(url: string, options: RequestInit = {}): Promise<Response> {
   const response = await fetch(url, options).catch((err) => {
     if (!err) err = new Error("Could not contact server");
-    throw err;
+    throw new Error(err, { cause: new Error("504") });
   });
   if (response.ok) {
     return response;
@@ -14,7 +14,7 @@ export async function fetchResponse(url: string, options: RequestInit = {}): Pro
     if (!err && json != null) err = json.message;
     if (!err) err = `${response.statusText ? response.statusText : "Could not contact server"} (${response.status})`;
     if (err.includes("Session expired")) clearSession();
-    throw new Error(err);
+    throw new Error(err, { cause: new Error(response.status.toString()) });
   }
 }
 

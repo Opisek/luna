@@ -76,6 +76,12 @@ Luna uses its own (UU)IDs for every resource accessed through it. Therefore, the
 - **Body**: `username`, `password`, `email`, `remember`
 - **Purpose**: Creates a new user
 
+#### Registration Enabled
+- **Path**: ``/api/register/enabled``
+- **Method**: ``GET``
+- **Body**: Empty
+- **Purpose**: Check if registration is open for everyone.
+
 #### Version
 - **Path**: ``/api/version``
 - **Method**: ``GET``
@@ -324,7 +330,7 @@ The description field is optional. Either the end date or the event duration is 
 
 #### Delete Sessions
 - **Path**: ``/api/sessions?type=<TYPE>``
-- **Method**: ``DELETE`
+- **Method**: ``DELETE``
 - **Body**: Empty
 - **Purpose**: Unauthorizes all sessions of the calling user
 - **Note**: The `<TYPE>` parametert should be set to `user`, `api`, or `all`, indicating which types of sessions should be revoked.
