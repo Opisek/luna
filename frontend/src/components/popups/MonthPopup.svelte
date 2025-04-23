@@ -1,4 +1,5 @@
 <script lang="ts">
+  import {  setContext } from "svelte";
   import { ChevronLeft, ChevronRight } from "lucide-svelte";
 
   import IconButton from "../interactive/IconButton.svelte";
@@ -7,6 +8,7 @@
   import { NoOp } from '$lib/client/placeholders';
   import { focusIndicator } from "$lib/client/decoration";
   import { getMonthName } from "$lib/common/humanization";
+  import { svelteFlyInHorizontal, svelteFlyOutHorizontal } from "$lib/client/animations";
 
   interface Props {
     date: Date;
@@ -28,6 +30,7 @@
   let internalShow: () => void = $state(NoOp);
   let internalClose: () => void = $state(NoOp);
 
+  /* Popup */
   showPopup = () => {
     if (popupVisible) return;
     selectedYear = date.getFullYear();
@@ -40,6 +43,12 @@
     onSelect(date);
   }
 
+  /* Animation */
+  let viewIteration = $state(0);
+  let flyDirection = $state("left");
+  setContext("flyDirection", () => flyDirection);
+
+  /* Selection */
   let selectedMonth: number = $state(date.getMonth());
   let selectedYear: number = $state(date.getFullYear());
   let decadeStart: number = $derived(Math.floor(selectedYear / 10) * 10);
@@ -59,11 +68,15 @@
   }
 
   function prev() {
+    flyDirection = "right";
+    viewIteration++;
     if (selectingMonth) selectedYear --;
     else selectedYear -= 10;
   }
 
   function next() {
+    flyDirection = "left";
+    viewIteration++;
     if (selectingMonth) selectedYear ++;
     else selectedYear += 10;
   }
@@ -74,9 +87,20 @@
   @use "../../styles/colors.scss";
   @use "../../styles/dimensions.scss";
 
+  div.body {
+    overflow: hidden;
+    position: relative;
+  }
+
   div.grid {
     display: grid;
     gap: dimensions.$gapSmall;
+  }
+
+  div.grid:not(:first-child) {
+    position: absolute;
+    top: 0;
+    left: 0;
   }
 
   div.grid.month {
@@ -150,31 +174,45 @@
       <ChevronRight/>
     </IconButton>
   </div>
-  {#if selectingMonth}
-  <div class="grid month">
-    {#each Array(12) as _, i}
-      <button
-        class="button month"
-        type="button"
-        onclick={(e) => clickMonth(e, i)}
-        use:focusIndicator
-      >
-        {getMonthName(i).substring(0, 3)}
-      </button>
-    {/each}
+  <div class="body">
+    {#if selectingMonth}
+      {#each [ selectedYear ] as _ (viewIteration)}
+        <div
+          class="grid month"
+          in:svelteFlyInHorizontal={{duration: 500}}
+          out:svelteFlyOutHorizontal={{duration: 500}}
+        >
+          {#each Array(12) as _, i}
+            <button
+              class="button month"
+              type="button"
+              onclick={(e) => clickMonth(e, i)}
+              use:focusIndicator
+            >
+              {getMonthName(i).substring(0, 3)}
+            </button>
+          {/each}
+        </div>
+      {/each}
+    {:else}
+      {#each [ selectedYear ] as _ (viewIteration)}
+        <div
+          class="grid year"
+          in:svelteFlyInHorizontal={{duration: 500}}
+          out:svelteFlyOutHorizontal={{duration: 500}}
+        >
+          {#each Array(10) as _, i}
+            <button
+              class="button year"
+              type="button"
+              onclick={(e) => clickYear(e, i)}
+              use:focusIndicator
+            >
+              {decadeStart + i}
+            </button>
+          {/each}
+        </div>
+      {/each}
+    {/if}
   </div>
-  {:else}
-  <div class="grid year">
-    {#each Array(10) as _, i}
-      <button
-        class="button year"
-        type="button"
-        onclick={(e) => clickYear(e, i)}
-        use:focusIndicator
-      >
-        {decadeStart + i}
-      </button>
-    {/each}
-  </div>
-  {/if}
 </Popup>

@@ -4,6 +4,8 @@
   import { getDayIndex, isSameDay } from "$lib/common/date";
   import { UserSettingKeys } from "../../types/settings";
   import { getSettings } from "$lib/client/settings.svelte";
+  import { setContext } from "svelte";
+  import { svelteFlyInHorizontal, svelteFlyOutHorizontal } from "$lib/client/animations";
 
   interface Props {
     date: Date;
@@ -21,13 +23,12 @@
 
   let today = new Date();
 
-  let [days, amountOfRows] = $derived((() => {
-    // Date calculation
+  /* Date calculation */
+  let [days, amountOfRows] = $derived.by(() => {
     const firstMonthDay = new Date(date.getFullYear(), date.getMonth(), 1);
     const lastMonthDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
     const firstDayOfWeek = getDayIndex(firstMonthDay);
 
-    //amountOfRows = ;
     const amountOfRows = 
       settings.userSettings[UserSettingKeys.DynamicSmallCalendarRows] ?
       Math.ceil((lastMonthDay.getDate() + firstDayOfWeek) / 7)
@@ -49,7 +50,24 @@
     }
 
     return [days, amountOfRows];
-  })());
+  });
+
+  /* Animation */
+  let viewIteration = $state(0);
+  // TODO: why do we need displayDays here but not in the large calendar?
+  // svelte-ignore state_referenced_locally
+  let displayDays = $state(days);
+  let currentDate = $state(new Date(date));
+  let flyDirection = $state("left");
+  setContext("flyDirection", () => flyDirection);
+  $effect(() => {
+    if (date.getTime() === currentDate.getTime()) return;
+    flyDirection = currentDate.getTime() <= date.getTime() ? "left" : "right";
+    currentDate = new Date(date);
+    viewIteration++;
+    displayDays = days;
+  });
+
 </script>
 
 <style lang="scss">
@@ -58,10 +76,22 @@
   @use "../../styles/dimensions.scss";
   @use "../../styles/text.scss";
 
+  div.animation {
+    overflow: hidden;
+    position: relative;
+  }
+
   div.calendar {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     gap: dimensions.$gapSmall; 
+    width: 100%;
+  }
+
+  div.calendar:not(:first-child) {
+    position: absolute;
+    top: 0;
+    left: 0;
   }
 
   div.smaller {
@@ -99,18 +129,28 @@
   }
 </style>
 
-<div class="calendar" class:smaller={smaller} style="grid-template-rows: repeat({amountOfRows}, 1fr)">
-  {#each days as day}
-    <button
-      class="day"
-      class:sunday={day.getDay() == 0}
-      class:today={isSameDay(day, today)}
-      class:otherMonth={day.getMonth() != date.getMonth()}
-      type="button"
-      onclick={() => (onDayClick(day))}
-      use:focusIndicator
+<div class="animation">
+  {#each [ displayDays ] as currentDays (viewIteration)}
+    <div
+      class="calendar"
+      class:smaller={smaller}
+      style="grid-template-rows: repeat({amountOfRows}, 1fr)"
+      in:svelteFlyInHorizontal={{duration: 500}}
+      out:svelteFlyOutHorizontal={{duration: 500}}
     >
-      {day.getDate()}
-    </button>
+      {#each currentDays as day}
+        <button
+          class="day"
+          class:sunday={day.getDay() == 0}
+          class:today={isSameDay(day, today)}
+          class:otherMonth={day.getMonth() != currentDate.getMonth()}
+          type="button"
+          onclick={() => (onDayClick(day))}
+          use:focusIndicator
+        >
+          {day.getDate()}
+        </button>
+      {/each}
+    </div>
   {/each}
 </div>
