@@ -3,7 +3,7 @@ import { UserSettingKeys } from "../../types/settings";
 import { getSettings } from "./settings.svelte";
 
 class Theme {
-  private lightMode: boolean = $state(true);
+  private lightMode: boolean = $state(false);
   private settings = getSettings();
   
   constructor() {
