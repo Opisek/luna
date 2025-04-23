@@ -13,12 +13,21 @@
 
   import { isValidEmail, isValidPassword, isValidRepeatPassword, isValidUsername, valid } from '$lib/client/validation';
   import { queueNotification } from '$lib/client/notifications';
+  import Title from '../../components/layout/Title.svelte';
+  import Paragraph from '../../components/layout/Paragraph.svelte';
+  import Box from '../../components/layout/Box.svelte';
 
-  interface Props {
+  interface PageProps {
     form: ActionData;
+    data: {
+      registrationEnabled: boolean;
+    }
   }
 
-  let { form = $bindable() }: Props = $props();
+  let {
+    form = $bindable(),
+    data,
+  }: PageProps = $props();
 
   afterNavigate(() => {
     if (form?.error) queueNotification(ColorKeys.Danger, form.error);
@@ -37,38 +46,49 @@
 </script>
 
 <SimplePage>
-  <Form title="Register" submittable={canSubmit}>
-    <TextInput
-      name="username"
-      placeholder="Username"
-      validation={isValidUsername}
-      bind:validity={usernameValidity}
-    />
-    <TextInput
-      name="email"
-      placeholder="Email"
-      validation={isValidEmail}
-      bind:validity={emailValidity}
-    />
-    <TextInput
-      name="password"
-      placeholder="Password"
-      password={true}
-      validation={isValidPassword}
-      bind:value={password}
-      bind:validity={passwordValidity}
-    />
-    <TextInput
-      name="passwordRepeat"
-      placeholder="Repeat Password"
-      password={true}
-      validation={isValidRepeatPassword(password)}
-      bind:validity={passwordRepeatValidity}
-    />
-    <ToggleInput
-      name="remember"
-      description="Remember me"
-    />
-    <Link href="/login?redirect={encodeURIComponent(redirect)}">Already got an account?</Link>
-  </Form>
+  {#if data.registrationEnabled}
+    <Form title="Register" submittable={canSubmit}>
+      <TextInput
+        name="username"
+        placeholder="Username"
+        validation={isValidUsername}
+        bind:validity={usernameValidity}
+      />
+      <TextInput
+        name="email"
+        placeholder="Email"
+        validation={isValidEmail}
+        bind:validity={emailValidity}
+      />
+      <TextInput
+        name="password"
+        placeholder="Password"
+        password={true}
+        validation={isValidPassword}
+        bind:value={password}
+        bind:validity={passwordValidity}
+      />
+      <TextInput
+        name="passwordRepeat"
+        placeholder="Repeat Password"
+        password={true}
+        validation={isValidRepeatPassword(password)}
+        bind:validity={passwordRepeatValidity}
+      />
+      <ToggleInput
+        name="remember"
+        description="Remember me"
+      />
+      <Link href="/login?redirect={encodeURIComponent(redirect)}">Already got an account?</Link>
+    </Form>
+  {:else}
+    <Box>
+      <Title>Registration</Title>
+      <Paragraph>
+        Registration is currently disabled.
+        Please contact the administrator if you think this is a mistake.
+      </Paragraph>
+      <Link href="/login?redirect={encodeURIComponent(redirect)}">Already got an account?</Link>
+    </Box>
+  {/if}
 </SimplePage>

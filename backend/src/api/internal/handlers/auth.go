@@ -145,6 +145,27 @@ type registerPayload struct {
 func Register(c *gin.Context) {
 	u := util.GetUtil(c)
 
+	// Check if any users exist to know if this user should be an admin
+	usersExist, err := u.Tx.Queries().AnyUsersExist()
+	if err != nil {
+		u.Error(err.
+			Append(errors.LvlDebug, "Could not check if any users exist").
+			Append(errors.LvlWordy, "Database error").
+			Append(errors.LvlBroad, "Could not register"),
+		)
+		return
+	}
+
+	// Check if registration is enabled or the user is the first user
+	if !u.Config.Settings.RegistrationEnabled.Enabled && usersExist {
+		u.Error(errors.New().Status(http.StatusForbidden).
+			Append(errors.LvlWordy, "Open registration is disabled").
+			AltStr(errors.LvlPlain, "Registration is disabled").
+			Append(errors.LvlBroad, "Could not register"),
+		)
+		return
+	}
+
 	// Parse and validate the payload
 	payload := registerPayload{}
 	if err := c.ShouldBind(&payload); err != nil {
@@ -175,17 +196,6 @@ func Register(c *gin.Context) {
 		u.Error(err.
 			Append(errors.LvlDebug, "Could not hash password").
 			Append(errors.LvlWordy, "Internal server error").
-			Append(errors.LvlBroad, "Could not register"),
-		)
-		return
-	}
-
-	// Check if any users exist to know if this user should be an admin
-	usersExist, err := u.Tx.Queries().AnyUsersExist()
-	if err != nil {
-		u.Error(err.
-			Append(errors.LvlDebug, "Could not check if any users exist").
-			Append(errors.LvlWordy, "Database error").
 			Append(errors.LvlBroad, "Could not register"),
 		)
 		return
@@ -255,4 +265,21 @@ func Register(c *gin.Context) {
 	}
 
 	u.Success(&gin.H{"token": token})
+}
+
+func RegistrationEnabled(c *gin.Context) {
+	u := util.GetUtil(c)
+
+	usersExist, err := u.Tx.Queries().AnyUsersExist()
+	if err != nil {
+		u.Error(err.
+			Append(errors.LvlDebug, "Could not check if any users exist").
+			Append(errors.LvlWordy, "Database error"),
+		)
+		return
+	}
+
+	u.Success(&gin.H{
+		"enabled": u.Config.Settings.RegistrationEnabled.Enabled || !usersExist,
+	})
 }

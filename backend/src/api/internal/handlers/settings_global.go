@@ -87,6 +87,10 @@ func PatchGlobalSettings(c *gin.Context) {
 		}
 	}
 
+	for _, setting := range entries {
+		u.Config.Settings.UpdateSetting(setting)
+	}
+
 	u.Success(nil)
 }
 
@@ -107,13 +111,13 @@ func ResetGlobalSetting(c *gin.Context) {
 		return
 	}
 
-	u.Config.Settings.UpdateSetting(setting)
-
 	err = u.Tx.Queries().UpdateGlobalSetting(setting)
 	if err != nil {
 		u.Error(err)
 		return
 	}
+
+	u.Config.Settings.UpdateSetting(setting)
 
 	u.Success(nil)
 }
@@ -130,6 +134,10 @@ func ResetGlobalSettings(c *gin.Context) {
 			u.Error(err)
 			return
 		}
+	}
+
+	for _, setting := range settings {
+		u.Config.Settings.UpdateSetting(setting)
 	}
 
 	u.Success(nil)

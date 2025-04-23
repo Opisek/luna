@@ -41,6 +41,7 @@ func run(api *util.Api) {
 	endpoints := rawEndpoints.Group("", middleware.RequestSetup(api.CommonConfig.Env.REQUEST_TIMEOUT_DEFAULT, api.Db, true, api.CommonConfig, api.Logger))
 
 	endpoints.GET("/health", handlers.GetHealth)
+	endpoints.GET("/register/enabled", handlers.RegistrationEnabled)
 
 	// everything past here requires the user to be logged in
 	authenticatedEndpoints := endpoints.Group("", middleware.RequireAuth())
