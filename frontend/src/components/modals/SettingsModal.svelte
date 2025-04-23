@@ -30,6 +30,7 @@
   import IconButton from "../interactive/IconButton.svelte";
   import ApiTokenModal from "./ApiTokenModal.svelte";
   import PasswordPromptModal from "./PasswordPromptModal.svelte";
+  import SectionDivider from "../layout/SectionDivider.svelte";
 
   interface Props {
     showModal?: () => any;
@@ -420,6 +421,7 @@
     overflow-x: hidden;
     padding-right: dimensions.$gapLarger;
     margin-right: -(dimensions.$gapLarger);
+    background-color: colors.$backgroundPrimary;
   }
 
   main > :global(*) {
@@ -593,6 +595,7 @@
           <TextInput value={settings.userData.id} name="id" placeholder="User ID" editable={false} />
         {/if}
       {:else if selectedCategory === "appearance"}
+        <SectionDivider title={"Calendar Appearance"}/>
         <ToggleInput
           name={UserSettingKeys.DisplayAllDayEventsFilled}
           description="Fill All-Day Events"
@@ -637,6 +640,7 @@
             { name: "Sunday", value: 0 }
           ]}
         />
+        <SectionDivider title={"Site Appearance"}/>
         <ToggleInput
           name={UserSettingKeys.DisplayRoundedCorners}
           description="Rounded Corners"
@@ -680,6 +684,22 @@
             { name: "Atkinson Hyperlegible Next", value: "Atkinson Hyperlegible Next" },
             { name: "Atkinson Hyperlegible Mono", value: "Atkinson Hyperlegible Mono" }
           ]}
+        />
+        <SectionDivider title="Animations"/>
+        <ToggleInput
+          name={UserSettingKeys.AnimateCalendarSwipe}
+          description="Animate Calendar"
+          bind:value={settings.userSettings[UserSettingKeys.AnimateCalendarSwipe]}
+        />
+        <ToggleInput
+          name={UserSettingKeys.AnimateSmallCalendarSwipe}
+          description="Animate Small Calendar"
+          bind:value={settings.userSettings[UserSettingKeys.AnimateSmallCalendarSwipe]}
+        />
+        <ToggleInput
+          name={UserSettingKeys.AnimateMonthSelectionSwipe}
+          description="Animate Month Selection"
+          bind:value={settings.userSettings[UserSettingKeys.AnimateMonthSelectionSwipe]}
         />
       {:else if selectedCategory === "developer"}
         <ToggleInput

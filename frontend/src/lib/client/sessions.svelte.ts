@@ -1,8 +1,6 @@
 import { browser } from "$app/environment";
 import ipLocation from "iplocation";
 import { fetchJson, fetchResponse } from "./net";
-import { queueNotification } from "./notifications";
-import { ColorKeys } from "../../types/colors";
 
 export function clearSession() {
   if (!browser) return;

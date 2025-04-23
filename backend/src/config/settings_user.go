@@ -22,6 +22,9 @@ const (
 	KeyDynamicSmallCalendarRows     = "dynamic_small_calendar_rows"
 	KeyDisplayRoundedCorners        = "display_rounded_corners"
 	KeyUiScaling                    = "ui_scaling"
+	KeyAnimateCalendarSwipe         = "animate_calendar_swipe"
+	KeyAnimateSmallCalendarSwipe    = "animate_small_calendar_swipe"
+	KeyAnimateMonthSelectionSwipe   = "animate_month_selection_swipe"
 )
 
 func AllDefaultUserSettings() []SettingsEntry {
@@ -40,6 +43,9 @@ func AllDefaultUserSettings() []SettingsEntry {
 		&DynamicSmallCalendarRows{},
 		&DisplayRoundedCorners{},
 		&UiScaling{},
+		&AnimateCalendarSwipe{},
+		&AnimateSmallCalendarSwipe{},
+		&AnimateMonthSelectionSwipe{},
 	}
 
 	for _, setting := range settings {
@@ -79,9 +85,15 @@ func GetMatchingUserSettingStruct(key string) (SettingsEntry, *errors.ErrorTrace
 		return &DisplayRoundedCorners{}, nil
 	case KeyUiScaling:
 		return &UiScaling{}, nil
+	case KeyAnimateCalendarSwipe:
+		return &AnimateCalendarSwipe{}, nil
+	case KeyAnimateSmallCalendarSwipe:
+		return &AnimateSmallCalendarSwipe{}, nil
+	case KeyAnimateMonthSelectionSwipe:
+		return &AnimateMonthSelectionSwipe{}, nil
 	default:
 		return nil, errors.New().Status(http.StatusBadRequest).
-			Append(errors.LvlWordy, "Invalid setting key").
+			Append(errors.LvlWordy, "Invalid setting key %s", key).
 			AltStr(errors.LvlPlain, "Invalid setting name")
 	}
 }
@@ -403,4 +415,64 @@ func (entry *UiScaling) UnmarshalJSON(data []byte) (err error) {
 		return fmt.Errorf("invalid scaling factor: %f", entry.Factor)
 	}
 	return nil
+}
+
+// Whether to animate calendar swipes
+// Should default to true
+type AnimateCalendarSwipe struct {
+	Enabled bool `json:"value"`
+}
+
+func (entry *AnimateCalendarSwipe) Key() string {
+	return KeyAnimateCalendarSwipe
+}
+func (entry *AnimateCalendarSwipe) Default() {
+	entry.Enabled = true
+}
+func (entry *AnimateCalendarSwipe) MarshalJSON() ([]byte, error) {
+	return common.MarshalBool(entry.Enabled), nil
+}
+func (entry *AnimateCalendarSwipe) UnmarshalJSON(data []byte) (err error) {
+	entry.Enabled, err = common.UnmarshalBool(data)
+	return err
+}
+
+// Whether to animate small calendar swipes
+// Should default to false
+type AnimateSmallCalendarSwipe struct {
+	Enabled bool `json:"value"`
+}
+
+func (entry *AnimateSmallCalendarSwipe) Key() string {
+	return KeyAnimateSmallCalendarSwipe
+}
+func (entry *AnimateSmallCalendarSwipe) Default() {
+	entry.Enabled = false
+}
+func (entry *AnimateSmallCalendarSwipe) MarshalJSON() ([]byte, error) {
+	return common.MarshalBool(entry.Enabled), nil
+}
+func (entry *AnimateSmallCalendarSwipe) UnmarshalJSON(data []byte) (err error) {
+	entry.Enabled, err = common.UnmarshalBool(data)
+	return err
+}
+
+// Whether to animate month selection swipes
+// Should default to true
+type AnimateMonthSelectionSwipe struct {
+	Enabled bool `json:"value"`
+}
+
+func (entry *AnimateMonthSelectionSwipe) Key() string {
+	return KeyAnimateMonthSelectionSwipe
+}
+func (entry *AnimateMonthSelectionSwipe) Default() {
+	entry.Enabled = true
+}
+func (entry *AnimateMonthSelectionSwipe) MarshalJSON() ([]byte, error) {
+	return common.MarshalBool(entry.Enabled), nil
+}
+func (entry *AnimateMonthSelectionSwipe) UnmarshalJSON(data []byte) (err error) {
+	entry.Enabled, err = common.UnmarshalBool(data)
+	return err
 }

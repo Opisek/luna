@@ -27,7 +27,10 @@ class Settings {
     [UserSettingKeys.FontTime]: "Atkinson Hyperlegible Mono",
     [UserSettingKeys.ThemeLight]: "luna-light",
     [UserSettingKeys.ThemeDark]: "luna-dark",
-    [UserSettingKeys.UiScaling]: 1
+    [UserSettingKeys.UiScaling]: 1,
+    [UserSettingKeys.AnimateCalendarSwipe]: true,
+    [UserSettingKeys.AnimateSmallCalendarSwipe]: false,
+    [UserSettingKeys.AnimateMonthSelectionSwipe]: true,
   });
   public globalSettings: GlobalSettings = $state({
     [GlobalSettingKeys.LoggingVerbosity]: 2,

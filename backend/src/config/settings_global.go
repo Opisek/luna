@@ -37,7 +37,7 @@ func GetMatchingGlobalSettingStruct(key string) (SettingsEntry, *errors.ErrorTra
 		return &UseCdnFonts{}, nil
 	default:
 		return nil, errors.New().Status(http.StatusBadRequest).
-			Append(errors.LvlWordy, "Invalid setting key").
+			Append(errors.LvlWordy, "Invalid setting key: %s", key).
 			AltStr(errors.LvlPlain, "Invalid setting name")
 	}
 }

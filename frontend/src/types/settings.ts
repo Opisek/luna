@@ -13,6 +13,9 @@ export enum UserSettingKeys {
   DynamicSmallCalendarRows = "dynamic_small_calendar_rows",
   DisplayRoundedCorners = "display_rounded_corners",
   UiScaling = "ui_scaling",
+  AnimateCalendarSwipe = "animate_calendar_swipe",
+  AnimateSmallCalendarSwipe = "animate_small_calendar_swipe",
+  AnimateMonthSelectionSwipe = "animate_month_selection_swipe",
 }
 
 export enum GlobalSettingKeys {
@@ -36,6 +39,9 @@ export type UserSettings = {
   [UserSettingKeys.DynamicSmallCalendarRows]: boolean;
   [UserSettingKeys.DisplayRoundedCorners]: boolean;
   [UserSettingKeys.UiScaling]: number;
+  [UserSettingKeys.AnimateCalendarSwipe]: boolean;
+  [UserSettingKeys.AnimateSmallCalendarSwipe]: boolean;
+  [UserSettingKeys.AnimateMonthSelectionSwipe]: boolean;
 };
 
 export type GlobalSettings = {
