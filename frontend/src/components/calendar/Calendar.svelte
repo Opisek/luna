@@ -35,9 +35,11 @@
   /* Animation */
   let viewIteration = $state(0);
   let currentDate = $state(new Date(date));
+  let flyDirection = $state("left");
+  setContext("flyDirection", () => flyDirection);
   $effect(() => {
     if (date.getTime() === currentDate.getTime()) return;
-    setContext("calendarFlyDirection", currentDate.getTime() <= date.getTime() ? "left" : "right");
+    flyDirection = currentDate.getTime() <= date.getTime() ? "left" : "right";
     viewIteration++;
     currentDate = new Date(date);
   });
@@ -277,6 +279,7 @@
 
 {#snippet daysGrid()}
   <div class="monthAnimation">
+    <!-- TODO: duration according to css variables? -->
     {#each [ days ] as currentDays (viewIteration)}
       <div
         class="days"
