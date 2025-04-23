@@ -45,12 +45,14 @@
   };
 
   function confirm() {
-    resolvePromise(password);
+    resolvePromise($state.snapshot(password));
+    password = "";
     hideModalInternal();
   }
 
   function cancel() {
     rejectPromise();
+    password = "";
     hideModalInternal();
   }
 </script>
