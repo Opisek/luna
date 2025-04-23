@@ -78,7 +78,7 @@
   @use "../styles/colors.scss";
   @use "../styles/dimensions.scss";
   @use "../styles/text.scss";
-
+  
   :global(*) {
     box-sizing: border-box;
   }
@@ -118,6 +118,8 @@
 <svelte:head>
   <link rel="stylesheet" href="/themes/light/{settings.userSettings[UserSettingKeys.ThemeLight]}.css">
   <link rel="stylesheet" href="/themes/dark/{settings.userSettings[UserSettingKeys.ThemeDark]}.css">
+  <link rel="stylesheet" href="/dynamic/font?purpose=fontFamilyText&file={settings.userSettings[UserSettingKeys.FontText]}">
+  <link rel="stylesheet" href="/dynamic/font?purpose=fontFamilyTime&file={settings.userSettings[UserSettingKeys.FontTime]}">
 </svelte:head>
 
 {@render children?.()}

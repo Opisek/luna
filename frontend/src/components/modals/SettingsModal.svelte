@@ -51,6 +51,7 @@
     saving = false;
     snapshotSettings();
     fetchThemes();
+    fetchFonts();
     sessions.fetch();
     settings.fetchSettings().then(() => {
       snapshotSettings();
@@ -116,22 +117,34 @@
   // Themes and Fonts
   let lightThemes = $state<Option<string>[]>([{ name: "Luna Light", value: "luna-light" }]);
   let darkThemes = $state<Option<string>[]>([{ name: "Luna Dark", value: "luna-dark" }]);
+  let fonts = $state<Option<string>[]>([
+    { name: "Atkinson Hyperlegible Next", value: "atkinson-hyperlegible-next" },
+    { name: "Atkinson Hyperlegible Mono", value: "atkinson-hyperlegible-next" }
+  ]);
 
-  function formatThemeOption(theme: string): Option<string> {
-    const formattedName = theme
+  function formatInstalledFile(rawName: string): Option<string> {
+    const formattedName = rawName
       .split("-")
       .map(x => x.charAt(0).toUpperCase() + x.slice(1))
       .join(" ");
 
-    return { name: formattedName, value: theme };
+    return { name: formattedName, value: rawName };
   }
 
   function fetchThemes() {
     fetchJson("/installed/themes").then((response) => {
-      lightThemes = Object.keys(response.light).map(formatThemeOption);
-      darkThemes = Object.keys(response.dark).map(formatThemeOption);
+      lightThemes = Object.keys(response.light).map(formatInstalledFile);
+      darkThemes = Object.keys(response.dark).map(formatInstalledFile);
     }).catch((err) => {
       queueNotification(ColorKeys.Danger, "Failed to fetch themes: " + err);
+    });
+  }
+
+  function fetchFonts() {
+    fetchJson("/installed/fonts").then((response) => {
+      fonts = Object.keys(response).map(formatInstalledFile);
+    }).catch((err) => {
+      queueNotification(ColorKeys.Danger, "Failed to fetch fonts: " + err);
     });
   }
 
@@ -682,19 +695,13 @@
           name={UserSettingKeys.FontText}
           placeholder="Text Font"
           bind:value={settings.userSettings[UserSettingKeys.FontText]}
-          options={[
-            { name: "Atkinson Hyperlegible Next", value: "Atkinson Hyperlegible Next" },
-            { name: "Atkinson Hyperlegible Mono", value: "Atkinson Hyperlegible Mono" }
-          ]}
+          options={fonts}
         />
         <SelectInput
           name={UserSettingKeys.FontTime}
           placeholder="Time Font"
           bind:value={settings.userSettings[UserSettingKeys.FontTime]}
-          options={[
-            { name: "Atkinson Hyperlegible Next", value: "Atkinson Hyperlegible Next" },
-            { name: "Atkinson Hyperlegible Mono", value: "Atkinson Hyperlegible Mono" }
-          ]}
+          options={fonts}
         />
         <SectionDivider title="Animations"/>
         <ToggleInput

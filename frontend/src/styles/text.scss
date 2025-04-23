@@ -1,8 +1,8 @@
 @use "./dimensions.scss";
 
 /* Font family */
-$fontFamilyText: "Atkinson Hyperlegible Next", sans-serif;
-$fontFamilyTime: "Atkinson Hyperlegible Mono", sans-serif;
+$fontFamilyText: var(--fontFamilyText, "Atkinson Hyperlegible Next");
+$fontFamilyTime: var(--fontFamilyTime, "Atkinson Hyperlegible Mono");
 
 /* Font size ratios */
 $fontSizeSmallerRatio: 0.6;

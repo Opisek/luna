@@ -256,7 +256,7 @@ func (entry *ThemeSynchronize) UnmarshalJSON(data []byte) (err error) {
 }
 
 // Which font to use for the text
-// Should default to "Atkinson Hyperlegible Next"
+// Should default to "atkinson-hyperlegible-next"
 type FontText struct {
 	Font string `json:"value"`
 }
@@ -265,7 +265,7 @@ func (entry *FontText) Key() string {
 	return "font_text"
 }
 func (entry *FontText) Default() {
-	entry.Font = "Atkinson Hyperlegible Next"
+	entry.Font = "atkinson-hyperlegible-next"
 }
 func (entry *FontText) MarshalJSON() ([]byte, error) {
 	return common.MarshalString(entry.Font), nil
@@ -276,7 +276,7 @@ func (entry *FontText) UnmarshalJSON(data []byte) (err error) {
 }
 
 // Which font to use for the time
-// Should default to "Atkinson Hyperlegible Mono"
+// Should default to "atkinson-hyperlegible-mono"
 type FontTime struct {
 	Font string `json:"value"`
 }
@@ -285,7 +285,7 @@ func (entry *FontTime) Key() string {
 	return "font_time"
 }
 func (entry *FontTime) Default() {
-	entry.Font = "Atkinson Hyperlegible Mono"
+	entry.Font = "atkinson-hyperlegible-mono"
 }
 func (entry *FontTime) MarshalJSON() ([]byte, error) {
 	return common.MarshalString(entry.Font), nil
