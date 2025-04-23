@@ -190,9 +190,12 @@
     overflow: hidden;
     position: relative;
   }
+  
+  div.days.animate {
+    position: absolute;
+  }
 
   div.days {
-    position: absolute;
     width: 100%;
     height: 100%;
     display: grid;
@@ -201,7 +204,7 @@
     padding: 0;
     margin: 0;
   }
-  
+
   div.columns-month,
   div.columns-week {
     grid-template-columns: repeat(7, 1fr);
@@ -270,41 +273,50 @@
         </div>
         {/each}
       </div>
-      {@render daysGrid()}
+      {@render daysGridAnimated()}
     </div>
   {:else}
-    {@render daysGrid()}
+    {@render daysGridAnimated()}
   {/if}
 </div>
 
-{#snippet daysGrid()}
-  <div class="monthAnimation">
-    <!-- TODO: duration according to css variables? -->
-    {#each [ days ] as currentDays (viewIteration)}
-      <div
-        class="days"
-        style="grid-template-rows: repeat({amountOfRows}, 1fr)"
-        class:columns-month={view === "month"}
-        class:columns-week={view === "week"}
-        class:columns-day={view === "day"}
-        in:svelteFlyInHorizontal={{duration: 500}}
-        out:svelteFlyOutHorizontal={{duration: 500}}
+
+{#snippet daysGridAnimated()}
+  {#if settings.userSettings[UserSettingKeys.AnimateCalendarSwipe]}
+    <div class="monthAnimation">
+      {#each [ days ] as currentDays (viewIteration)}
+        {@render grid(currentDays, amountOfRows, true)}
+      {/each}
+    </div>
+  {:else}
+    {@render grid(days, amountOfRows, false)}
+  {/if}
+{/snippet}
+
+{#snippet grid(days: Date[], amountOfRows: number, animate: boolean)}
+  <div
+    class="days"
+    class:animate={animate}
+    style="grid-template-rows: repeat({amountOfRows}, 1fr)"
+    class:columns-month={view === "month"}
+    class:columns-week={view === "week"}
+    class:columns-day={view === "day"}
+    in:svelteFlyInHorizontal={{duration: animate ? 500 : 0}}
+    out:svelteFlyOutHorizontal={{duration: animate ? 500 : 0}}
+  >
+    {#each days as day, i}
+      <Day
+        date={day}
+        isCurrentMonth={day.getMonth() === currentDate.getMonth()} 
+        events={processedEvents[i]}
+        isFirstDay={i == 0}
+        isToday={isSameDay(day, today)}
+        maxEvents={maxEvents}
+        bind:containerHeight={containerHeight}
+        view={view}
+        showMore={showMore}
       >
-        {#each currentDays as day, i}
-          <Day
-            date={day}
-            isCurrentMonth={day.getMonth() === currentDate.getMonth()} 
-            events={processedEvents[i]}
-            isFirstDay={i == 0}
-            isToday={isSameDay(day, today)}
-            maxEvents={maxEvents}
-            bind:containerHeight={containerHeight}
-            view={view}
-            showMore={showMore}
-          >
-          </Day>
-        {/each}
-      </div>
+      </Day>
     {/each}
   </div>
 {/snippet}

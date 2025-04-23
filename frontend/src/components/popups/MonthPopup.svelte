@@ -9,6 +9,8 @@
   import { focusIndicator } from "$lib/client/decoration";
   import { getMonthName } from "$lib/common/humanization";
   import { svelteFlyInHorizontal, svelteFlyOutHorizontal } from "$lib/client/animations";
+  import { getSettings } from "../../lib/client/settings.svelte";
+  import { UserSettingKeys } from "../../types/settings";
 
   interface Props {
     date: Date;
@@ -23,6 +25,8 @@
     hidePopup = $bindable(NoOp),
     onSelect = NoOp,
   }: Props = $props();
+
+  const settings = getSettings();
 
   let popupVisible: boolean = $state(false);
   let selectingMonth: boolean = $state(true);
@@ -176,43 +180,62 @@
   </div>
   <div class="body">
     {#if selectingMonth}
-      {#each [ selectedYear ] as _ (viewIteration)}
-        <div
-          class="grid month"
-          in:svelteFlyInHorizontal={{duration: 500}}
-          out:svelteFlyOutHorizontal={{duration: 500}}
-        >
-          {#each Array(12) as _, i}
-            <button
-              class="button month"
-              type="button"
-              onclick={(e) => clickMonth(e, i)}
-              use:focusIndicator
-            >
-              {getMonthName(i).substring(0, 3)}
-            </button>
-          {/each}
-        </div>
-      {/each}
+      {#if settings.userSettings[UserSettingKeys.AnimateMonthSelectionSwipe]}
+        {#each [ selectedYear ] as _ (viewIteration)}
+          {@render monthGrid(true)}
+        {/each}
+      {:else}
+        {@render monthGrid(false)}
+      {/if}
     {:else}
-      {#each [ selectedYear ] as _ (viewIteration)}
-        <div
-          class="grid year"
-          in:svelteFlyInHorizontal={{duration: 500}}
-          out:svelteFlyOutHorizontal={{duration: 500}}
-        >
-          {#each Array(10) as _, i}
-            <button
-              class="button year"
-              type="button"
-              onclick={(e) => clickYear(e, i)}
-              use:focusIndicator
-            >
-              {decadeStart + i}
-            </button>
-          {/each}
-        </div>
-      {/each}
+      {#if settings.userSettings[UserSettingKeys.AnimateMonthSelectionSwipe]}
+        {#each [ selectedYear ] as _ (viewIteration)}
+          {@render yearGrid(true)}
+        {/each}
+      {:else}
+        {@render yearGrid(false)}
+      {/if}
     {/if}
   </div>
 </Popup>
+
+
+{#snippet monthGrid(animate: boolean)}
+  <div
+    class="grid month"
+    class:animate={animate}
+    in:svelteFlyInHorizontal={{duration: animate ? 500 : 0}}
+    out:svelteFlyOutHorizontal={{duration: animate ? 500 : 0}}
+  >
+    {#each Array(12) as _, i}
+      <button
+        class="button month"
+        type="button"
+        onclick={(e) => clickMonth(e, i)}
+        use:focusIndicator
+      >
+        {getMonthName(i).substring(0, 3)}
+      </button>
+    {/each}
+  </div>
+{/snippet}
+
+{#snippet yearGrid(animate: boolean)}
+  <div
+    class="grid year"
+    class:animate={animate}
+    in:svelteFlyInHorizontal={{duration: animate ? 500 : 0}}
+    out:svelteFlyOutHorizontal={{duration: animate ? 500 : 0}}
+  >
+    {#each Array(10) as _, i}
+      <button
+        class="button year"
+        type="button"
+        onclick={(e) => clickYear(e, i)}
+        use:focusIndicator
+      >
+        {decadeStart + i}
+      </button>
+    {/each}
+  </div>
+{/snippet}

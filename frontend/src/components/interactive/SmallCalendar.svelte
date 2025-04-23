@@ -88,7 +88,7 @@
     width: 100%;
   }
 
-  div.calendar:not(:first-child) {
+  div.calendar.animate:not(:first-child) {
     position: absolute;
     top: 0;
     left: 0;
@@ -129,28 +129,37 @@
   }
 </style>
 
-<div class="animation">
-  {#each [ displayDays ] as currentDays (viewIteration)}
-    <div
-      class="calendar"
-      class:smaller={smaller}
-      style="grid-template-rows: repeat({amountOfRows}, 1fr)"
-      in:svelteFlyInHorizontal={{duration: 500}}
-      out:svelteFlyOutHorizontal={{duration: 500}}
-    >
-      {#each currentDays as day}
-        <button
-          class="day"
-          class:sunday={day.getDay() == 0}
-          class:today={isSameDay(day, today)}
-          class:otherMonth={day.getMonth() != currentDate.getMonth()}
-          type="button"
-          onclick={() => (onDayClick(day))}
-          use:focusIndicator
-        >
-          {day.getDate()}
-        </button>
-      {/each}
-    </div>
-  {/each}
-</div>
+{#if settings.userSettings[UserSettingKeys.AnimateSmallCalendarSwipe]}
+  <div class="animation">
+    {#each [ displayDays ] as currentDays (viewIteration)}
+      {@render grid(currentDays, amountOfRows, true)}
+    {/each}
+  </div>
+{:else}
+  {@render grid(days, amountOfRows, false)}
+{/if}
+
+{#snippet grid(days: Date[], amountOfRows: number, animate: boolean)}
+  <div
+    class="calendar"
+    class:smaller={smaller}
+    class:animate={animate}
+    style="grid-template-rows: repeat({amountOfRows}, 1fr)"
+    in:svelteFlyInHorizontal={{duration: animate ? 500 : 0}}
+    out:svelteFlyOutHorizontal={{duration: animate ? 500 : 0}}
+  >
+    {#each days as day}
+      <button
+        class="day"
+        class:sunday={day.getDay() == 0}
+        class:today={isSameDay(day, today)}
+        class:otherMonth={day.getMonth() != currentDate.getMonth()}
+        type="button"
+        onclick={() => (onDayClick(day))}
+        use:focusIndicator
+      >
+        {day.getDate()}
+      </button>
+    {/each}
+  </div>
+{/snippet}
