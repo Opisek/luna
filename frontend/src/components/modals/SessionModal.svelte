@@ -14,7 +14,7 @@
   
   interface Props {
     showCreateModal?: () => Promise<Session>;
-    showModal?: (session: Session) => Promise<Session>;
+    showModal?: (session: Session, editable: boolean) => Promise<Session>;
   }
 
   let {
@@ -31,11 +31,10 @@
   let promiseResolve: (value: Session | PromiseLike<Session>) => void = $state(NoOp);
   let promiseReject: (reason?: any) => void = $state(NoOp);
 
-  showModal = async (original: Session): Promise<Session> => {
+  showModal = async (original: Session, editable: boolean = false): Promise<Session> => {
     promiseReject();
 
-    editMode = original.session_id === "";
-    editMode = true;
+    editMode = editable;
     session = await deepCopy(original);
     originalSession = await deepCopy(original);
 
@@ -54,7 +53,7 @@
     })
   };
   showCreateModal = () => {
-    return showModal(EmptySession);
+    return showModal(EmptySession, true);
   }
 
   let showCreateModalInternal: () => any = $state(NoOp);
@@ -62,7 +61,7 @@
   let passwordPrompt = $state<() => Promise<string>>(() => Promise.reject(""));
 
   let editMode: boolean = $state(false);
-  let title: string = $derived(session.session_id ? (editMode ? "Edit API token" : "API Token") : "Create API Token");
+  let title: string = $derived((session.session_id ? (editMode ? "Edit " : "") : "Create ") + (session.is_api ? "API Token" : "Session"));
 
   const onDelete = async () => {
     await sessions.deauthorizeSession(session.session_id).catch(err => {
@@ -106,13 +105,16 @@
   onDelete={onDelete}
   onEdit={onEdit}
   onCancel={promiseReject}
+  editable={editMode}
   deletable={true}
   submittable={canSubmit}
 >
-  <TextInput bind:value={session.user_agent} name="name" placeholder="Name" editable={editMode} />
+  <TextInput bind:value={session.user_agent} name="user_agent" placeholder={session.is_api ? "Name" : "User Agent"} editable={editMode} />
   {#if session.session_id != ""}
     <DateTimeInput value={session.created_at} allDay={false} placeholder="Creation Date" name="created_at" editable={false}/>
     <DateTimeInput value={session.last_seen} allDay={false} placeholder="Last Activity" name="last_seen" editable={false}/>
+    <TextInput value={session.initial_ip_address} name="initial_ip_address" placeholder="Initial IP Address" editable={false} />
+    <TextInput value={session.last_ip_address} name="last_ip_address" placeholder="Last IP Address" editable={false} />
     {#if session.session_id && settings.userSettings[UserSettingKeys.DebugMode]}
       <TextInput value={session.session_id} name="id" placeholder="Session ID" editable={false} />
     {/if}

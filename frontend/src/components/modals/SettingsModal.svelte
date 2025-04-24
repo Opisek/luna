@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Bot, Code, Gamepad2, Laptop, LockKeyhole, LogOut, Microchip, Monitor, Pencil, RectangleGoggles, Smartphone, Tablet, TriangleAlert, TvMinimal, User, Users, Watch } from "lucide-svelte";
+  import { Bot, Code, Gamepad2, Info, Laptop, LockKeyhole, LogOut, Microchip, Monitor, Pencil, RectangleGoggles, Smartphone, Tablet, TriangleAlert, TvMinimal, User, Users, Watch } from "lucide-svelte";
   import { NoOp } from "../../lib/client/placeholders";
   import ButtonList from "../forms/ButtonList.svelte";
   import Modal from "./Modal.svelte";
@@ -28,7 +28,7 @@
   import List from "../forms/List.svelte";
   import { UAParser } from "ua-parser-js";
   import IconButton from "../interactive/IconButton.svelte";
-  import ApiTokenModal from "./ApiTokenModal.svelte";
+  import SessionModal from "./SessionModal.svelte";
   import PasswordPromptModal from "./PasswordPromptModal.svelte";
   import SectionDivider from "../layout/SectionDivider.svelte";
   import { getTheme } from "../../lib/client/theme.svelte";
@@ -363,7 +363,7 @@
     if (id === sessions.currentSession) return logout();
     sessions.deauthorizeSession(id);
   }
-  let editApiToken = $state<(session: Session) => Promise<Session>>(Promise.reject);
+  let editApiToken = $state<(session: Session, editable: boolean) => Promise<Session>>(Promise.reject);
   let createApiToken = $state<() => Promise<Session>>(Promise.reject);
 
   // Danger zone actions
@@ -826,10 +826,8 @@
     </span>
 
     <span class="details">
-      {#if !s.is_api}
-        {s.location}
-        •
-      {/if}
+      {s.location}
+      •
       {#if isActive}
         Current session
       {:else if today.getDate() == s.last_seen.getDate() && today.getMonth() == s.last_seen.getMonth() && today.getFullYear() == s.last_seen.getFullYear()}
@@ -840,11 +838,13 @@
     </span>
 
     <div class="buttons">
-      {#if s.is_api}
-        <IconButton click={() => editApiToken(s)}>
+      <IconButton click={() => editApiToken(s, s.is_api)}>
+        {#if s.is_api}
           <Pencil size={20}/>
-        </IconButton>
-      {/if}
+        {:else}
+          <Info size={20}/>
+        {/if}
+      </IconButton>
       <IconButton click={() => deauthorizeSession(s.session_id)}>
         <LogOut size={20}/>
       </IconButton>
@@ -856,7 +856,7 @@
   </div>
 {/snippet}
 
-<ApiTokenModal
+<SessionModal
   bind:showModal={editApiToken}
   bind:showCreateModal={createApiToken}
 />
