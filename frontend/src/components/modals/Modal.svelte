@@ -20,6 +20,7 @@
     resetFocus?: () => any;
     children?: Snippet;
     buttons?: Snippet;
+    topButtons?: Snippet;
   }
 
   let {
@@ -31,7 +32,8 @@
     resetFocus = $bindable(),
     onModalSubmit = hideModal,
     children,
-    buttons
+    buttons,
+    topButtons,
   }: Props = $props();
 
   let dialog: HTMLDialogElement;
@@ -128,7 +130,14 @@
         <Title>
           {title}
         </Title>
-        <CloseButton onClick={hideModal} />
+        {#if topButtons}
+          <Horizontal position="right">
+            {@render topButtons()}
+            <CloseButton onClick={hideModal} />
+          </Horizontal>
+        {:else}
+          <CloseButton onClick={hideModal} />
+        {/if}
       </Horizontal>
       {@render children?.()}
       <Horizontal position="right">

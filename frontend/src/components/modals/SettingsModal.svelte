@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Bot, Code, Gamepad2, Info, Laptop, LockKeyhole, LogOut, Microchip, Monitor, Pencil, RectangleGoggles, Smartphone, Tablet, TriangleAlert, TvMinimal, User, Users, Watch } from "lucide-svelte";
+  import { Bot, Code, Gamepad2, Info, Laptop, LockKeyhole, LogOut, Microchip, Monitor, Pencil, RectangleGoggles, RefreshCcw, RefreshCw, Smartphone, Tablet, TriangleAlert, TvMinimal, User, Users, Watch } from "lucide-svelte";
   import { NoOp } from "../../lib/client/placeholders";
   import ButtonList from "../forms/ButtonList.svelte";
   import Modal from "./Modal.svelte";
@@ -47,9 +47,10 @@
   const sessions = getActiveSessions();
   const today = new Date();
 
-  showModal = () => {
-    saving = false;
-    snapshotSettings();
+  // Loading
+  let loaderAnimation = $state(false);
+  function forceRefresh() {
+    loaderAnimation = true;
     fetchThemes();
     fetchFonts();
     sessions.fetch();
@@ -57,6 +58,12 @@
       snapshotSettings();
       refetchProfilePicture();
     });
+  }
+
+  showModal = () => {
+    saving = false;
+    snapshotSettings();
+    forceRefresh();
     showModalInternal();
   };
 
@@ -417,6 +424,7 @@
 </script>
 
 <style lang="scss">
+  @use "../../styles/animations.scss";
   @use "../../styles/colors.scss";
   @use "../../styles/dimensions.scss";
   @use "../../styles/text.scss";
@@ -508,6 +516,16 @@
     background-color: colors.$backgroundAccent;
     color: colors.$foregroundAccent;
   }
+  
+  span.refreshButtonWrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  span.spin {
+    animation: spin animations.$animationSpeedSlow animations.$cubic infinite forwards;
+  }
 </style>
 
 <Modal
@@ -516,6 +534,14 @@
   bind:hideModal={hideModalInternal}
   onModalHide={restoreSettings}
 >
+  {#snippet topButtons()}
+    <IconButton click={forceRefresh}>
+      <span class="refreshButtonWrapper" class:spin={loaderAnimation} onanimationiteration={() => { loaderAnimation = false; }}>
+        <RefreshCw/>
+      </span>
+    </IconButton>
+  {/snippet}
+
   {#snippet buttons()}
     {#if anyChanged}
       <Button type="submit" color={ColorKeys.Success} enabled={submittable} onClick={saveSettings}>

@@ -22,6 +22,7 @@
     showModal?: () => any;
     hideModal?: () => any;
     children?: Snippet;
+    extraButtonsTop?: Snippet;
     extraButtonsLeft?: Snippet;
     extraButtonsRight?: Snippet;
   }
@@ -40,6 +41,7 @@
     showModal = $bindable(),
     hideModal = $bindable(NoOp),
     children,
+    extraButtonsTop,
     extraButtonsLeft,
     extraButtonsRight,
   }: Props = $props(); import Modal from "./Modal.svelte";
@@ -106,7 +108,14 @@
   }
 </script>
 
-<Modal title={title} bind:showModal={showModalInternal} bind:hideModal={hideModalInternal} onModalHide={() => {editMode = false}} bind:resetFocus>
+<Modal
+  title={title}
+  bind:showModal={showModalInternal}
+  bind:hideModal={hideModalInternal}
+  onModalHide={() => {editMode = false}}
+  bind:resetFocus
+  topButtons={extraButtonsTop}
+>
   {@render children?.()}
   {#snippet buttons()}
     {@render extraButtonsLeft?.()}
