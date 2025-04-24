@@ -10,7 +10,7 @@ export const load: PageLoad = async (event: LoadEvent) => {
   ])
 
 	return {
-    userData: results[0],
+    userData: results[0].user,
     userSettings: results[1],
     globalSettings: results[2]
 	};
