@@ -86,6 +86,35 @@
   let currentFontTime = $derived(settings.userSettings[UserSettingKeys.FontTime]);
   let currentFontTextName = $derived(currentFontText.split("-").map(x => x.charAt(0).toUpperCase() + x.slice(1)).join(" "));
   let currentFontTimeName = $derived(currentFontTime.split("-").map(x => x.charAt(0).toUpperCase() + x.slice(1)).join(" "));
+
+  // CSS variables based on preferences
+  let style = $derived(`
+    <style>
+      @font-face {
+        font-family: "${currentFontTextName}"; 
+        src: url("/fonts/${currentFontText}.ttf");
+      }
+      @font-face {
+        font-family: "${currentFontTimeName}"; 
+        src: url("/fonts/${currentFontTime}.ttf");
+      }
+
+      :root {
+        --uiScaling: ${settings.userSettings[UserSettingKeys.UiScaling]};
+
+        ${settings.userSettings[UserSettingKeys.DisplayRoundedCorners] ? "" : "\
+          --borderRadiusSmall: 0;\
+          --borderRadius: 0;\
+          --borderRadiusLarge: 0;\
+        "}
+
+        --fontFamilyText: ${currentFontTextName};
+        --fontFamilyTime: ${currentFontTimeName};
+
+        --animationSpeedMultiplier: ${settings.userSettings[UserSettingKeys.AnimationDuration]};
+      }
+    </style> 
+  `);
 </script>
 
 <style lang="scss">
@@ -140,31 +169,7 @@
   <link rel="stylesheet" href="/themes/light/{currentThemeLight}.css">
   <link rel="stylesheet" href="/themes/dark/{currentThemeDark}.css">
 
-  {@html `
-    <style>
-      @font-face {
-        font-family: "${currentFontTextName}"; 
-        src: url("/fonts/${currentFontText}.ttf");
-      }
-      @font-face {
-        font-family: "${currentFontTimeName}"; 
-        src: url("/fonts/${currentFontTime}.ttf");
-      }
-
-      :root {
-        --uiScaling: ${settings.userSettings[UserSettingKeys.UiScaling]};
-
-        ${settings.userSettings[UserSettingKeys.DisplayRoundedCorners] ? "" : "\
-          --borderRadiusSmall: 0;\
-          --borderRadius: 0;\
-          --borderRadiusLarge: 0;\
-        "}
-
-        --fontFamilyText: ${currentFontTextName};
-        --fontFamilyTime: ${currentFontTimeName};
-      }
-    </style> 
-  `}
+  {@html style}
 </svelte:head>
 
 {@render children?.()}

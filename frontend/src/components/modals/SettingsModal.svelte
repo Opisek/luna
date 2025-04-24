@@ -736,23 +736,35 @@
           options={fonts}
         />
         <SectionDivider title="Animations"/>
-        <ToggleInput
-          name={UserSettingKeys.AnimateCalendarSwipe}
-          description="Animate Calendar"
-          bind:value={settings.userSettings[UserSettingKeys.AnimateCalendarSwipe]}
+        <SliderInput
+          name={UserSettingKeys.AnimationDuration}
+          title="Animation Duration"
+          info={"To disable animations, set the animation duration to 0%."}
+          bind:value={settings.userSettings[UserSettingKeys.AnimationDuration]}
+          min={0}
+          max={2}
+          step={0.1}
+          detentTransform={(value) => `${Math.round(value * 100)}%`}
         />
-        {#if settings.userSettings[UserSettingKeys.DisplaySmallCalendar]}
+        {#if settings.userSettings[UserSettingKeys.AnimationDuration] != 0}
           <ToggleInput
-            name={UserSettingKeys.AnimateSmallCalendarSwipe}
-            description="Animate Small Calendar"
-            bind:value={settings.userSettings[UserSettingKeys.AnimateSmallCalendarSwipe]}
+            name={UserSettingKeys.AnimateCalendarSwipe}
+            description="Animate Calendar"
+            bind:value={settings.userSettings[UserSettingKeys.AnimateCalendarSwipe]}
+          />
+          {#if settings.userSettings[UserSettingKeys.DisplaySmallCalendar]}
+            <ToggleInput
+              name={UserSettingKeys.AnimateSmallCalendarSwipe}
+              description="Animate Small Calendar"
+              bind:value={settings.userSettings[UserSettingKeys.AnimateSmallCalendarSwipe]}
+            />
+          {/if}
+          <ToggleInput
+            name={UserSettingKeys.AnimateMonthSelectionSwipe}
+            description="Animate Month Selection"
+            bind:value={settings.userSettings[UserSettingKeys.AnimateMonthSelectionSwipe]}
           />
         {/if}
-        <ToggleInput
-          name={UserSettingKeys.AnimateMonthSelectionSwipe}
-          description="Animate Month Selection"
-          bind:value={settings.userSettings[UserSettingKeys.AnimateMonthSelectionSwipe]}
-        />
       {:else if selectedCategory === "developer"}
         <ToggleInput
           name={UserSettingKeys.DebugMode}

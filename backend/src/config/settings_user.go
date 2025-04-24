@@ -27,6 +27,7 @@ const (
 	KeyAnimateSmallCalendarSwipe    = "animate_small_calendar_swipe"
 	KeyAnimateMonthSelectionSwipe   = "animate_month_selection_swipe"
 	KeyAppearanceFrostedGlass       = "appearance_frosted_glass"
+	KeyAnimationDuration            = "animation_duration"
 )
 
 func AllDefaultUserSettings() []SettingsEntry {
@@ -50,6 +51,7 @@ func AllDefaultUserSettings() []SettingsEntry {
 		&AnimateSmallCalendarSwipe{},
 		&AnimateMonthSelectionSwipe{},
 		&AppearenceFrostedGlass{},
+		&AnimationDuration{},
 	}
 
 	for _, setting := range settings {
@@ -99,6 +101,8 @@ func GetMatchingUserSettingStruct(key string) (SettingsEntry, *errors.ErrorTrace
 		return &AnimateMonthSelectionSwipe{}, nil
 	case KeyAppearanceFrostedGlass:
 		return &AppearenceFrostedGlass{}, nil
+	case KeyAnimationDuration:
+		return &AnimationDuration{}, nil
 	default:
 		return nil, errors.New().Status(http.StatusBadRequest).
 			Append(errors.LvlWordy, "Invalid setting key %s", key).
@@ -523,4 +527,30 @@ func (entry *AppearenceFrostedGlass) MarshalJSON() ([]byte, error) {
 func (entry *AppearenceFrostedGlass) UnmarshalJSON(data []byte) (err error) {
 	entry.Enabled, err = common.UnmarshalBool(data)
 	return err
+}
+
+// The factor by which to scale animatino duration
+// Should default to 1.0
+type AnimationDuration struct {
+	Factor float64 `json:"value"`
+}
+
+func (entry *AnimationDuration) Key() string {
+	return KeyAnimationDuration
+}
+func (entry *AnimationDuration) Default() {
+	entry.Factor = 1.0
+}
+func (entry *AnimationDuration) MarshalJSON() ([]byte, error) {
+	return common.MarshalFloat(entry.Factor), nil
+}
+func (entry *AnimationDuration) UnmarshalJSON(data []byte) (err error) {
+	entry.Factor, err = common.UnmarshalFloat(data)
+	if err != nil {
+		return fmt.Errorf("could not parse scaling factor: %v", err)
+	}
+	if entry.Factor < 0 || entry.Factor > 4.0 {
+		return fmt.Errorf("invalid scaling factor: %f", entry.Factor)
+	}
+	return nil
 }

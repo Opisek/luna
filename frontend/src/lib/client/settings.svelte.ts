@@ -33,6 +33,7 @@ class Settings {
     [UserSettingKeys.AnimateSmallCalendarSwipe]: false,
     [UserSettingKeys.AnimateMonthSelectionSwipe]: true,
     [UserSettingKeys.AppearenceFrostedGlass]: false,
+    [UserSettingKeys.AnimationDuration]: 1,
   });
   public globalSettings: GlobalSettings = $state({
     [GlobalSettingKeys.LoggingVerbosity]: 2,

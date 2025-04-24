@@ -145,8 +145,8 @@
     class:smaller={smaller}
     class:animate={animate}
     style="grid-template-rows: repeat({amountOfRows}, 1fr)"
-    in:svelteFlyInHorizontal={{duration: animate ? 500 : 0}}
-    out:svelteFlyOutHorizontal={{duration: animate ? 500 : 0}}
+    in:svelteFlyInHorizontal={{duration: animate ? 500 * settings.userSettings[UserSettingKeys.AnimationDuration] : 0}}
+    out:svelteFlyOutHorizontal={{duration: animate ? 500 * settings.userSettings[UserSettingKeys.AnimationDuration] : 0}}
   >
     {#each days as day}
       <button

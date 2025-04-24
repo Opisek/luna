@@ -301,8 +301,8 @@
     class:columns-month={view === "month"}
     class:columns-week={view === "week"}
     class:columns-day={view === "day"}
-    in:svelteFlyInHorizontal={{duration: animate ? 500 : 0}}
-    out:svelteFlyOutHorizontal={{duration: animate ? 500 : 0}}
+    in:svelteFlyInHorizontal={{duration: animate ? 500 * settings.userSettings[UserSettingKeys.AnimationDuration] : 0}}
+    out:svelteFlyOutHorizontal={{duration: animate ? 500 * settings.userSettings[UserSettingKeys.AnimationDuration] : 0}}
   >
     {#each days as day, i}
       <Day

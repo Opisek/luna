@@ -204,8 +204,8 @@
   <div
     class="grid month"
     class:animate={animate}
-    in:svelteFlyInHorizontal={{duration: animate ? 500 : 0}}
-    out:svelteFlyOutHorizontal={{duration: animate ? 500 : 0}}
+    in:svelteFlyInHorizontal={{duration: animate ? 500 * settings.userSettings[UserSettingKeys.AnimationDuration] : 0}}
+    out:svelteFlyOutHorizontal={{duration: animate ? 500 * settings.userSettings[UserSettingKeys.AnimationDuration] : 0}}
   >
     {#each Array(12) as _, i}
       <button
@@ -224,8 +224,8 @@
   <div
     class="grid year"
     class:animate={animate}
-    in:svelteFlyInHorizontal={{duration: animate ? 500 : 0}}
-    out:svelteFlyOutHorizontal={{duration: animate ? 500 : 0}}
+    in:svelteFlyInHorizontal={{duration: animate ? 500 * settings.userSettings[UserSettingKeys.AnimationDuration] : 0}}
+    out:svelteFlyOutHorizontal={{duration: animate ? 500 * settings.userSettings[UserSettingKeys.AnimationDuration] : 0}}
   >
     {#each Array(10) as _, i}
       <button

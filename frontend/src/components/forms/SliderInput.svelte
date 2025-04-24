@@ -15,6 +15,7 @@
 
     title: string;
     name: string;
+    info?: string;
   }
 
   let {
@@ -27,6 +28,7 @@
 
     title,
     name,
+    info = "",
   }: Props = $props();
 
   let rawValue = $state(value);
@@ -274,7 +276,7 @@
   onresize={recalculateBackgroundPercentage}
 />
 
-<Label name={name}>{title}</Label>
+<Label name={name} info={info}>{title}</Label>
 <div class="container"
   onmousedown={mouseDown}
   onkeydown={keyPress}
