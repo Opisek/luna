@@ -144,10 +144,10 @@
     <link rel="stylesheet" href="/dynamic/font?purpose=fontFamilyTime&file={previousFontTime}">
   {/if}
 
-  <link rel="stylesheet" href="/themes/light/{settings.userSettings[UserSettingKeys.ThemeLight]}.css">
-  <link rel="stylesheet" href="/themes/dark/{settings.userSettings[UserSettingKeys.ThemeDark]}.css">
-  <link rel="stylesheet" href="/dynamic/font?purpose=fontFamilyText&file={settings.userSettings[UserSettingKeys.FontText]}">
-  <link rel="stylesheet" href="/dynamic/font?purpose=fontFamilyTime&file={settings.userSettings[UserSettingKeys.FontTime]}">
+  <link rel="stylesheet" href="/themes/light/{currentThemeLight}.css">
+  <link rel="stylesheet" href="/themes/dark/{currentThemeDark}.css">
+  <link rel="stylesheet" href="/dynamic/font?purpose=fontFamilyText&file={currentFontText}">
+  <link rel="stylesheet" href="/dynamic/font?purpose=fontFamilyTime&file={currentFontTime}">
 </svelte:head>
 
 <svelte:body

@@ -1,10 +1,21 @@
 import { browser } from "$app/environment";
 import ipLocation from "iplocation";
 import { fetchJson, fetchResponse } from "./net";
+import { resetSettings } from "./settings.svelte";
+import { resetThemes } from "./theme.svelte";
+import { resetRepository } from "./repository.svelte";
+import { resetNotifications } from "./notifications";
 
 export function clearSession() {
   if (!browser) return;
   localStorage.clear();
+
+  resetSessions();
+  resetSettings();
+  resetThemes();
+  resetRepository();
+  resetNotifications();
+
   window.location.href = "/logout";
 }
 
@@ -83,10 +94,14 @@ class ActiveSessions {
   }
 }
 
-let activeSessions: ActiveSessions | null = null;
+let activeSessions: ActiveSessions | null = $state(null);
 export function getActiveSessions() {
   if (activeSessions === null) {
     activeSessions = new ActiveSessions();
   }
   return activeSessions;
+}
+
+export function resetSessions() {
+  activeSessions = null;
 }

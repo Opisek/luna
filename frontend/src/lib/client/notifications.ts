@@ -65,3 +65,7 @@ function showNotification() {
 export function redrawNotifications() {
   notifications.update((notifications) => notifications);
 }
+
+export function resetNotifications() {
+  notifications.update(() => []);
+}

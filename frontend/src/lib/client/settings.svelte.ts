@@ -42,7 +42,7 @@ class Settings {
   constructor(prefetchedData: { userData: UserData, userSettings: UserSettings, globalSettings: GlobalSettings } | null = null) {
     this.fetchFromStorage();
     if (browser) window.addEventListener("storage", () => this.fetchFromStorage());
-    if (prefetchedData) this.loadFromObject(prefetchedData.userData, prefetchedData.userSettings, prefetchedData.globalSettings);
+    if (prefetchedData && Object.keys(prefetchedData).length == 3) this.loadFromObject(prefetchedData.userData, prefetchedData.userSettings, prefetchedData.globalSettings);
     else this.fetchSettings();
   }
 
@@ -113,8 +113,13 @@ class Settings {
   }
 }
 
-let settings: Settings | null = null;
+let settings: Settings | null = $state(null);
 export function getSettings(prefetchedData: { userData: UserData, userSettings: UserSettings, globalSettings: GlobalSettings } | null = null): Settings {
-  if (settings === null) settings = new Settings(prefetchedData);
+  if (settings === null || prefetchedData != null) settings = new Settings(prefetchedData);
   return settings;
+}
+
+export function resetSettings() {
+  console.log("resetting setting");
+  settings = null;
 }

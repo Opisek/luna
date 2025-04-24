@@ -10,7 +10,11 @@ const loginPaths = [
 ]
 
 const unprivilegedPaths = loginPaths.concat([
-  "api"
+  "api",
+  "dynamic",
+  "themes",
+  "fonts",
+  "logout"
 ])
 
 export const handle: Handle = async ({ event, resolve }) => {

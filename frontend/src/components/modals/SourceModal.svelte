@@ -4,7 +4,7 @@
   import TextInput from "../forms/TextInput.svelte";
 
   import { EmptySource, NoOp } from "$lib/client/placeholders";
-  import { getRepository } from "$lib/client/repository";
+  import { getRepository } from "$lib/client/repository.svelte";
   import { deepCopy, deepEquality } from "$lib/common/misc";
   import { isValidIcalFile, isValidPath, isValidUrl, valid } from "$lib/client/validation";
   import { queueNotification } from "$lib/client/notifications";

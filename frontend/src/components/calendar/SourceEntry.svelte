@@ -6,7 +6,7 @@
   import { NoOp } from "$lib/client/placeholders";
   import { focusIndicator } from "$lib/client/decoration";
   import { getMetadata } from "$lib/client/metadata";
-  import { getRepository } from "$lib/client/repository";
+  import { getRepository } from "$lib/client/repository.svelte";
 
   import { getContext, untrack } from "svelte";
 

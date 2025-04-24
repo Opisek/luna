@@ -18,7 +18,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
     environment:
       PORT: 8080
-      PUBLIC_URL: http://localhost:8080
+      PUBLIC_URL: http://pc.opi:8080
       API_URL: http://luna-backend:3000
     build:
       context: frontend
@@ -31,7 +31,7 @@ services:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     environment:
-      PUBLIC_URL: http://localhost:8080
+      PUBLIC_URL: http://pc.opi:8080
       DB_HOST: luna-postgres
       DB_PORT: 5432
       DB_USERNAME: luna

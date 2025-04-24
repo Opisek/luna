@@ -58,10 +58,14 @@ class Theme {
   }
 }
 
-let theme: Theme | null = null;
+let theme: Theme | null = $state(null);
 export function getTheme() {
   if (theme === null) {
     theme = new Theme();
   }
   return theme;
+}
+
+export function resetThemes() {
+  theme = null;
 }

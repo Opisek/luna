@@ -21,7 +21,7 @@
   import SmallCalendar from "../components/interactive/SmallCalendar.svelte";
   import { NoOp } from "$lib/client/placeholders";
   import { getMetadata } from "$lib/client/metadata";
-  import { getRepository } from "$lib/client/repository";
+  import { getRepository } from "$lib/client/repository.svelte";
   import { queueNotification } from "$lib/client/notifications";
   import { getConnectivity, Reachability } from "$lib/client/connectivity";
   import Button from "../components/interactive/Button.svelte";

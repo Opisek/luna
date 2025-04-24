@@ -8,7 +8,7 @@
 
   import { EmptyEvent, NoChangesEvent, NoOp } from "$lib/client/placeholders";
   import { deepCopy, deepEquality } from "$lib/common/misc";
-  import { getRepository } from "$lib/client/repository";
+  import { getRepository } from "$lib/client/repository.svelte";
   import { isSameDay } from "$lib/common/date";
   import { queueNotification } from "$lib/client/notifications";
   import ToggleInput from "../forms/ToggleInput.svelte";

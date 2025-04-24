@@ -12,7 +12,7 @@
   import Horizontal from "../layout/Horizontal.svelte";
   import { fetchJson } from "../../lib/client/net";
   import { queueNotification } from "../../lib/client/notifications";
-  import { getRepository } from "../../lib/client/repository";
+  import { getRepository } from "../../lib/client/repository.svelte";
   import { ColorKeys } from "../../types/colors";
 
   interface Props {

@@ -1,4 +1,4 @@
-import { getRepository } from "../client/repository";
+import { getRepository } from "../client/repository.svelte";
 import { getSha1Hash } from "./crypto";
 
 export const parseRGB = (color: string): [number, number, number] => {

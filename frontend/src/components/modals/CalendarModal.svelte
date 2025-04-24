@@ -4,7 +4,7 @@
   import TextInput from "../forms/TextInput.svelte";
 
   import { EmptyCalendar, NoChangesCalendar, NoOp } from "$lib/client/placeholders";
-  import { getRepository } from "$lib/client/repository";
+  import { getRepository } from "$lib/client/repository.svelte";
   import { deepCopy } from "$lib/common/misc";
   import SelectInput from "../forms/SelectInput.svelte";
   import ColorInput from "../forms/ColorInput.svelte";

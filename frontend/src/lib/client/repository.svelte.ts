@@ -898,8 +898,12 @@ class Repository {
   }
 }
 
-let repository: Repository | null = null;
+let repository: Repository | null = $state(null);
 export function getRepository() {
   if (!repository) repository = new Repository();
   return repository;
+}
+
+export function resetRepository() {
+  repository = null;
 }

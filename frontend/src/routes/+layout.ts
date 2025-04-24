@@ -9,6 +9,8 @@ export const load: PageLoad = async (event: LoadEvent) => {
     fetchJsonFromEvent(event, "/api/settings", {}, true)
   ])
 
+  if (results[0].user === undefined) return null;
+
 	return {
     userData: results[0].user,
     userSettings: results[1],
