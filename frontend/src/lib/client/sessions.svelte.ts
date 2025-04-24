@@ -29,18 +29,18 @@ class ActiveSessions {
     await fetchJson("/api/sessions").then((data: { current: string, sessions: Session[] }) => {
       this.currentSession = data.current;
       data.sessions.forEach(async x => {
-        const cached = this.locationCache.get(x.ip_address);
+        const cached = this.locationCache.get(x.last_ip_address);
         if (cached) {
           x.location = cached;
-        } else if (["::1", "127.0.0.1", "localhost", ].includes(x.ip_address)) {
+        } else if (["::1", "127.0.0.1", "localhost", ].includes(x.last_ip_address)) {
           x.location = "Local Host";
-          this.locationCache.set(x.ip_address, x.location);
+          this.locationCache.set(x.last_ip_address, x.location);
         } else {
-          const location = await ipLocation(x.ip_address);
+          const location = await ipLocation(x.last_ip_address);
           if (location.reserved) x.location = "Local Network";
           else x.location = ((loc => `${loc.country.name} ${loc.region.name} ${loc.city}`)(location as ipLocation.LocationData));
           if (x.location.trim() === "") x.location = "Local Network"
-          this.locationCache.set(x.ip_address, x.location);
+          this.locationCache.set(x.last_ip_address, x.location);
         }
 
         x.created_at = new Date((x.created_at as unknown as string).replace("Z", ""));

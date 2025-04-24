@@ -117,12 +117,13 @@ func Login(c *gin.Context) {
 	}
 
 	session := &types.Session{
-		UserId:       userId,
-		UserAgent:    c.Request.UserAgent(),
-		IpAddress:    net.ParseIP(c.ClientIP()),
-		IsShortLived: c.PostForm("remember") != "true",
-		IsApi:        false,
-		SecretHash:   crypto.GetSha256Hash(secret),
+		UserId:           userId,
+		UserAgent:        c.Request.UserAgent(),
+		LastIpAddress:    net.ParseIP(c.ClientIP()),
+		InitialIpAddress: net.ParseIP(c.ClientIP()),
+		IsShortLived:     c.PostForm("remember") != "true",
+		IsApi:            false,
+		SecretHash:       crypto.GetSha256Hash(secret),
 	}
 	err = u.Tx.Queries().InsertSession(session)
 	if err != nil {
@@ -262,12 +263,13 @@ func Register(c *gin.Context) {
 	}
 
 	session := &types.Session{
-		UserId:       userId,
-		UserAgent:    c.Request.UserAgent(),
-		IpAddress:    net.ParseIP(c.ClientIP()),
-		IsShortLived: c.PostForm("remember") != "true",
-		IsApi:        false,
-		SecretHash:   crypto.GetSha256Hash(secret),
+		UserId:           userId,
+		UserAgent:        c.Request.UserAgent(),
+		InitialIpAddress: net.ParseIP(c.ClientIP()),
+		LastIpAddress:    net.ParseIP(c.ClientIP()),
+		IsShortLived:     c.PostForm("remember") != "true",
+		IsApi:            false,
+		SecretHash:       crypto.GetSha256Hash(secret),
 	}
 	err = u.Tx.Queries().InsertSession(session)
 	if err != nil {

@@ -81,12 +81,13 @@ func PutSession(c *gin.Context) {
 	}
 
 	session := &types.Session{
-		UserId:       userId,
-		UserAgent:    apiTokenName,
-		IpAddress:    net.ParseIP(c.ClientIP()),
-		IsShortLived: false,
-		IsApi:        true,
-		SecretHash:   crypto.GetSha256Hash(secret),
+		UserId:           userId,
+		UserAgent:        apiTokenName,
+		InitialIpAddress: net.ParseIP(c.ClientIP()),
+		LastIpAddress:    net.ParseIP(c.ClientIP()),
+		IsShortLived:     false,
+		IsApi:            true,
+		SecretHash:       crypto.GetSha256Hash(secret),
 	}
 	err = u.Tx.Queries().InsertSession(session)
 	if err != nil {

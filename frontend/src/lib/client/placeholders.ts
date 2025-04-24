@@ -44,7 +44,8 @@ export const EmptySession: Session = {
   created_at: new Date(0),
   last_seen: new Date(0),
   user_agent: "",
-  ip_address: "",
+  initial_ip_address: "",
+  last_ip_address: "",
   is_short_lived: false,
   is_api: false,
   location: ""

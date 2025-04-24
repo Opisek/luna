@@ -19,7 +19,8 @@ func (q *Tables) InitializeSessionsTable() error {
 			created_at TIMESTAMP NOT NULL DEFAULT NOW(),
 			last_seen TIMESTAMP NOT NULL DEFAULT NOW(),
 			user_agent TEXT,
-			ip_address INET,
+			initial_ip_address INET,
+			last_ip_address INET,
 			is_short_lived BOOLEAN DEFAULT FALSE,
 			is_api BOOLEAN DEFAULT FALSE,
 			hash BYTEA NOT NULL

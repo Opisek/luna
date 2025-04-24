@@ -11,6 +11,7 @@ import (
 	"luna-backend/crypto"
 	"luna-backend/db"
 	"luna-backend/errors"
+	"net"
 	"net/http"
 	"time"
 
@@ -244,7 +245,7 @@ func RequireAuth() gin.HandlerFunc {
 		}
 
 		// Find the session in the database => Verifies that the session has not been revoked and that the user exists
-		session, tr := u.Tx.Queries().GetSessionAndUpdateLastSeen(parsedToken.UserId, parsedToken.SessionId)
+		session, tr := u.Tx.Queries().GetSessionAndUpdateLastSeen(parsedToken.UserId, parsedToken.SessionId, net.ParseIP(c.ClientIP()))
 		if tr != nil {
 			u.Error(tr)
 			c.Abort()
