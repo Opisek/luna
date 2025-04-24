@@ -120,6 +120,5 @@ export function getSettings(prefetchedData: { userData: UserData, userSettings: 
 }
 
 export function resetSettings() {
-  console.log("resetting setting");
   settings = null;
 }
