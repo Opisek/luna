@@ -660,11 +660,13 @@
           description="Dynamic Calendar Row Count"
           bind:value={settings.userSettings[UserSettingKeys.DynamicCalendarRows]}
         />
-        <ToggleInput
-          name={UserSettingKeys.DynamicSmallCalendarRows}
-          description="Dynamic Small Calendar Row Count"
-          bind:value={settings.userSettings[UserSettingKeys.DynamicSmallCalendarRows]}
-        />
+        {#if settings.userSettings[UserSettingKeys.DisplaySmallCalendar]}
+          <ToggleInput
+            name={UserSettingKeys.DynamicSmallCalendarRows}
+            description="Dynamic Small Calendar Row Count"
+            bind:value={settings.userSettings[UserSettingKeys.DynamicSmallCalendarRows]}
+          />
+        {/if}
         <ToggleInput
           name={UserSettingKeys.DisplayWeekNumbers}
           description="Display Week Numbers"
@@ -739,11 +741,13 @@
           description="Animate Calendar"
           bind:value={settings.userSettings[UserSettingKeys.AnimateCalendarSwipe]}
         />
-        <ToggleInput
-          name={UserSettingKeys.AnimateSmallCalendarSwipe}
-          description="Animate Small Calendar"
-          bind:value={settings.userSettings[UserSettingKeys.AnimateSmallCalendarSwipe]}
-        />
+        {#if settings.userSettings[UserSettingKeys.DisplaySmallCalendar]}
+          <ToggleInput
+            name={UserSettingKeys.AnimateSmallCalendarSwipe}
+            description="Animate Small Calendar"
+            bind:value={settings.userSettings[UserSettingKeys.AnimateSmallCalendarSwipe]}
+          />
+        {/if}
         <ToggleInput
           name={UserSettingKeys.AnimateMonthSelectionSwipe}
           description="Animate Month Selection"
