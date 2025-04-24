@@ -39,10 +39,11 @@ class Settings {
     [GlobalSettingKeys.UseCdnFonts]: false,
   });
 
-  constructor() {
+  constructor(prefetchedData: { userData: UserData, userSettings: UserSettings, globalSettings: GlobalSettings } | null = null) {
     this.fetchFromStorage();
     if (browser) window.addEventListener("storage", () => this.fetchFromStorage());
-    this.fetchSettings();
+    if (prefetchedData) this.loadFromObject(prefetchedData.userData, prefetchedData.userSettings, prefetchedData.globalSettings);
+    else this.fetchSettings();
   }
 
   private async fetchUserData() {
@@ -104,12 +105,16 @@ class Settings {
       this.globalSettings = JSON.parse(globalSettings);
     }
   }
+
+  private loadFromObject(userData: UserData, userSettings: UserSettings, globalSettings: GlobalSettings) {
+    this.userData = userData;
+    this.userSettings = userSettings;
+    this.globalSettings = globalSettings;
+  }
 }
 
 let settings: Settings | null = null;
-export function getSettings() {
-  if (settings === null) {
-    settings = new Settings();
-  }
+export function getSettings(prefetchedData: { userData: UserData, userSettings: UserSettings, globalSettings: GlobalSettings } | null = null): Settings {
+  if (settings === null) settings = new Settings(prefetchedData);
   return settings;
 }

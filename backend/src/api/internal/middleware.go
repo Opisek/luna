@@ -246,12 +246,20 @@ func RequireAuth() gin.HandlerFunc {
 			return
 		}
 
-		if !session.IsApi {
+		// Check if the user agent matches the one used to create the session
+		// This is not a 100% guarantee that the token was not stolen, but it is a good first line of defense
+		// This is disabled for API requests and for loading data from +page.ts or +layout.ts in Svelte.
+		// While an attacker could just set their user agent to "FrontendLoad",
+		// this is not that much easier than setting the correct user agent in first place.
+		if !(session.IsApi || (c.Request.UserAgent() == "FrontendLoad" && (c.Request.Method == http.MethodGet || c.Request.Method == http.MethodHead))) {
 			// Compare the user agents => Verifies that the token was not stolen and used from another device (not a 100% guarantee)
 			associatedUserAgent := useragent.Parse(session.UserAgent)
 			currentUserAgent := useragent.Parse(c.Request.UserAgent())
 			if associatedUserAgent.OS != currentUserAgent.OS || associatedUserAgent.Name != currentUserAgent.Name || associatedUserAgent.Device != currentUserAgent.Device {
 				u.Error(errors.New().Status(http.StatusUnauthorized).
+					Append(errors.LvlDebug, "Expected %s, but got %s",
+						fmt.Sprintf("%s %s %s", associatedUserAgent.OS, associatedUserAgent.Name, associatedUserAgent.Device),
+						fmt.Sprintf("%s %s %s", currentUserAgent.OS, currentUserAgent.Name, currentUserAgent.Device)).
 					Append(errors.LvlWordy, "User agent mismatch"),
 				)
 				c.Abort()

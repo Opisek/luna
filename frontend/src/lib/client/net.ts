@@ -1,3 +1,4 @@
+import { error, type LoadEvent } from "@sveltejs/kit";
 import { clearSession } from "./sessions.svelte";
 
 export async function fetchResponse(url: string, options: RequestInit = {}): Promise<Response> {
@@ -24,6 +25,25 @@ export async function fetchJson(url: string, options: RequestInit = {}) {
     // TODO: show warnings as notifications
   }
   return json;
+}
+
+export async function fetchJsonFromEvent(event: LoadEvent, url: string, options: RequestInit = {}, ignoreErrors: boolean = false) {
+  options.headers = [ ["User-Agent", "FrontendLoad"] ]
+  const response = await event.fetch(url, options).catch((err) => {
+    if (!err.cause) err.cause = new Error("500");
+    if (ignoreErrors) return null;
+    else error(Number.parseInt(err.cause.message), err.message);
+  });
+  if (response === null) return {};
+  if (!response.ok) {
+    if (ignoreErrors) return {};
+    else error(response.status, response.statusText);
+  }
+  const body = await response.json().catch((err) => {
+    if (ignoreErrors) return {};
+    else error(500, err.message);
+  });
+  return body;
 }
 
 export function downloadFileToClient(file: FileList | string | null) {

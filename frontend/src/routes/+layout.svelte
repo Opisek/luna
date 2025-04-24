@@ -3,19 +3,25 @@
 
   import { notificationExpireTime, notifications } from "$lib/client/notifications";
   import { getSettings } from "$lib/client/settings.svelte";
-  import { browser } from "$app/environment";
-  import { UserSettingKeys } from "../types/settings";
-  import { afterNavigate } from "$app/navigation";
+  import { UserSettingKeys, type GlobalSettings, type UserData, type UserSettings } from "../types/settings";
   import { getTheme } from "$lib/client/theme.svelte";
   import type { NotificationModel } from "../types/notification";
 
-  interface Props {
+  interface PageProps {
     children?: import('svelte').Snippet;
+    data: {
+      userData: UserData;
+      userSettings: UserSettings;
+      globalSettings: GlobalSettings;
+    }
   }
 
-  let { children }: Props = $props();
+  let {
+    children,
+    data
+  }: PageProps = $props();
 
-  const settings = getSettings();
+  const settings = getSettings(data);
   const theme = getTheme();
 
   let notifsWrapper: HTMLDivElement;
@@ -62,15 +68,10 @@
   });
 
   $effect(() => {
-    if (!browser) return;
     const root = document.documentElement;
     root.setAttribute("data-style-rounded-corners", settings.userSettings[UserSettingKeys.DisplayRoundedCorners] ? "true" : "false");
     root.setAttribute("data-theme", theme.isLightMode() ? "light" : "dark");
     root.setAttribute("data-ui-scaling", (Math.round(settings.userSettings[UserSettingKeys.UiScaling] * 100)).toString());
-  })
-
-  afterNavigate(() => {
-    settings.fetchSettings();
   })
 
   // Prevent "flashing" by unloading the previous theme/font only after loading the next one.
