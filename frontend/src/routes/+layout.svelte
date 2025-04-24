@@ -142,12 +142,12 @@
   {@html `
     <style>
       @font-face {
-        font-family: "${currentFontText}"; 
-        src: url("/fonts/${currentFontTextName}.ttf");
+        font-family: "${currentFontTextName}"; 
+        src: url("/fonts/${currentFontText}.ttf");
       }
       @font-face {
-        font-family: "${currentFontTime}"; 
-        src: url("/fonts/${currentFontTimeName}.ttf");
+        font-family: "${currentFontTimeName}"; 
+        src: url("/fonts/${currentFontTime}.ttf");
       }
 
       :root {
