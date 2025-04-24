@@ -20,7 +20,7 @@ func GetGravatarUrl(email string) *types.Url {
 	email = strings.ToLower(email)
 
 	// Get email hash
-	hash := crypto.GetSha256Hash(email)
+	hash := crypto.GetSha256Hash([]byte(email))
 
 	// Convert the hash to a hex string
 	hex := hex.EncodeToString(hash)

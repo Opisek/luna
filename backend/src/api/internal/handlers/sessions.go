@@ -3,6 +3,7 @@ package handlers
 import (
 	"luna-backend/api/internal/util"
 	"luna-backend/auth"
+	"luna-backend/crypto"
 	"luna-backend/errors"
 	"luna-backend/types"
 	"net"
@@ -61,11 +62,20 @@ func PutSession(c *gin.Context) {
 		return
 	}
 
-	// Create the API token
+	// Create the API session
 	apiTokenName := c.Request.FormValue("name")
 	if apiTokenName == "" {
 		u.Error(errors.New().Status(http.StatusBadRequest).
 			Append(errors.LvlPlain, "Name may not be empty"),
+		)
+		return
+	}
+
+	secret, err := crypto.GenerateRandomBytes(256)
+	if err != nil {
+		u.Error(err.
+			Append(errors.LvlWordy, "Could not generate random bytes").
+			AltStr(errors.LvlBroad, "Could not create API key"),
 		)
 		return
 	}
@@ -76,6 +86,7 @@ func PutSession(c *gin.Context) {
 		IpAddress:    net.ParseIP(c.ClientIP()),
 		IsShortLived: false,
 		IsApi:        true,
+		SecretHash:   crypto.GetSha256Hash(secret),
 	}
 	err = u.Tx.Queries().InsertSession(session)
 	if err != nil {
@@ -87,7 +98,7 @@ func PutSession(c *gin.Context) {
 	}
 
 	// Generate the token
-	token, err := auth.NewToken(u.Config, u.Tx, userId, session.SessionId)
+	token, err := auth.NewToken(u.Config, u.Tx, userId, session.SessionId, secret)
 	if err != nil {
 		u.Error(err.
 			Append(errors.LvlWordy, "Could not generate API token").

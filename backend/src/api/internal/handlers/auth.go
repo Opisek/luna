@@ -3,6 +3,7 @@ package handlers
 import (
 	"luna-backend/api/internal/util"
 	"luna-backend/auth"
+	"luna-backend/crypto"
 	"luna-backend/errors"
 	"luna-backend/types"
 	"net"
@@ -106,12 +107,22 @@ func Login(c *gin.Context) {
 	}
 
 	// Create new session
+	secret, err := crypto.GenerateRandomBytes(256)
+	if err != nil {
+		u.Error(err.
+			Append(errors.LvlWordy, "Could not generate random bytes").
+			AltStr(errors.LvlBroad, "Could not create API key"),
+		)
+		return
+	}
+
 	session := &types.Session{
 		UserId:       userId,
 		UserAgent:    c.Request.UserAgent(),
 		IpAddress:    net.ParseIP(c.ClientIP()),
 		IsShortLived: c.PostForm("remember") != "true",
 		IsApi:        false,
+		SecretHash:   crypto.GetSha256Hash(secret),
 	}
 	err = u.Tx.Queries().InsertSession(session)
 	if err != nil {
@@ -122,7 +133,7 @@ func Login(c *gin.Context) {
 	}
 
 	// Generate the token
-	token, err := auth.NewToken(u.Config, u.Tx, userId, session.SessionId)
+	token, err := auth.NewToken(u.Config, u.Tx, userId, session.SessionId, secret)
 	if err != nil {
 		u.Error(err.
 			Append(errors.LvlWordy, "Could not generate token").
@@ -175,6 +186,7 @@ func Register(c *gin.Context) {
 			Append(errors.LvlWordy, "Malformed request").
 			Append(errors.LvlBroad, "Could not register"),
 		)
+		return
 	}
 
 	usernameErr := util.IsValidUsername(payload.Username)
@@ -240,12 +252,22 @@ func Register(c *gin.Context) {
 	}
 
 	// Create new session
+	secret, err := crypto.GenerateRandomBytes(256)
+	if err != nil {
+		u.Error(err.
+			Append(errors.LvlWordy, "Could not generate random bytes").
+			AltStr(errors.LvlBroad, "Could not create API key"),
+		)
+		return
+	}
+
 	session := &types.Session{
 		UserId:       userId,
 		UserAgent:    c.Request.UserAgent(),
 		IpAddress:    net.ParseIP(c.ClientIP()),
 		IsShortLived: c.PostForm("remember") != "true",
 		IsApi:        false,
+		SecretHash:   crypto.GetSha256Hash(secret),
 	}
 	err = u.Tx.Queries().InsertSession(session)
 	if err != nil {
@@ -256,12 +278,13 @@ func Register(c *gin.Context) {
 	}
 
 	// Generate the token
-	token, err := auth.NewToken(u.Config, u.Tx, userId, session.SessionId)
+	token, err := auth.NewToken(u.Config, u.Tx, userId, session.SessionId, secret)
 	if err != nil {
 		u.Error(err.
 			Append(errors.LvlWordy, "Could not generate token").
 			Append(errors.LvlBroad, "Could not register"),
 		)
+		return
 	}
 
 	u.Success(&gin.H{"token": token})

@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"encoding/base64"
 	"luna-backend/config"
 	"luna-backend/crypto"
 	"luna-backend/db"
@@ -14,13 +15,15 @@ import (
 type JsonWebToken struct {
 	SessionId types.ID `json:"session_id"`
 	UserId    types.ID `json:"user_id"`
+	Secret    string   `json:"secret"`
 	jwt.RegisteredClaims
 }
 
-func NewToken(commonConfig *config.CommonConfig, tx *db.Transaction, userId types.ID, sessionId types.ID) (string, *errors.ErrorTrace) {
+func NewToken(commonConfig *config.CommonConfig, tx *db.Transaction, userId types.ID, sessionId types.ID, secret []byte) (string, *errors.ErrorTrace) {
 	token := JsonWebToken{
 		UserId:    userId,
 		SessionId: sessionId,
+		Secret:    base64.StdEncoding.EncodeToString(secret),
 	}
 
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS512, token)

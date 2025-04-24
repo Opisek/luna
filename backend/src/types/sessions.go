@@ -14,4 +14,5 @@ type Session struct {
 	IpAddress    net.IP    `json:"ip_address" db:"ip_address"`
 	IsShortLived bool      `json:"is_short_lived" db:"is_short_lived"`
 	IsApi        bool      `json:"is_api" db:"is_api"`
+	SecretHash   []byte    `json:"-" db:"hash"`
 }

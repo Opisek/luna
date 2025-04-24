@@ -1,11 +1,14 @@
 package middleware
 
 import (
+	"bytes"
 	"context"
+	"encoding/base64"
 	"fmt"
 	"luna-backend/api/internal/util"
 	"luna-backend/auth"
 	"luna-backend/config"
+	"luna-backend/crypto"
 	"luna-backend/db"
 	"luna-backend/errors"
 	"net/http"
@@ -207,6 +210,8 @@ func RequestSetup(timeout time.Duration, database *db.Database, withTransaction 
 	}
 }
 
+// Error messages must be kept intentionally vague even in higher verbosity levels,
+// to avoid the creation of an oracle.
 func RequireAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		u := util.GetUtil(c)
@@ -231,17 +236,37 @@ func RequireAuth() gin.HandlerFunc {
 		}
 
 		// Parse the token => Verifies that it was signed by the server
-		parsedToken, err := auth.ParseToken(u.Config, token)
-		if err != nil {
-			u.Error(err)
+		parsedToken, tr := auth.ParseToken(u.Config, token)
+		if tr != nil {
+			u.Error(tr)
 			c.Abort()
 			return
 		}
 
 		// Find the session in the database => Verifies that the session has not been revoked and that the user exists
-		session, err := u.Tx.Queries().GetSessionAndUpdateLastSeen(parsedToken.UserId, parsedToken.SessionId)
+		session, tr := u.Tx.Queries().GetSessionAndUpdateLastSeen(parsedToken.UserId, parsedToken.SessionId)
+		if tr != nil {
+			u.Error(tr)
+			c.Abort()
+			return
+		}
+
+		// Check if the secret from the token hashes to the same value as the one in the database.
+		// This is one line of defense against forged tokens.
+		secret, err := base64.StdEncoding.DecodeString(parsedToken.Secret)
 		if err != nil {
-			u.Error(err)
+			u.Error(errors.New().Status(http.StatusInternalServerError).
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlDebug, "Could not decode secret from token"),
+			)
+			c.Abort()
+			return
+		}
+		actualHash := crypto.GetSha256Hash(secret)
+		if !bytes.Equal(actualHash, session.SecretHash) {
+			u.Error(errors.New().Status(http.StatusUnauthorized).
+				Append(errors.LvlDebug, "Token secret value produces incorrect hash value"),
+			)
 			c.Abort()
 			return
 		}
@@ -260,7 +285,7 @@ func RequireAuth() gin.HandlerFunc {
 					Append(errors.LvlDebug, "Expected %s, but got %s",
 						fmt.Sprintf("%s %s %s", associatedUserAgent.OS, associatedUserAgent.Name, associatedUserAgent.Device),
 						fmt.Sprintf("%s %s %s", currentUserAgent.OS, currentUserAgent.Name, currentUserAgent.Device)).
-					Append(errors.LvlWordy, "User agent mismatch"),
+					Append(errors.LvlDebug, "User agent mismatch"),
 				)
 				c.Abort()
 				return
