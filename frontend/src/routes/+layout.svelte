@@ -1,6 +1,4 @@
 <script lang="ts">
-  import { style } from "svelte-body";
-
   import Notification from "../components/interactive/Notification.svelte";
 
   import { notificationExpireTime, notifications } from "$lib/client/notifications";
@@ -77,16 +75,16 @@
   // Prevent "flashing" by unloading the previous theme/font only after loading the next one.
   let currentThemeLight = $derived(settings.userSettings[UserSettingKeys.ThemeLight]);
   let currentThemeDark = $derived(settings.userSettings[UserSettingKeys.ThemeDark]);
-  let currentFontText = $derived(settings.userSettings[UserSettingKeys.FontText]);
-  let currentFontTime = $derived(settings.userSettings[UserSettingKeys.FontTime]);
   let previousThemeLight = $state("");
   let previousThemeDark = $state("");
-  let previousFontText = $state("");
-  let previousFontTime = $state("");
   $effect(() => { setTimeout((val) => previousThemeLight = val, 100, currentThemeLight); });
   $effect(() => { setTimeout((val) => previousThemeDark = val, 100, currentThemeDark); });
-  $effect(() => { setTimeout((val) => previousFontText = val, 100, currentFontText); });
-  $effect(() => { setTimeout((val) => previousFontTime = val, 100, currentFontTime); });
+
+  // Font loading
+  let currentFontText = $derived(settings.userSettings[UserSettingKeys.FontText]);
+  let currentFontTime = $derived(settings.userSettings[UserSettingKeys.FontTime]);
+  let currentFontTextName = $derived(currentFontText.split("-").map(x => x.charAt(0).toUpperCase() + x.slice(1)).join(" "));
+  let currentFontTimeName = $derived(currentFontTime.split("-").map(x => x.charAt(0).toUpperCase() + x.slice(1)).join(" "));
 </script>
 
 <style lang="scss">
@@ -137,27 +135,36 @@
   {#if previousThemeDark != "" && previousThemeDark != currentThemeDark}
     <link rel="stylesheet" href="/themes/dark/{previousThemeDark}.css">
   {/if}
-  {#if previousFontText != "" && previousFontText != currentFontText}
-    <link rel="stylesheet" href="/dynamic/font?purpose=fontFamilyText&file={previousFontText}">
-  {/if}
-  {#if previousFontTime != "" && previousFontTime != currentFontTime}
-    <link rel="stylesheet" href="/dynamic/font?purpose=fontFamilyTime&file={previousFontTime}">
-  {/if}
 
   <link rel="stylesheet" href="/themes/light/{currentThemeLight}.css">
   <link rel="stylesheet" href="/themes/dark/{currentThemeDark}.css">
-  <link rel="stylesheet" href="/dynamic/font?purpose=fontFamilyText&file={currentFontText}">
-  <link rel="stylesheet" href="/dynamic/font?purpose=fontFamilyTime&file={currentFontTime}">
-</svelte:head>
 
-<svelte:body
-  use:style={{
-    "--uiScaling": settings.userSettings[UserSettingKeys.UiScaling],
-    "--borderRadiusSmall": settings.userSettings[UserSettingKeys.DisplayRoundedCorners] ? null : 0,
-    "--borderRadius": settings.userSettings[UserSettingKeys.DisplayRoundedCorners] ? null : 0,
-    "--borderRadiusLarge": settings.userSettings[UserSettingKeys.DisplayRoundedCorners] ? null : 0
-  }}
-/>
+  {@html `
+    <style>
+      @font-face {
+        font-family: "${currentFontText}"; 
+        src: url("/fonts/${currentFontTextName}.ttf");
+      }
+      @font-face {
+        font-family: "${currentFontTime}"; 
+        src: url("/fonts/${currentFontTimeName}.ttf");
+      }
+
+      :root {
+        --uiScaling: ${settings.userSettings[UserSettingKeys.UiScaling]};
+
+        ${settings.userSettings[UserSettingKeys.DisplayRoundedCorners] ? "" : "\
+          --borderRadiusSmall: 0;\
+          --borderRadius: 0;\
+          --borderRadiusLarge: 0;\
+        "}
+
+        --fontFamilyText: ${currentFontTextName};
+        --fontFamilyTime: ${currentFontTimeName};
+      }
+    </style> 
+  `}
+</svelte:head>
 
 {@render children?.()}
 

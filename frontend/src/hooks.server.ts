@@ -11,7 +11,6 @@ const loginPaths = [
 
 const unprivilegedPaths = loginPaths.concat([
   "api",
-  "dynamic",
   "themes",
   "fonts",
   "logout"
