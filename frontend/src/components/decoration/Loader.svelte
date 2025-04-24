@@ -23,7 +23,7 @@
   
   @for $i from 1 through 3 {
     .dot:nth-child(#{$i}) {
-      animation-delay: animations.$animationSpeedFast * ($i - 1);
+      animation-delay: calc(animations.$animationSpeedFast * ($i - 1));
     }
   }
 

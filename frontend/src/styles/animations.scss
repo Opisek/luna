@@ -59,7 +59,7 @@
 $cubic: cubic-bezier(0.34, 1.56, 0.64, 1);
 
 /* Timing */
-$animationSpeedFast: .1s;
-$animationSpeed: .25s;
-$animationSpeedSlow: .5s;
-$animationSpeedVerySlow: 1.5s;
+$animationSpeedFast: calc(var(--animationSpeedMultiplier, 1) * .1s);
+$animationSpeed: calc(var(--animationSpeedMultiplier, 1) * .25s);
+$animationSpeedSlow: calc(var(--animationSpeedMultiplier, 1) * .5s);
+$animationSpeedVerySlow: calc(var(--animationSpeedMultiplier, 1) * 1.5s);
