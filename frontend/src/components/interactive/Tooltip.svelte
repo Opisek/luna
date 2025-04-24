@@ -129,6 +129,11 @@
     transition: opacity animations.$animationSpeed;
   }
 
+  :global(html[data-frost="true"]) .popover {
+    background-color: color-mix(in srgb, colors.$backgroundSecondary 65%, transparent);
+    backdrop-filter: blur(dimensions.$blurLarge);
+  }
+
   .popover.visible {
     opacity: 1;
   }

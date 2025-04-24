@@ -26,6 +26,7 @@ const (
 	KeyAnimateCalendarSwipe         = "animate_calendar_swipe"
 	KeyAnimateSmallCalendarSwipe    = "animate_small_calendar_swipe"
 	KeyAnimateMonthSelectionSwipe   = "animate_month_selection_swipe"
+	KeyAppearanceFrostedGlass       = "appearance_frosted_glass"
 )
 
 func AllDefaultUserSettings() []SettingsEntry {
@@ -48,6 +49,7 @@ func AllDefaultUserSettings() []SettingsEntry {
 		&AnimateCalendarSwipe{},
 		&AnimateSmallCalendarSwipe{},
 		&AnimateMonthSelectionSwipe{},
+		&AppearenceFrostedGlass{},
 	}
 
 	for _, setting := range settings {
@@ -95,6 +97,8 @@ func GetMatchingUserSettingStruct(key string) (SettingsEntry, *errors.ErrorTrace
 		return &AnimateSmallCalendarSwipe{}, nil
 	case KeyAnimateMonthSelectionSwipe:
 		return &AnimateMonthSelectionSwipe{}, nil
+	case KeyAppearanceFrostedGlass:
+		return &AppearenceFrostedGlass{}, nil
 	default:
 		return nil, errors.New().Status(http.StatusBadRequest).
 			Append(errors.LvlWordy, "Invalid setting key %s", key).
@@ -497,6 +501,26 @@ func (entry *AnimateMonthSelectionSwipe) MarshalJSON() ([]byte, error) {
 	return common.MarshalBool(entry.Enabled), nil
 }
 func (entry *AnimateMonthSelectionSwipe) UnmarshalJSON(data []byte) (err error) {
+	entry.Enabled, err = common.UnmarshalBool(data)
+	return err
+}
+
+// Whether popups and modals should have a frosted glass appearance
+// Should default to false
+type AppearenceFrostedGlass struct {
+	Enabled bool `json:"value"`
+}
+
+func (entry *AppearenceFrostedGlass) Key() string {
+	return KeyAppearanceFrostedGlass
+}
+func (entry *AppearenceFrostedGlass) Default() {
+	entry.Enabled = false
+}
+func (entry *AppearenceFrostedGlass) MarshalJSON() ([]byte, error) {
+	return common.MarshalBool(entry.Enabled), nil
+}
+func (entry *AppearenceFrostedGlass) UnmarshalJSON(data []byte) (err error) {
 	entry.Enabled, err = common.UnmarshalBool(data)
 	return err
 }

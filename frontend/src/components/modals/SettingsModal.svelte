@@ -448,7 +448,6 @@
     overflow-x: hidden;
     padding-right: dimensions.$gapLarger;
     margin-right: -(dimensions.$gapLarger);
-    background-color: colors.$backgroundPrimary;
   }
 
   main > :global(*) {
@@ -686,6 +685,11 @@
           ]}
         />
         <SectionDivider title={"Site Appearance"}/>
+        <ToggleInput
+          name={UserSettingKeys.AppearenceFrostedGlass}
+          description="Frosted Glass Effect"
+          bind:value={settings.userSettings[UserSettingKeys.AppearenceFrostedGlass]}
+        />
         <ToggleInput
           name={UserSettingKeys.DisplayRoundedCorners}
           description="Rounded Corners"

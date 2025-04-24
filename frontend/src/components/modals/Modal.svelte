@@ -94,6 +94,10 @@
     background-color: colors.$backgroundPrimary;
     color: colors.$foregroundPrimary;
   }
+  :global(html[data-frost="true"]) dialog {
+    background-color: color-mix(in srgb, colors.$backgroundPrimary 75%, transparent);
+    backdrop-filter: blur(dimensions.$blurLarge);
+  }
   dialog::backdrop {
     backdrop-filter: blur(dimensions.$blur);
   }

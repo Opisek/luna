@@ -12,32 +12,23 @@
 
   span.wrapper {
     color: color-mix(in srgb, currentColor 50%, transparent);
-    background-color: inherit;
     width: 100%;
-    position: relative;
-    text-align: center;
-  }
-
-  span.text {
-    background-color: inherit;
-    padding: 0 dimensions.$gapLarge;
-    z-index: 2;
-    position: relative;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: dimensions.$gapLarge;
   }
 
   hr {
     width: 100%;
     color: colors.$backgroundSecondary; 
     border: solid .1em;
-    border-radius: dimensions.$borderRadius;
-    position: absolute;
-    top: .1em;
+    border-radius: .05em;
   }
 </style>
 
 <span class="wrapper">
-  <span class="text">
-    {title}
-  </span>
+  <hr/>
+  {title}
   <hr/>
 </span>

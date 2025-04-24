@@ -70,6 +70,7 @@
   $effect(() => {
     const root = document.documentElement;
     root.setAttribute("data-theme", theme.isLightMode() ? "light" : "dark");
+    root.setAttribute("data-frost", settings.userSettings[UserSettingKeys.AppearenceFrostedGlass] ? "true" : "false");
   })
 
   // Prevent "flashing" by unloading the previous theme/font only after loading the next one.

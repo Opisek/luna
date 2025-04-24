@@ -93,6 +93,10 @@
     background-color: colors.$backgroundSecondary;
     color: colors.$foregroundSecondary;
   }
+  :global(html[data-frost="true"]) dialog {
+    background-color: color-mix(in srgb, colors.$backgroundSecondary 50%, transparent) !important;
+    backdrop-filter: blur(dimensions.$blurLarge);
+  }
 
   dialog[open] {
 		animation: zoom animations.$animationSpeed animations.$cubic forwards;
