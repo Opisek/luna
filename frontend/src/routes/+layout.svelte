@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { style } from "svelte-body";
+
   import Notification from "../components/interactive/Notification.svelte";
 
   import { notificationExpireTime, notifications } from "$lib/client/notifications";
@@ -69,9 +71,7 @@
 
   $effect(() => {
     const root = document.documentElement;
-    root.setAttribute("data-style-rounded-corners", settings.userSettings[UserSettingKeys.DisplayRoundedCorners] ? "true" : "false");
     root.setAttribute("data-theme", theme.isLightMode() ? "light" : "dark");
-    root.setAttribute("data-ui-scaling", (Math.round(settings.userSettings[UserSettingKeys.UiScaling] * 100)).toString());
   })
 
   // Prevent "flashing" by unloading the previous theme/font only after loading the next one.
@@ -149,6 +149,15 @@
   <link rel="stylesheet" href="/dynamic/font?purpose=fontFamilyText&file={settings.userSettings[UserSettingKeys.FontText]}">
   <link rel="stylesheet" href="/dynamic/font?purpose=fontFamilyTime&file={settings.userSettings[UserSettingKeys.FontTime]}">
 </svelte:head>
+
+<svelte:body
+  use:style={{
+    "--uiScaling": settings.userSettings[UserSettingKeys.UiScaling],
+    "--borderRadiusSmall": settings.userSettings[UserSettingKeys.DisplayRoundedCorners] ? null : 0,
+    "--borderRadius": settings.userSettings[UserSettingKeys.DisplayRoundedCorners] ? null : 0,
+    "--borderRadiusLarge": settings.userSettings[UserSettingKeys.DisplayRoundedCorners] ? null : 0
+  }}
+/>
 
 {@render children?.()}
 

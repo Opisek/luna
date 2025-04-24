@@ -1,17 +1,5 @@
 @use "sass:math";
 
-:global(html[data-style-rounded-corners="false"]) {
-  --borderRadiusSmall: 0;
-  --borderRadius: 0;
-  --borderRadiusLarge: 0;
-}
-
-@for $i from 10 through 30 {
-  :global(html[data-ui-scaling="#{$i * 5}"]) {
-    --uiScaling: #{math.div($i, 20)};
-  }
-}
-
 /* Multiplier */
 $multiplier: var(--uiScaling, 1);
 $test: 1;
