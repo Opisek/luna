@@ -1,7 +1,7 @@
 <script lang="ts">
   import Notification from "../components/interactive/Notification.svelte";
 
-  import { notificationExpireTime, notifications, queueNotification } from "$lib/client/notifications";
+  import { notificationExpireTime, notifications } from "$lib/client/notifications";
   import { getSettings } from "$lib/client/settings.svelte";
   import { browser } from "$app/environment";
   import { UserSettingKeys } from "../types/settings";
@@ -72,6 +72,20 @@
   afterNavigate(() => {
     settings.fetchSettings();
   })
+
+  // Prevent "flashing" by unloading the previous theme/font only after loading the next one.
+  let currentThemeLight = $derived(settings.userSettings[UserSettingKeys.ThemeLight]);
+  let currentThemeDark = $derived(settings.userSettings[UserSettingKeys.ThemeDark]);
+  let currentFontText = $derived(settings.userSettings[UserSettingKeys.FontText]);
+  let currentFontTime = $derived(settings.userSettings[UserSettingKeys.FontTime]);
+  let previousThemeLight = $state("");
+  let previousThemeDark = $state("");
+  let previousFontText = $state("");
+  let previousFontTime = $state("");
+  $effect(() => { setTimeout((val) => previousThemeLight = val, 100, currentThemeLight); });
+  $effect(() => { setTimeout((val) => previousThemeDark = val, 100, currentThemeDark); });
+  $effect(() => { setTimeout((val) => previousFontText = val, 100, currentFontText); });
+  $effect(() => { setTimeout((val) => previousFontTime = val, 100, currentFontTime); });
 </script>
 
 <style lang="scss">
@@ -116,6 +130,19 @@
 </style>
 
 <svelte:head>
+  {#if previousThemeLight != "" && previousThemeLight != currentThemeLight}
+    <link rel="stylesheet" href="/themes/light/{previousThemeLight}.css">
+  {/if}
+  {#if previousThemeDark != "" && previousThemeDark != currentThemeDark}
+    <link rel="stylesheet" href="/themes/dark/{previousThemeDark}.css">
+  {/if}
+  {#if previousFontText != "" && previousFontText != currentFontText}
+    <link rel="stylesheet" href="/dynamic/font?purpose=fontFamilyText&file={previousFontText}">
+  {/if}
+  {#if previousFontTime != "" && previousFontTime != currentFontTime}
+    <link rel="stylesheet" href="/dynamic/font?purpose=fontFamilyTime&file={previousFontTime}">
+  {/if}
+
   <link rel="stylesheet" href="/themes/light/{settings.userSettings[UserSettingKeys.ThemeLight]}.css">
   <link rel="stylesheet" href="/themes/dark/{settings.userSettings[UserSettingKeys.ThemeDark]}.css">
   <link rel="stylesheet" href="/dynamic/font?purpose=fontFamilyText&file={settings.userSettings[UserSettingKeys.FontText]}">
