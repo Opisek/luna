@@ -133,8 +133,8 @@
 
   function fetchThemes() {
     fetchJson("/installed/themes").then((response) => {
-      lightThemes = Object.keys(response.light).map(formatInstalledFile);
-      darkThemes = Object.keys(response.dark).map(formatInstalledFile);
+      lightThemes = Object.keys(response.light).map(formatInstalledFile).sort((a, b) => a.name.localeCompare(b.name));
+      darkThemes = Object.keys(response.dark).map(formatInstalledFile).sort((a, b) => a.name.localeCompare(b.name));
     }).catch((err) => {
       queueNotification(ColorKeys.Danger, "Failed to fetch themes: " + err);
     });
@@ -142,7 +142,7 @@
 
   function fetchFonts() {
     fetchJson("/installed/fonts").then((response) => {
-      fonts = Object.keys(response).map(formatInstalledFile);
+      fonts = Object.keys(response).map(formatInstalledFile).sort((a, b) => a.name.localeCompare(b.name));
     }).catch((err) => {
       queueNotification(ColorKeys.Danger, "Failed to fetch fonts: " + err);
     });
