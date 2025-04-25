@@ -52,14 +52,14 @@ The reasoning for this change is that Luna is supposed to be a calendar **aggreg
 ### UUIDs
 Luna uses UUIDs for all its IDs. This has a few reasons:
 - Avoiding conflicts in distributed scenarios (future-proofing)
-- Better security due to unpredictable IDs; in particular, a potential attacker can neither guess IDs of any resources, nor can they deduct information from IDs, like amount of registered users (since IDs are not consecutive).
+- Better security thanks to unpredictable IDs; in particular, a potential attacker can neither guess IDs of any resources, nor can they deduct information from IDs, like amount of registered users (since IDs are not consecutive).
 - While UUIDv4 is used as a base for some IDs to ensure uniquity and unpredictability, other IDs are built on top of these pseudo-random identifiers using the deterministic UUIDv5. This determinism built on top of random "base" IDs provides design-level collision resistance while maintaining deterministic ways to derive the IDs.
 
 ### Local IDs
 Luna uses its own (UU)IDs for every resource accessed through it. Therefore, the ID, over which you access a calendar or an event over Luna is different from the underlying IDs used by the upstream source. This has a few reasons:
 - Different sources might use different ID types. Luna instead uses the same ID scheme for everything.
-- Better security due to hiding the nature of the upstream sources from potential eavesdroppers.
-- If an event with the same ID is present in two different calendars (this can have legitimate operational reasons), Luna will still be able to distinguish between them due to different internal IDs.
+- Better security thanks to hiding the nature of the upstream sources from potential eavesdroppers.
+- If an event with the same ID is present in two different calendars (this can have legitimate operational reasons), Luna will still be able to distinguish between them thanks to different internal IDs.
 
 ## Endpoints
 ### Unauthenticated
@@ -310,13 +310,13 @@ The description field is optional. Either the end date or the event duration is 
 - **Purpose**: Returns all currently authorized sessions of the calling user
 
 #### Put Session
-- **Path**: `/api/sessions``
+- **Path**: ``/api/sessions``
 - **Method**: `PUT`
 - **Body**: `name`, `password`
 - **Purpose** Creates a return new API token
 
 #### Patch Session
-- **Path**: `/api/sessions/<ID>``
+- **Path**: ``/api/sessions/<ID>``
 - **Method**: `PUT`
 - **Body**: `name`, `password`
 - **Purpose** Modifies an API token
@@ -347,3 +347,7 @@ Depending on the `auth_type` field, additional information may need to be passed
 - `basic`: `username`, `password`
 - `bearer`: `token`
 - `oauth`: Not yet implemented
+
+## Additional Frontend Endpoints
+Aside from using the backend API, the frontend also provides a limited amount of "endpoints" for its own purposes.
+These are: `/installed/fonts` and `/installed/themes` to list the installed frontend fonts and themes respectively.
