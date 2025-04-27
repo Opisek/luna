@@ -624,7 +624,7 @@
         {/if}
         <ToggleInput
           name="searchable" 
-          description="Allow other users to find me"
+          description="Allow Other Users To Find Me"
           bind:value={settings.userData.searchable}
         />
         <Horizontal position="justify" width="full">
