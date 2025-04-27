@@ -834,11 +834,13 @@
           info={"Allows anyone to create an account.\nIf you just want to invite a few people, head to the \"Users\" tab."}
           bind:value={settings.globalSettings[GlobalSettingKeys.RegistrationEnabled]}
         />
+        <!--
         <ToggleInput
           name={GlobalSettingKeys.UseCdnFonts}
           description="Use Google's CDN for fonts"
           bind:value={settings.globalSettings[GlobalSettingKeys.UseCdnFonts]}
         />
+        -->
         <SelectButtons
           name={GlobalSettingKeys.LoggingVerbosity}
           bind:value={settings.globalSettings[GlobalSettingKeys.LoggingVerbosity]}
