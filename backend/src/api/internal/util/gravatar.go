@@ -26,7 +26,7 @@ func GetGravatarUrl(email string) *types.Url {
 	hex := hex.EncodeToString(hash)
 
 	// Construct gravatar url
-	rawUrl := "https://www.gravatar.com/avatar/" + hex
+	rawUrl := "https://www.gravatar.com/avatar/" + hex + "?d=identicon"
 
 	// Return as URL
 	// We know this will never error unless we are hit by cosmic radiation

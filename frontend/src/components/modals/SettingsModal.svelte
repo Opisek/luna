@@ -73,13 +73,21 @@
 
   function refetchProfilePicture() {
     const profilePictureUrl = settings.userData.profile_picture || "";
-    profilePictureFileId = profilePictureUrl.match(/\/api\/files\/([a-f0-9-]{36})/)?.[1] || "";
-    if (profilePictureFileId != "") {
-      fetchFileById(profilePictureFileId).then(fileList => {
-        profilePictureFiles = fileList;
-      }).catch(err => {
-        queueNotification(ColorKeys.Danger, `Could not download profile picture: ${err.message}`);
-      });
+
+    switch (profilePictureType) {
+      case "gravatar":
+        profilePictureGravatarForceDefault = profilePictureUrl.includes("f=y");
+        break;
+      case "database":
+        profilePictureFileId = profilePictureUrl.match(/\/api\/files\/([a-f0-9-]{36})/)?.[1] || "";
+        if (profilePictureFileId != "") {
+          fetchFileById(profilePictureFileId).then(fileList => {
+            profilePictureFiles = fileList;
+          }).catch(err => {
+            queueNotification(ColorKeys.Danger, `Could not download profile picture: ${err.message}`);
+          });
+        }
+        break;
     }
   }
 
@@ -163,11 +171,16 @@
   let profilePictureFiles: FileList | null = $state(null);
   let profilePictureFileId = $state("");
   let profilePictureRemoteUrl = $state("");
-  let profilePictureGravatarUrl = $derived.by(() => {
+  let profilePictureGravatarIsDefault = $state(true);
+  let profilePictureGravatarForceDefault = $state(false);
+  let profilePictureGravatarUrlTrue = $derived.by(() => {
     const email = settings.userData.email || "";
     const trimmedLowercaseEmail = email.trim().toLowerCase();
     const emailHash = getSha256Hash(trimmedLowercaseEmail);
-    return `https://www.gravatar.com/avatar/${emailHash}`;
+    return `https://www.gravatar.com/avatar/${emailHash}?d=identicon`;
+  })
+  let profilePictureGravatarUrl = $derived.by(() => {
+    return `${profilePictureGravatarUrlTrue}${profilePictureGravatarForceDefault && !profilePictureGravatarIsDefault ? "&f=y" : ""}`;
   })
 
   let effectiveProfilePictureSource = $state("");
@@ -199,7 +212,7 @@
   $effect(() => {
     const loadedProfilePictureUrl = settings.userData.profile_picture || "";
 
-    if (/https:\/\/www\.gravatar\.com\/avatar\/[a-z0-9]{32}/.test(loadedProfilePictureUrl)) {
+    if (/https:\/\/www\.gravatar\.com\/avatar\/[a-z0-9]{32}(\?.+)?/.test(loadedProfilePictureUrl)) {
       profilePictureType = "gravatar";
     } else if (/\/api\/files\/([a-f0-9-]{36})/.test(loadedProfilePictureUrl)) {
       profilePictureType = "database";
@@ -208,6 +221,21 @@
       profilePictureRemoteUrl = loadedProfilePictureUrl;
     }
   });
+
+  let gravatarCheckDefaultTimeout = $state<ReturnType<typeof setTimeout>>();
+  $effect(() => {
+    if (profilePictureType !== "gravatar") return;
+    clearTimeout(gravatarCheckDefaultTimeout);
+
+    setTimeout(async (url: string) => {
+      await fetch(url + "&d=404").then((response) => {
+        profilePictureGravatarIsDefault = response.status === 404;
+      }).catch(() => {
+        profilePictureGravatarIsDefault = true;
+      });
+      if (profilePictureGravatarIsDefault) profilePictureGravatarForceDefault = false;
+    }, 100, profilePictureGravatarUrlTrue);
+  })
 
   // Changes
 
@@ -634,6 +662,17 @@
             placeholder="Profile Picture Link"
             bind:value={profilePictureRemoteUrl}
           />
+        {:else if profilePictureType === "gravatar"}
+          {#if !profilePictureGravatarIsDefault}
+            <ToggleInput
+              name="pfp_gravatar_force_default"
+              description="Use Default Gravatar Profile Picture"
+              bind:value={profilePictureGravatarForceDefault}
+            />
+          {/if}
+        {/if}
+        {#if settings.userData.id && settings.userSettings[UserSettingKeys.DebugMode]}
+          <TextInput value={settings.userData.id} name="id" placeholder="User ID" editable={false} />
         {/if}
         {#if settings.userData.id && settings.userSettings[UserSettingKeys.DebugMode]}
           <TextInput value={settings.userData.id} name="id" placeholder="User ID" editable={false} />
