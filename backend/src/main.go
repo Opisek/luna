@@ -185,6 +185,8 @@ func main() {
 	cronLogger := logger.WithField("module", "cron")
 	c := cron.New()
 	c.AddFunc("*/30 * * * *", createTask("RefetchIcalFiles", tasks.RefetchIcalFiles, db, cronLogger))
+	c.AddFunc("0 * * * *", createTask("DeleteExpiredShortLivedSessions", tasks.DeleteStaleShortLivedSessions, db, cronLogger))
+	c.AddFunc("0 0 * * *", createTask("DeleteExpiredLongLivedSessions", tasks.DeleteStaleLongLivedSessions, db, cronLogger))
 
 	// Wait for goroutines to finish
 	var wg sync.WaitGroup

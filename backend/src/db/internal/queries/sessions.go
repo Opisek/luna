@@ -234,13 +234,15 @@ func (q *Queries) DeleteApiSessions(userid types.ID) *errors.ErrorTrace {
 	return nil
 }
 
-func (q *Queries) DeleteExpiredSessions(deleteBefore time.Time) *errors.ErrorTrace {
+func (q *Queries) DeleteExpiredSessions(deleteBefore time.Time, shortLived bool) *errors.ErrorTrace {
 	query := `
 		DELETE FROM sessions
-		WHERE last_seen < $1;
+		WHERE last_seen < $1
+		AND is_short_lived = $2
+		AND is_api = false;
 	`
 
-	_, err := q.Tx.Exec(q.Context, query, deleteBefore)
+	_, err := q.Tx.Exec(q.Context, query, deleteBefore, shortLived)
 	if err != nil {
 		return errors.New().Status(http.StatusInternalServerError).
 			AddErr(errors.LvlDebug, err).
