@@ -19,22 +19,13 @@
   }: Props = $props();
 
   const metadata = getMetadata();
+  const repository = getRepository();
 
   let hasErrored = $derived(source && metadata.faultySources.has(source.id));
   let isLoading = $derived(source && metadata.loadingSources.has(source.id));
   let sourceCollapsed = $state(source && metadata.collapsedSources.has(source.id));
 
-  let hasCals = $state(false);
-  getRepository().calendars.subscribe(async (cals) => {
-    hasCals = false;
-    if (!source) return;
-    for (const cal of cals) {
-      if (cal.source === source.id) {
-        hasCals = true;
-        break;
-      }
-    }
-  })
+  let hasCals = $derived(repository.calendars.filter(x => x.source === source.id).length > 0);
 
   let showModal: ((source: SourceModel) => Promise<SourceModel>) = getContext("showSourceModal");
   function showModalInternal() {

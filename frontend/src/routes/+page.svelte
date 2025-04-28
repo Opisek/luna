@@ -38,6 +38,7 @@
   /* Singletons */
   const settings = getSettings();
   const metadata = getMetadata();
+  const repository = getRepository();
 
   /* Reachability */
   let reachability: Reachability = $state(Reachability.Database);
@@ -47,14 +48,6 @@
 
   /* View */
   let view: "month" | "week" | "day" = $state("month");
-
-  /* Fetched data */
-  let localSources: SourceModel[] = $state([]);
-  let localCalendars: CalendarModel[] = $state([]);
-  let localEvents: EventModel[] = $state([]);
-
-  let sourceCalendars: Map<string, number[]> = $state(new Map());
-  let calendarEvents: Map<string, number[]> = new Map();
 
   /* View logic */
   let today = $state(new Date());
@@ -146,7 +139,7 @@
   function smallCalendarClick(clickedDate: Date) {
     const range = getVisibleRange(date, view);
     if (isInRange(clickedDate, range.start, range.end) && clickedDate.getMonth() === date.getMonth()) {
-      showDateModal(clickedDate, localEvents
+      showDateModal(clickedDate, repository.events
         .filter((event) => event.date.start.getTime() <= clickedDate.getTime() + 24 * 60 * 60 * 1000 && event.date.end.getTime() >= clickedDate.getTime())
         .sort(compareEventsByStartDate)
       );
@@ -177,38 +170,6 @@
   });
 
   getRepository().getSources().catch(NoOp);
-
-  getRepository().events.subscribe((newEvents) => {
-    localEvents = newEvents;
-
-    calendarEvents = new Map();
-    localEvents.forEach((event, i) => {
-      if (calendarEvents.has(event.calendar)) {
-        // @ts-ignore typescript says that this might be undefined despite the check above
-        calendarEvents.get(event.calendar).push(i);
-      } else {
-        calendarEvents.set(event.calendar, [ i ]);
-      }
-    });
-  });
-
-  getRepository().calendars.subscribe((newCalendars) => {
-    localCalendars = newCalendars;
-
-    sourceCalendars = new Map();
-    localCalendars.forEach((calendar, i) => {
-      if (sourceCalendars.has(calendar.source)) {
-        // @ts-ignore typescript says that this might be undefined despite the check above
-        sourceCalendars.get(calendar.source).push(i);
-      } else {
-        sourceCalendars.set(calendar.source, [ i ]);
-      }
-    });
-  });
-
-  getRepository().sources.subscribe((newSources) => {
-    localSources = newSources;
-  });
 
   let spooledRefresh: (ReturnType<typeof setTimeout> | undefined) = $state(undefined);
   function refresh(force = false) {
@@ -370,7 +331,7 @@
   {/if}
 
   <div class="sources">
-    {@render sourceEntries(localSources)}
+    {@render sourceEntries(repository.sources)}
   </div>
 
   <Horizontal position="center">
@@ -438,21 +399,22 @@
     <Calendar
       date={date}
       view={view}
-      events={localEvents}
+      events={repository.events}
     />
 </main>
 
 {#snippet sourceEntries(sources: SourceModel[])}
   {#each sources as source, i}
-    <SourceEntry bind:source={localSources[i]}/>
-    {#if !metadata.collapsedSources.has(localSources[i].id)}
-      {@render calendarEntries(sourceCalendars.get(source.id) || [])}
+    <SourceEntry bind:source={repository.sources[i]}/>
+    {#if !metadata.collapsedSources.has(repository.sources[i].id)}
+      {@render calendarEntries(repository.calendars.filter(cal => cal.source === source.id) || [])}
     {/if}
   {/each}
 {/snippet}
 
-{#snippet calendarEntries(calendarIndices: number[])}
-  {#each calendarIndices as i}
-    <CalendarEntry bind:calendar={localCalendars[i]}/>
+{#snippet calendarEntries(calendars: CalendarModel[])}
+  {#each calendars as cal}
+    {@const index = repository.calendars.findIndex((calendar) => calendar.id === cal.id)}
+    <CalendarEntry bind:calendar={repository.calendars[index]}/>
   {/each}
 {/snippet}

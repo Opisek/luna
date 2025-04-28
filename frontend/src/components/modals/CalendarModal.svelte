@@ -24,6 +24,7 @@
   }: Props = $props();
 
   const settings = getSettings();
+  const repository = getRepository();
 
   let calendar: CalendarModel = $state(EmptyCalendar);
   let originalCalendar: CalendarModel = $state(EmptyCalendar);
@@ -67,7 +68,7 @@
   let title: string = $derived(calendar.id ? (editMode ? "Edit calendar" : "Calendar") : "Add calendar");
 
   let selectableSources = $derived(
-    getRepository().sources.getArray()
+    repository.sources
       .filter(x => editMode ? x.type !== "ical" || x.id === calendar.source : x.id === calendar.source)
       .map(x => ({ value: x.id, name: x.name }))
   );

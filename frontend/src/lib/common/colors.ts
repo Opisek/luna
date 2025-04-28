@@ -117,7 +117,7 @@ export const GetEventColor = (event: EventModel | null) => {
     return defaultEventColor;
   }
 
-  const calendar = getRepository().calendars.getArray().find(calendar => calendar.id === event.calendar);
+  const calendar = getRepository().calendars.find(calendar => calendar.id === event.calendar);
   if (calendar && calendar.color) {
     return calendar.color;
   } else {
