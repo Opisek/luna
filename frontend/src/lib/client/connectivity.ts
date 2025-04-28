@@ -74,7 +74,7 @@ class Connectivity {
       document.location.pathname !== "/version" &&
       [VersionCompatibility.BackendOutdatedMajor, VersionCompatibility.FrontendOutdatedMajor].includes(this.compatibility)
     ) {
-      document.location.href = `/version?redirect=${encodeURIComponent(document.location.href)}`;
+      document.location.href = `/version?redirect=${encodeURIComponent(new URL(document.location.href).pathname)}`;
     } 
 
     return this.compatibility;

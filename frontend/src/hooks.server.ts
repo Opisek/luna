@@ -54,7 +54,7 @@ export const handle: Handle = async ({ event, resolve }) => {
       return new Response(null, {
         status: 302,
         headers: {
-          location: `/login?redirect=${encodeURIComponent(event.request.url)}`,
+          location: `/login?redirect=${encodeURIComponent(new URL(event.request.url).pathname)}`,
         },
       })
     }
