@@ -333,6 +333,8 @@
         refetchProfilePicture();
       }).catch((err) => {
         queueNotification(ColorKeys.Danger, "Failed to save user data: " + err);
+        saving = false;
+        throw err;
       });
     }
 
@@ -353,6 +355,8 @@
         userSettingsSnapshot = await deepCopy(settings.userSettings);
       }).catch((err) => {
         queueNotification(ColorKeys.Danger, "Failed to save user settings: " + err);
+        saving = false;
+        throw err;
       });
     }
 
@@ -373,6 +377,8 @@
         globalSettingsSnapshot = await deepCopy(settings.globalSettings);
       }).catch((err) => {
         queueNotification(ColorKeys.Danger, "Failed to save global settings: " + err);
+        saving = false;
+        throw err;
       });
     }
 
@@ -571,7 +577,7 @@
 
   {#snippet buttons()}
     {#if anyChanged}
-      <Button type="submit" color={ColorKeys.Success} enabled={submittable} onClick={saveSettings}>
+      <Button type="submit" color={ColorKeys.Success} enabled={submittable} onClick={() => { saveSettings().catch(NoOp); }}>
         {#if saving}
           <Loader/>
         {:else}
