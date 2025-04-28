@@ -84,7 +84,7 @@
   {:else if granularity === "day"}
     {@render buttons(previousDay, nextDay)}
   {/if}
-  <button onclick={showPopup} type="button" use:focusIndicator={{ type: "underline", ignoreParent: true }}>
+  <button onclick={showPopup} type="button" use:focusIndicator={{ type: "underline" }}>
     {`${getMonthName(date.getMonth())} ${date.getFullYear()}`}
   </button>
   <MonthPopup bind:showPopup bind:date={date} onSelect={onSelect}/>

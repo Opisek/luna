@@ -1,6 +1,5 @@
 type FocusIndicatorSettings = {
   type: "bar" | "underline" | "custom";
-  ignoreParent?: boolean;
 }
 
 type Validity = {

@@ -222,7 +222,7 @@
     class:editable={editable}
     onclick={selectClick}
     type="button"
-    use:focusIndicator={{ type: "bar", ignoreParent: true }}
+    use:focusIndicator={{ type: "bar" }}
   >
     {#if selectedOption !== null}
       {selectedOption.name}

@@ -40,7 +40,7 @@
   <button
     type="button"
     onclick={onClick}
-    use:focusIndicator={{ type: "underline", ignoreParent: true }}
+    use:focusIndicator={{ type: "underline" }}
   >
     {@render children?.()}
   </button>
@@ -48,7 +48,7 @@
   <a
     href={href}
     onclick={onClick}
-    use:focusIndicator={{ type: "underline", ignoreParent: true }}
+    use:focusIndicator={{ type: "underline" }}
   >
     {@render children?.()}
   </a>

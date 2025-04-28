@@ -80,11 +80,16 @@ export function isDescendentOf(descendent: HTMLElement, element: HTMLElement): b
     return false;
 }
 
-export function isChildOfModal(element: HTMLElement): boolean {
+export function parentModal(element: HTMLElement): HTMLElement | null {
     for (let node: (HTMLElement | null) = element; node; node = node.parentElement) {
-        if (node instanceof HTMLDialogElement) return true;
+        if (node instanceof HTMLDialogElement) return node;
     }
-    return false;
+    return null;
+}
+
+
+export function isChildOfModal(element: HTMLElement): boolean {
+    return parentModal(element) !== null;
 }
 
 export function isChildOfForm(element: HTMLElement): boolean {
