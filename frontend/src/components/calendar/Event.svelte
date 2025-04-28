@@ -55,8 +55,8 @@
 
   let eventEndsThisWeek = $derived(remainingDays == remainingDaysThisWeek);
 
-  let currentlyHoveredEvent = getContext("currentlyHoveredEvent") as Writable<EventModel | null>;
-  let currentlyClickedEvent = getContext("currentlyClickedEvent") as Writable<EventModel | null>;
+  let currentlyHoveredEvent = $state((getContext("currentlyHoveredEvent") as () => (EventModel | null))());;
+  let currentlyClickedEvent = $state((getContext("currentlyClickedEvent") as () => (EventModel | null))());
 
   let showModal: ((event: EventModel) => Promise<EventModel>) = getContext("showEventModal");
 
@@ -70,26 +70,26 @@
   function mouseEnter() {
     if (event == null) return;
 
-    $currentlyHoveredEvent = event;
+    currentlyHoveredEvent = event;
   }
   function mouseLeave() {
     if (event == null) return;
 
-    if ($currentlyHoveredEvent == event)
-      $currentlyHoveredEvent = null;
-    if ($currentlyClickedEvent == event)
-      $currentlyClickedEvent = null;
+    if (currentlyHoveredEvent == event)
+      currentlyHoveredEvent = null;
+    if (currentlyClickedEvent == event)
+      currentlyClickedEvent = null;
   }
   function mouseDown() {
     if (event == null) return;
 
-    $currentlyClickedEvent = event;
+    currentlyClickedEvent = event;
   }
   function mouseUp() {
     if (event == null) return;
 
-    if ($currentlyClickedEvent == event) {
-      $currentlyClickedEvent = null;
+    if (currentlyClickedEvent == event) {
+      currentlyClickedEvent = null;
       showModal(event).then(newEvent => event = newEvent).catch(NoOp);
       element?.blur();
     }
@@ -197,8 +197,8 @@
     bind:this={element}
     class:start={isEventStart}
     class:end={eventEndsThisWeek}
-    class:hover={$currentlyHoveredEvent == event}
-    class:active={$currentlyClickedEvent == event}
+    class:hover={currentlyHoveredEvent == event}
+    class:active={currentlyClickedEvent == event}
     class:hidden={!visible}
     class:foregroundBright={isBackgroundDark}
     class:foregroundDark={!isBackgroundDark}
@@ -213,7 +213,7 @@
     role="button"
     tabindex={isFirstDisplay ? 0 : -1}
     style="
-      background-color:{$currentlyHoveredEvent == event ? GetEventHoverColor(event) : GetEventColor(event)};
+      background-color:{currentlyHoveredEvent == event ? GetEventHoverColor(event) : GetEventColor(event)};
       width: calc({(showOnlyCircle ? 1 : remainingDaysThisWeek) * 100}% - {((isEventStart ? 1 : 0) + (eventEndsThisWeek ? 1 : 0)) * (showOnlyCircle ? 0 : 1)} * var(--gapBetweenDays));
       z-index: {16 - getDayIndex(date)};
     "

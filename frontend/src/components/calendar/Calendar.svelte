@@ -27,10 +27,10 @@
 
   let today = new Date();
 
-  let currentlyClickedEvent = writable(null);
-  let currentlyHoveredEvent = writable(null);
-  setContext("currentlyHoveredEvent", currentlyHoveredEvent);
-  setContext("currentlyClickedEvent", currentlyClickedEvent);
+  let currentlyClickedEvent = $state<EventModel | null>(null);
+  let currentlyHoveredEvent = $state<EventModel | null>(null);
+  setContext("currentlyHoveredEvent", () => currentlyHoveredEvent);
+  setContext("currentlyClickedEvent", () => currentlyClickedEvent);
 
   /* Animation */
   let viewIteration = $state(0);
