@@ -2,11 +2,10 @@ import { browser } from "$app/environment";
 
 import { AllChangesCalendar, AllChangesEvent, AllChangesSource, NoChangesCalendar, NoChangesEvent, NoOp } from "./placeholders";
 import { fetchJson, fetchResponse } from "./net";
-import { getMetadata } from "./metadata";
+import { getMetadata } from "./metadata.svelte";
 import { queueNotification } from "./notifications";
 
 import { atLeastOnePromise, deepCopy } from "$lib/common/misc";
-import { SubscribeableArray } from "./reactivity";
 import { ColorKeys } from "../../types/colors";
 
 class Repository {
@@ -21,21 +20,17 @@ class Repository {
   // Subscribeable Stores
   //
 
-  readonly sources: SubscribeableArray<SourceModel>;
-  readonly calendars: SubscribeableArray<CalendarModel>;
-  readonly events: SubscribeableArray<EventModel>;
+  sources = $state<SourceModel[]>([]);
+  calendars = $state<CalendarModel[]>([]);
+  events = $state<EventModel[]>([]);
 
   //
   // Constructor
   //
   constructor() {
-    this.sources = new SubscribeableArray();
-    this.calendars = new SubscribeableArray();
-    this.events = new SubscribeableArray();
-
-    getMetadata().hiddenCalendars.subscribe(() => {
-      this.compileEvents(this.eventsRangeStart, this.eventsRangeEnd);
-    });
+    this.sources = [];
+    this.calendars = [];
+    this.events = [];
 
     if (browser) {
       window.addEventListener("storage", () => this.loadCache());
@@ -188,7 +183,7 @@ class Repository {
   //
 
   private compileSources() {
-    this.sources.set(this.sourcesCache.value || []);
+    this.sources = this.sourcesCache.value || [];
   }
 
   private compileCalendarsTimeout: (ReturnType<typeof setTimeout> | undefined) = undefined;
@@ -196,7 +191,7 @@ class Repository {
     clearTimeout(this.compileCalendarsTimeout);
     this.compileCalendarsTimeout = setTimeout(() => {
       const allCalendars = Array.from(this.calendarsCache.values().map(x => x.value).filter(x => x != null)).flat();
-      this.calendars.set(allCalendars.map(x => this.calendarsMap.get(x)).filter(x => x != null));
+      this.calendars = allCalendars.map(x => this.calendarsMap.get(x)).filter(x => x != null);
     }, this.spoolerDelay)
   }
 
@@ -219,8 +214,11 @@ class Repository {
 
       const eventsWithData = await this.mapAllRecurrenceInstances(uniqueEvents);
 
-      this.events.set(eventsWithData);
+      this.events = eventsWithData;
     }, this.spoolerDelay)
+  }
+  public recalculateEvents() {
+    this.compileEvents(this.eventsRangeStart, this.eventsRangeEnd);
   }
 
   //
@@ -336,7 +334,7 @@ class Repository {
 
     newSource.id = json.id;
     this.sourcesCache.value = this.sourcesCache.value?.concat(newSource) || [ newSource ];
-    this.sources.update((sources) => sources.concat(newSource));
+    this.sources.push(newSource);
 
     this.getCalendars(newSource.id).then(async (cals) => {
       this.compileCalendars();
@@ -508,7 +506,7 @@ class Repository {
     });
 
     // add to display
-    this.calendars.update((calendars) => calendars.concat(newCalendar));
+    this.calendars.push(newCalendar);
 
     this.saveCache();
   };
@@ -528,7 +526,7 @@ class Repository {
     this.calendarsMap.set(modifiedCalendar.id, modifiedCalendar);
 
     // update on display
-    this.calendars.update((calendars) => calendars.map((cal) => cal.id === modifiedCalendar.id ? modifiedCalendar : cal));
+    //this.calendars.update((calendars) => calendars.map((cal) => cal.id === modifiedCalendar.id ? modifiedCalendar : cal));
     if (changes.color) this.compileEvents(this.eventsRangeStart, this.eventsRangeEnd);
 
     this.saveCache();
@@ -552,7 +550,7 @@ class Repository {
     });
 
     // remove from display
-    this.calendars.update((calendars) => calendars.filter((cal) => cal.id !== id));
+    this.calendars.splice(this.calendars.findIndex((cal) => cal.id === id), 1);
     this.compileEvents(this.eventsRangeStart, this.eventsRangeEnd);
 
     this.saveCache();
@@ -804,7 +802,7 @@ class Repository {
 
     // add to display
     const isHidden = getMetadata().hiddenCalendars.has(newEvent.calendar)
-    if (!isHidden && newEvent.date.start <= this.eventsRangeEnd && newEvent.date.end >= this.eventsRangeStart) this.events.update((events) => events.concat(newEvent));
+    if (!isHidden && newEvent.date.start <= this.eventsRangeEnd && newEvent.date.end >= this.eventsRangeStart) this.events.push(newEvent);
 
     // info if the event is hidden
     if (isHidden) {
@@ -852,9 +850,9 @@ class Repository {
 
     // update on display
     if (modifiedEvent.date.start <= this.eventsRangeEnd && modifiedEvent.date.end >= this.eventsRangeStart) {
-      this.events.update((events) => events.map((event) => event.id === modifiedEvent.id ? modifiedEvent : event));
+      //this.events.update((events) => events.map((event) => event.id === modifiedEvent.id ? modifiedEvent : event));
     } else {
-      this.events.update((events) => events.filter((event) => event.id !== modifiedEvent.id));
+      this.events.splice(this.events.findIndex((event) => event.id === modifiedEvent.id), 1);
     }
 
     this.saveCache();
@@ -875,7 +873,7 @@ class Repository {
     for (const month of months) this.removeEventFromCache(event, month);
 
     // remove from display
-    this.events.update((events) => events.filter((event) => event.id !== id));
+    this.events.splice(this.events.findIndex((event) => event.id === id), 1);
 
     this.saveCache();
   }

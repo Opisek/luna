@@ -5,10 +5,10 @@
 
   import { NoOp } from "$lib/client/placeholders";
   import { focusIndicator } from "$lib/client/decoration";
-  import { getMetadata } from "$lib/client/metadata";
+  import { getMetadata } from "$lib/client/metadata.svelte";
   import { getRepository } from "$lib/client/repository.svelte";
 
-  import { getContext, untrack } from "svelte";
+  import { getContext } from "svelte";
 
   interface Props {
     source: SourceModel;
@@ -18,42 +18,25 @@
     source = $bindable()
   }: Props = $props();
 
-  let hasErrored = $state(false);
-  getMetadata().faultySources.subscribe((faulty) => {
-    if (!source || !source.id) return;
-    hasErrored = faulty.has(source.id);
-  });
+  const metadata = getMetadata();
+  const repository = getRepository();
 
-  let isLoading = $state(false);
-  getMetadata().loadingSources.subscribe((loading) => {
-    if (!source || !source.id) return;
-    isLoading = loading.has(source.id) as boolean;
-  });
+  let hasErrored = $derived(source && metadata.faultySources.has(source.id));
+  let isLoading = $derived(source && metadata.loadingSources.has(source.id));
+  let sourceCollapsed = $state(source && metadata.collapsedSources.has(source.id));
 
-  let hasCals = $state(false);
-  getRepository().calendars.subscribe(async (cals) => {
-    hasCals = false;
-    if (!source) return;
-    for (const cal of cals) {
-      if (cal.source === source.id) {
-        hasCals = true;
-        break;
-      }
-    }
-  })
+  let hasCals = $derived(repository.calendars.filter(x => x.source === source.id).length > 0);
 
   let showModal: ((source: SourceModel) => Promise<SourceModel>) = getContext("showSourceModal");
   function showModalInternal() {
     showModal(source).then(newSource => source = newSource).catch(NoOp);
   }
 
-  let sourceCollapsed = $state(source ? getMetadata().collapsedSources.has(source.id) : false);
-  getMetadata().collapsedSources.subscribe((collapsed) => {
-    if (!source || !source.id) return;
-    sourceCollapsed = collapsed.has(source.id);
+  $effect(() => {
+    sourceCollapsed = metadata.collapsedSources.has(source.id);
   });
   $effect(() => {
-    if (source && source.id) getMetadata().setSourceCollapse(source.id, sourceCollapsed);
+    if (source && source.id) metadata.setSourceCollapse(source.id, sourceCollapsed);
   });
 </script>
 

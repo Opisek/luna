@@ -27,18 +27,16 @@
   }: Props = $props();
 
   const settings = getSettings();
+  const repository = getRepository();
 
   let event: EventModel = $state(EmptyEvent);
   let originalEvent: EventModel = $state(EmptyEvent);
 
-  let calendars: CalendarModel[] = $state([]);
-  let sources: SourceModel[] = $state([]);
-
   let eventSourceType = $derived.by(() => {
-    const calendar = calendars.find(x => x.id === event.calendar);
+    const calendar = repository.calendars.find(x => x.id === event.calendar);
     if (!calendar) return "unknown";
 
-    const source = sources.find(x => x.id === calendar.source);
+    const source = repository.sources.find(x => x.id === calendar.source);
     if (!source) return "unknown";
 
     return source.type;
@@ -50,9 +48,6 @@
   showCreateModal = async (date: Date) => {
     promiseReject();
 
-    calendars = getRepository().calendars.getArray();
-    sources = getRepository().sources.getArray();
-    
     editMode = false;
 
     const start = new Date(date);
@@ -86,9 +81,6 @@
 
   showModal = async (original: EventModel): Promise<EventModel> => {
     promiseReject();
-
-    calendars = getRepository().calendars.getArray();
-    sources = getRepository().sources.getArray();
 
     editMode = false;
 
@@ -131,13 +123,13 @@
     let selectable;
 
     if (editMode) {
-      selectable = calendars.filter(x => {
+      selectable = repository.calendars.filter(x => {
         if (x.id === event.calendar) return true;
-        const source = sources.find(y => y.id === x.source);
+        const source = repository.sources.find(y => y.id === x.source);
         return source && source.type !== "ical";
       });
     } else {
-      selectable = calendars.filter(x => x.id === event.calendar);
+      selectable = repository.calendars.filter(x => x.id === event.calendar);
     }
 
     return selectable.map(x => ({ value: x.id, name: x.name }))
