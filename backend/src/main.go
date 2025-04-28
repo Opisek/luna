@@ -9,6 +9,7 @@ import (
 	"luna-backend/errors"
 	"luna-backend/log"
 	"luna-backend/parsing"
+	"luna-backend/services"
 	"luna-backend/tasks"
 	"luna-backend/types"
 	"os"
@@ -188,9 +189,14 @@ func main() {
 	c.AddFunc("0 * * * *", createTask("DeleteExpiredShortLivedSessions", tasks.DeleteStaleShortLivedSessions, db, cronLogger))
 	c.AddFunc("0 0 * * *", createTask("DeleteExpiredLongLivedSessions", tasks.DeleteStaleLongLivedSessions, db, cronLogger))
 
+	// Token invalidation service
+	tokenInvalidationLogger := logger.WithField("module", "token_invalidation")
+	tokenInvalidationService := services.NewTokenInvalidationService(db, commonConfig, tokenInvalidationLogger)
+
 	// Wait for goroutines to finish
 	var wg sync.WaitGroup
-	startGoroutine(api.Run, &wg)
+	startGoroutine(tokenInvalidationService.Start, &wg)
 	startGoroutine(c.Start, &wg)
+	startGoroutine(api.Start, &wg)
 	wg.Wait()
 }

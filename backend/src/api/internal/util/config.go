@@ -23,6 +23,6 @@ func NewApi(db *db.Database, commonConfig *config.CommonConfig, logger *logrus.E
 	}
 }
 
-func (api *Api) Run() {
+func (api *Api) Start() {
 	api.run(api)
 }

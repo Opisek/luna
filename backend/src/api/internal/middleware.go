@@ -281,13 +281,21 @@ func RequireAuth() gin.HandlerFunc {
 			// Compare the user agents => Verifies that the token was not stolen and used from another device (not a 100% guarantee)
 			associatedUserAgent := useragent.Parse(session.UserAgent)
 			currentUserAgent := useragent.Parse(c.Request.UserAgent())
-			if associatedUserAgent.OS != currentUserAgent.OS || associatedUserAgent.Name != currentUserAgent.Name || associatedUserAgent.Device != currentUserAgent.Device {
+
+			osMatch := associatedUserAgent.OS == currentUserAgent.OS
+			nameMatch := associatedUserAgent.Name == currentUserAgent.Name
+			deviceMatch := associatedUserAgent.Device == currentUserAgent.Device
+
+			if !osMatch || !nameMatch || !deviceMatch || (session.IsShortLived && associatedUserAgent.String != currentUserAgent.String) {
 				u.Error(errors.New().Status(http.StatusUnauthorized).
 					Append(errors.LvlDebug, "Expected %s, but got %s",
 						fmt.Sprintf("%s %s %s", associatedUserAgent.OS, associatedUserAgent.Name, associatedUserAgent.Device),
 						fmt.Sprintf("%s %s %s", currentUserAgent.OS, currentUserAgent.Name, currentUserAgent.Device)).
 					Append(errors.LvlDebug, "User agent mismatch"),
 				)
+
+				u.Config.TokenInvalidationChannel <- session
+
 				c.Abort()
 				return
 			}

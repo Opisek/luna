@@ -6,9 +6,10 @@ import (
 )
 
 type CommonConfig struct {
-	Version  types.Version
-	Env      *Environmental
-	Settings *GlobalSettings
+	Version                  types.Version
+	Env                      *Environmental
+	Settings                 *GlobalSettings
+	TokenInvalidationChannel chan *types.Session
 }
 
 func (c *CommonConfig) LoggingVerbosity() int {
