@@ -4,11 +4,7 @@ import type { PageLoad } from "./register/$types";
 import { unprivilegedPaths } from "../lib/common/paths";
 
 export const load: PageLoad = async (event: LoadEvent) => {
-  for (const path of unprivilegedPaths) {
-    if (event.url.pathname.startsWith(`/${path}`)) {
-      return null; 
-    }
-  }
+  for (const path of unprivilegedPaths) if (event.url.pathname.startsWith(`/${path}`)) return null; 
 
   const results = await Promise.all([
     fetchJsonFromEvent(event, "/api/users/self", {}, true),

@@ -9,6 +9,7 @@ import { resetNotifications } from "./notifications";
 export function clearSession() {
   if (!browser) return;
   localStorage.clear();
+  document.cookie = "tokenPresent=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
 
   resetSessions();
   resetSettings();
