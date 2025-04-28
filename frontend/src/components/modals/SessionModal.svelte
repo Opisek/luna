@@ -98,7 +98,7 @@
 
 <EditableModal
   title={title}
-  deleteConfirmation={`Are you sure you want to delete API token "${session ? session.user_agent : ""}"?`}
+  deleteConfirmation={`Are you sure you want to ${session.is_api ? "delete API token" : "deauthorize session"} "${session ? " " + session.user_agent : ""}"?`}
   bind:editMode={editMode}
   bind:showCreateModal={showCreateModalInternal}
   bind:showModal={showModalInternal}
