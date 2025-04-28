@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Bot, Code, Gamepad2, Info, Laptop, LockKeyhole, LogOut, Microchip, Monitor, Pencil, RectangleGoggles, RefreshCcw, RefreshCw, Smartphone, Tablet, TriangleAlert, TvMinimal, User, Users, Watch } from "lucide-svelte";
+  import { Bot, Code, Gamepad2, Info, Laptop, LockKeyhole, LogOut, Microchip, Palette, Pencil, RectangleGoggles, RefreshCw, Smartphone, Tablet, TriangleAlert, TvMinimal, User, Users, Watch } from "lucide-svelte";
   import { NoOp } from "../../lib/client/placeholders";
   import ButtonList from "../forms/ButtonList.svelte";
   import Modal from "./Modal.svelte";
@@ -97,7 +97,7 @@
   const categoriesAdmin: Option<string>[][] = [
     [
       { name: "Account", value: "account", icon: User },
-      { name: "Appearance", value: "appearance", icon: Monitor },
+      { name: "Appearance", value: "appearance", icon: Palette },
       { name: "Developer", value: "developer", icon: Code }
     ],
     [
@@ -112,7 +112,7 @@
   const categories: Option<string>[][] = [
     [
       { name: "Account", value: "account", icon: User },
-      { name: "Appearance", value: "appearance", icon: Monitor },
+      { name: "Appearance", value: "appearance", icon: Palette },
       { name: "Developer", value: "developer", icon: Code }
     ],
     [
