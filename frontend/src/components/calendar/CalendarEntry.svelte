@@ -7,7 +7,7 @@
   import { GetCalendarColor } from "$lib/common/colors";
   import { NoOp } from "$lib/client/placeholders";
   import { focusIndicator } from "$lib/client/decoration";
-  import { getMetadata } from "$lib/client/metadata";
+  import { getMetadata } from "$lib/client/metadata.svelte";
 
   import { getContext } from "svelte";
 
@@ -17,28 +17,19 @@
 
   let { calendar = $bindable() }: Props = $props();
 
-  let calendarVisible = $state(calendar && calendar.id ? !getMetadata().hiddenCalendars.has(calendar.id) : false);
+  const metadata = getMetadata();
 
-  let hasErrored = $state(false);
-  getMetadata().faultyCalendars.subscribe((faulty) => {
-    if (!calendar || !calendar.id) return;
-    hasErrored = faulty.has(calendar.id);
-  });
-
-  let isLoading = $state(false);
-  getMetadata().loadingCalendars.subscribe((loading) => {
-    if (!calendar || !calendar.id) return;
-    isLoading = loading.has(calendar.id);
-  });
+  let hasErrored = $derived(calendar && metadata.faultyCalendars.has(calendar.id));
+  let isLoading = $derived(calendar && metadata.loadingCalendars.get(calendar.id));
+  let calendarVisible = $derived(calendar && metadata.hiddenCalendars.has(calendar.id));
 
   let showModal: ((calendar: CalendarModel) => Promise<CalendarModel>) = getContext("showCalendarModal");
   function showModalInternal() {
     showModal(calendar).then(newCalendar => calendar = newCalendar).catch(NoOp);
   }
 
-  getMetadata().hiddenCalendars.subscribe((collapsed) => {
-    if (!calendar || !calendar.id) return;
-    calendarVisible = !collapsed.has(calendar.id);
+  $effect(() => {
+    calendarVisible = !metadata.hiddenCalendars.has(calendar.id);
   });
   $effect(() => {
     if (calendar && calendar.id) getMetadata().setCalendarVisibility(calendar.id, calendarVisible);

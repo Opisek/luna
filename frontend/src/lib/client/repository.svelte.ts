@@ -2,7 +2,7 @@ import { browser } from "$app/environment";
 
 import { AllChangesCalendar, AllChangesEvent, AllChangesSource, NoChangesCalendar, NoChangesEvent, NoOp } from "./placeholders";
 import { fetchJson, fetchResponse } from "./net";
-import { getMetadata } from "./metadata";
+import { getMetadata } from "./metadata.svelte";
 import { queueNotification } from "./notifications";
 
 import { atLeastOnePromise, deepCopy } from "$lib/common/misc";
@@ -32,10 +32,6 @@ class Repository {
     this.sources = new SubscribeableArray();
     this.calendars = new SubscribeableArray();
     this.events = new SubscribeableArray();
-
-    getMetadata().hiddenCalendars.subscribe(() => {
-      this.compileEvents(this.eventsRangeStart, this.eventsRangeEnd);
-    });
 
     if (browser) {
       window.addEventListener("storage", () => this.loadCache());
@@ -221,6 +217,9 @@ class Repository {
 
       this.events.set(eventsWithData);
     }, this.spoolerDelay)
+  }
+  public recalculateEvents() {
+    this.compileEvents(this.eventsRangeStart, this.eventsRangeEnd);
   }
 
   //

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Github } from "svelte-simples"
+  import { Github, Jsonwebtokens } from "svelte-simples"
   import { PlusIcon, RefreshCw, Settings, WifiOff } from "lucide-svelte";
   import { setContext, untrack } from "svelte";
 
@@ -20,7 +20,7 @@
 
   import SmallCalendar from "../components/interactive/SmallCalendar.svelte";
   import { NoOp } from "$lib/client/placeholders";
-  import { getMetadata } from "$lib/client/metadata";
+  import { getMetadata } from "$lib/client/metadata.svelte";
   import { getRepository } from "$lib/client/repository.svelte";
   import { queueNotification } from "$lib/client/notifications";
   import { getConnectivity, Reachability } from "$lib/client/connectivity";
@@ -35,8 +35,9 @@
   import ThemeToggle from "../components/interactive/ThemeToggle.svelte";
   import { ColorKeys } from "../types/colors";
 
-  /* Settings */
+  /* Singletons */
   const settings = getSettings();
+  const metadata = getMetadata();
 
   /* Reachability */
   let reachability: Reachability = $state(Reachability.Database);
@@ -49,7 +50,6 @@
 
   /* Fetched data */
   let localSources: SourceModel[] = $state([]);
-  let isCollapsed: boolean[] = $state([]);
   let localCalendars: CalendarModel[] = $state([]);
   let localEvents: EventModel[] = $state([]);
 
@@ -157,12 +157,11 @@
 
   /* Fetching logic */
   let pageLoaded: boolean = $state(false);
-  let isLoading: boolean = $state(false);
+  let isLoading: boolean = $derived(getMetadata().loadingData);
   let loaderAnimation = $state(false);
-  getMetadata().loadingData.subscribe((loadingData) => {
-    isLoading = loadingData;
+  $effect(() => {
     if (isLoading) loaderAnimation = true;
-  });
+  })
 
   afterNavigate(() => {
     getConnectivity().check().then((res) => reachability = res);
@@ -208,7 +207,6 @@
   });
 
   getRepository().sources.subscribe((newSources) => {
-    isCollapsed = newSources.map((source) => getMetadata().collapsedSources.has(source.id));
     localSources = newSources;
   });
 
@@ -247,10 +245,6 @@
         refresh();
       });
     })(date, view, pageLoaded);
-  });
-
-  getMetadata().collapsedSources.subscribe((collapsed) => {
-    isCollapsed = localSources.map((source) => collapsed.has(source.id));
   });
 
   /* Single instance modal logic */
@@ -451,7 +445,7 @@
 {#snippet sourceEntries(sources: SourceModel[])}
   {#each sources as source, i}
     <SourceEntry bind:source={localSources[i]}/>
-    {#if !isCollapsed[i]}
+    {#if !metadata.collapsedSources.has(localSources[i].id)}
       {@render calendarEntries(sourceCalendars.get(source.id) || [])}
     {/if}
   {/each}
