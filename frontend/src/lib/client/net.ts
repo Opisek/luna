@@ -27,20 +27,20 @@ export async function fetchJson(url: string, options: RequestInit = {}) {
   return json;
 }
 
-export async function fetchJsonFromEvent(event: LoadEvent, url: string, options: RequestInit = {}, ignoreErrors: boolean = false) {
+export async function fetchJsonFromEvent(event: LoadEvent, url: string, options: RequestInit = {}, manualErrors: boolean = false) {
   options.headers = [ ["User-Agent", "FrontendLoad"] ]
   const response = await event.fetch(url, options).catch((err) => {
     if (!err.cause) err.cause = new Error("500");
-    if (ignoreErrors) return null;
+    if (manualErrors) throw err;
     else error(Number.parseInt(err.cause.message), err.message);
   });
   if (response === null) return {};
   if (!response.ok) {
-    if (ignoreErrors) return {};
+    if (manualErrors) throw new Error(response.statusText, { cause: new Error(response.status.toString()) });
     else error(response.status, response.statusText);
   }
   const body = await response.json().catch((err) => {
-    if (ignoreErrors) return {};
+    if (manualErrors) throw err;
     else error(500, err.message);
   });
   return body;

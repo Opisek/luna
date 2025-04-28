@@ -7,7 +7,6 @@ export const loginPaths = [
 export const unprivilegedPaths = loginPaths.concat([
   "api",
   "themes",
-  "fonts",
-  "logout"
+  "fonts"
 ])
 

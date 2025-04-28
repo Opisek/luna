@@ -17,13 +17,29 @@ export const handle: Handle = async ({ event, resolve }) => {
       }
     }
 
+    const sessionExpired = event.url.searchParams.get("expired") === "true";
+
     if (isLogin) {
-      return new Response(null, {
-        status: 302,
-        headers: {
-          location: getRedirectPage(currentUrl),
-        },
-      })
+      if (sessionExpired) {
+        const opts = {
+          path: "/",
+          httpOnly: true,
+          maxAge: undefined as number | undefined,
+          sameSite: "strict" as boolean | "strict" | "lax" | "none",
+          secure: !(process.env.PUBLIC_URL?.startsWith("http://") || false),
+        };
+
+        event.cookies.delete("tokenPresent", opts);
+        opts.httpOnly = true;
+        event.cookies.delete("token", opts);
+      } else {
+        return new Response(null, {
+          status: 302,
+          headers: {
+            location: getRedirectPage(currentUrl),
+          },
+        })
+      }
     }
   } else {
     let isUnprivileged = false

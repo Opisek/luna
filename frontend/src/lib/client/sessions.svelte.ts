@@ -16,7 +16,7 @@ export function clearSession() {
   resetRepository();
   resetNotifications();
 
-  window.location.href = "/logout";
+  window.location.href = "/login?expired=true";
 }
 
 class ActiveSessions {
