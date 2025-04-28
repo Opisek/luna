@@ -2,19 +2,7 @@ import type { Handle } from "@sveltejs/kit";
 import { getRedirectPage } from "./lib/common/parsing";
 
 import "dotenv/config"
-
-const loginPaths = [
-  "login",
-  "register",
-  "recover"
-]
-
-const unprivilegedPaths = loginPaths.concat([
-  "api",
-  "themes",
-  "fonts",
-  "logout"
-])
+import { loginPaths, unprivilegedPaths } from "./lib/common/paths";
 
 export const handle: Handle = async ({ event, resolve }) => {
   const tokenPresent = event.cookies.get("tokenPresent");
