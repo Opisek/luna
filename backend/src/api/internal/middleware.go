@@ -256,9 +256,10 @@ func RequireAuth() gin.HandlerFunc {
 		// This is one line of defense against forged tokens.
 		secret, err := base64.StdEncoding.DecodeString(parsedToken.Secret)
 		if err != nil {
-			u.Error(errors.New().Status(http.StatusInternalServerError).
+			u.Error(errors.New().Status(http.StatusUnauthorized).
 				AddErr(errors.LvlDebug, err).
-				Append(errors.LvlDebug, "Could not decode secret from token"),
+				Append(errors.LvlDebug, "Could not decode secret from token").
+				Append(errors.LvlPlain, "Session expired"),
 			)
 			c.Abort()
 			return
@@ -266,7 +267,8 @@ func RequireAuth() gin.HandlerFunc {
 		actualHash := crypto.GetSha256Hash(secret)
 		if !bytes.Equal(actualHash, session.SecretHash) {
 			u.Error(errors.New().Status(http.StatusUnauthorized).
-				Append(errors.LvlDebug, "Token secret value produces incorrect hash value"),
+				Append(errors.LvlDebug, "Token secret value produces incorrect hash value").
+				Append(errors.LvlPlain, "Session expired"),
 			)
 			c.Abort()
 			return
@@ -291,7 +293,8 @@ func RequireAuth() gin.HandlerFunc {
 					Append(errors.LvlDebug, "Expected %s, but got %s",
 						fmt.Sprintf("%s %s %s", associatedUserAgent.OS, associatedUserAgent.Name, associatedUserAgent.Device),
 						fmt.Sprintf("%s %s %s", currentUserAgent.OS, currentUserAgent.Name, currentUserAgent.Device)).
-					Append(errors.LvlDebug, "User agent mismatch"),
+					Append(errors.LvlDebug, "User agent mismatch").
+					Append(errors.LvlPlain, "Session expired"),
 				)
 
 				u.Config.TokenInvalidationChannel <- session
