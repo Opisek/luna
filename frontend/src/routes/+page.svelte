@@ -34,6 +34,7 @@
   import { UserSettingKeys } from "../types/settings";
   import ThemeToggle from "../components/interactive/ThemeToggle.svelte";
   import { ColorKeys } from "../types/colors";
+  import { page } from "$app/state";
 
   /* Singletons */
   const settings = getSettings();
@@ -44,50 +45,29 @@
   /* Constants */
   let autoRefreshInterval = 1000 * 60; // 1 minute
 
-  /* View */
-  let view: "month" | "week" | "day" = $state("month");
-
   /* View logic */
-  let today = $state(new Date());
-  let date = $state(new Date());
+  let view: "month" | "week" | "day" = $derived.by(() => {
+    const stored = page.url.searchParams.get("view");
+    if (!stored || !["month", "week", "day"].includes(stored)) return "month"
+    return stored as "month" | "week" | "day";
+  });
 
-  // Svelte bug... These don't work like they're supposed to.
-  //let rangeStart = $derived.by(() => {
-  //  console.log("deriving range start");
-  //  const tmp = new Date(date);
-  //  tmp.setHours(0, 0, 0, 0);
-  //  switch (view) {
-  //    case "month":
-  //      tmp.setDate(1);
-  //      break;
-  //    case "week":
-  //      tmp.setDate(date.getDate() - ((date.getDay() + 6) % 7));
-  //      break;
-  //    case "day":
-  //    default:
-  //  }
-  //  console.log("range start changed", date, tmp)
-  //  return tmp;
-  //});
-  //let rangeEnd = $derived.by(() => {
-  //  console.log("deriving range end");
-  //  const tmp = new Date(date);
-  //  tmp.setHours(23, 59, 59, 999);
-  //  switch (view) {
-  //    case "month":
-  //      tmp.setMonth(tmp.getMonth() + 1);
-  //      tmp.setDate(0);
-  //      break;
-  //    case "week":
-  //      tmp.setDate(rangeStart.getDate() + 7);
-  //      break;
-  //    case "day":
-  //    default:
-  //  }
-  //  console.log("range end changed", date, tmp)
-  //  return tmp;
-  //});
-  //let todayInRange = $derived(isInRange(today, rangeStart, rangeEnd));
+  let today = $state(new Date());
+  let date = $derived.by(() => {
+    const stored = page.url.searchParams.get("date");
+    if (!stored) return new Date(today);
+    const parsed = new Date(stored);
+    return parsed;
+  });
+
+  $effect(() => {
+    const url = new URL(window.location.toString());
+
+    url.searchParams.set("view", view);
+    url.searchParams.set("date", date.toISOString().split("T")[0]);
+
+    history.replaceState(history.state, '', url);
+  })
 
   function getVisibleRange(date: Date, view: "month" | "week" | "day"): { start: Date, end: Date } {
     const rangeStart = new Date(date);
@@ -121,19 +101,6 @@
     date = new Date(today);
   }
 
-  function getRangeFromStorage() {
-    if (pageLoaded) return;
-
-    const storedDate = browser ? sessionStorage.getItem("selectedDate") : null;
-    date = storedDate === null ? today : new Date(storedDate);
-
-    const storedView = browser ? sessionStorage.getItem("selectedView") : "month";
-    //@ts-ignore
-    view = storedView && [ "month", "week", "day" ].includes(storedView) ? storedView : "month";
-
-    pageLoaded = true;
-  }
-
   function smallCalendarClick(clickedDate: Date) {
     const range = getVisibleRange(date, view);
     if (isInRange(clickedDate, range.start, range.end) && clickedDate.getMonth() === date.getMonth()) {
@@ -147,7 +114,6 @@
   }
 
   /* Fetching logic */
-  let pageLoaded: boolean = $state(false);
   let isLoading: boolean = $derived(getMetadata().loadingData);
   let loaderAnimation = $state(false);
   $effect(() => {
@@ -155,13 +121,11 @@
   })
 
   afterNavigate(() => {
-    getRangeFromStorage();
     refresh();
   });
 
   beforeNavigate((args) => {
     if (args.to === null) return;
-    pageLoaded = false;
     clearTimeout(spooledRefresh);
     spooledRefresh = undefined; 
   });
@@ -170,9 +134,6 @@
 
   let spooledRefresh: (ReturnType<typeof setTimeout> | undefined) = $state(undefined);
   function refresh(force = false) {
-    sessionStorage.setItem("selectedDate", date.toString());
-    sessionStorage.setItem("selectedView", view);
-
     const range = getVisibleRange(date, view);
 
     getRepository().getAllEvents(range.start, range.end, force).catch((err) => {
@@ -193,16 +154,12 @@
   }
 
   $effect(() => {
-    ((date: Date, view: "month" | "week" | "day", loaded: boolean) => {
+    ((date: Date, view: "month" | "week" | "day") => {
       untrack(() => {
         if (!browser) return;
-        if (!loaded) {
-          getRangeFromStorage();
-          return;
-        }
         refresh();
       });
-    })(date, view, pageLoaded);
+    })(date, view);
   });
 
   /* Single instance modal logic */
