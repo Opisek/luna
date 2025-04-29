@@ -92,7 +92,7 @@ class Connectivity {
   }
 }
 
-let connectivity: Connectivity | null = null;
+let connectivity: Connectivity | null = $state(null);
 export function getConnectivity() {
   if (connectivity === null) {
     connectivity = new Connectivity();

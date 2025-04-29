@@ -135,10 +135,14 @@ class Metadata {
   }
 }
 
-let metadata: Metadata | null = null;
+let metadata: Metadata | null = $state(null);
 export function getMetadata() {
   if (metadata === null) {
     metadata = new Metadata();
   }
   return metadata;
+}
+
+export function resetMetadata() {
+  metadata = null;
 }

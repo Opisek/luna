@@ -5,6 +5,7 @@ import { resetSettings } from "./settings.svelte";
 import { resetThemes } from "./theme.svelte";
 import { resetRepository } from "./repository.svelte";
 import { resetNotifications } from "./notifications";
+import { resetMetadata } from "./metadata.svelte";
 
 export function clearSession() {
   if (!browser) return;
@@ -16,6 +17,7 @@ export function clearSession() {
   resetThemes();
   resetRepository();
   resetNotifications();
+  resetMetadata();
 
   window.location.href = "/login?expired=true";
 }
