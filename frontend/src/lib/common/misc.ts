@@ -1,4 +1,4 @@
-export async function atLeastOnePromise<T>(promises: Promise<T>[]): Promise<[T[], [number, Error][]]> {
+export async function parallel<T>(promises: Promise<T>[]): Promise<[T[], [number, Error][]]> {
     const results = await Promise.allSettled(promises);
 
     let fulfilled: T[] = [];
@@ -9,8 +9,17 @@ export async function atLeastOnePromise<T>(promises: Promise<T>[]): Promise<[T[]
         else rejected.push([index, result.reason]);
     };
 
-    if (fulfilled.length === 0 && results.length > 0) {
-        throw "All promises failed";
+    if (
+        fulfilled.length === 0 &&
+        results.length > 1 &&
+        rejected.every(r =>
+            r[1].message === rejected[0][1].message || (
+                r[1].cause instanceof Error && rejected[0][1].cause instanceof Error &&
+                r[1].cause.message === rejected[0][1].message
+            )
+        )
+    ) {
+        throw rejected[0][1];
     }
 
     return [fulfilled, rejected];

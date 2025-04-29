@@ -5,7 +5,7 @@ import { fetchJson, fetchResponse } from "./net";
 import { getMetadata } from "./metadata.svelte";
 import { queueNotification } from "./notifications";
 
-import { atLeastOnePromise, deepCopy } from "$lib/common/misc";
+import { parallel, deepCopy } from "$lib/common/misc";
 import { ColorKeys } from "../../types/colors";
 
 class Repository {
@@ -338,8 +338,8 @@ class Repository {
 
     this.getCalendars(newSource.id).then(async (cals) => {
       this.compileCalendars();
-      const [_, errors] = await atLeastOnePromise(cals.map((cal) => this.getEventsFromCalendar(cal.id, this.eventsRangeStart, this.eventsRangeEnd))).catch(() => {
-        throw new Error("Failed to fetch events");
+      const [_, errors] = await parallel(cals.map((cal) => this.getEventsFromCalendar(cal.id, this.eventsRangeStart, this.eventsRangeEnd))).catch((err) => {
+        throw new Error(`Failed to fetch events from ${newSource.name}: ${(err.cause || err).message}`, { cause: err.cause || err });
       });
       errors.forEach((err) => {
         queueNotification(
@@ -372,8 +372,8 @@ class Repository {
 
     this.getCalendars(modifiedSource.id).then(async (cals) => {
       this.compileCalendars();
-      const [_, errors] = await atLeastOnePromise(cals.map((cal) => this.getEventsFromCalendar(cal.id, this.eventsRangeStart, this.eventsRangeEnd))).catch(() => {
-        throw new Error("Failed to fetch events");
+      const [_, errors] = await parallel(cals.map((cal) => this.getEventsFromCalendar(cal.id, this.eventsRangeStart, this.eventsRangeEnd))).catch((err) => {
+        throw new Error(`Failed to fetch events from ${modifiedSource.name}: ${(err.cause || err).message}`, { cause: err.cause || err });
       });
       errors.forEach((err) => {
         queueNotification(
@@ -420,8 +420,8 @@ class Repository {
 
     const allSources = await this.getSources(forceRefresh);
 
-    const [calendars, errors] = await atLeastOnePromise(allSources.map((source) => this.getCalendars(source.id, forceRefresh))).catch(() => {
-      throw new Error("Failed to fetch calendars");
+    const [calendars, errors] = await parallel(allSources.map((source) => this.getCalendars(source.id, forceRefresh))).catch((err) => {
+      throw new Error(`Failed to fetch calendars: ${(err.cause || err).message}`, { cause: err.cause || err });
     });
 
     errors.forEach((err) => {
@@ -640,8 +640,8 @@ class Repository {
 
     this.compileEvents(start, end);
     const allSources = await this.getSources(forceRefresh).catch((err) => { throw err; });
-    const [events, errors] = await atLeastOnePromise(allSources.map((source) => this.getEventsFromSource(source.id, start, end, forceRefresh))).catch(() => {
-      throw new Error("Failed to fetch events");
+    const [events, errors] = await parallel(allSources.map((source) => this.getEventsFromSource(source.id, start, end, forceRefresh))).catch((err) => {
+      throw new Error(`Failed to fetch events: ${(err.cause || err).message}`, { cause: err.cause || err });
     });
     errors.forEach((err) => {
       queueNotification(
@@ -669,8 +669,8 @@ class Repository {
   private async getEventsFromSource(source: string, start: Date, end: Date, forceRefresh = false): Promise<EventModel[]> {
     let cals = await this.getCalendars(source, forceRefresh).catch((err) => { throw err; });
     cals = cals.filter(x => !getMetadata().hiddenCalendars.has(x.id)); // only fetch events from visible calendars
-    const [events, errors] = await atLeastOnePromise(cals.map((calendar) => this.getEventsFromCalendar(calendar.id, start, end, forceRefresh))).catch(() => {
-      throw new Error("Failed to fetch events");
+    const [events, errors] = await parallel(cals.map((calendar) => this.getEventsFromCalendar(calendar.id, start, end, forceRefresh))).catch((err) => {
+      throw new Error(`Failed to fetch events: ${(err.cause || err).message}`, { cause: err.cause || err });
     })
     errors.forEach((err) => {
       queueNotification(
