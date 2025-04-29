@@ -15,7 +15,7 @@ export enum Reachability {
 }
 
 class Connectivity {
-  private reachable: Reachability;
+  reachable = $state<Reachability>(Reachability.Unknown);
 
   private compatibility: VersionCompatibility;
   private backendVersion: string | null;
@@ -90,12 +90,16 @@ class Connectivity {
       compatibility: this.compatibility
     }
   }
+
+  setPrefetchedVersion(prefetchedVersion: string) {
+    this.backendVersion = prefetchedVersion;
+    this.compatibility = isCompatibleWithBackend(prefetchedVersion);
+  }
 }
 
 let connectivity: Connectivity | null = $state(null);
-export function getConnectivity() {
-  if (connectivity === null) {
-    connectivity = new Connectivity();
-  }
+export function getConnectivity(prefetchedVersion: string = ""): Connectivity {
+  if (connectivity === null) connectivity = new Connectivity();
+  if (prefetchedVersion !== "") connectivity.setPrefetchedVersion(prefetchedVersion);
   return connectivity;
 }

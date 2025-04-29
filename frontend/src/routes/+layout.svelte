@@ -6,10 +6,12 @@
   import { UserSettingKeys, type GlobalSettings, type UserData, type UserSettings } from "../types/settings";
   import { getTheme } from "$lib/client/theme.svelte";
   import type { NotificationModel } from "../types/notification";
+  import { getConnectivity } from "$lib/client/connectivity.svelte";
 
   interface PageProps {
     children?: import('svelte').Snippet;
     data: {
+      version: string;
       userData: UserData;
       userSettings: UserSettings;
       globalSettings: GlobalSettings;
@@ -22,6 +24,7 @@
   }: PageProps = $props();
 
   const settings = getSettings(data);
+  const connectivity = getConnectivity(data.version);
   const theme = getTheme();
 
   let notifsWrapper: HTMLDivElement;

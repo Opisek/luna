@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Github, Jsonwebtokens } from "svelte-simples"
+  import { Github } from "svelte-simples"
   import { PlusIcon, RefreshCw, Settings, WifiOff } from "lucide-svelte";
   import { setContext, untrack } from "svelte";
 
@@ -39,9 +39,7 @@
   const settings = getSettings();
   const metadata = getMetadata();
   const repository = getRepository();
-
-  /* Reachability */
-  let reachability: Reachability = $state(Reachability.Database);
+  const connectivity = getConnectivity();
 
   /* Constants */
   let autoRefreshInterval = 1000 * 60; // 1 minute
@@ -157,7 +155,6 @@
   })
 
   afterNavigate(() => {
-    getConnectivity().check().then((res) => reachability = res);
     getRangeFromStorage();
     refresh();
   });
@@ -182,7 +179,7 @@
       queueNotification(ColorKeys.Danger, `Failed to fetch events: ${err.message}`);
     });
 
-    if (force) getConnectivity().check().then((res) => reachability = res);
+    connectivity.check();
 
     clearTimeout(spooledRefresh);
     spooledRefresh = setTimeout(() => {
@@ -351,15 +348,15 @@
   <div class="toprow">
     <MonthSelection bind:date granularity={view} />
     <Horizontal position="justify" width="auto">
-      {#if reachability != Reachability.Database}
+      {#if connectivity.reachable != Reachability.Database}
         <span class="reachability">
-          {#if reachability == Reachability.Backend}
+          {#if connectivity.reachable == Reachability.Backend}
             The database cannot be reached.
-          {:else if reachability == Reachability.Frontend}
+          {:else if connectivity.reachable == Reachability.Frontend}
             The backend server cannot be reached.
-          {:else if reachability == Reachability.None}
+          {:else if connectivity.reachable == Reachability.None}
             The frontend server cannot be reached.
-          {:else if reachability == Reachability.Incompatible}
+          {:else if connectivity.reachable == Reachability.Incompatible}
             The frontend server and the backend server are not compatible.
           {:else}
             Unknown network error

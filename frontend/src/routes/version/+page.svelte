@@ -71,7 +71,7 @@
           The frontend server is <Bold color={ColorKeys.Warning}>outdated</Bold> and might be missing some features.<br>
           Consider to <Bold>update</Bold> the frontend server.
         {:else if versions.compatibility === VersionCompatibility.Compatible}
-          The frontend and backend servers are <Bold color={ColorKeys.Warning}>compatible</Bold>.<br>
+          The frontend and backend servers are <Bold color={ColorKeys.Success}>compatible</Bold>.<br>
           Luna is <Bold>ready</Bold> to be used.
         {/if}
       {/if}
