@@ -13,6 +13,7 @@
 
   import { isValidPassword, isValidUsername, valid } from '$lib/client/validation';
   import { queueNotification } from '$lib/client/notifications';
+  import { browser } from '$app/environment';
 
   interface Props {
     form: ActionData;
@@ -22,6 +23,7 @@
 
   afterNavigate(() => {
     if (form?.error) queueNotification(ColorKeys.Danger, form.error);
+    if (browser) localStorage.clear();
   });
 
   const redirect = $derived(page.url.searchParams.get('redirect') || "/");

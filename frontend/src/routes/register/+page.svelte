@@ -16,6 +16,7 @@
   import Title from '../../components/layout/Title.svelte';
   import Paragraph from '../../components/layout/Paragraph.svelte';
   import Box from '../../components/layout/Box.svelte';
+  import { browser } from '$app/environment';
 
   interface PageProps {
     form: ActionData;
@@ -31,6 +32,7 @@
 
   afterNavigate(() => {
     if (form?.error) queueNotification(ColorKeys.Danger, form.error);
+    if (browser) localStorage.clear();
   });
 
   const redirect = $derived(page.url.searchParams.get('redirect') || "/");
