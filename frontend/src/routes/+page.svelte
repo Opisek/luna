@@ -23,7 +23,7 @@
   import { getMetadata } from "$lib/client/metadata.svelte";
   import { getRepository } from "$lib/client/repository.svelte";
   import { queueNotification } from "$lib/client/notifications";
-  import { getConnectivity, Reachability } from "$lib/client/connectivity";
+  import { getConnectivity, Reachability } from "$lib/client/connectivity.svelte";
   import Button from "../components/interactive/Button.svelte";
   import DayViewModal from "../components/modals/DayViewModal.svelte";
   import { getDayIndex, isInRange } from "../lib/common/date";
