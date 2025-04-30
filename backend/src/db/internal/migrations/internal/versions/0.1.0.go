@@ -146,6 +146,13 @@ func init() {
 				Append(errors.LvlDebug, "Could not initialize sessions table")
 		}
 
+		err = q.Tables.InitializeInvitesTable()
+		if err != nil {
+			return errors.New().
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlDebug, "Could not initialize invites table")
+		}
+
 		return nil
 	})
 }
