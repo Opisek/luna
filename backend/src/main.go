@@ -188,6 +188,7 @@ func main() {
 	c.AddFunc("*/30 * * * *", createTask("RefetchIcalFiles", tasks.RefetchIcalFiles, db, cronLogger))
 	c.AddFunc("0 * * * *", createTask("DeleteExpiredShortLivedSessions", tasks.DeleteStaleShortLivedSessions, db, cronLogger))
 	c.AddFunc("0 0 * * *", createTask("DeleteExpiredLongLivedSessions", tasks.DeleteStaleLongLivedSessions, db, cronLogger))
+	c.AddFunc("0 * * * *", createTask("DeleteExpiredRegistrationInvites", tasks.DeleteExpiredRegistrationInvites, db, cronLogger))
 
 	// Token invalidation service
 	tokenInvalidationLogger := logger.WithField("module", "token_invalidation")
