@@ -108,6 +108,12 @@ func run(api *util.Api) {
 	sessionEndpoints.DELETE("/:sessionId", handlers.DeleteSession)
 	sessionEndpoints.DELETE("", handlers.DeleteSessions)
 
+	// /api/invites/*
+	inviteEndpoints := administratorEndpoints.Group("/invites")
+	inviteEndpoints.GET("", handlers.GetInvites)
+	inviteEndpoints.PUT("", handlers.PutInvite)
+	inviteEndpoints.DELETE("/:inviteId", handlers.DeleteInvite)
+
 	// /api/* the rest
 	authenticatedEndpoints.POST("/url", handlers.CheckUrl)
 

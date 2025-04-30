@@ -2,8 +2,10 @@ package crypto
 
 import (
 	"crypto/rand"
+	"encoding/base64"
 	"encoding/binary"
 	"luna-backend/errors"
+	"math"
 	"net/http"
 )
 
@@ -29,4 +31,15 @@ func GenerateRandomNumber() (uint32, *errors.ErrorTrace) {
 	num := binary.BigEndian.Uint32(bytes)
 
 	return num, nil
+}
+
+func GenerateRandomBase64(n int) (string, *errors.ErrorTrace) {
+	bytes, err := GenerateRandomBytes((int)(math.Ceil(float64(n) / 4 * 3)))
+	if err != nil {
+		return "", err
+	}
+
+	str := base64.StdEncoding.EncodeToString(bytes)
+
+	return str[:n], nil
 }

@@ -111,3 +111,20 @@ func (q *Queries) DeleteExpiredInvites() *errors.ErrorTrace {
 
 	return nil
 }
+
+func (q *Queries) DeleteInvite(inviteId types.ID) *errors.ErrorTrace {
+	query := `
+		DELETE FROM invites
+		WHERE inviteid = $1;
+	`
+
+	_, err := q.Tx.Exec(q.Context, query, inviteId.UUID())
+	if err != nil {
+		return errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlWordy, "Could not delete invite").
+			Append(errors.LvlPlain, "Database error")
+	}
+
+	return nil
+}
