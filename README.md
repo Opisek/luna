@@ -348,6 +348,25 @@ Depending on the `auth_type` field, additional information may need to be passed
 - `bearer`: `token`
 - `oauth`: Not yet implemented
 
+### Invites
+#### Get Invites
+- **Path**: ``/api/invites``
+- **Method**: ``GET``
+- **Body**: Empty
+- **Purpose**: Returns all active registration invites
+
+#### Put Invite
+- **Path**: ``/api/invites``
+- **Method**: ``PUT``
+- **Body**: `duration` in seconds
+- **Purpose**: Creates a new registration invite
+
+#### Delete Invite
+- **Path**: ``/api/invites/<ID>``
+- **Method**: ``DELETE``
+- **Body**: Empty
+- **Purpose**: Retracts a registration invite
+
 ## Additional Frontend Endpoints
 Aside from using the backend API, the frontend also provides a limited amount of "endpoints" for its own purposes.
 These are: `/installed/fonts` and `/installed/themes` to list the installed frontend fonts and themes respectively.
