@@ -32,6 +32,17 @@
   let passwordValidity: Validity = $state(valid);
 
   let canSubmit: boolean = $derived(usernameValidity?.valid && passwordValidity?.valid);
+
+  let username: string = $state("");
+
+  export const snapshot = {
+    capture: () => ({
+      username: username
+    }),
+    restore: (state: { username: string }) => {
+      username = state.username;
+    },
+  }
 </script>
 
 <SimplePage>
@@ -41,6 +52,7 @@
       placeholder="Username"
       validation={isValidUsername}
       bind:validity={usernameValidity}
+      bind:value={username}
     />
     <TextInput
       name="password"

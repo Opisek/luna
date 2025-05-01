@@ -32,6 +32,7 @@
   import PasswordPromptModal from "./PasswordPromptModal.svelte";
   import SectionDivider from "../layout/SectionDivider.svelte";
   import { getTheme } from "../../lib/client/theme.svelte";
+  import RegistrationInviteModal from "./RegistrationInviteModal.svelte";
 
   interface Props {
     showModal?: () => any;
@@ -444,6 +445,10 @@
     settings.userSettings[UserSettingKeys.ThemeSynchronize], setTimeout(() => getTheme().refetchTheme(), 0);
   });
 
+  // User Management
+  let showRegistrationInvite = $state<(session: RegistrationInvite, editable: boolean) => Promise<RegistrationInvite>>(Promise.reject);
+  let issueRegistrationInvite = $state<() => Promise<RegistrationInvite>>(Promise.reject);
+
   // Confirmation dialog
   let internalShowConfirmation = $state(NoOp);
   let confirmationCallback = $state(async () => {});
@@ -832,7 +837,10 @@
           />
         {/if}
       {:else if selectedCategory === "users"}
-        <Button color={ColorKeys.Accent}>Invite a user</Button>
+        <Button color={ColorKeys.Accent} onClick={issueRegistrationInvite}>Invite a user</Button>
+
+        <!-- TODO: display all current invites -->
+        <!-- TODO: remove all invites button -->
       {:else if selectedCategory === "admin"}
         <ToggleInput
           name={GlobalSettingKeys.RegistrationEnabled}
@@ -948,6 +956,11 @@
     </span>
   </div>
 {/snippet}
+
+<RegistrationInviteModal
+  bind:showModal={showRegistrationInvite}
+  bind:showCreateModal={issueRegistrationInvite}
+/>
 
 <SessionModal
   bind:showModal={editApiToken}

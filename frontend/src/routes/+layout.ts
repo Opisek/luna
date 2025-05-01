@@ -6,7 +6,8 @@ import { NoOp } from "$lib/client/placeholders";
 import { isCompatibleWithBackend, VersionCompatibility } from "$lib/common/version";
 
 export const load: PageLoad = async (event: LoadEvent) => {
-  const version = (await fetchJsonFromEvent(event, "/api/version", {}, true).catch(NoOp)).version || null;
+  const response = await fetchJsonFromEvent(event, "/api/version", {}, true).catch(NoOp);
+  const version = response?.version;
   if (event.url.pathname !== "/version" && [VersionCompatibility.BackendOutdatedMajor, VersionCompatibility.FrontendOutdatedMajor].includes(isCompatibleWithBackend(version)))
     redirect(302, `/version?redirect=${encodeURIComponent(event.url.pathname)}`);
 

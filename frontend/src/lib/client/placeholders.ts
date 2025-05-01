@@ -51,6 +51,15 @@ export const EmptySession: Session = {
   location: ""
 }
 
+export const EmptyRegistrationInvite: RegistrationInvite = {
+  invite_id: "",
+  author: "",
+  email: "",
+  created_at: new Date(0),
+  expires_at: new Date(0),
+  code: ""
+}
+
 export const AllChangesCalendar: CalendarModelChanges = {
   name: true,
   desc: true,

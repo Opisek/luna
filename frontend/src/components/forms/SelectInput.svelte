@@ -8,6 +8,7 @@
   import { calculateOptimalPopupPosition } from "$lib/common/calculations";
   import { focusIndicator } from "$lib/client/decoration";
   import type { Option } from "../../types/options";
+  import Event from "../calendar/Event.svelte";
 
   let active = $state(false);
   let optionsAbove = $state(false);
@@ -43,7 +44,12 @@
     if (browser) {
       window.addEventListener("click", clickOutside);
       window.addEventListener("keydown", keyboardClick);
+      window.addEventListener("scroll", scrollEvent);
     }
+
+    optionsWrapper.showPopover();
+    calculatePopoverPosition();
+
     setTimeout(() => {
       const els = optionsWrapper.getElementsByClassName("selected");
       if (els.length > 0 && els[0]) (els[0] as HTMLElement).focus();
@@ -54,6 +60,8 @@
     if (!active) {
       window.removeEventListener("click", clickOutside);
       window.removeEventListener("keydown", keyboardClick);
+      window.removeEventListener("scroll", scrollEvent);
+      optionsWrapper.hidePopover();
     }
   })
 
@@ -88,6 +96,10 @@
     }
   }
 
+  function scrollEvent(_: any) {
+    active = false;
+  }
+
   function focusNext() {
     const currentFocus = document.activeElement;
 
@@ -120,6 +132,22 @@
     if (currentIndex < 0) return;
 
     (optionsWrapper.children[currentIndex] as HTMLElement).focus();
+  }
+
+  // TODO: we need to revisit this once CSS anchors are supported
+  let popoverTop = $state(0);
+  let popoverLeft = $state(0);
+  let popoverWidth = $state(0);
+  let optionsPositionStyle = $derived(`top: ${popoverTop}px; left: ${popoverLeft}px; width: ${popoverWidth}px;`);
+  function calculatePopoverPosition() {
+    if (!selectWrapper) return;
+
+    const wrapperRect = selectWrapper.getBoundingClientRect();
+    
+    popoverLeft = wrapperRect.left;
+    if (optionsAbove) popoverTop = wrapperRect.top;
+    else popoverTop = wrapperRect.bottom;
+    popoverWidth = wrapperRect.width;
   }
 </script>
 
@@ -167,7 +195,7 @@
   div.options {
     position: absolute;
     background-color: colors.$backgroundSecondary;
-    width: 100%;
+    color: colors.$foregroundSecondary;
     left: 0;
     box-shadow: decorations.$boxShadow;
     z-index: 10;
@@ -175,10 +203,20 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
+
+    outline: 0;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
   }
   
   div.options.hidden {
     display: none;
+  }
+
+  div.options.above {
+    transform: translateY(-100%);
   }
 
   button.option {
@@ -243,8 +281,10 @@
   <div
     class="options"
     class:hidden={!active}
-    style="top: {optionsAbove ? -100 * options.length : 100}%"
+    class:above={optionsAbove}
+    style={optionsPositionStyle}
     bind:this={optionsWrapper}
+    popover="manual"
   >
     {#each options as option}
       <button

@@ -106,10 +106,11 @@ func PutInvite(c *gin.Context) {
 
 	// Create invite
 	invite := &types.RegistrationInvite{
-		Author:  userId,
-		Email:   email,
-		Expires: currentTime.Add(time.Duration(duration) * time.Second),
-		Code:    code,
+		Author:    userId,
+		Email:     email,
+		CreatedAt: currentTime,
+		Expires:   currentTime.Add(time.Duration(duration) * time.Second),
+		Code:      code,
 	}
 
 	tr = u.Tx.Queries().InsertInvite(invite)
@@ -123,7 +124,7 @@ func PutInvite(c *gin.Context) {
 	// TODO: Send email if address provided
 
 	u.Success(&gin.H{
-		"code": code,
+		"invite": invite,
 	})
 }
 
@@ -149,7 +150,7 @@ func DeleteInvite(c *gin.Context) {
 	u.Success(nil)
 }
 
-func DeletInvites(c *gin.Context) {
+func DeleteInvites(c *gin.Context) {
 	u := util.GetUtil(c)
 
 	// Delete all invites

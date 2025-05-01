@@ -2,7 +2,7 @@ package tables
 
 func (q *Tables) InitializeInvitesTable() error {
 	// Invites table:
-	// inviteid author created_at expires code
+	// inviteid author created_at expires_at code
 	//
 	// UNIQUE on code not only makes sense but also automatically creates an index
 	// in postgres
@@ -14,7 +14,7 @@ func (q *Tables) InitializeInvitesTable() error {
 			author UUID REFERENCES users(id) ON DELETE CASCADE,
 			email VARCHAR(255) UNIQUE,
 			created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-			expires TIMESTAMP NOT NULL,
+			expires_at TIMESTAMP NOT NULL,
 			code TEXT UNIQUE NOT NULL
 		);
 		`,
