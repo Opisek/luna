@@ -9,7 +9,7 @@ func (q *Tables) InitializeInvitesTable() error {
 	_, err := q.Tx.Exec(
 		q.Context,
 		`
-		CREATE TABLE sessions (
+		CREATE TABLE invites (
 			inviteid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 			author UUID REFERENCES users(id) ON DELETE CASCADE,
 			email VARCHAR(255) UNIQUE,
