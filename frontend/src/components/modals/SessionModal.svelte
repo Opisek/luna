@@ -38,8 +38,10 @@
     session = await deepCopy(original);
     originalSession = await deepCopy(original);
 
-    if (editMode) setTimeout(showCreateModalInternal(), 0);
-    else setTimeout(showModalInternal(), 0);
+    if (editMode) {
+      session.is_api = true;
+      setTimeout(showCreateModalInternal(), 0);
+    } else setTimeout(showModalInternal(), 0);
 
     return new Promise((resolve, reject) => {
       promiseResolve = ((res) => {
