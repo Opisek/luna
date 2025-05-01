@@ -335,42 +335,28 @@ func RequireAdmin() gin.HandlerFunc {
 	}
 }
 
-func DynamicThrottle() gin.HandlerFunc {
-	// Map of IP to failed attempts
-	failures := make(map[string]int)
-	// Map of IP to last failed attempt
-	lastFailed := make(map[string]time.Time)
-
+func DynamicThrottle(throttle *util.Throttle) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		u := util.GetUtil(c)
 
 		ip := net.ParseIP(c.ClientIP()).String()
 
-		lastFail, ok := lastFailed[ip]
-		if ok && time.Since(lastFail) > 1*time.Minute {
-			// Reset the number of failures after 1 minute
-			delete(failures, ip)
-			delete(lastFailed, ip)
-			// TODO: periodically clean up the map to avoid memory leaks
-		} else if ok {
-			failCount := failures[ip]
-
-			if failCount > 100 {
-				u.Logger.Warnf("IP %s has failed %d times in the last minute, aborting...", ip, failCount)
-				u.Error(errors.New().Status(http.StatusTooManyRequests).
-					Append(errors.LvlPlain, "Too many failed requests from this IP address"),
-				)
-				c.Abort()
-			} else if failCount > 15 {
-				u.Logger.Warnf("IP %s has failed %d times in the last minute, throttling...", ip, failCount)
-				time.Sleep(5 * time.Second)
-			} else if failCount > 10 {
-				u.Logger.Warnf("IP %s has failed %d times in the last minute, throttling...", ip, failCount)
-				time.Sleep(1 * time.Second)
-			} else if failCount > 5 {
-				u.Logger.Warnf("IP %s has failed %d times in the last minute, throttling...", ip, failCount)
-				time.Sleep(100 * time.Millisecond)
-			}
+		failCount := throttle.GetFailedAttempts(ip)
+		if failCount > 100 {
+			u.Logger.Warnf("IP %s has failed %d times in the last minute, aborting...", ip, failCount)
+			u.Error(errors.New().Status(http.StatusTooManyRequests).
+				Append(errors.LvlPlain, "Too many failed requests from this IP address"),
+			)
+			c.Abort()
+		} else if failCount > 15 {
+			u.Logger.Warnf("IP %s has failed %d times in the last minute, throttling...", ip, failCount)
+			time.Sleep(5 * time.Second)
+		} else if failCount > 10 {
+			u.Logger.Warnf("IP %s has failed %d times in the last minute, throttling...", ip, failCount)
+			time.Sleep(1 * time.Second)
+		} else if failCount > 5 {
+			u.Logger.Warnf("IP %s has failed %d times in the last minute, throttling...", ip, failCount)
+			time.Sleep(100 * time.Millisecond)
 		}
 
 		c.Next()
@@ -378,16 +364,10 @@ func DynamicThrottle() gin.HandlerFunc {
 		// Check for errors
 		if _, errored := c.Get("error"); !errored {
 			// Reset the number of failures if the request was successful
-			delete(failures, ip)
-			delete(lastFailed, ip)
+			throttle.RecordSuccessfulAttempt(ip)
 		} else {
 			// Increment the number of failures
-			if _, ok := failures[ip]; !ok {
-				failures[ip] = 1
-			} else {
-				failures[ip]++
-			}
-			lastFailed[ip] = time.Now()
+			throttle.RecordFailedAttempt(ip)
 		}
 	}
 }

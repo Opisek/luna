@@ -12,6 +12,7 @@ type Api struct {
 	CommonConfig *config.CommonConfig
 	Logger       *logrus.Entry
 	run          func(*Api)
+	Throttle     *Throttle
 }
 
 func NewApi(db *db.Database, commonConfig *config.CommonConfig, logger *logrus.Entry, run func(*Api)) *Api {
@@ -20,6 +21,7 @@ func NewApi(db *db.Database, commonConfig *config.CommonConfig, logger *logrus.E
 		CommonConfig: commonConfig,
 		Logger:       logger,
 		run:          run,
+		Throttle:     NewRequestThrottle(),
 	}
 }
 

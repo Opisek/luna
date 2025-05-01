@@ -36,7 +36,7 @@ func run(api *util.Api) {
 	// /api/* (long-running authentication)
 	authEndpoints := rawEndpoints.Group("",
 		middleware.RequestSetup(api.CommonConfig.Env.REQUEST_TIMEOUT_AUTHENTICATION, api.Db, true, api.CommonConfig, api.Logger),
-		middleware.DynamicThrottle(),
+		middleware.DynamicThrottle(api.Throttle),
 	)
 
 	authEndpoints.POST("/login", handlers.Login)
