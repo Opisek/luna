@@ -85,15 +85,24 @@ func PutInvite(c *gin.Context) {
 
 	currentTime := time.Now()
 
-	// Invite code
-	random, tr := crypto.GenerateRandomBase64(16)
-	if tr != nil {
-		u.Error(tr.Status(http.StatusInternalServerError).
-			Append(errors.LvlWordy, "Could not generate random invite code"),
-		)
-	}
+	var tr *errors.ErrorTrace
 
-	code := strings.ToUpper(fmt.Sprintf("%s-%s-%s-%s", random[:4], random[4:8], random[8:12], random[12:16]))
+	// Invite code
+	// 36 possible characters (0-9, A-Z)
+	// 3 groups of 4 characters
+	// 36^16 = approx 62 bits of entropy
+	// This is far enough considering the request throttling that is also in place.
+	// If we want this to be more secure, 4 groups would result in approx 83 bits of entropy.
+	var code string
+	for code == "" || strings.Contains(code, "+") || strings.Contains(code, "/") {
+		random, tr := crypto.GenerateRandomBase64(16)
+		if tr != nil {
+			u.Error(tr.Status(http.StatusInternalServerError).
+				Append(errors.LvlWordy, "Could not generate random invite code"),
+			)
+		}
+		code = strings.ToUpper(fmt.Sprintf("%s-%s-%s", random[:4], random[4:8], random[8:12]))
+	}
 
 	// Create invite
 	invite := &types.RegistrationInvite{
