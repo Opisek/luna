@@ -148,3 +148,18 @@ func DeleteInvite(c *gin.Context) {
 
 	u.Success(nil)
 }
+
+func DeletInvites(c *gin.Context) {
+	u := util.GetUtil(c)
+
+	// Delete all invites
+	tr := u.Tx.Queries().DeleteInvites()
+	if tr != nil {
+		u.Error(tr.Status(http.StatusInternalServerError).
+			Append(errors.LvlWordy, "Could not delete invites"),
+		)
+		return
+	}
+
+	u.Success(nil)
+}

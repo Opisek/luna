@@ -367,6 +367,12 @@ Depending on the `auth_type` field, additional information may need to be passed
 - **Body**: Empty
 - **Purpose**: Retracts a registration invite
 
+#### Delete Invites
+- **Path**: ``/api/invites``
+- **Method**: ``DELETE``
+- **Body**: Empty
+- **Purpose**: Retracts all registration invites
+
 ## Additional Frontend Endpoints
 Aside from using the backend API, the frontend also provides a limited amount of "endpoints" for its own purposes.
 These are: `/installed/fonts` and `/installed/themes` to list the installed frontend fonts and themes respectively.
