@@ -147,9 +147,10 @@ func Login(c *gin.Context) {
 }
 
 type registerPayload struct {
-	Username string `form:"username"`
-	Password string `form:"password"`
-	Email    string `form:"email"`
+	Username   string `form:"username"`
+	Password   string `form:"password"`
+	Email      string `form:"email"`
+	InviteCode string `form:"invite_code"`
 }
 
 // TODO: check if registration is enabled on this instance otherwise we will
@@ -163,16 +164,6 @@ func Register(c *gin.Context) {
 		u.Error(err.
 			Append(errors.LvlDebug, "Could not check if any users exist").
 			Append(errors.LvlWordy, "Database error").
-			Append(errors.LvlBroad, "Could not register"),
-		)
-		return
-	}
-
-	// Check if registration is enabled or the user is the first user
-	if !u.Config.Settings.RegistrationEnabled.Enabled && usersExist {
-		u.Error(errors.New().Status(http.StatusForbidden).
-			Append(errors.LvlWordy, "Open registration is disabled").
-			AltStr(errors.LvlPlain, "Registration is disabled").
 			Append(errors.LvlBroad, "Could not register"),
 		)
 		return
@@ -199,6 +190,29 @@ func Register(c *gin.Context) {
 			Append(errors.LvlDebug, "Input did not pass validation").
 			Append(errors.LvlWordy, "Malformed request").
 			Append(errors.LvlPlain, "Could not register"),
+		)
+		return
+	}
+
+	// Check invite code and remove it from the database
+	var invite *types.RegistrationInvite
+	if payload.InviteCode != "" {
+		invite, err = u.Tx.Queries().GetValidInvite(payload.Email, payload.InviteCode)
+		if err != nil {
+			u.Error(err)
+			return
+		}
+		if invite != nil {
+			u.Tx.Queries().DeleteInvite(invite.InviteId)
+		}
+	}
+
+	// Check if registration is enabled or the user is the first user
+	if !u.Config.Settings.RegistrationEnabled.Enabled && usersExist && invite == nil {
+		u.Error(errors.New().Status(http.StatusForbidden).
+			Append(errors.LvlWordy, "Open registration is disabled").
+			AltStr(errors.LvlPlain, "Registration is disabled").
+			Append(errors.LvlBroad, "Could not register"),
 		)
 		return
 	}
