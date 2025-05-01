@@ -20,8 +20,8 @@
     multiline?: boolean;
     password?: boolean;
     label?: boolean;
-    onChange?: (value: string) => any;
-    onInput?: (value: string) => any;
+    onChange?: (value: string, event: Event | null) => any;
+    onInput?: (value: string, event: Event | null) => any;
     onFocus?: () => any;
     validation?: InputValidation;
     validity?: Validity;
@@ -60,20 +60,20 @@
   let empty = $state(value === "");
 
   // Once the user has finished typing, update the validity.
-  async function internalOnChange() {
+  async function internalOnChange(event: Event | null) {
     if (!value) return;
     validity = await validation(value);
     empty = value === "";
-    onChange(value);
+    onChange(value, event);
   }
 
   // Immediately tell the user if the input becomes valid,
   // but not if it becomes invalid, as they are not done typing yet.
-  async function internalOnInput() {
+  async function internalOnInput(event: Event | null) {
     if (!value) return;
     const res = await validation(value);
     if (res.valid) validity = res;
-    onInput(value);
+    onInput(value, event);
   }
 
   // If the validation function changes, like for the repeat password field,
@@ -82,7 +82,7 @@
     ((_) => {
       if (validation === lastValidationFunction) return;
       lastValidationFunction = validation;
-      internalOnChange();
+      internalOnChange(null);
     })(validation);
   });
 
