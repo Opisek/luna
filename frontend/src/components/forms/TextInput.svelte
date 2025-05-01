@@ -5,7 +5,6 @@
   import { alwaysValid, valid } from "$lib/client/validation";
   import { focusIndicator } from "$lib/client/decoration";
   import { NoOp } from "../../lib/client/placeholders";
-  import { CircleAlert } from "lucide-svelte";
 
   let passwordVisible: boolean = $state(false);
 
@@ -24,6 +23,7 @@
     onInput?: (value: string, event: Event | null) => any;
     onFocus?: () => any;
     validation?: InputValidation;
+    formatting?: (value: string, event: Event | null) => string;
     validity?: Validity;
   }
 
@@ -39,9 +39,11 @@
     onInput = NoOp,
     onFocus = NoOp,
     validation = alwaysValid,
+    formatting = (value, _) => value,
     validity = $bindable(valid)
   }: Props = $props();
 
+  let element: HTMLInputElement | HTMLTextAreaElement | null = $state(null);
 
   // If the value is set programmatically, update the validity.
   // For example when opening a new form
@@ -62,6 +64,7 @@
   // Once the user has finished typing, update the validity.
   async function internalOnChange(event: Event | null) {
     if (!value) return;
+    value = formatting(value, event);
     validity = await validation(value);
     empty = value === "";
     onChange(value, event);
@@ -71,6 +74,7 @@
   // but not if it becomes invalid, as they are not done typing yet.
   async function internalOnInput(event: Event | null) {
     if (!value) return;
+    value = formatting(value, event);
     const res = await validation(value);
     if (res.valid) validity = res;
     onInput(value, event);
@@ -179,6 +183,7 @@
 >
   {#if multiline}
       <textarea
+        bind:this={element}
         bind:value={value}
         onchange={internalOnChange}
         oninput={internalOnInput}
@@ -192,6 +197,7 @@
 ></textarea>
   {:else if password && !passwordVisible}
     <input
+      bind:this={element}
       bind:value={value}
       onchange={internalOnChange}
       oninput={internalOnInput}
@@ -206,6 +212,7 @@
     />
   {:else}
     <input
+      bind:this={element}
       bind:value={value}
       onchange={internalOnChange}
       oninput={internalOnInput}
