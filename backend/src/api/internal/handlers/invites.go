@@ -111,6 +111,8 @@ func PutInvite(c *gin.Context) {
 		return
 	}
 
+	// TODO: Send email if address provided
+
 	u.Success(&gin.H{
 		"code": code,
 	})
