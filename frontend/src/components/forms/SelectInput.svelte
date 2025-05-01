@@ -44,7 +44,7 @@
     if (browser) {
       window.addEventListener("click", clickOutside);
       window.addEventListener("keydown", keyboardClick);
-      window.addEventListener("scroll", scrollEvent);
+      document.addEventListener("scroll", scrollEvent, true);
     }
 
     optionsWrapper.showPopover();
@@ -60,7 +60,7 @@
     if (!active) {
       window.removeEventListener("click", clickOutside);
       window.removeEventListener("keydown", keyboardClick);
-      window.removeEventListener("scroll", scrollEvent);
+      document.removeEventListener("scroll", scrollEvent, true);
       optionsWrapper.hidePopover();
     }
   })
