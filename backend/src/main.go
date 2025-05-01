@@ -189,7 +189,7 @@ func main() {
 	c.AddFunc("0 * * * *", createTask("DeleteExpiredShortLivedSessions", tasks.DeleteStaleShortLivedSessions, db, cronLogger))
 	c.AddFunc("0 0 * * *", createTask("DeleteExpiredLongLivedSessions", tasks.DeleteStaleLongLivedSessions, db, cronLogger))
 	c.AddFunc("0 * * * *", createTask("DeleteExpiredRegistrationInvites", tasks.DeleteExpiredRegistrationInvites, db, cronLogger))
-	c.AddFunc("*/5 * * * *", createTask("DeleteStaleRequestThrottleEntries", tasks.DeleteStaleRequestThrottleEntries(api.Throttle), db, cronLogger))
+	c.AddFunc("*/10 * * * *", createTask("DeleteStaleRequestThrottleEntries", tasks.DeleteStaleRequestThrottleEntries(api.Throttle), db, cronLogger))
 
 	// Token invalidation service
 	tokenInvalidationLogger := logger.WithField("module", "token_invalidation")
