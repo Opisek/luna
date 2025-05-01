@@ -342,7 +342,7 @@ func DynamicThrottle(throttle *util.Throttle) gin.HandlerFunc {
 		ip := net.ParseIP(c.ClientIP()).String()
 
 		failCount := throttle.GetFailedAttempts(ip)
-		if failCount > 100 {
+		if failCount > 50 {
 			u.Logger.Warnf("IP %s has failed %d times in the last minute, aborting...", ip, failCount)
 			u.Error(errors.New().Status(http.StatusTooManyRequests).
 				Append(errors.LvlPlain, "Too many failed requests from this IP address"),
