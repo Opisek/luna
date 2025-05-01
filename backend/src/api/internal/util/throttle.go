@@ -30,7 +30,7 @@ func (t *Throttle) RecordSuccessfulAttempt(ip string) {
 
 func (t *Throttle) GetFailedAttempts(ip string) int {
 	lastFail, ok := t.lastFailedAttempt[ip]
-	if ok && time.Since(lastFail) > 1*time.Minute {
+	if ok && time.Since(lastFail) > 5*time.Minute {
 		delete(t.failedAttempts, ip)
 		delete(t.lastFailedAttempt, ip)
 	} else if ok {
@@ -41,7 +41,7 @@ func (t *Throttle) GetFailedAttempts(ip string) int {
 
 func (t *Throttle) CleanStaleEntries() {
 	for ip, lastFail := range t.lastFailedAttempt {
-		if time.Since(lastFail) > 1*time.Minute {
+		if time.Since(lastFail) > 5*time.Minute {
 			delete(t.failedAttempts, ip)
 			delete(t.lastFailedAttempt, ip)
 		}
