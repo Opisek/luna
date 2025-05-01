@@ -32,7 +32,6 @@ func NewTokenInvalidationService(db *db.Database, commonConfig *config.CommonCon
 }
 
 func (t *TokenInvalidationService) Start() {
-	t.logger.Info("starting token invalidation service")
 	go func() {
 		for s := range t.receiveChannel {
 			t.invalidate(s)
