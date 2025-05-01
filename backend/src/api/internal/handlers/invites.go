@@ -9,6 +9,7 @@ import (
 	"luna-backend/types"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -72,14 +73,14 @@ func PutInvite(c *gin.Context) {
 	currentTime := time.Now()
 
 	// Invite code
-	random, tr := crypto.GenerateRandomBase64(12)
+	random, tr := crypto.GenerateRandomBase64(16)
 	if tr != nil {
 		u.Error(tr.Status(http.StatusInternalServerError).
 			Append(errors.LvlWordy, "Could not generate random invite code"),
 		)
 	}
 
-	code := fmt.Sprintf("%s-%s-%s", random[:4], random[4:8], random[8:12])
+	code := strings.ToUpper(fmt.Sprintf("%s-%s-%s-%s", random[:4], random[4:8], random[8:12], random[12:16]))
 
 	// Create invite
 	invite := &types.RegistrationInvite{
