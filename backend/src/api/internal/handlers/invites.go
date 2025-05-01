@@ -36,6 +36,19 @@ func PutInvite(c *gin.Context) {
 	// Invite author
 	userId := util.GetUserId(c)
 
+	// Invitee email
+	// Optional, can either be a valid email address or empty
+	email := c.PostForm("email")
+	if email != "" {
+		if err := util.IsValidEmail(email); err != nil {
+			u.Error(errors.New().Status(http.StatusBadRequest).
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlPlain, "Invalid email address"),
+			)
+			return
+		}
+	}
+
 	// Calculate duration
 	durationString := c.PostForm("duration")
 	if durationString == "" {
@@ -85,6 +98,7 @@ func PutInvite(c *gin.Context) {
 	// Create invite
 	invite := &types.RegistrationInvite{
 		Author:  userId,
+		Email:   email,
 		Expires: currentTime.Add(time.Duration(duration) * time.Second),
 		Code:    code,
 	}

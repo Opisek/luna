@@ -12,6 +12,7 @@ func (q *Tables) InitializeInvitesTable() error {
 		CREATE TABLE sessions (
 			inviteid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 			author UUID REFERENCES users(id) ON DELETE CASCADE,
+			email VARCHAR(255),
 			created_at TIMESTAMP NOT NULL DEFAULT NOW(),
 			expires TIMESTAMP NOT NULL,
 			code TEXT UNIQUE NOT NULL

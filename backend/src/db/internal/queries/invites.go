@@ -10,8 +10,8 @@ import (
 
 func (q *Queries) InsertInvite(invite *types.RegistrationInvite) *errors.ErrorTrace {
 	query := `
-		INSERT INTO invites (author, expires, code)
-		VALUES ($1, $2, $3)
+		INSERT INTO invites (author, email, expires, code)
+		VALUES ($1, $2, $3, $4)
 		RETURNING inviteid, created_at;
 	`
 
@@ -20,6 +20,7 @@ func (q *Queries) InsertInvite(invite *types.RegistrationInvite) *errors.ErrorTr
 			q.Context,
 			query,
 			invite.Author.UUID(),
+			invite.Email,
 			invite.Expires,
 			invite.Code,
 		).Scan(&invite.InviteId, &invite.CreatedAt)
@@ -66,12 +67,13 @@ func (q *Queries) GetValidInvites() ([]*types.RegistrationInvite, *errors.ErrorT
 	return invites, nil
 }
 
-func (q *Queries) GetValidInvite(code string) (*types.RegistrationInvite, *errors.ErrorTrace) {
+func (q *Queries) GetValidInvite(email string, code string) (*types.RegistrationInvite, *errors.ErrorTrace) {
 	query := `
 		SELECT inviteid, author, created_at, expires, code
 		FROM invites
 		WHERE code = $1
-		AND expires > NOW();
+		AND expires > NOW()
+		AND (email = '' OR email = $2);
 	`
 
 	invite := &types.RegistrationInvite{}
@@ -80,6 +82,7 @@ func (q *Queries) GetValidInvite(code string) (*types.RegistrationInvite, *error
 			q.Context,
 			query,
 			code,
+			email,
 		).Scan(&invite.InviteId, &invite.Author, &invite.CreatedAt, &invite.Expires, &invite.Code)
 
 	switch err {
