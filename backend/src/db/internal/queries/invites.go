@@ -15,14 +15,21 @@ func (q *Queries) InsertInvite(invite *types.RegistrationInvite) *errors.ErrorTr
 		RETURNING inviteid, created_at;
 	`
 
+	params := make([]any, 4)
+	params[0] = invite.Author.UUID()
+	if invite.Email == "" {
+		params[1] = nil
+	} else {
+		params[1] = invite.Email
+	}
+	params[2] = invite.Expires
+	params[3] = invite.Code
+
 	err := q.Tx.
 		QueryRow(
 			q.Context,
 			query,
-			invite.Author.UUID(),
-			invite.Email,
-			invite.Expires,
-			invite.Code,
+			params...,
 		).Scan(&invite.InviteId, &invite.CreatedAt)
 	if err != nil {
 		return errors.New().Status(http.StatusInternalServerError).
@@ -73,7 +80,7 @@ func (q *Queries) GetValidInvite(email string, code string) (*types.Registration
 		FROM invites
 		WHERE code = $1
 		AND expires > NOW()
-		AND (email = '' OR email = $2);
+		AND (email IS NULL OR email = $2);
 	`
 
 	invite := &types.RegistrationInvite{}
