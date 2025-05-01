@@ -27,25 +27,32 @@ func run(api *util.Api) {
 	rawEndpoints := router.Group("/api")
 
 	// /api/* (with no transactions)
-	noDatabaseEndpoints := rawEndpoints.Group("", middleware.RequestSetup(api.CommonConfig.Env.REQUEST_TIMEOUT_DEFAULT, api.Db, false, api.CommonConfig, api.Logger))
+	noDatabaseEndpoints := rawEndpoints.Group("",
+		middleware.RequestSetup(api.CommonConfig.Env.REQUEST_TIMEOUT_DEFAULT, api.Db, false, api.CommonConfig, api.Logger),
+	)
 
 	noDatabaseEndpoints.GET("/version", handlers.GetVersion)
 
 	// /api/* (long-running authentication)
-	longRunningEndpoints := rawEndpoints.Group("", middleware.RequestSetup(api.CommonConfig.Env.REQUEST_TIMEOUT_AUTHENTICATION, api.Db, true, api.CommonConfig, api.Logger))
+	authEndpoints := rawEndpoints.Group("",
+		middleware.RequestSetup(api.CommonConfig.Env.REQUEST_TIMEOUT_AUTHENTICATION, api.Db, true, api.CommonConfig, api.Logger),
+		middleware.DynamicThrottle(),
+	)
 
-	longRunningEndpoints.POST("/login", handlers.Login)
-	longRunningEndpoints.POST("/register", handlers.Register)
+	authEndpoints.POST("/login", handlers.Login)
+	authEndpoints.POST("/register", handlers.Register)
 
 	// /api/* the rest
-	endpoints := rawEndpoints.Group("", middleware.RequestSetup(api.CommonConfig.Env.REQUEST_TIMEOUT_DEFAULT, api.Db, true, api.CommonConfig, api.Logger))
+	endpoints := rawEndpoints.Group("",
+		middleware.RequestSetup(api.CommonConfig.Env.REQUEST_TIMEOUT_DEFAULT, api.Db, true, api.CommonConfig, api.Logger),
+	)
 
 	endpoints.GET("/health", handlers.GetHealth)
 	endpoints.GET("/register/enabled", handlers.RegistrationEnabled)
 
 	// everything past here requires the user to be logged in
 	authenticatedEndpoints := endpoints.Group("", middleware.RequireAuth())
-	longRunningAuthenticatedEndpoints := longRunningEndpoints.Group("", middleware.RequireAuth())
+	longRunningAuthenticatedEndpoints := authEndpoints.Group("", middleware.RequireAuth())
 	administratorEndpoints := authenticatedEndpoints.Group("", middleware.RequireAdmin())
 
 	// /api/users

@@ -19,6 +19,7 @@ type HandlerUtility struct {
 	Logger       *logrus.Entry
 	Tx           *db.Transaction
 	Context      context.Context
+	GinContext   *gin.Context
 	ResponseChan chan *Response
 	ErrChan      chan *errors.ErrorTrace
 	WarnChan     chan *errors.ErrorTrace
@@ -69,6 +70,7 @@ func (u *HandlerUtility) ResponseWithFile(file types.File) {
 }
 
 func (u *HandlerUtility) Error(err *errors.ErrorTrace) {
+	u.GinContext.Set("error", true)
 	u.ErrChan <- err
 }
 
