@@ -9,7 +9,7 @@ export const actions = {
     const formData = await request.formData();
 
     const password = formData.get("password");
-    const passwordRepeat = formData.get("passwordRepeat");
+    const passwordRepeat = formData.get("password_repeat");
 
     if (password !== passwordRepeat) {
       return {

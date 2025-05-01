@@ -33,6 +33,7 @@
   afterNavigate(() => {
     if (form?.error) queueNotification(ColorKeys.Danger, form.error);
     if (browser) localStorage.clear();
+    if (page.url.searchParams.get("code")) inviteCode = page.url.searchParams.get("code") || "";
   });
 
   const redirect = $derived(page.url.searchParams.get('redirect') || "/");
