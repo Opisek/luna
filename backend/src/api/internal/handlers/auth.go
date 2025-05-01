@@ -202,9 +202,13 @@ func Register(c *gin.Context) {
 			u.Error(err)
 			return
 		}
-		if invite != nil {
-			u.Tx.Queries().DeleteInvite(invite.InviteId)
+		if invite == nil {
+			u.Error(errors.New().Status(http.StatusForbidden).
+				Append(errors.LvlPlain, "Invalid invite code"),
+			)
+			return
 		}
+		u.Tx.Queries().DeleteInvite(invite.InviteId)
 	}
 
 	// Check if registration is enabled or the user is the first user
