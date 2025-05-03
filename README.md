@@ -355,6 +355,12 @@ Depending on the `auth_type` field, additional information may need to be passed
 - **Body**: Empty
 - **Purpose**: Returns all active registration invites
 
+#### Get Invite QR Code
+- **Path**: ``/api/invites/<ID>/qr``
+- **Method**: ``GET``
+- **Body**: Empty
+- **Purpose**: Returns a QR code image of the specified invitation link
+
 #### Put Invite
 - **Path**: ``/api/invites``
 - **Method**: ``PUT``

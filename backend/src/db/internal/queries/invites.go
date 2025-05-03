@@ -105,6 +105,35 @@ func (q *Queries) GetValidInvite(email string, code string) (*types.Registration
 	}
 }
 
+func (q *Queries) GetValidInviteById(inviteId types.ID) (*types.RegistrationInvite, *errors.ErrorTrace) {
+	query := `
+		SELECT inviteid, author, COALESCE(email, ''), created_at, expires_at, code
+		FROM invites
+		WHERE inviteid = $1
+		AND expires_at > NOW();
+	`
+
+	invite := &types.RegistrationInvite{}
+	err := q.Tx.
+		QueryRow(
+			q.Context,
+			query,
+			inviteId.UUID(),
+		).Scan(&invite.InviteId, &invite.Author, &invite.Email, &invite.CreatedAt, &invite.Expires, &invite.Code)
+
+	switch err {
+	case nil:
+		return invite, nil
+	case pgx.ErrNoRows:
+		return nil, nil
+	default:
+		return nil, errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlWordy, "Could not get invite").
+			Append(errors.LvlPlain, "Database error")
+	}
+}
+
 func (q *Queries) DeleteExpiredInvites() *errors.ErrorTrace {
 	query := `
 		DELETE FROM invites

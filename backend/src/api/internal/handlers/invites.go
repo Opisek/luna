@@ -6,6 +6,7 @@ import (
 	"luna-backend/constants"
 	"luna-backend/crypto"
 	"luna-backend/errors"
+	"luna-backend/files"
 	"luna-backend/types"
 	"net/http"
 	"strconv"
@@ -13,6 +14,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/skip2/go-qrcode"
 )
 
 func GetInvites(c *gin.Context) {
@@ -28,6 +30,39 @@ func GetInvites(c *gin.Context) {
 	u.Success(&gin.H{
 		"invites": invites,
 	})
+}
+
+func GetInviteQrCode(c *gin.Context) {
+	u := util.GetUtil(c)
+
+	// Invite ID
+	inviteId, tr := util.GetId(c, "invite")
+	if tr != nil {
+		u.Error(tr)
+		return
+	}
+
+	// Get the invite code
+	invite, tr := u.Tx.Queries().GetValidInviteById(inviteId)
+	if tr != nil {
+		u.Error(tr)
+		return
+	}
+
+	// Generate the invite link
+	inviteLink := fmt.Sprintf("%s/register?code=%s", u.Config.Env.PUBLIC_URL, invite.Code)
+
+	// Generate the QR code
+	qrCode, err := qrcode.Encode(inviteLink, qrcode.Medium, 256)
+	if err != nil {
+		u.Error(errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlPlain, "Could not generate QR code"),
+		)
+		return
+	}
+
+	u.ResponseWithFile(files.NewVolatileFile(fmt.Sprintf("invite-%s.png", invite.Code), qrCode))
 }
 
 func PutInvite(c *gin.Context) {

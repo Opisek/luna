@@ -118,6 +118,7 @@ func run(api *util.Api) {
 	// /api/invites/*
 	inviteEndpoints := administratorEndpoints.Group("/invites")
 	inviteEndpoints.GET("", handlers.GetInvites)
+	inviteEndpoints.GET("/:inviteId/qr", handlers.GetInviteQrCode)
 	inviteEndpoints.PUT("", handlers.PutInvite)
 	inviteEndpoints.DELETE("/:inviteId", handlers.DeleteInvite)
 
