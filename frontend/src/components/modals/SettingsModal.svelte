@@ -742,9 +742,6 @@
         {#if settings.userData.id && settings.userSettings[UserSettingKeys.DebugMode]}
           <TextInput value={settings.userData.id} name="id" placeholder="User ID" editable={false} />
         {/if}
-        {#if settings.userData.id && settings.userSettings[UserSettingKeys.DebugMode]}
-          <TextInput value={settings.userData.id} name="id" placeholder="User ID" editable={false} />
-        {/if}
       {:else if selectedCategory === "appearance"}
         <SectionDivider title={"Calendar Appearance"}/>
         <ToggleInput
@@ -878,9 +875,6 @@
           description="Display IDs"
           bind:value={settings.userSettings[UserSettingKeys.DebugMode]}
         />
-        {#if settings.userData.id && settings.userSettings[UserSettingKeys.DebugMode]}
-          <TextInput bind:value={settings.userData.id} name="id" placeholder="User ID" editable={false} />
-        {/if}
 
         <Button color={ColorKeys.Accent} onClick={() => createApiToken().catch(err => { if (err) queueNotification(ColorKeys.Danger, err.message); } )}>Create an API token</Button>
 
