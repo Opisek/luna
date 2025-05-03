@@ -1,8 +1,8 @@
 import { browser } from "$app/environment";
-import { ColorKeys } from "../../types/colors";
-import { GlobalSettingKeys, UserSettingKeys, type GlobalSettings, type UserData, type UserSettings } from "../../types/settings";
-import { fetchJson } from "./net";
-import { queueNotification } from "./notifications";
+import { ColorKeys } from "../../../types/colors";
+import { GlobalSettingKeys, UserSettingKeys, type GlobalSettings, type UserData, type UserSettings } from "../../../types/settings";
+import { fetchJson } from "../net";
+import { queueNotification } from "../notifications";
 
 class Settings {
   public userData: UserData = $state({

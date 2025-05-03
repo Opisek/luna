@@ -9,7 +9,7 @@
   import { focusIndicator } from "$lib/client/decoration";
   import { getMonthName } from "$lib/common/humanization";
   import { svelteFlyInHorizontal, svelteFlyOutHorizontal } from "$lib/client/animations";
-  import { getSettings } from "../../lib/client/settings.svelte";
+  import { getSettings } from "../../lib/client/data/settings.svelte";
   import { UserSettingKeys } from "../../types/settings";
 
   interface Props {

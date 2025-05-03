@@ -20,17 +20,17 @@
 
   import SmallCalendar from "../components/interactive/SmallCalendar.svelte";
   import { NoOp } from "$lib/client/placeholders";
-  import { getMetadata } from "$lib/client/metadata.svelte";
-  import { getRepository } from "$lib/client/repository.svelte";
+  import { getMetadata } from "$lib/client/data/metadata.svelte";
+  import { getRepository } from "$lib/client/data/repository.svelte";
   import { queueNotification } from "$lib/client/notifications";
-  import { getConnectivity, Reachability } from "$lib/client/connectivity.svelte";
+  import { getConnectivity, Reachability } from "$lib/client/data/connectivity.svelte";
   import Button from "../components/interactive/Button.svelte";
   import DayViewModal from "../components/modals/DayViewModal.svelte";
   import { getDayIndex, isInRange } from "../lib/common/date";
   import { compareEventsByStartDate } from "../lib/common/comparators";
   import SourceWizardModal from "../components/modals/SourceWizardModal.svelte";
   import SettingsModal from "../components/modals/SettingsModal.svelte";
-  import { getSettings } from "$lib/client/settings.svelte";
+  import { getSettings } from "$lib/client/data/settings.svelte";
   import { UserSettingKeys } from "../types/settings";
   import ThemeToggle from "../components/interactive/ThemeToggle.svelte";
   import { ColorKeys } from "../types/colors";

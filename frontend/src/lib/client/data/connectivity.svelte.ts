@@ -3,7 +3,7 @@
 
 import { browser } from "$app/environment";
 import { FRONTEND_VERSION, isCompatibleWithBackend, VersionCompatibility } from "$lib/common/version";
-import { fetchJson } from "./net";
+import { fetchJson } from "../net";
 
 export enum Reachability {
   Unknown,

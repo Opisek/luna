@@ -7,7 +7,7 @@
   import { GetCalendarColor } from "$lib/common/colors";
   import { NoOp } from "$lib/client/placeholders";
   import { focusIndicator } from "$lib/client/decoration";
-  import { getMetadata } from "$lib/client/metadata.svelte";
+  import { getMetadata } from "$lib/client/data/metadata.svelte";
 
   import { getContext } from "svelte";
 

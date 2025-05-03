@@ -1,12 +1,12 @@
 import { browser } from "$app/environment";
 
-import { AllChangesCalendar, AllChangesEvent, AllChangesSource, NoChangesCalendar, NoChangesEvent, NoOp } from "./placeholders";
-import { fetchJson, fetchResponse } from "./net";
+import { AllChangesCalendar, AllChangesEvent, AllChangesSource, NoChangesCalendar, NoChangesEvent, NoOp } from "../placeholders";
+import { fetchJson, fetchResponse } from "../net";
 import { getMetadata } from "./metadata.svelte";
-import { queueNotification } from "./notifications";
+import { queueNotification } from "../notifications";
 
 import { parallel, deepCopy } from "$lib/common/misc";
-import { ColorKeys } from "../../types/colors";
+import { ColorKeys } from "../../../types/colors";
 
 class Repository {
   //

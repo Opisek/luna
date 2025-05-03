@@ -8,7 +8,7 @@
   import Title from "../../components/layout/Title.svelte";
   import { VersionCompatibility } from "$lib/common/version";
   import { afterNavigate } from "$app/navigation";
-  import { getConnectivity } from "$lib/client/connectivity.svelte";
+  import { getConnectivity } from "$lib/client/data/connectivity.svelte";
   import Paragraph from "../../components/layout/Paragraph.svelte";
   import Bold from "../../components/layout/Bold.svelte";
   import Divider from "../../components/layout/Divider.svelte";

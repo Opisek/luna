@@ -1,5 +1,5 @@
 import { error, type LoadEvent } from "@sveltejs/kit";
-import { clearSession } from "./sessions.svelte";
+import { clearSession } from "./data/sessions.svelte";
 
 export async function fetchResponse(url: string, options: RequestInit = {}): Promise<Response> {
   const response = await fetch(url, options).catch((err) => {

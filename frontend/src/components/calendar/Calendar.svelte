@@ -7,7 +7,7 @@
   import { getContext, setContext } from "svelte";
   import { writable } from "svelte/store";
   import { getDayIndex, getWeekNumber, getWeekMonth, isSameDay } from "$lib/common/date";
-  import { getSettings } from "$lib/client/settings.svelte";
+  import { getSettings } from "$lib/client/data/settings.svelte";
   import { UserSettingKeys } from "../../types/settings";
   import { svelteFlyInHorizontal, svelteFlyOutHorizontal } from "../../lib/client/animations";
 

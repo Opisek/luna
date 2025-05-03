@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Bot, Code, Gamepad2, Info, Laptop, LockKeyhole, LogOut, Microchip, Palette, Pencil, RectangleGoggles, RefreshCw, Smartphone, Tablet, TriangleAlert, TvMinimal, User, Users, Watch } from "lucide-svelte";
+  import { Bot, Code, Eye, Gamepad2, Info, Laptop, LockKeyhole, LogOut, Microchip, Palette, Pencil, RectangleGoggles, RefreshCw, Smartphone, Tablet, Trash, Trash2, TriangleAlert, TvMinimal, User, Users, Watch } from "lucide-svelte";
   import { NoOp } from "../../lib/client/placeholders";
   import ButtonList from "../forms/ButtonList.svelte";
   import Modal from "./Modal.svelte";
@@ -12,7 +12,7 @@
   import Horizontal from "../layout/Horizontal.svelte";
   import SelectInput from "../forms/SelectInput.svelte";
   import { GlobalSettingKeys, UserSettingKeys, type GlobalSettings, type UserData, type UserSettings } from "../../types/settings";
-  import { getSettings } from "../../lib/client/settings.svelte";
+  import { getSettings } from "../../lib/client/data/settings.svelte";
   import { getSha256Hash } from "../../lib/common/crypto";
   import { deepCopy, deepEquality } from "$lib/common/misc";
   import Button from "../interactive/Button.svelte";
@@ -23,7 +23,7 @@
   import type { Option } from "../../types/options";
   import SliderInput from "../forms/SliderInput.svelte";
   import ConfirmationModal from "./ConfirmationModal.svelte";
-  import { clearSession, getActiveSessions } from "../../lib/client/sessions.svelte";
+  import { clearSession, getActiveSessions } from "../../lib/client/data/sessions.svelte";
   import Tooltip from "../interactive/Tooltip.svelte";
   import List from "../forms/List.svelte";
   import { UAParser } from "ua-parser-js";
@@ -31,8 +31,9 @@
   import SessionModal from "./SessionModal.svelte";
   import PasswordPromptModal from "./PasswordPromptModal.svelte";
   import SectionDivider from "../layout/SectionDivider.svelte";
-  import { getTheme } from "../../lib/client/theme.svelte";
+  import { getTheme } from "../../lib/client/data/theme.svelte";
   import RegistrationInviteModal from "./RegistrationInviteModal.svelte";
+  import { getRegistrationInvites } from "../../lib/client/data/invites.svelte";
 
   interface Props {
     showModal?: () => any;
@@ -46,6 +47,7 @@
 
   const settings = getSettings();
   const sessions = getActiveSessions();
+  const invites = getRegistrationInvites();
   const today = new Date();
 
   // Loading
@@ -55,6 +57,7 @@
     fetchThemes();
     fetchFonts();
     sessions.fetch();
+    invites.fetch();
     settings.fetchSettings().then(() => {
       snapshotSettings();
       refetchProfilePicture();
@@ -449,6 +452,18 @@
   let showRegistrationInvite = $state<(session: RegistrationInvite, editable: boolean) => Promise<RegistrationInvite>>(Promise.reject);
   let issueRegistrationInvite = $state<() => Promise<RegistrationInvite>>(Promise.reject);
 
+  function deleteInvite(id: string) {
+    invites.revokeInvite(id).catch((err) => {
+      queueNotification(ColorKeys.Danger, err);
+    });
+  }
+
+  function deleteInvites() {
+    invites.revokeInvites().catch((err) => {
+      queueNotification(ColorKeys.Danger, err);
+    });
+  }
+
   // Confirmation dialog
   let internalShowConfirmation = $state(NoOp);
   let confirmationCallback = $state(async () => {});
@@ -553,6 +568,48 @@
   .session.active {
     background-color: colors.$backgroundAccent;
     color: colors.$foregroundAccent;
+  }
+
+  .invite {
+    padding: dimensions.$gapMiddle;
+    background-color: colors.$backgroundSecondary;
+    color: colors.$foregroundSecondary;
+    border-radius: dimensions.$borderRadius;
+
+    display: grid;
+    gap: dimensions.$gapSmall;
+    row-gap: 0;
+    grid-template-columns: auto 1fr auto;
+    grid-template-rows: auto auto;
+    grid-template-areas: "device agent buttons" "device details buttons";
+    justify-content: center;
+    align-items: center;
+  }
+
+  .invite.showId {
+    grid-template-rows: auto auto auto;
+    grid-template-areas: "device agent buttons" "device details buttons" "device id buttons";
+  }
+
+  .invite > .agent {
+    grid-area: agent;
+  }
+  .invite > .details {
+    grid-area: details;
+    font-size: text.$fontSizeSmall;
+  }
+  .invite > .buttons {
+    grid-area: buttons;
+    display: flex;
+    flex-direction: row;
+    gap: dimensions.$gapSmall;
+  }
+  .invite > .id {
+    grid-area: id;
+    font-size: text.$fontSizeSmall;
+  }
+  .invite:not(.showId) > .id {
+    display: none;
   }
   
   span.refreshButtonWrapper {
@@ -781,7 +838,7 @@
         />
         <SelectInput
           name={UserSettingKeys.FontTime}
-          placeholder="Time Font"
+          placeholder="Monospaced Font"
           bind:value={settings.userSettings[UserSettingKeys.FontTime]}
           options={fonts}
         />
@@ -839,8 +896,16 @@
       {:else if selectedCategory === "users"}
         <Button color={ColorKeys.Accent} onClick={issueRegistrationInvite}>Invite a user</Button>
 
-        <!-- TODO: display all current invites -->
-        <!-- TODO: remove all invites button -->
+        {#if invites.activeInvites.length !== 0}
+          <List
+            label="Active Invites"
+            items={invites.activeInvites}
+            id={item => item.invite_id}
+            template={inviteTemplate}
+          />
+
+          <Button color={ColorKeys.Danger} onClick={deleteInvites}>Delete all invites</Button>
+        {/if}
       {:else if selectedCategory === "admin"}
         <ToggleInput
           name={GlobalSettingKeys.RegistrationEnabled}
@@ -953,6 +1018,41 @@
 
     <span class="id">
       ID: {s.session_id}
+    </span>
+  </div>
+{/snippet}
+
+{#snippet inviteTemplate(invite: RegistrationInvite)}
+  {@const expiresToday = invite.expires_at.getDate() == today.getDate() && invite.expires_at.getMonth() == today.getMonth() && invite.expires_at.getFullYear() == today.getFullYear()}
+
+  {@const hoursRemaining = Math.floor((invite.expires_at.getTime() - today.getTime()) / (1000 * 60 * 60))}
+  {@const minutesRemaining = Math.floor((invite.expires_at.getTime() - today.getTime()) / (1000 * 60)) % 60}
+  {@const daysRemaining = Math.floor((invite.expires_at.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))}
+
+  {@const expiresString = expiresToday ? `at ${invite.expires_at.toLocaleTimeString()}` : `${invite.expires_at.toLocaleDateString()} at ${invite.expires_at.toLocaleTimeString()}`}
+  {@const expiresDetailed = expiresToday ? ` (${hoursRemaining == 0 ? `${minutesRemaining} minutes left` : `${hoursRemaining} ${hoursRemaining == 1 ? "hour" : "hours"} left`})` : ""}
+
+  <div class="invite" class:showId={settings.userSettings[UserSettingKeys.DebugMode]}>
+    <span class="agent">
+      Expires {expiresString}{expiresDetailed}
+    </span>
+
+    <span class="details">
+      <!-- TODO: transform invite.author into username -->
+      Created {invite.created_at.toLocaleDateString()} at {invite.created_at.toLocaleTimeString()} by {"TODO"}
+    </span>
+
+    <div class="buttons">
+      <IconButton click={() => showRegistrationInvite(invite, false)}>
+        <Eye size={20}/>
+      </IconButton>
+      <IconButton click={() => deleteInvite(invite.invite_id)}>
+        <Trash2 size={20}/>
+      </IconButton>
+    </div>
+
+    <span class="id">
+      ID: {invite.invite_id}
     </span>
   </div>
 {/snippet}

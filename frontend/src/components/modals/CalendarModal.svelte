@@ -4,12 +4,12 @@
   import TextInput from "../forms/TextInput.svelte";
 
   import { EmptyCalendar, NoChangesCalendar, NoOp } from "$lib/client/placeholders";
-  import { getRepository } from "$lib/client/repository.svelte";
+  import { getRepository } from "$lib/client/data/repository.svelte";
   import { deepCopy } from "$lib/common/misc";
   import SelectInput from "../forms/SelectInput.svelte";
   import ColorInput from "../forms/ColorInput.svelte";
   import { queueNotification } from "../../lib/client/notifications";
-  import { getSettings } from "$lib/client/settings.svelte";
+  import { getSettings } from "$lib/client/data/settings.svelte";
   import { UserSettingKeys } from "../../types/settings";
   import { ColorKeys } from "../../types/colors";
 

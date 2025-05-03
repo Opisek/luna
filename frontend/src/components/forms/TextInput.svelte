@@ -5,6 +5,10 @@
   import { alwaysValid, valid } from "$lib/client/validation";
   import { focusIndicator } from "$lib/client/decoration";
   import { NoOp } from "../../lib/client/placeholders";
+  import IconButton from "../interactive/IconButton.svelte";
+  import { Copy } from "lucide-svelte";
+  import { queueNotification } from "../../lib/client/notifications";
+  import { ColorKeys } from "../../types/colors";
 
   let passwordVisible: boolean = $state(false);
 
@@ -18,6 +22,8 @@
     editable?: boolean;
     multiline?: boolean;
     password?: boolean;
+    mono?: boolean;
+    displayCopyButton?: boolean;
     label?: boolean;
     onChange?: (value: string, event: Event | null) => any;
     onInput?: (value: string, event: Event | null) => any;
@@ -34,6 +40,8 @@
     editable = true,
     multiline = false,
     password = false,
+    mono = false,
+    displayCopyButton = false,
     label = true,
     onChange = NoOp,
     onInput = NoOp,
@@ -98,6 +106,12 @@
   //   if (!textArea) return;
   //   textAreaRows = Math.ceil(textArea.scrollHeight / 18.5)
   // }
+
+  function copy() {
+    navigator.clipboard.writeText(value || "").then(() => {
+      queueNotification(ColorKeys.Success, "Copied to clipboard");
+    });
+  }
 </script>
 
 <style lang="scss">
@@ -121,7 +135,7 @@
     border-radius: dimensions.$borderRadius;
   }
 
-  div.editable > input, div.editable > textarea {
+  div.wrapper.editable {
     background: colors.$backgroundSecondary;
   }
   div.noneditable {
@@ -136,14 +150,23 @@
     //margin: 0;
   }
 
-  div.visibility {
+  div.wrapper.mono > input, div.wrapper.mono > textarea {
+    font-family: text.$fontFamilyTime;
+  }
+
+  div.buttons {
     position: absolute;
-    //height: 100%;
     top: 50%;
     transform: translateY(-50%);
-    right: calc(1.5 * dimensions.$gapSmaller);
+    right: 0;
     color: color-mix(in srgb, colors.$foregroundSecondary 50%, transparent);
-    background-color: colors.$backgroundSecondary;
+    background-color: inherit;
+
+    display: flex;
+    flex-direction: row;;
+    gap: dimensions.$gapTiny;
+    padding: 0 dimensions.$gapSmaller;
+
   }
 
   span.label {
@@ -176,25 +199,27 @@
   class="wrapper"
   class:editable={editable} 
   class:noneditable={!editable} 
+  class:mono={mono}
   tabindex="-1"
   use:focusIndicator
   class:error={!validity.valid && !empty}
   bind:this={wrapper}
 >
   {#if multiline}
-      <textarea
-        bind:this={element}
-        bind:value={value}
-        onchange={internalOnChange}
-        oninput={internalOnInput}
-        onfocusout={internalOnChange}
-        onfocusin={onFocus}
-        name={name}
-        placeholder={placeholder}
-        disabled={!editable}
-        rows=6
-        tabindex={editable ? 0 : -1}
-></textarea>
+    <textarea
+      bind:this={element}
+      bind:value={value}
+      onchange={internalOnChange}
+      oninput={internalOnInput}
+      onfocusout={internalOnChange}
+      onfocusin={onFocus}
+      name={name}
+      placeholder={placeholder}
+      disabled={!editable}
+      rows=6
+      tabindex={editable ? 0 : -1}
+    ></textarea>
+    {@render copyButton()}
   {:else if password && !passwordVisible}
     <input
       bind:this={element}
@@ -210,6 +235,11 @@
       tabindex={editable ? 0 : -1}
       type="password"
     />
+    {#if displayCopyButton}
+      <div class="buttons">
+        {@render copyButton()}
+      </div>
+    {/if}
   {:else}
     <input
       bind:this={element}
@@ -225,12 +255,35 @@
       tabindex={editable ? 0 : -1}
       type="text"
     />
+    {#if displayCopyButton}
+      <div class="buttons">
+        {@render copyButton()}
+      </div>
+    {/if}
   {/if}
-  {#if password && editable}
-  <div class="visibility">
-    <VisibilityToggle bind:visible={passwordVisible} momentary={true} />
-  </div>
+
+  {#if editable}
+    {#if password}
+      <div class="buttons">
+        <VisibilityToggle bind:visible={passwordVisible} momentary={true} />
+        {#if displayCopyButton}
+        {@render copyButton()}
+        {/if}
+      </div>
+    {/if}
+  {:else}
+    {#if password && displayCopyButton}
+      <div class="buttons">
+        {@render copyButton()}
+      </div>
+    {/if}
   {/if}
 </div>
+
+{#snippet copyButton()}
+  <IconButton>
+    <Copy size={16} onclick={copy}/>
+  </IconButton>
+{/snippet}
 
 <!-- TODO: snippets and svelte:element in conjuction with {...otherProps} to reduce amount of rewritten code -->

@@ -121,6 +121,7 @@ func run(api *util.Api) {
 	inviteEndpoints.GET("/:inviteId/qr", handlers.GetInviteQrCode)
 	inviteEndpoints.PUT("", handlers.PutInvite)
 	inviteEndpoints.DELETE("/:inviteId", handlers.DeleteInvite)
+	inviteEndpoints.DELETE("", handlers.DeleteInvites)
 
 	// /api/* the rest
 	authenticatedEndpoints.POST("/url", handlers.CheckUrl)

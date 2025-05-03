@@ -4,14 +4,14 @@
   import TextInput from "../forms/TextInput.svelte";
 
   import { EmptySource, NoOp } from "$lib/client/placeholders";
-  import { getRepository } from "$lib/client/repository.svelte";
+  import { getRepository } from "$lib/client/data/repository.svelte";
   import { deepCopy, deepEquality } from "$lib/common/misc";
   import { isValidIcalFile, isValidPath, isValidUrl, valid } from "$lib/client/validation";
   import { queueNotification } from "$lib/client/notifications";
   import FileUpload from "../forms/FileUpload.svelte";
   import { fetchFileById, fetchResponse } from "../../lib/client/net";
   import { UserSettingKeys } from "../../types/settings";
-  import { getSettings } from "$lib/client/settings.svelte";
+  import { getSettings } from "$lib/client/data/settings.svelte";
   import { ColorKeys } from "../../types/colors";
 
   interface Props {

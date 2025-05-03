@@ -3,7 +3,7 @@
   import { focusIndicator } from "$lib/client/decoration";
   import { getDayIndex, isSameDay } from "$lib/common/date";
   import { UserSettingKeys } from "../../types/settings";
-  import { getSettings } from "$lib/client/settings.svelte";
+  import { getSettings } from "$lib/client/data/settings.svelte";
   import { setContext } from "svelte";
   import { svelteFlyInHorizontal, svelteFlyOutHorizontal } from "$lib/client/animations";
 

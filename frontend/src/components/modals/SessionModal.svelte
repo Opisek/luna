@@ -4,10 +4,10 @@
 
   import { EmptySession, NoOp } from "$lib/client/placeholders";
   import { deepCopy } from "$lib/common/misc";
-  import { getSettings } from "$lib/client/settings.svelte";
+  import { getSettings } from "$lib/client/data/settings.svelte";
   import { UserSettingKeys } from "../../types/settings";
   import DateTimeInput from "../forms/DateTimeInput.svelte";
-  import { getActiveSessions } from "../../lib/client/sessions.svelte";
+  import { getActiveSessions } from "../../lib/client/data/sessions.svelte";
   import PasswordPromptModal from "./PasswordPromptModal.svelte";
   import { queueNotification } from "../../lib/client/notifications";
   import { ColorKeys } from "../../types/colors";

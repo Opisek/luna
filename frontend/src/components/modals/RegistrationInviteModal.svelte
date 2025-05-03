@@ -4,12 +4,14 @@
 
   import { EmptyRegistrationInvite, NoOp } from "$lib/client/placeholders";
   import { deepCopy } from "$lib/common/misc";
-  import { getSettings } from "$lib/client/settings.svelte";
+  import { getSettings } from "$lib/client/data/settings.svelte";
   import { UserSettingKeys } from "../../types/settings";
   import DateTimeInput from "../forms/DateTimeInput.svelte";
-  import { fetchJson, fetchResponse } from "../../lib/client/net";
   import SelectInput from "../forms/SelectInput.svelte";
   import { page } from "$app/state";
+  import { getRegistrationInvites } from "../../lib/client/data/invites.svelte";
+  import Image from "../layout/Image.svelte";
+  import Horizontal from "../layout/Horizontal.svelte";
   
   interface Props {
     showCreateModal?: () => Promise<RegistrationInvite>;
@@ -22,6 +24,7 @@
   }: Props = $props();
 
   const settings = getSettings();
+  const invites = getRegistrationInvites();
 
   let invite: RegistrationInvite = $state(EmptyRegistrationInvite);
   let originalInvite: RegistrationInvite = $state(EmptyRegistrationInvite);
@@ -62,7 +65,7 @@
   let title: string = $derived(invite.invite_id ? "Registration Invite" : "Invite User");
 
   const onDelete = async () => {
-    await fetchResponse(`/api/invites/${invite.invite_id}`, { method: "DELETE"}).catch(err => {
+    await invites.revokeInvite(invite.invite_id).catch(err => {
       throw new Error(`Could not delete registration invite: ${err.message}`);
     });
 
@@ -70,18 +73,9 @@
   };
   const onEdit = async () => {
     if (invite.invite_id === "") {
-      const formData = new FormData();
-      formData.append("duration", "3600");
-
-      const response = await fetchJson("/api/invites", { method: "PUT", body: formData }).catch(err => {
+      const newInvite = await invites.createInvite(duration).catch(err => {
         throw new Error(`Could not create registration invite: ${err.message}`);
       });
-
-      const newInvite = response.invite;
-      newInvite.created_at = new Date(newInvite.created_at);
-      newInvite.expires_at = new Date(newInvite.expires_at);
-
-      console.log(JSON.stringify(newInvite, null, 2));
 
       editMode = false;
 
@@ -129,9 +123,30 @@
     />
   {:else}
 
-    <!-- TODO: nice formatting, copy to clipboard buttons, and QR code -->
-    {inviteCode}
-    {inviteLink}
+    <Horizontal position="center">
+      <Image
+          src={`/api/invites/${invite.invite_id}/qr`}
+          alt="QR Code"
+          large={true}
+      />
+    </Horizontal>
+
+    <TextInput
+      value={inviteCode}
+      name="invite_id"
+      placeholder="Invite Code"
+      editable={false}
+      displayCopyButton={true}
+      mono={true}
+    />
+
+    <TextInput
+      value={inviteLink}
+      name="user_id"
+      placeholder="Invite Link"
+      editable={false}
+      displayCopyButton={true}
+    />
       
     <DateTimeInput value={invite.created_at} allDay={false} placeholder="Creation Date" name="created_at" editable={false}/>
     <DateTimeInput value={invite.expires_at} allDay={false} placeholder="Expiry Date" name="expires_at" editable={false}/>

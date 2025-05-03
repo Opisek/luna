@@ -1,17 +1,19 @@
 import { browser } from "$app/environment";
 import ipLocation from "iplocation";
-import { fetchJson, fetchResponse } from "./net";
+import { fetchJson, fetchResponse } from "../net";
 import { resetSettings } from "./settings.svelte";
 import { resetThemes } from "./theme.svelte";
 import { resetRepository } from "./repository.svelte";
-import { resetNotifications } from "./notifications";
+import { resetNotifications } from "../notifications";
 import { resetMetadata } from "./metadata.svelte";
+import { resetRegistrationInvites } from "./invites.svelte";
 
 export function clearSession() {
   if (!browser) return;
   localStorage.clear();
   document.cookie = "tokenPresent=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
 
+  resetRegistrationInvites();
   resetSessions();
   resetSettings();
   resetThemes();

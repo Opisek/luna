@@ -6,6 +6,7 @@
     alt: string;
     aspectRatio?: string;
     small?: boolean;
+    large?: boolean;
   }
 
   let {
@@ -13,6 +14,7 @@
     alt,
     aspectRatio = "1/1",
     small = false,
+    large = false,
   }: Props = $props();
 
   let loaded = $state(false);
@@ -46,6 +48,10 @@
     height: dimensions.$imageHeightSmall;
   }
 
+  div.large {
+    height: dimensions.$imageHeightLarge;
+  }
+
   img {
     width: 100%;
     height: 100%;
@@ -64,6 +70,7 @@
 <div
   style="aspect-ratio: {aspectRatio} !important;"
   class:small={small}
+  class:large={large}
 >
   {#if !loaded && !error}
     <Loader/>

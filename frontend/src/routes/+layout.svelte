@@ -2,11 +2,11 @@
   import Notification from "../components/interactive/Notification.svelte";
 
   import { notificationExpireTime, notifications } from "$lib/client/notifications";
-  import { getSettings } from "$lib/client/settings.svelte";
+  import { getSettings } from "$lib/client/data/settings.svelte";
   import { UserSettingKeys, type GlobalSettings, type UserData, type UserSettings } from "../types/settings";
-  import { getTheme } from "$lib/client/theme.svelte";
+  import { getTheme } from "$lib/client/data/theme.svelte";
   import type { NotificationModel } from "../types/notification";
-  import { getConnectivity } from "$lib/client/connectivity.svelte";
+  import { getConnectivity } from "$lib/client/data/connectivity.svelte";
 
   interface PageProps {
     children?: import('svelte').Snippet;

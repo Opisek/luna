@@ -1,4 +1,4 @@
-import { getSettings } from "$lib/client/settings.svelte";
+import { getSettings } from "$lib/client/data/settings.svelte";
 import { UserSettingKeys } from "../../types/settings";
 
 export function isSameDay(a: Date, b: Date): boolean {

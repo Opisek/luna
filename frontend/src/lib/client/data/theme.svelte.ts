@@ -1,5 +1,5 @@
 import { browser } from "$app/environment";
-import { UserSettingKeys } from "../../types/settings";
+import { UserSettingKeys } from "../../../types/settings";
 import { getSettings } from "./settings.svelte";
 
 class Theme {

@@ -2,7 +2,7 @@
   import MoonIcon from "lucide-svelte/icons/moon";
   import SunIcon from "lucide-svelte/icons/sun";
 
-  import { getTheme } from "$lib/client/theme.svelte";
+  import { getTheme } from "$lib/client/data/theme.svelte";
 
   import IconButton from "./IconButton.svelte";
 

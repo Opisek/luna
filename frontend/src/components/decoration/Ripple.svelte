@@ -1,7 +1,7 @@
 <!-- based on https://github.com/GeekLaunch/button-ripple-effect/ -->
 <script lang="ts">
   import { browser } from "$app/environment";
-  import { getSettings } from "../../lib/client/settings.svelte";
+  import { getSettings } from "../../lib/client/data/settings.svelte";
   import { UserSettingKeys } from "../../types/settings";
 
   interface Props {

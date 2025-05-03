@@ -8,7 +8,7 @@
   import type { Writable } from "svelte/store";
   import { NoOp } from "$lib/client/placeholders";
   import ColorCircle from "../misc/ColorCircle.svelte";
-  import { getSettings } from "$lib/client/settings.svelte";
+  import { getSettings } from "$lib/client/data/settings.svelte";
   import { UserSettingKeys } from "../../types/settings";
   import { getDayIndex } from "$lib/common/date";
 
