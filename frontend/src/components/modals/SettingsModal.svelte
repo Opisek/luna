@@ -579,20 +579,20 @@
     display: grid;
     gap: dimensions.$gapSmall;
     row-gap: 0;
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: 1fr auto;
     grid-template-rows: auto auto;
-    grid-template-areas: "device agent buttons" "device details buttons";
+    grid-template-areas: "expiry buttons" "details buttons";
     justify-content: center;
     align-items: center;
   }
 
   .invite.showId {
     grid-template-rows: auto auto auto;
-    grid-template-areas: "device agent buttons" "device details buttons" "device id buttons";
+    grid-template-areas: "expiry buttons" "details buttons" "id buttons";
   }
 
-  .invite > .agent {
-    grid-area: agent;
+  .invite > .expiry {
+    grid-area: expiry;
   }
   .invite > .details {
     grid-area: details;
@@ -1027,7 +1027,7 @@
   {@const expiresDetailed = expiresToday ? ` (${hoursRemaining == 0 ? `${minutesRemaining} minutes left` : `${hoursRemaining} ${hoursRemaining == 1 ? "hour" : "hours"} left`})` : ""}
 
   <div class="invite" class:showId={settings.userSettings[UserSettingKeys.DebugMode]}>
-    <span class="agent">
+    <span class="expiry">
       Expires {expiresString}{expiresDetailed}
     </span>
 
