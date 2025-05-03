@@ -14,6 +14,7 @@
   import { isValidPassword, isValidUsername, valid } from '$lib/client/validation';
   import { queueNotification } from '$lib/client/notifications';
   import { browser } from '$app/environment';
+  import type { ActionResult } from '@sveltejs/kit';
 
   interface Props {
     form: ActionData;
@@ -22,9 +23,13 @@
   let { form = $bindable() }: Props = $props();
 
   afterNavigate(() => {
-    if (form?.error) queueNotification(ColorKeys.Danger, form.error);
     if (browser) localStorage.clear();
   });
+
+  function handleError(result: ActionResult) {
+    if (!result || result.type !== "failure" || !result.data?.error) return;
+    queueNotification(ColorKeys.Danger, result.data.error);
+  }
 
   const redirect = $derived(page.url.searchParams.get('redirect') || "/");
 
@@ -32,27 +37,15 @@
   let passwordValidity: Validity = $state(valid);
 
   let canSubmit: boolean = $derived(usernameValidity?.valid && passwordValidity?.valid);
-
-  let username: string = $state("");
-
-  export const snapshot = {
-    capture: () => ({
-      username: username
-    }),
-    restore: (state: { username: string }) => {
-      username = state.username;
-    },
-  }
 </script>
 
 <SimplePage>
-  <Form title="Login" submittable={canSubmit}>
+  <Form title="Login" submittable={canSubmit} callback={handleError}>
     <TextInput
       name="username"
       placeholder="Username"
       validation={isValidUsername}
       bind:validity={usernameValidity}
-      bind:value={username}
     />
     <TextInput
       name="password"

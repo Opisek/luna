@@ -5,14 +5,23 @@
   import Title from "../layout/Title.svelte";
   import type { Snippet } from "svelte";
   import { ColorKeys } from "../../types/colors";
+  import { enhance } from "$app/forms";
+  import type { ActionResult } from "@sveltejs/kit";
+  import { NoOp } from "../../lib/client/placeholders";
 
   interface Props {
     title: string;
     submittable?: boolean;
+    callback?: (result: ActionResult) => void;
     children?: Snippet;
   }
 
-  let { title, submittable = true, children }: Props = $props();
+  let {
+    title,
+    submittable = true,
+    callback = NoOp,
+    children,
+  }: Props = $props();
 
   let loading = $state(false);
 
@@ -22,6 +31,12 @@
       return; // TODO: add some user feedback when a form fails to submit
     }
     loading = true;
+  }
+
+  function onResult({ result, update }: { result: ActionResult; update: () => void }) {
+    loading = false;
+    callback(result);
+    update();
   }
 </script>
 
@@ -45,7 +60,7 @@
   }
 </style>
 
-<form method="POST" onsubmit={onSubmit}>
+<form method="POST" onsubmit={onSubmit} use:enhance={() => onResult}>
   <Title>{title}</Title>
   {@render children?.()}
   <Horizontal position="right">

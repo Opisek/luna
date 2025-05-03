@@ -17,6 +17,7 @@
   import Paragraph from '../../components/layout/Paragraph.svelte';
   import Box from '../../components/layout/Box.svelte';
   import { browser } from '$app/environment';
+  import type { ActionResult } from '@sveltejs/kit';
 
   interface PageProps {
     form: ActionData;
@@ -31,10 +32,14 @@
   }: PageProps = $props();
 
   afterNavigate(() => {
-    if (form?.error) queueNotification(ColorKeys.Danger, form.error);
     if (browser) localStorage.clear();
     if (page.url.searchParams.get("code")) inviteCode = page.url.searchParams.get("code") || "";
   });
+
+  function handleError(result: ActionResult) {
+    if (!result || result.type !== "failure" || !result.data?.error) return;
+    queueNotification(ColorKeys.Danger, result.data.error);
+  }
 
   const redirect = $derived(page.url.searchParams.get('redirect') || "/");
 
@@ -106,7 +111,7 @@
 
 <SimplePage>
   {#if data.registrationEnabled || inviteCodeValidAndNotEmpty}
-    <Form title="Register" submittable={canSubmit}>
+    <Form title="Register" submittable={canSubmit} callback={handleError}>
       <TextInput
         name="username"
         placeholder="Username"
