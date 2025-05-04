@@ -122,17 +122,26 @@
 
   div.wrapper {
     display: flex;
-    flex-direction: column;
-    gap: dimensions.$gapLarge;
-    position: relative;
+    flex-direction: row;
+    gap: dimensions.$gapTiny;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+
     border-radius: calc(dimensions.$borderRadius + 0.1em);
+    padding: 0 dimensions.$gapSmall;
+    width: 100%;
     overflow: hidden;
+
+    color: color-mix(in srgb, colors.$foregroundSecondary 50%, transparent);
   }
 
   input, textarea {
     all: unset;
-    padding: dimensions.$gapSmall;
-    border-radius: dimensions.$borderRadius;
+    flex-grow: 1;
+    color: colors.$foregroundPrimary;
+    margin: dimensions.$gapSmall 0;
+    padding: 0;
   }
 
   div.wrapper.editable {
@@ -146,27 +155,10 @@
     min-height: 0;
     white-space: pre-wrap;
     word-wrap: break-word;
-    //padding: 0;
-    //margin: 0;
   }
 
   div.wrapper.mono > input, div.wrapper.mono > textarea {
     font-family: text.$fontFamilyTime;
-  }
-
-  div.buttons {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    right: 0;
-    color: color-mix(in srgb, colors.$foregroundSecondary 50%, transparent);
-    background-color: inherit;
-
-    display: flex;
-    flex-direction: row;;
-    gap: dimensions.$gapTiny;
-    padding: 0 dimensions.$gapSmaller;
-
   }
 
   span.label {
@@ -219,7 +211,6 @@
       rows=6
       tabindex={editable ? 0 : -1}
     ></textarea>
-    {@render copyButton()}
   {:else if password && !passwordVisible}
     <input
       bind:this={element}
@@ -235,11 +226,6 @@
       tabindex={editable ? 0 : -1}
       type="password"
     />
-    {#if displayCopyButton}
-      <div class="buttons">
-        {@render copyButton()}
-      </div>
-    {/if}
   {:else}
     <input
       bind:this={element}
@@ -255,28 +241,12 @@
       tabindex={editable ? 0 : -1}
       type="text"
     />
-    {#if displayCopyButton}
-      <div class="buttons">
-        {@render copyButton()}
-      </div>
-    {/if}
   {/if}
-
-  {#if editable}
-    {#if password}
-      <div class="buttons">
-        <VisibilityToggle bind:visible={passwordVisible} momentary={true} />
-        {#if displayCopyButton}
-        {@render copyButton()}
-        {/if}
-      </div>
-    {/if}
-  {:else}
-    {#if password && displayCopyButton}
-      <div class="buttons">
-        {@render copyButton()}
-      </div>
-    {/if}
+  {#if password &&editable}
+    <VisibilityToggle bind:visible={passwordVisible} momentary={true} />
+  {/if}
+  {#if displayCopyButton}
+    {@render copyButton()}
   {/if}
 </div>
 
