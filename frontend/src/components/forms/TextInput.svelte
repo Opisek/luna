@@ -126,7 +126,7 @@
     gap: dimensions.$gapTiny;
     align-items: center;
     justify-content: center;
-    vertical-align: middle;
+    position: relative;
 
     border-radius: calc(dimensions.$borderRadius + 0.1em);
     padding: 0 dimensions.$gapSmall;
