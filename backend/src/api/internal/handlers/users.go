@@ -239,7 +239,25 @@ func PatchUserData(c *gin.Context) {
 func DeleteUser(c *gin.Context) {
 	u := util.GetUtil(c)
 
-	userId := util.GetUserId(c)
+	executingUserId := util.GetUserId(c)
+	affectedUserId, tr := util.GetIdOrDefault(c, "user", "self", executingUserId)
+	if tr != nil {
+		u.Error(tr)
+		return
+	}
+	if affectedUserId != executingUserId {
+		isAdmin, tr := u.Tx.Queries().IsAdmin(executingUserId)
+		if tr != nil {
+			u.Error(tr)
+			return
+		}
+		if !isAdmin {
+			u.Error(errors.New().Status(http.StatusForbidden).
+				Append(errors.LvlPlain, "You are not allowed to delete other user accounts"),
+			)
+			return
+		}
+	}
 
 	// Get the user's password
 	password := c.PostForm("password")
@@ -251,10 +269,10 @@ func DeleteUser(c *gin.Context) {
 	}
 
 	// Get the user's password
-	savedPassword, err := u.Tx.Queries().GetPassword(userId)
+	savedPassword, err := u.Tx.Queries().GetPassword(executingUserId)
 	if err != nil {
 		u.Error(err.Status(http.StatusUnauthorized).
-			Append(errors.LvlDebug, "Could not get password for user %v", userId.String()).
+			Append(errors.LvlDebug, "Could not get password for user %v", executingUserId.String()).
 			Append(errors.LvlPlain, "Invalid credentials"),
 		)
 		return
@@ -269,7 +287,7 @@ func DeleteUser(c *gin.Context) {
 		return
 	}
 
-	err = u.Tx.Queries().DeleteUser(userId)
+	err = u.Tx.Queries().DeleteUser(affectedUserId)
 	if err != nil {
 		u.Error(err)
 		return
