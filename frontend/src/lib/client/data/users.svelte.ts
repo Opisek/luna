@@ -9,7 +9,7 @@ class Users {
     await fetchJson("/api/users?all=true").then((data: { current: string, users: UserData[] }) => {
       this.currentUser = data.current;
       data.users.forEach(async x => {
-        x.created_at = new Date(x.created_at);
+        x.created_at = new Date((x.created_at as unknown as string).replace("Z", ""));
       });
       this.users = data.users;
     });
