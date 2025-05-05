@@ -12,17 +12,46 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func GetUserData(c *gin.Context) {
+func GetUser(c *gin.Context) {
 	u := util.GetUtil(c)
 
 	userId := util.GetUserId(c)
-	user, err := u.Tx.Queries().GetUserData(userId)
+	user, err := u.Tx.Queries().GetUser(userId)
 	if err != nil {
 		u.Error(err)
 		return
 	}
 
 	u.Success(&gin.H{"user": user})
+}
+
+func GetUsers(c *gin.Context) {
+	u := util.GetUtil(c)
+
+	all := c.Query("all") == "true"
+	if all {
+		isAdmin, tr := u.Tx.Queries().IsAdmin(util.GetUserId(c))
+		if tr != nil {
+			u.Error(tr)
+			return
+		}
+		if !isAdmin {
+			u.Error(errors.New().Status(http.StatusForbidden).
+				Append(errors.LvlPlain, "Only administrators can view all users"),
+			)
+			return
+		}
+	}
+
+	users, tr := u.Tx.Queries().GetUsers(all)
+	if tr != nil {
+		u.Error(tr)
+		return
+	}
+
+	// TODO: when not using all=true, we might want to hide some fields like verified, email, etc.
+
+	u.Success(&gin.H{"users": users})
 }
 
 func PatchUserData(c *gin.Context) {
@@ -124,7 +153,7 @@ func PatchUserData(c *gin.Context) {
 	}
 
 	// Delete old profile picture if applicable
-	oldUserStruct, tr := u.Tx.Queries().GetUserData(userId)
+	oldUserStruct, tr := u.Tx.Queries().GetUser(userId)
 	if tr != nil {
 		u.Error(tr)
 		return

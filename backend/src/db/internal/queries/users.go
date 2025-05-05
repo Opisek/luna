@@ -133,7 +133,7 @@ func (q *Queries) AnyUsersExist() (bool, *errors.ErrorTrace) {
 	return exists, nil
 }
 
-func (q *Queries) GetUserData(userId types.ID) (*types.User, *errors.ErrorTrace) {
+func (q *Queries) GetUser(userId types.ID) (*types.User, *errors.ErrorTrace) {
 	var err error
 
 	user := &types.User{}
@@ -177,6 +177,67 @@ func (q *Queries) GetUserData(userId types.ID) (*types.User, *errors.ErrorTrace)
 	}
 
 	return user, nil
+}
+
+func (q *Queries) GetUsers(all bool) ([]*types.User, *errors.ErrorTrace) {
+	var err error
+
+	var rows pgx.Rows
+
+	var query string
+	if all {
+		query = `
+		SELECT *
+		FROM users;
+		`
+	} else {
+		query = `
+		SELECT *
+		FROM users
+		WHERE enabled = TRUE
+		AND searchable = TRUE;
+		`
+	}
+
+	rows, err = q.Tx.Query(
+		q.Context,
+		query,
+	)
+
+	if err != nil {
+		return nil, errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not get users")
+	}
+
+	defer rows.Close()
+
+	users := make([]*types.User, 0)
+
+	for rows.Next() {
+		user := &types.User{}
+		var rawProfilePicture string
+
+		err = rows.Scan(&user.Id, &user.Username, &user.Email, &user.Admin, &user.Verified, &user.Enabled, &user.Searchable, &rawProfilePicture)
+		if err != nil {
+			return nil, errors.New().Status(http.StatusInternalServerError).
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlDebug, "Could not get users").
+				Append(errors.LvlPlain, "Database error")
+		}
+
+		user.ProfilePicture, err = types.NewUrl(rawProfilePicture)
+		if err != nil {
+			return nil, errors.New().Status(http.StatusInternalServerError).
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlDebug, "Could not get user %v", user.Id).
+				Append(errors.LvlPlain, "Database error")
+		}
+
+		users = append(users, user)
+	}
+
+	return users, nil
 }
 
 func (q *Queries) UpdateUserData(user *types.User) *errors.ErrorTrace {

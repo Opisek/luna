@@ -60,7 +60,8 @@ func run(api *util.Api) {
 	longRunningUserEndpoints := longRunningAuthenticatedEndpoints.Group("/users") // user endpoints that require password verification
 	administrativeUserEndpoints := administratorEndpoints.Group("/users")
 
-	userEndpoints.GET("/:userId", handlers.GetUserData)
+	userEndpoints.GET("/:userId", handlers.GetUser)
+	userEndpoints.GET("", handlers.GetUsers)
 	administrativeUserEndpoints.POST("/:userId/enable", handlers.EnableUser)
 	administrativeUserEndpoints.POST("/:userId/disable", handlers.DisableUser)
 	longRunningUserEndpoints.PATCH("/:userId", handlers.PatchUserData)
