@@ -2,12 +2,14 @@
   import type { Snippet } from "svelte";
 
   import { NoOp } from "$lib/client/placeholders";
+  import Tooltip from "./Tooltip.svelte";
 
   interface Props {
     up?: () => void;
     down?: () => void;
     click?: () => void;
     visible?: boolean;
+    info?: string;
     style?: string;
     tabindex?: number;
     href?: string;
@@ -19,6 +21,7 @@
     down = NoOp,
     click = NoOp,
     visible = true,
+    info = "",
     style = "",
     tabindex = 0,
     href = "",
@@ -27,7 +30,7 @@
 
   // svelte-ignore non_reactive_update
   // isLink is set once and never changed
-  let button: HTMLElement;
+  let button = $state<HTMLElement | null>(null);
 
   function clickInternal(e: MouseEvent) {
     e.stopPropagation();
@@ -35,10 +38,12 @@
   }
 
   function leaveInternal() {
+    if (!button) return;
     button.blur();
     up();
   }
   function upInternal() {
+    if (!button) return;
     button.blur();
     up();
   }
@@ -92,30 +97,45 @@
   }
 </style>
 
-{#if href !== ""}
-  <a
-    bind:this={button}
-    class:hidden={!visible}
-    href={href}
-    style={style}
-    tabindex="{tabindex}"
-  >
-    <div class="circle"></div>
-    {@render children?.()}
-  </a>
+{#if info == ""}
+  {@render buttonSnippet()}
 {:else}
-  <button
-    bind:this={button}
-    onclick={clickInternal}
-    onmousedown={down}
-    onmouseleave={leaveInternal}
-    onmouseup={upInternal}
-    class:hidden={!visible}
-    type="button"
-    style={style}
-    tabindex="{tabindex}"
+  <Tooltip
+    icon={buttonSnippet} 
+    inheritColor={true}
+    tight={true}
+    pointerCursor={true}
   >
-    <div class="circle"></div>
-    {@render children?.()}
-  </button>
+    {info}
+  </Tooltip>
 {/if}
+
+{#snippet buttonSnippet()}
+  {#if href !== ""}
+    <a
+      bind:this={button}
+      class:hidden={!visible}
+      href={href}
+      style={style}
+      tabindex="{tabindex}"
+    >
+      <div class="circle"></div>
+      {@render children?.()}
+    </a>
+  {:else}
+    <button
+      bind:this={button}
+      onclick={clickInternal}
+      onmousedown={down}
+      onmouseleave={leaveInternal}
+      onmouseup={upInternal}
+      class:hidden={!visible}
+      type="button"
+      style={style}
+      tabindex="{tabindex}"
+    >
+      <div class="circle"></div>
+      {@render children?.()}
+    </button>
+  {/if}
+{/snippet}

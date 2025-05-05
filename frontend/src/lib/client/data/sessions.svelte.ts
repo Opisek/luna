@@ -7,6 +7,7 @@ import { resetRepository } from "./repository.svelte";
 import { resetNotifications } from "../notifications";
 import { resetMetadata } from "./metadata.svelte";
 import { resetRegistrationInvites } from "./invites.svelte";
+import { resetUsers } from "./users.svelte";
 
 export function clearSession() {
   if (!browser) return;
@@ -14,6 +15,7 @@ export function clearSession() {
   document.cookie = "tokenPresent=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
 
   resetRegistrationInvites();
+  resetUsers();
   resetSessions();
   resetSettings();
   resetThemes();

@@ -63,4 +63,7 @@ export type UserData = {
   searchable: boolean;
   profile_picture: string;
   admin: boolean;
+  verified: boolean;
+  enabled: boolean;
+  created_at: Date;
 }

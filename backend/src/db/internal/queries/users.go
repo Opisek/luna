@@ -147,7 +147,7 @@ func (q *Queries) GetUser(userId types.ID) (*types.User, *errors.ErrorTrace) {
 		WHERE id = $1;
 		`,
 		userId.UUID(),
-	).Scan(&user.Id, &user.Username, &user.Email, &user.Admin, &user.Verified, &user.Enabled, &user.Searchable, &rawProfilePicture)
+	).Scan(&user.Id, &user.Username, &user.Email, &user.Admin, &user.Verified, &user.Enabled, &user.Searchable, &rawProfilePicture, &user.CreatedAt)
 	switch err {
 	case nil:
 		break
@@ -218,7 +218,7 @@ func (q *Queries) GetUsers(all bool) ([]*types.User, *errors.ErrorTrace) {
 		user := &types.User{}
 		var rawProfilePicture string
 
-		err = rows.Scan(&user.Id, &user.Username, &user.Email, &user.Admin, &user.Verified, &user.Enabled, &user.Searchable, &rawProfilePicture)
+		err = rows.Scan(&user.Id, &user.Username, &user.Email, &user.Admin, &user.Verified, &user.Enabled, &user.Searchable, &rawProfilePicture, &user.CreatedAt)
 		if err != nil {
 			return nil, errors.New().Status(http.StatusInternalServerError).
 				AddErr(errors.LvlDebug, err).

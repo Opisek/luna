@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Bot, Code, Eye, Gamepad2, Info, Laptop, LockKeyhole, LogOut, Microchip, Palette, Pencil, RectangleGoggles, RefreshCw, Smartphone, Tablet, Trash, Trash2, TriangleAlert, TvMinimal, User, Users, Watch } from "lucide-svelte";
+  import { BadgeCheck, Ban, Bot, Code, Eye, Gamepad2, Info, Laptop, LogOut, Microchip, Palette, Pencil, RectangleGoggles, RefreshCw, Shield, Smartphone, Tablet, Trash2, TriangleAlert, TvMinimal, User, UserRoundPlus, UserRoundX, Users, Watch } from "lucide-svelte";
   import { NoOp } from "../../lib/client/placeholders";
   import ButtonList from "../forms/ButtonList.svelte";
   import Modal from "./Modal.svelte";
@@ -34,6 +34,7 @@
   import { getTheme } from "../../lib/client/data/theme.svelte";
   import RegistrationInviteModal from "./RegistrationInviteModal.svelte";
   import { getRegistrationInvites } from "../../lib/client/data/invites.svelte";
+  import { getUsers } from "$lib/client/data/users.svelte";
 
   interface Props {
     showModal?: () => any;
@@ -48,6 +49,8 @@
   const settings = getSettings();
   const sessions = getActiveSessions();
   const invites = getRegistrationInvites();
+  const users = getUsers();
+
   const today = new Date();
 
   // Loading
@@ -57,10 +60,14 @@
     fetchThemes();
     fetchFonts();
     sessions.fetch();
-    invites.fetch();
     settings.fetchSettings().then(() => {
       snapshotSettings();
       refetchProfilePicture();
+
+      if (settings.userData.admin) {
+        invites.fetch();
+        users.fetchAll();
+      }
     });
   }
 
@@ -106,7 +113,7 @@
     ],
     [
       { name: "Users", value: "users", icon: Users },
-      { name: "Administrative", value: "admin", icon: LockKeyhole },
+      { name: "Administrative", value: "admin", icon: Shield },
     ],
     [
       { name: "Danger Zone", value: "danger", icon: TriangleAlert, color: ColorKeys.Danger },
@@ -412,17 +419,18 @@
   let createApiToken = $state<() => Promise<Session>>(Promise.reject);
 
   // Danger zone actions
-  function deleteAccount() {
-    showConfirmation("Are you sure you want to delete your account?\nThis action is irreversible.", async () => {
+  function deleteAccount(id: string = "self") {
+    const ownAccount = id === "self" || id === users.currentUser;
+    showConfirmation(`Are you sure you want to delete ${ownAccount ? "your" : "this"} account?\nThis action is irreversible.`, async () => {
       requirePasswordForAccountDeletion = true;
       const password = await new Promise<string>(resolve => setTimeout(async () => resolve(await passwordPrompt().catch(() => "")), 0));
       requirePasswordForAccountDeletion = false;
       if (password == "") return;
       const body = new FormData();
       body.append("password", password);
-      await fetchResponse("/api/users/self", { method: "DELETE", body: body });
-      clearSession();
-    }, "All your data will be deleted.");
+      await fetchResponse(`/api/users/${id}`, { method: "DELETE", body: body });
+      if (ownAccount) clearSession();
+    }, `All ${ownAccount ? "your" : "user"} data will be deleted.`);
   }
   function resetPreferences() {
     showConfirmation("Are you sure you want to reset all your preferences?\nThis action is irreversible.", async () => {
@@ -464,6 +472,21 @@
     });
   }
 
+  function disableAccount(id: string) {
+    showConfirmation("Are you sure you want to disable this account?\nThe user will no longer be able to log in.\nThe user's account will remain intact.", async () => {
+      users.disableUser(id).catch((err) => {
+        queueNotification(ColorKeys.Danger, `Could not disable user account: ${err.message}`)
+      })
+    });
+  }
+
+  function enableAccount(id: string) {
+    showConfirmation("Are you sure you want to enable this account?\nThe user will be able log in again.", async () => {
+      users.enableUser(id).catch((err) => {
+        queueNotification(ColorKeys.Danger, `Could not enable user account: ${err.message}`)
+      })
+    });
+  }
   // Confirmation dialog
   let internalShowConfirmation = $state(NoOp);
   let confirmationCallback = $state(async () => {});
@@ -610,6 +633,68 @@
   }
   .invite:not(.showId) > .id {
     display: none;
+  }
+
+  .user {
+    padding: dimensions.$gapMiddle;
+    background-color: colors.$backgroundSecondary;
+    color: colors.$foregroundSecondary;
+    border-radius: dimensions.$borderRadius;
+
+    display: grid;
+    gap: dimensions.$gapSmall;
+    row-gap: 0;
+    grid-template-columns: auto 1fr auto;
+    grid-template-rows: auto auto auto;
+    grid-template-areas: "profilePicture username buttons" "profilePicture details buttons" "profilePicture date buttons";
+    justify-content: center;
+    align-items: center;
+  }
+
+  .user.showId {
+    grid-template-rows: auto auto auto auto;
+    grid-template-areas: "profilePicture username buttons" "profilePicture details buttons" "profilePicture date buttons" "profilePicture id buttons";
+  }
+
+  .user > .profilePicture {
+    grid-area: profilePicture;
+    display: flex;
+    height: 100%;
+    align-items: center;
+  }
+  .user > .username {
+    grid-area: username;
+    display: flex;
+    flex-direction: row;
+    justify-content: start;
+    align-items: center;
+    gap: dimensions.$gapTiny;
+  }
+  .user > .details {
+    grid-area: details;
+    font-size: text.$fontSizeSmall;
+  }
+  .user > .date {
+    grid-area: date;
+    font-size: text.$fontSizeSmall;
+  }
+  .user > .buttons {
+    grid-area: buttons;
+    display: flex;
+    flex-direction: row;
+    gap: dimensions.$gapSmall;
+  }
+  .user > .id {
+    grid-area: id;
+    font-size: text.$fontSizeSmall;
+  }
+  .user:not(.showId) > .id {
+    display: none;
+  }
+
+  .user.active {
+    background-color: colors.$backgroundAccent;
+    color: colors.$foregroundAccent;
   }
   
   span.refreshButtonWrapper {
@@ -900,6 +985,13 @@
 
           <Button color={ColorKeys.Danger} onClick={deleteInvites}>Delete all invites</Button>
         {/if}
+
+        <List
+          label="Registered Users"
+          items={users.users}
+          id={item => item.id}
+          template={userTemplate}
+        />
       {:else if selectedCategory === "admin"}
         <ToggleInput
           name={GlobalSettingKeys.RegistrationEnabled}
@@ -1033,7 +1125,11 @@
 
     <span class="details">
       <!-- TODO: transform invite.author into username -->
-      Created {invite.created_at.toLocaleDateString()} at {invite.created_at.toLocaleTimeString()} by {"TODO"}
+      Created {invite.created_at.toLocaleDateString()} at {invite.created_at.toLocaleTimeString()} by {users.users.filter(x => x.id == invite.author)[0]?.username || invite.author}
+      {#if invite.email != ""}
+        •
+        {invite.email}
+      {/if}
     </span>
 
     <div class="buttons">
@@ -1047,6 +1143,77 @@
 
     <span class="id">
       ID: {invite.invite_id}
+    </span>
+  </div>
+{/snippet}
+
+{#snippet userTemplate(u: UserData)}
+  {@const isActive=u.id === users.currentUser}
+
+  <div class="user" class:active={isActive} class:showId={settings.userSettings[UserSettingKeys.DebugMode]}>
+    <div class="profilePicture">
+      <Image
+        src={u.profile_picture}
+        alt={`Profile picture of user ${u.username}`}
+        small={true}
+      />
+    </div>
+
+    <span class="username">
+      {u.username}
+      {#if u.admin}
+        <Tooltip inheritColor={true} tight={true}>
+          {#snippet icon()}
+            <Shield size={12}/>
+          {/snippet}
+          Administrator
+        </Tooltip>
+      {/if}
+      {#if u.verified}
+        <Tooltip inheritColor={true} tight={true}>
+          {#snippet icon()}
+            <BadgeCheck size={12}/>
+          {/snippet}
+          Verified E-Mail Address
+        </Tooltip>
+      {/if}
+      {#if !u.enabled}
+        <Tooltip inheritColor={true} tight={true}>
+          {#snippet icon()}
+            <Ban size={12}/>
+          {/snippet}
+          Account disabled
+        </Tooltip>
+      {/if}
+    </span>
+
+    <span class="details">
+      {u.email}
+    </span>
+
+    <span class="date">
+      Created {u.created_at.toLocaleDateString()} at {u.created_at.toLocaleTimeString()}
+    </span>
+
+    <div class="buttons">
+      {#if !u.admin}
+        <IconButton click={() => { u.enabled ? disableAccount(u.id) : enableAccount(u.id) }} info={ u.enabled ? "Disable account" : "Enable account"}>
+          {#if u.enabled}
+            <UserRoundX size={20}/>
+          {:else}
+            <UserRoundPlus size={20}/>
+          {/if}
+        </IconButton>
+      {/if}
+      {#if !isActive}
+        <IconButton click={() => { deleteAccount(u.id); }}>
+          <Trash2 size={20}/>
+        </IconButton>
+      {/if}
+    </div>
+
+    <span class="id">
+      ID: {u.id}
     </span>
   </div>
 {/snippet}

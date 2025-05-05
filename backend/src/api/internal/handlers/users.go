@@ -28,9 +28,11 @@ func GetUser(c *gin.Context) {
 func GetUsers(c *gin.Context) {
 	u := util.GetUtil(c)
 
+	userId := util.GetUserId(c)
+
 	all := c.Query("all") == "true"
 	if all {
-		isAdmin, tr := u.Tx.Queries().IsAdmin(util.GetUserId(c))
+		isAdmin, tr := u.Tx.Queries().IsAdmin(userId)
 		if tr != nil {
 			u.Error(tr)
 			return
@@ -51,7 +53,10 @@ func GetUsers(c *gin.Context) {
 
 	// TODO: when not using all=true, we might want to hide some fields like verified, email, etc.
 
-	u.Success(&gin.H{"users": users})
+	u.Success(&gin.H{
+		"users":   users,
+		"current": userId,
+	})
 }
 
 func PatchUserData(c *gin.Context) {

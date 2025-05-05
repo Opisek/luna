@@ -14,7 +14,8 @@ func (q *Tables) InitializeUsersTable() error {
 			verified BOOLEAN,
 			enabled BOOLEAN,
 			searchable BOOLEAN,
-			profile_picture VARCHAR(255)
+			profile_picture VARCHAR(255),
+			created_at TIMESTAMP DEFAULT NOW()
 		);
 		`,
 	)
