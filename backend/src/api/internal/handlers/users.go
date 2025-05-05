@@ -277,3 +277,59 @@ func DeleteUser(c *gin.Context) {
 
 	u.Success(nil)
 }
+
+func EnableUser(c *gin.Context) {
+	u := util.GetUtil(c)
+
+	userId, tr := util.GetId(c, "user")
+	if tr != nil {
+		u.Error(tr)
+		return
+	}
+
+	tr = u.Tx.Queries().SetUserEnabled(userId, true)
+
+	if tr != nil {
+		u.Error(tr)
+		return
+	}
+
+	u.Success(nil)
+}
+
+func DisableUser(c *gin.Context) {
+	u := util.GetUtil(c)
+
+	userId, tr := util.GetId(c, "user")
+	if tr != nil {
+		u.Error(tr)
+		return
+	}
+
+	isAdmin, tr := u.Tx.Queries().IsAdmin(userId)
+	if tr != nil {
+		u.Error(tr)
+		return
+	}
+	if isAdmin {
+		u.Error(errors.New().Status(http.StatusBadRequest).
+			Append(errors.LvlPlain, "Admin accounts cannot be disabled."),
+		)
+		return
+	}
+
+	tr = u.Tx.Queries().SetUserEnabled(userId, false)
+
+	if tr != nil {
+		u.Error(tr)
+		return
+	}
+
+	tr = u.Tx.Queries().DeleteSessions(userId)
+	if tr != nil {
+		u.Error(tr)
+		return
+	}
+
+	u.Success(nil)
+}

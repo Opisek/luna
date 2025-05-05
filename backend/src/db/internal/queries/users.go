@@ -15,8 +15,8 @@ func (q *Queries) AddUser(user *types.User) (types.ID, *errors.ErrorTrace) {
 	var err error
 
 	query := `
-		INSERT INTO users (username, email, admin, searchable, profile_picture)
-		VALUES ($1, $2, $3, $4, $5)
+		INSERT INTO users (username, email, admin, verified, enabled, searchable, profile_picture)
+		VALUES ($1, $2, $3, FALSE, TRUE, $4, $5)
 		RETURNING id;
 	`
 
@@ -96,16 +96,22 @@ func (q *Queries) IsAdmin(userId types.ID) (bool, *errors.ErrorTrace) {
 		userId.UUID(),
 	).Scan(&admin)
 
-	if err != nil {
+	switch err {
+	case nil:
+		return admin, nil
+	case pgx.ErrNoRows:
+		return false, errors.New().Status(http.StatusNotFound).
+			Append(errors.LvlDebug, "User %v does not exist", userId).
+			AltStr(errors.LvlPlain, "User does not exist")
+	default:
 		return false, errors.New().Status(http.StatusInternalServerError).
 			AddErr(errors.LvlDebug, err).
 			Append(errors.LvlDebug, "Could not check admin status of user %v", userId)
 	}
-
-	return admin, nil
 }
 
 func (q *Queries) AnyUsersExist() (bool, *errors.ErrorTrace) {
+	// TODO: rewrite with EXISTS
 	rows, err := q.Tx.Query(
 		q.Context,
 		`
@@ -136,12 +142,12 @@ func (q *Queries) GetUserData(userId types.ID) (*types.User, *errors.ErrorTrace)
 	err = q.Tx.QueryRow(
 		q.Context,
 		`
-		SELECT id, username, email, admin, searchable, profile_picture
+		SELECT *
 		FROM users
 		WHERE id = $1;
 		`,
 		userId.UUID(),
-	).Scan(&user.Id, &user.Username, &user.Email, &user.Admin, &user.Searchable, &rawProfilePicture)
+	).Scan(&user.Id, &user.Username, &user.Email, &user.Admin, &user.Verified, &user.Enabled, &user.Searchable, &rawProfilePicture)
 	switch err {
 	case nil:
 		break
@@ -178,7 +184,7 @@ func (q *Queries) UpdateUserData(user *types.User) *errors.ErrorTrace {
 
 	query := `
 		UPDATE users
-		SET username = $1, email = $2, admin = $3, searchable = $4, profile_picture = $5
+		SET username = $1, email = $2, admin = $3, verified = $4, enabled = $5, searchable = $6, profile_picture = $7
 		WHERE id = $6;
 	`
 
@@ -188,6 +194,8 @@ func (q *Queries) UpdateUserData(user *types.User) *errors.ErrorTrace {
 		user.Username,
 		user.Email,
 		user.Admin,
+		user.Verified,
+		user.Enabled,
 		user.Searchable,
 		user.ProfilePicture,
 		user.Id.UUID(),
@@ -222,6 +230,56 @@ func (q *Queries) DeleteUser(userId types.ID) *errors.ErrorTrace {
 			AddErr(errors.LvlDebug, err).
 			Append(errors.LvlDebug, "Could not delete user %v", userId).
 			AltStr(errors.LvlPlain, "Database error")
+	}
+
+	return nil
+}
+
+func (q *Queries) IsUserEnabled(userId types.ID) (bool, *errors.ErrorTrace) {
+	var err error
+
+	var enabled bool
+
+	err = q.Tx.QueryRow(
+		q.Context,
+		`
+		SELECT enabled
+		FROM users
+		WHERE id = $1;
+		`,
+		userId.UUID(),
+	).Scan(&enabled)
+
+	if err != nil {
+		return false, errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not check if user %v is enabled", userId)
+	}
+
+	return enabled, nil
+}
+
+func (q *Queries) SetUserEnabled(userId types.ID, enabled bool) *errors.ErrorTrace {
+	var err error
+
+	query := `
+		UPDATE users
+		SET enabled = $1
+		WHERE id = $2
+		AND admin = FALSE;
+	`
+
+	_, err = q.Tx.Exec(
+		q.Context,
+		query,
+		enabled,
+		userId.UUID(),
+	)
+
+	if err != nil {
+		return errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not set user %v enabled to %v", userId, enabled)
 	}
 
 	return nil

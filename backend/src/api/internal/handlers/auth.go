@@ -106,6 +106,23 @@ func Login(c *gin.Context) {
 		}
 	}
 
+	// Check if the user account is disabled
+	enabled, err := u.Tx.Queries().IsUserEnabled(userId)
+	if err != nil {
+		u.Error(err.
+			Append(errors.LvlDebug, "Could not check if user %v is enabled", userId.String()).
+			Append(errors.LvlWordy, "Database error").
+			Append(errors.LvlBroad, "Could not log in"),
+		)
+		return
+	}
+	if !enabled {
+		u.Error(errors.New().Status(http.StatusForbidden).
+			Append(errors.LvlPlain, "Your account is disabled."),
+		)
+		return
+	}
+
 	// Create new session
 	secret, err := crypto.GenerateRandomBytes(256)
 	if err != nil {

@@ -11,6 +11,8 @@ func (q *Tables) InitializeUsersTable() error {
 			username VARCHAR(255) NOT NULL UNIQUE,
 			email VARCHAR(255) NOT NULL UNIQUE,
 			admin BOOLEAN,
+			verified BOOLEAN,
+			enabled BOOLEAN,
 			searchable BOOLEAN,
 			profile_picture VARCHAR(255)
 		);

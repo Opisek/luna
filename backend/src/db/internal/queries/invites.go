@@ -90,7 +90,7 @@ func (q *Queries) GetValidInvite(email string, code string) (*types.Registration
 			query,
 			code,
 			email,
-		).Scan(&invite.InviteId, &invite.Author, &invite.CreatedAt, &invite.Expires, &invite.Code)
+		).Scan(&invite.InviteId, &invite.Author, &invite.Email, &invite.CreatedAt, &invite.Expires, &invite.Code)
 
 	switch err {
 	case nil:
