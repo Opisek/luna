@@ -3,17 +3,18 @@ import { clearSession } from "./data/sessions.svelte";
 
 export async function fetchResponse(url: string, options: RequestInit = {}): Promise<Response> {
   const response = await fetch(url, options).catch((err) => {
-    if (!err) err = new Error("Could not contact server");
+    if (!err) err = new Error("Could not reach the server");
+    if (err.includes("NetworkError when attempting to fetch resource.")) err = "Could not reach the server";
     throw new Error(err, { cause: new Error("504") });
   });
   if (response.ok) {
     return response;
   } else {
-    const json = await response.json().catch(() => null);
+    const json = await response.json().catch((err) => ({ error: err.message }));
     let err = null;
     if (!err && json != null) err = json.error;
     if (!err && json != null) err = json.message;
-    if (!err) err = `${response.statusText ? response.statusText : "Could not contact server"} (${response.status})`;
+    if (!err) err = `${response.statusText ? response.statusText : "Could not reach the server"} (${response.status})`;
     if (err.includes("Session expired")) clearSession();
     throw new Error(err, { cause: new Error(response.status.toString()) });
   }
