@@ -35,9 +35,6 @@
   ));
 
   let remainingDays = $derived.by(() => {
-    // keep in mind start of the week is monday for now
-    // Monday: 1, Tuesday: 2, ..., Sunday: 0
-
     if (!date || !event) return 0;
     if (view === "day") return 1;
 
