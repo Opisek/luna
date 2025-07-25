@@ -52,7 +52,7 @@
 
   let eventEndsThisWeek = $derived(remainingDays == remainingDaysThisWeek);
 
-  let currentlyHoveredEvent = $state((getContext("currentlyHoveredEvent") as () => (EventModel | null))());;
+  let currentlyHoveredEvent = $state((getContext("currentlyHoveredEvent") as () => (EventModel | null))());
   let currentlyClickedEvent = $state((getContext("currentlyClickedEvent") as () => (EventModel | null))());
 
   let showModal: ((event: EventModel) => Promise<EventModel>) = getContext("showEventModal");
