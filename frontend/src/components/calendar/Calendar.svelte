@@ -91,7 +91,7 @@
     nextViewDay.setDate(nextViewDay.getDate() + 1);
 
     // Event pre-processing
-    const filteredEvents = events.filter(e => e.date.end.getTime() >= firstViewDay.getTime() && e.date.start.getTime() < nextViewDay.getTime());
+    const filteredEvents = events.filter(e => e.date.end.getTime() > firstViewDay.getTime() && e.date.start.getTime() < nextViewDay.getTime());
     filteredEvents.sort(compareEventsByStartDate);
 
     // Fill
