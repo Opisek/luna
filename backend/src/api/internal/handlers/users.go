@@ -12,17 +12,51 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func GetUserData(c *gin.Context) {
+func GetUser(c *gin.Context) {
 	u := util.GetUtil(c)
 
 	userId := util.GetUserId(c)
-	user, err := u.Tx.Queries().GetUserData(userId)
+	user, err := u.Tx.Queries().GetUser(userId)
 	if err != nil {
 		u.Error(err)
 		return
 	}
 
 	u.Success(&gin.H{"user": user})
+}
+
+func GetUsers(c *gin.Context) {
+	u := util.GetUtil(c)
+
+	userId := util.GetUserId(c)
+
+	all := c.Query("all") == "true"
+	if all {
+		isAdmin, tr := u.Tx.Queries().IsAdmin(userId)
+		if tr != nil {
+			u.Error(tr)
+			return
+		}
+		if !isAdmin {
+			u.Error(errors.New().Status(http.StatusForbidden).
+				Append(errors.LvlPlain, "Only administrators can view all users"),
+			)
+			return
+		}
+	}
+
+	users, tr := u.Tx.Queries().GetUsers(all)
+	if tr != nil {
+		u.Error(tr)
+		return
+	}
+
+	// TODO: when not using all=true, we might want to hide some fields like verified, email, etc.
+
+	u.Success(&gin.H{
+		"users":   users,
+		"current": userId,
+	})
 }
 
 func PatchUserData(c *gin.Context) {
@@ -124,7 +158,7 @@ func PatchUserData(c *gin.Context) {
 	}
 
 	// Delete old profile picture if applicable
-	oldUserStruct, tr := u.Tx.Queries().GetUserData(userId)
+	oldUserStruct, tr := u.Tx.Queries().GetUser(userId)
 	if tr != nil {
 		u.Error(tr)
 		return
@@ -239,7 +273,25 @@ func PatchUserData(c *gin.Context) {
 func DeleteUser(c *gin.Context) {
 	u := util.GetUtil(c)
 
-	userId := util.GetUserId(c)
+	executingUserId := util.GetUserId(c)
+	affectedUserId, tr := util.GetIdOrDefault(c, "user", "self", executingUserId)
+	if tr != nil {
+		u.Error(tr)
+		return
+	}
+	if affectedUserId != executingUserId {
+		isAdmin, tr := u.Tx.Queries().IsAdmin(executingUserId)
+		if tr != nil {
+			u.Error(tr)
+			return
+		}
+		if !isAdmin {
+			u.Error(errors.New().Status(http.StatusForbidden).
+				Append(errors.LvlPlain, "You are not allowed to delete other user accounts"),
+			)
+			return
+		}
+	}
 
 	// Get the user's password
 	password := c.PostForm("password")
@@ -251,10 +303,10 @@ func DeleteUser(c *gin.Context) {
 	}
 
 	// Get the user's password
-	savedPassword, err := u.Tx.Queries().GetPassword(userId)
+	savedPassword, err := u.Tx.Queries().GetPassword(executingUserId)
 	if err != nil {
 		u.Error(err.Status(http.StatusUnauthorized).
-			Append(errors.LvlDebug, "Could not get password for user %v", userId.String()).
+			Append(errors.LvlDebug, "Could not get password for user %v", executingUserId.String()).
 			Append(errors.LvlPlain, "Invalid credentials"),
 		)
 		return
@@ -269,9 +321,65 @@ func DeleteUser(c *gin.Context) {
 		return
 	}
 
-	err = u.Tx.Queries().DeleteUser(userId)
+	err = u.Tx.Queries().DeleteUser(affectedUserId)
 	if err != nil {
 		u.Error(err)
+		return
+	}
+
+	u.Success(nil)
+}
+
+func EnableUser(c *gin.Context) {
+	u := util.GetUtil(c)
+
+	userId, tr := util.GetId(c, "user")
+	if tr != nil {
+		u.Error(tr)
+		return
+	}
+
+	tr = u.Tx.Queries().SetUserEnabled(userId, true)
+
+	if tr != nil {
+		u.Error(tr)
+		return
+	}
+
+	u.Success(nil)
+}
+
+func DisableUser(c *gin.Context) {
+	u := util.GetUtil(c)
+
+	userId, tr := util.GetId(c, "user")
+	if tr != nil {
+		u.Error(tr)
+		return
+	}
+
+	isAdmin, tr := u.Tx.Queries().IsAdmin(userId)
+	if tr != nil {
+		u.Error(tr)
+		return
+	}
+	if isAdmin {
+		u.Error(errors.New().Status(http.StatusBadRequest).
+			Append(errors.LvlPlain, "Admin accounts cannot be disabled."),
+		)
+		return
+	}
+
+	tr = u.Tx.Queries().SetUserEnabled(userId, false)
+
+	if tr != nil {
+		u.Error(tr)
+		return
+	}
+
+	tr = u.Tx.Queries().DeleteSessions(userId)
+	if tr != nil {
+		u.Error(tr)
 		return
 	}
 

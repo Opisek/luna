@@ -94,14 +94,20 @@ Luna uses its own (UU)IDs for every resource accessed through it. Therefore, the
 - **Body**: Empty
 - **Purpose**: Determines whether the frontend, the backend, and the database are all functioning correctly.
 
-### User Data
-#### Get User Data
+### Uses
+#### Get User
 - **Path**: ``/api/users/<ID>``
 - **Method**: ``GET``
 - **Body**: Empty
 - **Purpose**: Returns the user's saved data, like username and email address.
 
-#### Patch User Data
+#### Get Users
+- **Path**: ``/api/users``
+- **Method**: ``GET``
+- **Search Parameters**: `all` (`false` by default, `true` to also include disabled or non-searchable accounts)
+- **Purpose**: Returns the user's saved data, like username and email address.
+
+#### Patch User
 - **Path**: ``/api/users/<ID>``
 - **Method**: ``PATCH``
 - **Body**: Depending on which the user wants to change: `username`, `new_password`, `email`, `pfp_url`, `pfp_file`, `searchable`. The old password `password` is required if any of `username`, `new_password`, or `email` are specified.
@@ -112,6 +118,18 @@ Luna uses its own (UU)IDs for every resource accessed through it. Therefore, the
 - **Method**: ``DELETE``
 - **Body**: `password`
 - **Purpose**: Deletes the user account.
+
+#### Disable User
+- **Path**: ``/api/users/<ID>/disable`
+- **Method**: ``POST``
+- **Body**: Empty
+- **Purpose**: Disables user account (delete sessions and prevents login).
+
+#### Enable User
+- **Path**: ``/api/users/<ID>/enable`
+- **Method**: ``POST``
+- **Body**: Empty
+- **Purpose**: Enables user account (allow login again).
 
 ### Sources
 #### Get Sources

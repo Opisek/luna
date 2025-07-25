@@ -125,7 +125,7 @@ func createTask(name string, task func(*db.Transaction, *logrus.Entry) *errors.E
 
 		err = task(tx, cronLogger.WithField("task", name))
 		if err != nil {
-			cronLogger.Errorf("failure running cron task %v: %v", name, err)
+			cronLogger.Errorf("failure running cron task %v: %v", name, err.Serialize(errors.LvlDebug))
 			return
 		}
 

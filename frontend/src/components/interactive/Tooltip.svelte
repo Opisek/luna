@@ -7,9 +7,12 @@
   interface Props {
     error?: boolean;
     children?: Snippet;
+    icon?: Snippet;
     tight?: boolean;
     tiny?: boolean;
     inline?: boolean;
+    inheritColor?: boolean;
+    pointerCursor?: boolean;
   }
 
   let {
@@ -17,26 +20,29 @@
     tight = false,
     tiny = false,
     inline = false,
-    children
+    inheritColor = false,
+    pointerCursor = false,
+    children,
+    icon,
   }: Props = $props();
 
-  let icon = $state<HTMLElement>();
+  let iconElement = $state<HTMLElement>();
   let popover = $state<HTMLElement>();
   let popoverTop = $state(0);
   let popoverLeft = $state(0);
   let popoverOpen = $state(false);
 
   function show() {
-    if (!popover || !icon) return;
+    if (!popover || !iconElement) return;
     popover.showPopover();
     popoverOpen = true;
 
     const popoverRect = popover.getBoundingClientRect();
-    const iconRect = icon.getBoundingClientRect();
+    const iconRect = iconElement.getBoundingClientRect();
 
     const marginSize = popoverRect.y - popoverTop;
 
-    const optimalPosition = calculateOptimalPopupPosition(icon, 3);
+    const optimalPosition = calculateOptimalPopupPosition(iconElement, 3);
 
     if (!optimalPosition.center) {
       // The popover is not centered vertically with respect to the icon
@@ -103,6 +109,14 @@
     margin-bottom: 0.25ch;
   }
 
+  div.inheritColor {
+    color: inherit;
+  }
+
+  div.pointerCursor {
+    cursor: pointer;
+  }
+
   .popover {
     border-radius: dimensions.$borderRadius;
     padding: dimensions.$gapSmall;
@@ -148,15 +162,19 @@
   class:error={error}
   class:tight={tight}
   class:inline={inline}
+  class:inheritColor={inheritColor}
+  class:pointerCursor={pointerCursor}
   role="tooltip"
   tabindex="0"
   onmouseenter={show}
   onmouseleave={hide}
   onfocus={show}
   onblur={hide}
-  bind:this={icon}
+  bind:this={iconElement}
 >
-  {#if error}
+  {#if icon}
+    {@render icon?.()}
+  {:else if error}
     <CircleAlert size={tiny ? 14 : 16}/>
   {:else}
     <Info size={tiny ? 14 : 16}/>

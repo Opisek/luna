@@ -11,7 +11,10 @@ class Settings {
     email: "",
     admin: false,
     searchable: true,
-    profile_picture: ""
+    profile_picture: "",
+    verified: false,
+    enabled: false,
+    created_at: new Date(0),
   });
   public userSettings: UserSettings = $state({
     [UserSettingKeys.DebugMode]: false,

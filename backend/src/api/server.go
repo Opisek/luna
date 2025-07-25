@@ -55,12 +55,25 @@ func run(api *util.Api) {
 	longRunningAuthenticatedEndpoints := authEndpoints.Group("", middleware.RequireAuth())
 	administratorEndpoints := authenticatedEndpoints.Group("", middleware.RequireAdmin())
 
-	// /api/users
+	// /api/users/*
 	userEndpoints := authenticatedEndpoints.Group("/users")
-	longRunningUserEndpoints := longRunningAuthenticatedEndpoints.Group("/users")
-	userEndpoints.GET("/:userId", handlers.GetUserData)
+	longRunningUserEndpoints := longRunningAuthenticatedEndpoints.Group("/users") // user endpoints that require password verification
+	administrativeUserEndpoints := administratorEndpoints.Group("/users")
+
+	userEndpoints.GET("/:userId", handlers.GetUser)
+	userEndpoints.GET("", handlers.GetUsers)
+	administrativeUserEndpoints.POST("/:userId/enable", handlers.EnableUser)
+	administrativeUserEndpoints.POST("/:userId/disable", handlers.DisableUser)
 	longRunningUserEndpoints.PATCH("/:userId", handlers.PatchUserData)
 	longRunningUserEndpoints.DELETE("/:userId", handlers.DeleteUser)
+
+	// /api/users/settings/*
+	userSettingsEndpoints := userEndpoints.Group("/:userId/settings")
+	userSettingsEndpoints.GET("", handlers.GetUserSettings)
+	userSettingsEndpoints.GET("/:settingKey", handlers.GetUserSetting)
+	userSettingsEndpoints.PATCH("", handlers.PatchUserSettings)
+	userSettingsEndpoints.DELETE("", handlers.ResetUserSettings)
+	userSettingsEndpoints.DELETE("/:settingKey", handlers.ResetUserSetting)
 
 	// /api/sources/*
 	sourcesEndpoints := authenticatedEndpoints.Group("/sources")
@@ -92,13 +105,6 @@ func run(api *util.Api) {
 	fileEndpoints.HEAD("/:fileId", handlers.GetFile)
 
 	// /api/settings/*
-	userSettingsEndpoints := userEndpoints.Group("/:userId/settings")
-	userSettingsEndpoints.GET("", handlers.GetUserSettings)
-	userSettingsEndpoints.GET("/:settingKey", handlers.GetUserSetting)
-	userSettingsEndpoints.PATCH("", handlers.PatchUserSettings)
-	userSettingsEndpoints.DELETE("", handlers.ResetUserSettings)
-	userSettingsEndpoints.DELETE("/:settingKey", handlers.ResetUserSetting)
-
 	globalSettingsEndpoints := administratorEndpoints.Group("/settings")
 	globalSettingsEndpointsPublic := authenticatedEndpoints.Group("/settings")
 	globalSettingsEndpointsPublic.GET("", handlers.GetGlobalSettings)

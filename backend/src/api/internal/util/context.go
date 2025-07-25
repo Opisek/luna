@@ -110,6 +110,30 @@ func GetId(c *gin.Context, primitive string) (types.ID, *errors.ErrorTrace) {
 	return id, nil
 }
 
+func GetIdOrDefault(c *gin.Context, primitive string, defaultString string, defaultValue types.ID) (types.ID, *errors.ErrorTrace) {
+	rawId := c.Param(fmt.Sprintf("%sId", primitive))
+
+	if rawId == "" {
+		return types.EmptyId(), errors.New().Status(http.StatusBadRequest).
+			Append(errors.LvlWordy, "Missing %v id", primitive).
+			Append(errors.LvlPlain, "Malformed request")
+	}
+
+	if rawId == defaultString {
+		return defaultValue, nil
+	}
+
+	id, err := types.IdFromString(rawId)
+	if err != nil {
+		return types.EmptyId(), errors.New().Status(http.StatusBadRequest).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlWordy, "Malformed %v id", primitive).
+			Append(errors.LvlPlain, "Malformed request")
+	}
+
+	return id, nil
+}
+
 func GetBearerToken(c *gin.Context) (string, *errors.ErrorTrace) {
 	header := c.Request.Header.Get("Authorization")
 	if header == "" {
