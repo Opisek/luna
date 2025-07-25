@@ -130,7 +130,7 @@ class Metadata {
   setCalendarVisibility = (calendarId: string, visible: boolean) => {
     if (visible) this.hiddenCalendars.delete(calendarId);
     else this.hiddenCalendars.add(calendarId);
-    if (browser) localStorage.setItem("collapsedSources", JSON.stringify(Array.from(this.hiddenCalendars)));
+    if (browser) localStorage.setItem("hiddenCalendars", JSON.stringify(Array.from(this.hiddenCalendars)));
     getRepository().recalculateEvents();
   }
 }
