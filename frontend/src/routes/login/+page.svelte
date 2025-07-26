@@ -8,7 +8,7 @@
   import ToggleInput from '../../components/forms/ToggleInput.svelte';
   import { ColorKeys } from '../../types/colors';
 
-  import { afterNavigate } from '$app/navigation';
+  import { afterNavigate, invalidateAll } from '$app/navigation';
   import { page } from '$app/state';
 
   import { isValidPassword, isValidUsername, valid } from '$lib/client/validation';
@@ -24,6 +24,7 @@
 
   afterNavigate(() => {
     if (browser) localStorage.clear();
+    invalidateAll();
   });
 
   function handleError(result: ActionResult) {

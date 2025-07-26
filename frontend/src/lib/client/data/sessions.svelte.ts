@@ -1,32 +1,17 @@
 import { browser } from "$app/environment";
+import { page } from "$app/state";
+
 import ipLocation from "iplocation";
 import { fetchJson, fetchResponse } from "../net";
-import { resetSettings } from "./settings.svelte";
-import { resetThemes } from "./theme.svelte";
-import { resetRepository } from "./repository.svelte";
-import { resetNotifications } from "../notifications";
-import { resetMetadata } from "./metadata.svelte";
-import { resetRegistrationInvites } from "./invites.svelte";
-import { resetUsers } from "./users.svelte";
 
 export function clearSession() {
   if (!browser) return;
   localStorage.clear();
   document.cookie = "tokenPresent=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-
-  resetRegistrationInvites();
-  resetUsers();
-  resetSessions();
-  resetSettings();
-  resetThemes();
-  resetRepository();
-  resetNotifications();
-  resetMetadata();
-
   window.location.href = "/login?expired=true";
 }
 
-class ActiveSessions {
+export class ActiveSessions {
   public currentSession = $state("");
   public activeSessions = $state<Session[]>([]);
 
@@ -101,14 +86,6 @@ class ActiveSessions {
   }
 }
 
-let activeSessions: ActiveSessions | null = $state(null);
 export function getActiveSessions() {
-  if (activeSessions === null) {
-    activeSessions = new ActiveSessions();
-  }
-  return activeSessions;
-}
-
-export function resetSessions() {
-  activeSessions = null;
+  return page.data.singletons.sessions;
 }

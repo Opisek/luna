@@ -1,7 +1,9 @@
-import { fetchJson, fetchResponse } from "../net";
-import type { UserData } from "../../../types/settings";
+import { page } from "$app/state";
 
-class Users {
+import type { UserData } from "../../../types/settings";
+import { fetchJson, fetchResponse } from "../net";
+
+export class Users {
   public currentUser = $state("");
   public users = $state<UserData[]>([]);
 
@@ -43,14 +45,6 @@ class Users {
   }
 }
 
-let users: Users | null = $state(null);
 export function getUsers() {
-  if (users === null) {
-    users = new Users();
-  }
-  return users;
-}
-
-export function resetUsers() {
-  users = null;
+  return page.data.singletons.users;
 }

@@ -1,12 +1,15 @@
 import { browser } from "$app/environment";
-import { UserSettingKeys } from "../../../types/settings";
-import { getSettings } from "./settings.svelte";
+import { page } from "$app/state";
 
-class Theme {
+import { UserSettingKeys } from "../../../types/settings";
+import { Settings } from "./settings.svelte";
+
+export class Theme {
   private lightMode: boolean = $state(false);
-  private settings = getSettings();
+  private settings: Settings;
   
-  constructor() {
+  constructor(settings: Settings) {
+    this.settings = settings;
     if (!browser) return;
     this.fetchFromStorage();
     this.fetchFromSystem();
@@ -58,14 +61,6 @@ class Theme {
   }
 }
 
-let theme: Theme | null = $state(null);
 export function getTheme() {
-  if (theme === null) {
-    theme = new Theme();
-  }
-  return theme;
-}
-
-export function resetThemes() {
-  theme = null;
+  return page.data.singletons.theme;
 }

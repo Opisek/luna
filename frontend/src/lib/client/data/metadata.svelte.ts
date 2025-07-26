@@ -1,8 +1,12 @@
 import { browser } from "$app/environment";
-import { SvelteMap, SvelteSet } from "svelte/reactivity";
-import { getRepository } from "./repository.svelte";
+import { page } from "$app/state";
 
-class Metadata {
+import { SvelteMap, SvelteSet } from "svelte/reactivity";
+import type { Repository } from "./repository.svelte";
+
+export class Metadata {
+  private recalculateEvents: () => void;
+
   //
   // Exported Subscribeables
   //
@@ -24,7 +28,9 @@ class Metadata {
   //
   // Constructor
   //
-  constructor() {
+  constructor(recalculateEvents: () => void) {
+    this.recalculateEvents = recalculateEvents;
+
     this.faultySources = new SvelteSet();
     this.faultyCalendars = new SvelteSet();
 
@@ -131,18 +137,10 @@ class Metadata {
     if (visible) this.hiddenCalendars.delete(calendarId);
     else this.hiddenCalendars.add(calendarId);
     if (browser) localStorage.setItem("hiddenCalendars", JSON.stringify(Array.from(this.hiddenCalendars)));
-    getRepository().recalculateEvents();
+    this.recalculateEvents();
   }
 }
 
-let metadata: Metadata | null = $state(null);
 export function getMetadata() {
-  if (metadata === null) {
-    metadata = new Metadata();
-  }
-  return metadata;
-}
-
-export function resetMetadata() {
-  metadata = null;
+  return page.data.singletons.metadata;
 }

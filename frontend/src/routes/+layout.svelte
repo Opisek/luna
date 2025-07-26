@@ -23,9 +23,9 @@
     data
   }: PageProps = $props();
 
-  const settings = getSettings(data);
-  const connectivity = getConnectivity(data.version);
-  const theme = getTheme();
+  const settings = $derived(getSettings());
+  const connectivity = $derived(getConnectivity());
+  const theme = $derived(getTheme());
 
   let notifsWrapper: HTMLDivElement;
 
