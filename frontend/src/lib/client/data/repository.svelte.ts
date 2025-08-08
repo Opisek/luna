@@ -1,14 +1,18 @@
 import { browser } from "$app/environment";
+import { page } from "$app/state";
 
 import { AllChangesCalendar, AllChangesEvent, AllChangesSource, NoChangesCalendar, NoChangesEvent, NoOp } from "../placeholders";
+import { ColorKeys } from "../../../types/colors";
 import { fetchJson, fetchResponse } from "../net";
-import { getMetadata } from "./metadata.svelte";
 import { queueNotification } from "../notifications";
 
 import { parallel, deepCopy } from "$lib/common/misc";
-import { ColorKeys } from "../../../types/colors";
+import type { Metadata } from "./metadata.svelte";
 
-class Repository {
+
+export class Repository {
+  private metadata: Metadata;
+
   //
   // Constants
   //
@@ -27,7 +31,9 @@ class Repository {
   //
   // Constructor
   //
-  constructor() {
+  constructor(metadata: Metadata) {
+    this.metadata = metadata;
+
     this.sources = [];
     this.calendars = [];
     this.events = [];
@@ -202,7 +208,7 @@ class Repository {
     this.compileEventsTimeout = setTimeout(async () => {
       const allEvents = 
         Array.from(this.eventsCache.entries())
-        .filter(x => !getMetadata().hiddenCalendars.has(x[0]) && x[1] != null) // Event must be visible
+        .filter(x => !this.metadata.hiddenCalendars.has(x[0]) && x[1] != null) // Event must be visible
         .map(x => Array.from(x[1].entries()))
         .flat()
         .filter(x => x[1] != null && x[0] >= start.getTime() && x[0] <= end.getTime()) // Event must be in the time frame
@@ -292,7 +298,7 @@ class Repository {
       if (cached) return Promise.resolve(cached);
     }
 
-    const stopLoading = getMetadata().startLoading();
+    const stopLoading = this.metadata.startLoading();
 
     const fetchedSources: SourceModel[] = (await fetchJson("/api/sources").catch((err) => {
       throw err;
@@ -442,16 +448,16 @@ class Repository {
       if (cached) return Promise.resolve(cached.map(x => this.calendarsMap.get(x)).filter(x => x != null));
     }
 
-    const stopLoading = getMetadata().startLoadingSource(id);
+    const stopLoading = this.metadata.startLoadingSource(id);
 
     const response = await fetchJson(`/api/sources/${id}/calendars`).catch((err) => {
-      getMetadata().addFaultySource(id, err.message);
+      this.metadata.addFaultySource(id, err.message);
       throw err;
     }).finally(() => {
       stopLoading();
     });
 
-    getMetadata().removeFaultySource(id);
+    this.metadata.removeFaultySource(id);
 
     const fetched: CalendarModel[] = response.calendars;
 
@@ -668,7 +674,7 @@ class Repository {
 
   private async getEventsFromSource(source: string, start: Date, end: Date, forceRefresh = false): Promise<EventModel[]> {
     let cals = await this.getCalendars(source, forceRefresh).catch((err) => { throw err; });
-    cals = cals.filter(x => !getMetadata().hiddenCalendars.has(x.id)); // only fetch events from visible calendars
+    cals = cals.filter(x => !this.metadata.hiddenCalendars.has(x.id)); // only fetch events from visible calendars
     const [events, errors] = await parallel(cals.map((calendar) => this.getEventsFromCalendar(calendar.id, start, end, forceRefresh))).catch((err) => {
       throw new Error(`Failed to fetch events: ${(err.cause || err).message}`, { cause: err.cause || err });
     })
@@ -714,16 +720,16 @@ class Repository {
       return result;
     }
 
-    const stopLoading = getMetadata().startLoadingCalendar(calendar);
+    const stopLoading = this.metadata.startLoadingCalendar(calendar);
 
     const fetchedEvents = await this.fetchEvents(calendar, fetchStart, fetchEnd).catch((err) => {
-      getMetadata().addFaultyCalendar(calendar, err.message);
+      this.metadata.addFaultyCalendar(calendar, err.message);
       throw err;
     }).finally(() => {
       stopLoading();
     });
 
-    getMetadata().removeFaultyCalendar(calendar);
+    this.metadata.removeFaultyCalendar(calendar);
 
     this.compileEvents(start, end);
     this.saveCache();
@@ -801,7 +807,7 @@ class Repository {
     for (const month of this.determineEventMonths(newEvent)) this.addEventToCache(newEvent, month);
 
     // add to display
-    const isHidden = getMetadata().hiddenCalendars.has(newEvent.calendar)
+    const isHidden = this.metadata.hiddenCalendars.has(newEvent.calendar)
     if (!isHidden && newEvent.date.start <= this.eventsRangeEnd && newEvent.date.end >= this.eventsRangeStart) this.events.push(newEvent);
 
     // info if the event is hidden
@@ -896,12 +902,6 @@ class Repository {
   }
 }
 
-let repository: Repository | null = $state(null);
 export function getRepository() {
-  if (!repository) repository = new Repository();
-  return repository;
-}
-
-export function resetRepository() {
-  repository = null;
+  return page.data.singletons.repository;
 }

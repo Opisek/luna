@@ -2,6 +2,8 @@
 // It also checks /api/version to determine the compatibility of the frontend with the backend.
 
 import { browser } from "$app/environment";
+import { page } from "$app/state";
+
 import { FRONTEND_VERSION, isCompatibleWithBackend, VersionCompatibility } from "$lib/common/version";
 import { fetchJson } from "../net";
 
@@ -14,7 +16,7 @@ export enum Reachability {
   Database
 }
 
-class Connectivity {
+export class Connectivity {
   reachable = $state<Reachability>(Reachability.Unknown);
 
   private compatibility: VersionCompatibility;
@@ -22,10 +24,10 @@ class Connectivity {
 
   private promise: Promise<Reachability> | null;
   
-  constructor() {
+  constructor(backendVersion: string | null = null) {
     this.reachable = Reachability.Database;
     this.compatibility = VersionCompatibility.Unknown;
-    this.backendVersion = null;
+    this.backendVersion = backendVersion;
     this.promise = null;
   }
 
@@ -97,9 +99,6 @@ class Connectivity {
   }
 }
 
-let connectivity: Connectivity | null = $state(null);
-export function getConnectivity(prefetchedVersion: string = ""): Connectivity {
-  if (connectivity === null) connectivity = new Connectivity();
-  if (prefetchedVersion !== "") connectivity.setPrefetchedVersion(prefetchedVersion);
-  return connectivity;
+export function getConnectivity() {
+  return page.data.singletons.connectivity;
 }

@@ -1,10 +1,12 @@
 import { browser } from "$app/environment";
+import { page } from "$app/state";
+
 import { ColorKeys } from "../../../types/colors";
 import { GlobalSettingKeys, UserSettingKeys, type GlobalSettings, type UserData, type UserSettings } from "../../../types/settings";
 import { fetchJson } from "../net";
 import { queueNotification } from "../notifications";
 
-class Settings {
+export class Settings {
   public userData: UserData = $state({
     id: "",
     username: "",
@@ -118,13 +120,6 @@ class Settings {
   }
 }
 
-let settings: Settings | null = $state(null);
-export function getSettings(prefetchedData: { userData: UserData, userSettings: UserSettings, globalSettings: GlobalSettings } | null = null): Settings {
-  if (prefetchedData && (!prefetchedData.userData || !prefetchedData.userSettings || !prefetchedData.globalSettings)) prefetchedData = null;
-  if (settings === null || prefetchedData != null) settings = new Settings(prefetchedData);
-  return settings;
-}
-
-export function resetSettings() {
-  settings = null;
+export function getSettings(): Settings {
+  return page.data.singletons.settings;
 }

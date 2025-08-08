@@ -3,6 +3,7 @@
   import Modal from "./Modal.svelte";
 
   import { NoOp } from "$lib/client/placeholders";
+  import { setContext } from "svelte";
 
   interface Props {
     showModal?: (date: Date, events: (EventModel | null)[]) => any;
@@ -23,6 +24,11 @@
     events = _events;
     showModalInternal();
   };
+
+  let currentlyClickedEvent = $state<EventModel | null>(null);
+  let currentlyHoveredEvent = $state<EventModel | null>(null);
+  setContext("currentlyClickedEvent", () => currentlyClickedEvent);
+  setContext("currentlyHoveredEvent", () => currentlyHoveredEvent);
 </script>
 
 <style lang="scss">

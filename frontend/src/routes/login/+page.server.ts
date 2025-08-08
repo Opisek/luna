@@ -3,6 +3,7 @@ import { fail, redirect, type Actions } from "@sveltejs/kit";
 import { COOKIE_MAX_AGE } from "$lib/server/constants.server";
 import { apiProxy } from "$lib/server/api.server";
 import { getRedirectPage } from "$lib/common/parsing";
+import { invalidateAll } from "$app/navigation";
 
 export const actions = {
   default: async ({cookies, request, getClientAddress}) => {

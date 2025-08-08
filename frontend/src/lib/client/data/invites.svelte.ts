@@ -1,6 +1,8 @@
+import { page } from "$app/state";
+
 import { fetchJson, fetchResponse } from "../net";
 
-class RegistrationInvites {
+export class RegistrationInvites {
   public activeInvites = $state<RegistrationInvite[]>([]);
 
   public async fetch() {
@@ -38,14 +40,6 @@ class RegistrationInvites {
   }
 }
 
-let registrationInvites: RegistrationInvites | null = $state(null);
 export function getRegistrationInvites() {
-  if (registrationInvites === null) {
-    registrationInvites = new RegistrationInvites();
-  }
-  return registrationInvites;
-}
-
-export function resetRegistrationInvites() {
-  registrationInvites = null;
+  return page.data.singletons.invites;
 }
