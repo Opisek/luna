@@ -82,7 +82,7 @@ func PatchUserSettings(c *gin.Context) {
 		}
 	}
 
-	// TODO: it may or may not be smarter to do INSERT ... ON CONFLICT than setting each key individually
+	// TODO: can we do this in bulk rather than individually for each key?
 	for _, setting := range entries {
 		tr = u.Tx.Queries().UpdateUserSetting(userId, setting)
 		if tr != nil {

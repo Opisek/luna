@@ -1006,6 +1006,13 @@
           bind:value={settings.globalSettings[GlobalSettingKeys.UseCdnFonts]}
         />
         -->
+        <ToggleInput
+          name={GlobalSettingKeys.UseIpGeolocation}
+          description="Determine IP Address Geolocation"
+          info={`This setting enables the frontend to display an approximate location of the user's sessions in their settings page. This feature is meant to help users determine whether illicit actors have access to their account. Since determining the geolocation of an IP address requires the use of a third-party service, using it raises some privacy concerns. If you would prefer not to use this feature, it can be disabled here. Please note that IP addresses themselves will still be stored in the database for security and audit purposes, but they are never shared with any third party outside of the behavior controlled by this toggle.`
+          }
+          bind:value={settings.globalSettings[GlobalSettingKeys.UseIpGeolocation]}
+        />
         <SelectButtons
           name={GlobalSettingKeys.LoggingVerbosity}
           bind:value={settings.globalSettings[GlobalSettingKeys.LoggingVerbosity]}

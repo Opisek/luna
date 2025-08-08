@@ -102,12 +102,13 @@ func (q *Queries) UpdateGlobalSetting(setting config.SettingsEntry) *errors.Erro
 	_, err := q.Tx.Exec(
 		q.Context,
 		`
-			UPDATE global_settings
-			SET value = $1
-			WHERE key = $2;
+			INSERT INTO global_settings (key, value)
+			VALUES ($1, $2)
+			ON CONFLICT (key) DO UPDATE
+			SET value = $2;
 		`,
-		setting,
 		setting.Key(),
+		setting,
 	)
 
 	if err != nil {

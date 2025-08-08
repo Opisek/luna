@@ -141,13 +141,14 @@ func (q *Queries) UpdateUserSetting(userId types.ID, setting config.SettingsEntr
 	_, err := q.Tx.Exec(
 		q.Context,
 		`
-		UPDATE user_settings
-		SET value = $1
-		WHERE userid = $2 AND key = $3;
+		INSERT INTO user_settings (userid, key, value)
+		VALUES ($1, $2, $3)
+		ON CONFLICT (userid, key) DO UPDATE
+		SET value = $3;
 		`,
-		setting,
 		userId.UUID(),
 		setting.Key(),
+		setting,
 	)
 
 	if err != nil {

@@ -25,6 +25,7 @@ export enum GlobalSettingKeys {
   RegistrationEnabled = "registration_enabled",
   LoggingVerbosity = "logging_verbosity",
   UseCdnFonts = "use_cdn_fonts",
+  UseIpGeolocation = "use_ip_geolocation",
 }
 
 export type UserSettings = {
@@ -54,6 +55,7 @@ export type GlobalSettings = {
   [GlobalSettingKeys.RegistrationEnabled]: boolean;
   [GlobalSettingKeys.LoggingVerbosity]: number;
   [GlobalSettingKeys.UseCdnFonts]: boolean;
+  [GlobalSettingKeys.UseIpGeolocation]: boolean;
 };
 
 export type UserData = {

@@ -12,6 +12,7 @@ type GlobalSettings struct {
 	RegistrationEnabled RegistrationEnabled `json:"registration_enabled"`
 	LoggingVerbosity    LoggingVerbosity    `json:"logging_verbosity"`
 	UseCdnFonts         UseCdnFonts         `json:"use_cdn_fonts"`
+	UseIpGeolocation    UseIpGeolocation    `json:"use_ip_geolocation"`
 }
 
 func (s *GlobalSettings) UpdateSetting(entry SettingsEntry) {
@@ -22,6 +23,8 @@ func (s *GlobalSettings) UpdateSetting(entry SettingsEntry) {
 		s.LoggingVerbosity.Verbosity = entry.(*LoggingVerbosity).Verbosity
 	case KeyUseCdnFonts:
 		s.UseCdnFonts.UseCdn = entry.(*UseCdnFonts).UseCdn
+	case KeyUseIpGeolocation:
+		s.UseIpGeolocation.UseIpGeolocation = entry.(*UseIpGeolocation).UseIpGeolocation
 	default:
 		// TODO: warning
 	}

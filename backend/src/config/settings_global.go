@@ -11,6 +11,7 @@ const (
 	KeyRegistrationEnabled = "registration_enabled"
 	KeyLoggingVerbosity    = "logging_verbosity"
 	KeyUseCdnFonts         = "use_cdn_fonts"
+	KeyUseIpGeolocation    = "use_ip_geolocation"
 )
 
 func AllDefaultGlobalSettings() []SettingsEntry {
@@ -18,6 +19,7 @@ func AllDefaultGlobalSettings() []SettingsEntry {
 		&RegistrationEnabled{},
 		&LoggingVerbosity{},
 		&UseCdnFonts{},
+		&UseIpGeolocation{},
 	}
 
 	for _, setting := range settings {
@@ -35,6 +37,8 @@ func GetMatchingGlobalSettingStruct(key string) (SettingsEntry, *errors.ErrorTra
 		return &LoggingVerbosity{}, nil
 	case KeyUseCdnFonts:
 		return &UseCdnFonts{}, nil
+	case KeyUseIpGeolocation:
+		return &UseIpGeolocation{}, nil
 	default:
 		return nil, errors.New().Status(http.StatusBadRequest).
 			Append(errors.LvlWordy, "Invalid setting key: %s", key).
@@ -132,5 +136,25 @@ func (entry *UseCdnFonts) MarshalJSON() ([]byte, error) {
 }
 func (entry *UseCdnFonts) UnmarshalJSON(data []byte) (err error) {
 	entry.UseCdn, err = common.UnmarshalBool(data)
+	return err
+}
+
+// Whether to use determine IP address geolocation in the frontend
+// Should default to true
+type UseIpGeolocation struct {
+	UseIpGeolocation bool `json:"value"`
+}
+
+func (entry *UseIpGeolocation) Key() string {
+	return KeyUseIpGeolocation
+}
+func (entry *UseIpGeolocation) Default() {
+	entry.UseIpGeolocation = true
+}
+func (entry *UseIpGeolocation) MarshalJSON() ([]byte, error) {
+	return common.MarshalBool(entry.UseIpGeolocation), nil
+}
+func (entry *UseIpGeolocation) UnmarshalJSON(data []byte) (err error) {
+	entry.UseIpGeolocation, err = common.UnmarshalBool(data)
 	return err
 }

@@ -2,7 +2,10 @@ import { browser } from "$app/environment";
 import { page } from "$app/state";
 
 import ipLocation from "iplocation";
+
 import { fetchJson, fetchResponse } from "../net";
+import type { Settings } from "./settings.svelte";
+import { GlobalSettingKeys } from "../../../types/settings";
 
 export function clearSession() {
   if (!browser) return;
@@ -17,6 +20,12 @@ export class ActiveSessions {
 
   private locationCache = new Map<string, string>();
 
+  private settings: Settings;
+
+  constructor(settings: Settings) {
+    this.settings = settings;
+  }
+
   public async fetch() {
     await fetchJson("/api/sessions").then((data: { current: string, sessions: Session[] }) => {
       this.currentSession = data.current;
@@ -28,10 +37,13 @@ export class ActiveSessions {
           x.location = "Local Host";
           this.locationCache.set(x.last_ip_address, x.location);
         } else {
-          const location = await ipLocation(x.last_ip_address);
-          if (location.reserved) x.location = "Local Network";
-          else x.location = ((loc => `${loc.country.name} ${loc.region.name} ${loc.city}`)(location as ipLocation.LocationData));
-          if (x.location.trim() === "") x.location = "Local Network"
+          const location = this.settings.globalSettings[GlobalSettingKeys.UseIpGeolocation] ? await ipLocation(x.last_ip_address) : null;
+          if (location == null) x.location = "Unknown Location";
+          else if (location.reserved) x.location = "Local Network";
+          else {
+            x.location = ((loc => `${loc.country.name} ${loc.region.name} ${loc.city}`)(location as ipLocation.ReturnType as ipLocation.LocationData)); // TypeScript bug, need to double cast even though it should be able to do the first one implicitly
+            if (x.location.trim() === "") x.location = "Local Network"
+          }
           this.locationCache.set(x.last_ip_address, x.location);
         }
 

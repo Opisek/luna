@@ -44,6 +44,7 @@ export class Settings {
     [GlobalSettingKeys.LoggingVerbosity]: 2,
     [GlobalSettingKeys.RegistrationEnabled]: false,
     [GlobalSettingKeys.UseCdnFonts]: false,
+    [GlobalSettingKeys.UseIpGeolocation]: true,
   });
 
   constructor(prefetchedData: { userData: UserData, userSettings: UserSettings, globalSettings: GlobalSettings } | null = null) {
@@ -63,7 +64,7 @@ export class Settings {
 
   private async fetchUserSettings() {
     await fetchJson("/api/users/self/settings").then((data: UserSettings) => {
-      this.userSettings = data;
+      this.setUserSettings(data);
     }).catch((err) => {
       throw new Error("Could not get user settings: " + err.message);
     });
@@ -71,7 +72,7 @@ export class Settings {
 
   private async fetchGlobalSettings() {
     await fetchJson("/api/settings").then((data: GlobalSettings) => {
-      this.globalSettings = data;
+      this.setGlobalSettings(data);
     }).catch((err) => {
       throw new Error("Could not get global settings: " + err.message);
     });
@@ -105,18 +106,32 @@ export class Settings {
     }
     const userSettings = localStorage.getItem("userSettings");
     if (userSettings != null) {
-      this.userSettings = JSON.parse(userSettings);
+      this.setUserSettings(JSON.parse(userSettings));
     }
     const globalSettings = localStorage.getItem("globalSettings");
     if (globalSettings != null) {
-      this.globalSettings = JSON.parse(globalSettings);
+      this.setGlobalSettings(JSON.parse(globalSettings));
     }
   }
 
   private loadFromObject(userData: UserData, userSettings: UserSettings, globalSettings: GlobalSettings) {
     this.userData = userData;
-    this.userSettings = userSettings;
-    this.globalSettings = globalSettings;
+    this.setUserSettings(userSettings);
+    this.setGlobalSettings(globalSettings);
+  }
+
+  private setUserSettings(userSettings: UserSettings) {
+    for (const [key, value] of Object.entries(userSettings)) {
+      // @ts-ignore
+      this.userSettings[key] = value; // TODO: figure out how to make typescript not complain
+    }
+  }
+
+  private setGlobalSettings(globalSettings: GlobalSettings) {
+    for (const [key, value] of Object.entries(globalSettings)) {
+      // @ts-ignore
+      this.globalSettings[key] = value; // TODO: figure out how to make typescript not complain
+    }
   }
 }
 

@@ -34,8 +34,8 @@ function getSingletons(version: string, preloadedSettings: { userData: any, user
   let invites = new RegistrationInvites();
   let metadata = new Metadata(recalculateEvents);
   let repository = new Repository(metadata);
-  let sessions = new ActiveSessions();
   let settings = new Settings(preloadedSettings);
+  let sessions = new ActiveSessions(settings);
   let theme = new Theme(settings);
   let users = new Users();
 
