@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Github } from "svelte-simples"
-  import { PlusIcon, RefreshCw, Settings, WifiOff } from "lucide-svelte";
+  import { Copyleft, PlusIcon, RefreshCw, Settings, WifiOff } from "lucide-svelte";
   import { setContext, untrack } from "svelte";
 
   import Calendar from "../components/calendar/Calendar.svelte";
@@ -35,6 +35,7 @@
   import ThemeToggle from "../components/interactive/ThemeToggle.svelte";
   import { ColorKeys } from "../types/colors";
   import { page } from "$app/state";
+  import CreditsModal from "../components/modals/CreditsModal.svelte";
 
   /* Singletons */
   const settings = getSettings();
@@ -192,12 +193,15 @@
   setContext("showDateModal", showDateModalInternal);
 
   let showSettingsModal: () => any = $state(NoOp);
+
+  let showCreditsModal: () => any = $state(NoOp);
 </script>
 
 <style lang="scss">
   @use "../styles/animations.scss";
   @use "../styles/colors.scss";
   @use "../styles/dimensions.scss";
+  @use "../styles/text.scss";
 
   :global(body) {
     display: flex;
@@ -268,6 +272,13 @@
   span.spin {
     animation: spin animations.$animationSpeedSlow animations.$cubic infinite forwards;
   }
+
+  span.copyright {
+    color: color-mix(in srgb, colors.$foregroundPrimary 50%, transparent);
+    font-size: text.$fontSizeSmall;
+    text-align: center;
+    margin-top: -(dimensions.$gapSmall);
+  }
 </style>
 
 <SourceWizardModal bind:showModal={showSourceWizardModal}/>
@@ -276,6 +287,7 @@
 <EventModal bind:showCreateModal={showNewEventModal} bind:showModal={showEventModal}/>
 <DayViewModal bind:showModal={showDateModal}/>
 <SettingsModal bind:showModal={showSettingsModal}/>
+<CreditsModal bind:showModal={showCreditsModal}/>
 
 <aside>
   <Title>Luna</Title>
@@ -289,16 +301,26 @@
   </div>
 
   <Horizontal position="center">
-    <IconButton click={showSettingsModal}>
-      <Settings/>
-    </IconButton>
     <IconButton click={showSourceWizardModal}>
       <PlusIcon/>
+    </IconButton>
+  </Horizontal>
+  <Horizontal position="center">
+    <IconButton click={showSettingsModal}>
+      <Settings/>
     </IconButton>
     <IconButton href="https://github.com/Opisek/luna">
       <Github/>
     </IconButton>
+    <IconButton click={showCreditsModal}>
+      <Copyleft/>
+    </IconButton>
   </Horizontal>
+
+  <span class="copyright">
+    Copyright © 2025 Kacper Darowski "Opisek" 
+    Licensed under TBD 
+  </span>
 </aside>
 
 <main>
