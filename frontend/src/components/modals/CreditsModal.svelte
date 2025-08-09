@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { CaseSensitive, Languages, Layers, Link, Package, Palette, User } from "lucide-svelte";
+  import { CaseSensitive, Layers, Link, Package, Palette } from "lucide-svelte";
   import ButtonList from "../forms/ButtonList.svelte";
   import Modal from "./Modal.svelte";
   import { NoOp } from "$lib/client/placeholders";
@@ -7,6 +7,7 @@
   import IconButton from "../interactive/IconButton.svelte";
   import { Github } from "svelte-simples";
   import List from "../forms/List.svelte";
+  import Vertical from "../layout/Vertical.svelte";
 
   interface Props {
     showModal?: () => any;
@@ -119,10 +120,15 @@
   bind:hideModal={hideModalInternal}
 >
   <div class="container">
-    <ButtonList
-      bind:value={selectedCategory}
-      options={categories} 
-    />
+    <Vertical height="auto" position="top">
+      <ButtonList
+        bind:value={selectedCategory}
+        options={categories} 
+      />
+      <IconButton href="https://github.com/Opisek/luna">
+        <Github/>
+      </IconButton>
+    </Vertical>
     <main tabindex="-1">
       {#if selectedCategory === "languages"}
         <List

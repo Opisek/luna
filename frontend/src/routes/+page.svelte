@@ -301,16 +301,11 @@
   </div>
 
   <Horizontal position="center">
-    <IconButton click={showSourceWizardModal}>
-      <PlusIcon/>
-    </IconButton>
-  </Horizontal>
-  <Horizontal position="center">
     <IconButton click={showSettingsModal}>
       <Settings/>
     </IconButton>
-    <IconButton href="https://github.com/Opisek/luna">
-      <Github/>
+    <IconButton click={showSourceWizardModal}>
+      <PlusIcon/>
     </IconButton>
     <IconButton click={showCreditsModal}>
       <Copyleft/>
