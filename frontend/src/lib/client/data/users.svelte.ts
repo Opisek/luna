@@ -45,6 +45,6 @@ export class Users {
   }
 }
 
-export function getUsers() {
+export function getUsers(): Users {
   return page.data.singletons.users;
 }

@@ -98,6 +98,6 @@ export class ActiveSessions {
   }
 }
 
-export function getActiveSessions() {
+export function getActiveSessions(): ActiveSessions {
   return page.data.singletons.sessions;
 }

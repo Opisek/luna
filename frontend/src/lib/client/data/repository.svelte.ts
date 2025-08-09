@@ -902,6 +902,6 @@ export class Repository {
   }
 }
 
-export function getRepository() {
+export function getRepository(): Repository {
   return page.data.singletons.repository;
 }

@@ -40,6 +40,6 @@ export class RegistrationInvites {
   }
 }
 
-export function getRegistrationInvites() {
+export function getRegistrationInvites(): RegistrationInvites {
   return page.data.singletons.invites;
 }

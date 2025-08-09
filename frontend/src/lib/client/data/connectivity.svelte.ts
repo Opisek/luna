@@ -99,6 +99,6 @@ export class Connectivity {
   }
 }
 
-export function getConnectivity() {
+export function getConnectivity(): Connectivity {
   return page.data.singletons.connectivity;
 }

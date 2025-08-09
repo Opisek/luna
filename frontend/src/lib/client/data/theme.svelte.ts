@@ -61,6 +61,6 @@ export class Theme {
   }
 }
 
-export function getTheme() {
+export function getTheme(): Theme {
   return page.data.singletons.theme;
 }

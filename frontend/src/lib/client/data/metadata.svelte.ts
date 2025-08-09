@@ -141,6 +141,6 @@ export class Metadata {
   }
 }
 
-export function getMetadata() {
+export function getMetadata(): Metadata {
   return page.data.singletons.metadata;
 }
