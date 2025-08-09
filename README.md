@@ -114,19 +114,19 @@ Luna uses its own (UU)IDs for every resource accessed through it. Therefore, the
 - **Purpose**: Changes the user's data.
 
 #### Delete User
-- **Path**: ``/api/users/<ID>`
+- **Path**: ``/api/users/<ID>``
 - **Method**: ``DELETE``
 - **Body**: `password`
 - **Purpose**: Deletes the user account.
 
 #### Disable User
-- **Path**: ``/api/users/<ID>/disable`
+- **Path**: ``/api/users/<ID>/disable``
 - **Method**: ``POST``
 - **Body**: Empty
 - **Purpose**: Disables user account (delete sessions and prevents login).
 
 #### Enable User
-- **Path**: ``/api/users/<ID>/enable`
+- **Path**: ``/api/users/<ID>/enable``
 - **Method**: ``POST``
 - **Body**: Empty
 - **Purpose**: Enables user account (allow login again).
