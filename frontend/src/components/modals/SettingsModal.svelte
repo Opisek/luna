@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { BadgeCheck, Ban, Bot, Code, Eye, Gamepad2, Info, Laptop, LogOut, Microchip, Palette, Pencil, RectangleGoggles, RefreshCw, Shield, Smartphone, Tablet, Trash2, TriangleAlert, TvMinimal, User, UserRoundPlus, UserRoundX, Users, Watch } from "lucide-svelte";
+  import { BadgeCheck, Ban, Bot, CaseSensitive, Code, Eye, Gamepad2, Info, Laptop, LogOut, Microchip, Moon, Palette, Pencil, RectangleGoggles, RefreshCw, Shield, Smartphone, Sun, Tablet, Trash2, TriangleAlert, TvMinimal, User, UserRoundPlus, UserRoundX, Users, Watch } from "lucide-svelte";
   import { NoOp } from "../../lib/client/placeholders";
   import ButtonList from "../forms/ButtonList.svelte";
   import Modal from "./Modal.svelte";
@@ -113,6 +113,8 @@
     ],
     [
       { name: "Users", value: "users", icon: Users },
+      { name: "Themes", value: "themes", icon: Palette },
+      { name: "Fonts", value: "fonts", icon: CaseSensitive },
       { name: "Administrative", value: "admin", icon: Shield },
     ],
     [
@@ -141,26 +143,28 @@
   });
 
   // Themes and Fonts
-  let lightThemes = $state<Option<string>[]>([{ name: "Luna Light", value: "luna-light" }]);
-  let darkThemes = $state<Option<string>[]>([{ name: "Luna Dark", value: "luna-dark" }]);
+  let lightThemes = $state<Option<string>[]>([{ name: "Luna Light", value: "luna-light", icon: Sun }]);
+  let darkThemes = $state<Option<string>[]>([{ name: "Luna Dark", value: "luna-dark", icon: Moon }]);
   let fonts = $state<Option<string>[]>([
     { name: "Atkinson Hyperlegible Next", value: "atkinson-hyperlegible-next" },
     { name: "Atkinson Hyperlegible Mono", value: "atkinson-hyperlegible-next" }
   ]);
 
-  function formatInstalledFile(rawName: string): Option<string> {
-    const formattedName = rawName
-      .split("-")
-      .map(x => x.charAt(0).toUpperCase() + x.slice(1))
-      .join(" ");
+  function formatInstalledFile(icon: any = null): (rawName: string) => Option<string> {
+    return (rawName: string): Option<string> => {
+      const formattedName = rawName
+        .split("-")
+        .map(x => x.charAt(0).toUpperCase() + x.slice(1))
+        .join(" ");
 
-    return { name: formattedName, value: rawName };
+      return { name: formattedName, value: rawName, icon: icon };
+    }
   }
 
   function fetchThemes() {
     fetchJson("/installed/themes").then((response) => {
-      lightThemes = Object.keys(response.light).map(formatInstalledFile).sort((a, b) => a.name.localeCompare(b.name));
-      darkThemes = Object.keys(response.dark).map(formatInstalledFile).sort((a, b) => a.name.localeCompare(b.name));
+      lightThemes = Object.keys(response.light).map(formatInstalledFile(Sun)).sort((a, b) => a.name.localeCompare(b.name));
+      darkThemes = Object.keys(response.dark).map(formatInstalledFile(Moon)).sort((a, b) => a.name.localeCompare(b.name));
     }).catch((err) => {
       queueNotification(ColorKeys.Danger, "Failed to fetch themes: " + err);
     });
@@ -168,7 +172,7 @@
 
   function fetchFonts() {
     fetchJson("/installed/fonts").then((response) => {
-      fonts = Object.keys(response).map(formatInstalledFile).sort((a, b) => a.name.localeCompare(b.name));
+      fonts = Object.keys(response).map(formatInstalledFile()).sort((a, b) => a.name.localeCompare(b.name));
     }).catch((err) => {
       queueNotification(ColorKeys.Danger, "Failed to fetch fonts: " + err);
     });
@@ -696,6 +700,45 @@
     background-color: colors.$backgroundAccent;
     color: colors.$foregroundAccent;
   }
+
+  .installedResource {
+    padding: dimensions.$gapMiddle;
+    background-color: colors.$backgroundSecondary;
+    color: colors.$foregroundSecondary;
+    border-radius: dimensions.$borderRadius;
+
+    display: grid;
+    gap: dimensions.$gapSmall;
+    row-gap: 0;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    grid-template-areas: "name buttons" "details buttons";
+    justify-content: center;
+    align-items: center;
+  }
+  .installedResource > .name {
+    grid-area: name;
+    display: flex;
+    flex-direction: row;
+    justify-content: start;
+    align-items: center;
+    gap: dimensions.$gapTiny;
+  }
+  .installedResource > .details {
+    grid-area: details;
+    font-size: text.$fontSizeSmall;
+  }
+  .installedResource > .buttons {
+    grid-area: buttons;
+    display: flex;
+    flex-direction: row;
+    gap: dimensions.$gapSmall;
+  }
+
+  .user.active {
+    background-color: colors.$backgroundAccent;
+    color: colors.$foregroundAccent;
+  }
   
   span.refreshButtonWrapper {
     display: flex;
@@ -1040,6 +1083,36 @@
           id={item => item.session_id}
           template={sessionTemplate}
         />
+      {:else if selectedCategory === "themes"}
+          <FileUpload
+            name="theme_file"
+            placeholder="Install a Theme"
+            bind:files={profilePictureFiles}
+            bind:fileId={profilePictureFileId}
+            accept={".css"}
+          />
+          <List
+            label="Installed Themes"
+            info={"Looking to change your current theme? Head to the \"Appearance\" tab."}
+            items={lightThemes.concat(darkThemes)}
+            id={item => item.value}
+            template={themeTemplate}
+          />
+      {:else if selectedCategory === "fonts"}
+          <FileUpload
+            name="theme_file"
+            placeholder="Install a Font"
+            bind:files={profilePictureFiles}
+            bind:fileId={profilePictureFileId}
+            accept={".otf,.ttf"}
+          />
+          <List
+            label="Installed Fonts"
+            info={"Looking to change your current font? Head to the \"Appearance\" tab."}
+            items={fonts}
+            id={item => item.value}
+            template={fontTemplate}
+          />
       {/if}
     </main>
   </div>
@@ -1222,6 +1295,46 @@
     <span class="id">
       ID: {u.id}
     </span>
+  </div>
+{/snippet}
+
+{#snippet themeTemplate(theme: Option<string>)}
+  {@const Icon = theme.icon}
+
+  <div class="installedResource">
+    <span class="name">
+      {theme.name}
+
+      <Icon size={16}/>
+    </span>
+
+    <span class="details">
+      {theme.value}.css
+    </span>
+
+    <div class="buttons">
+      <IconButton click={() => { }}>
+        <Trash2 size={20}/>
+      </IconButton>
+    </div>
+  </div>
+{/snippet}
+
+{#snippet fontTemplate(font: Option<string>)}
+  <div class="installedResource">
+    <span class="name">
+      {font.name}
+    </span>
+
+    <span class="details">
+      {font.value}.css
+    </span>
+
+    <div class="buttons">
+      <IconButton click={() => { }}>
+        <Trash2 size={20}/>
+      </IconButton>
+    </div>
   </div>
 {/snippet}
 
