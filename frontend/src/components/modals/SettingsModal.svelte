@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { BadgeCheck, Ban, Bot, CaseSensitive, Code, Eye, Gamepad2, Info, Laptop, LogOut, Microchip, Moon, Palette, Pencil, RectangleGoggles, RefreshCw, Shield, Smartphone, Sun, Tablet, Trash2, TriangleAlert, TvMinimal, User, UserRoundPlus, UserRoundX, Users, Watch } from "lucide-svelte";
+  import { BadgeCheck, Ban, Bot, CaseSensitive, Code, Download, Eye, Gamepad2, Info, Laptop, LogOut, Microchip, Moon, Palette, Pencil, RectangleGoggles, RefreshCw, Shield, Smartphone, Sun, Tablet, Trash2, TriangleAlert, TvMinimal, User, UserRoundPlus, UserRoundX, Users, Watch } from "lucide-svelte";
   import { NoOp } from "../../lib/client/placeholders";
   import ButtonList from "../forms/ButtonList.svelte";
   import Modal from "./Modal.svelte";
@@ -17,7 +17,7 @@
   import { deepCopy, deepEquality } from "$lib/common/misc";
   import Button from "../interactive/Button.svelte";
   import Loader from "../decoration/Loader.svelte";
-  import { fetchFileById, fetchJson, fetchResponse } from "$lib/client/net";
+  import { downloadFileToClient, fetchFileById, fetchJson, fetchResponse } from "$lib/client/net";
   import { queueNotification } from "$lib/client/notifications";
   import { ColorKeys } from "../../types/colors";
   import type { Option } from "../../types/options";
@@ -1104,7 +1104,7 @@
             placeholder="Install a Font"
             bind:files={profilePictureFiles}
             bind:fileId={profilePictureFileId}
-            accept={".otf,.ttf"}
+            accept={".ttf"}
           />
           <List
             label="Installed Fonts"
@@ -1313,6 +1313,9 @@
     </span>
 
     <div class="buttons">
+      <IconButton click={() => { downloadFileToClient(`/themes/${theme.icon === Sun ? "light" : "dark"}/${theme.value}.css`) }}>
+        <Download size={20}/>
+      </IconButton>
       <IconButton click={() => { }}>
         <Trash2 size={20}/>
       </IconButton>
@@ -1327,10 +1330,13 @@
     </span>
 
     <span class="details">
-      {font.value}.css
+      {font.value}.ttf
     </span>
 
     <div class="buttons">
+      <IconButton click={() => { downloadFileToClient(`/fonts/${font.value}.ttf`) }}>
+        <Download size={20}/>
+      </IconButton>
       <IconButton click={() => { }}>
         <Trash2 size={20}/>
       </IconButton>

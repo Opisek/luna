@@ -54,7 +54,8 @@ export function downloadFileToClient(file: FileList | string | null) {
 
   let url: string;
   if (typeof file === "string") {
-    url = `/api/files/${file}`;
+    url = file.startsWith('/') ? file : `/api/files/${file}`;
+    a.download = file.split("/").pop() || "download";
   } else {
     const blob = new Blob([file[0]], { type: file[0].type });
     url = URL.createObjectURL(blob);
