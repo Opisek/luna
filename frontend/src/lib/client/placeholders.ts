@@ -104,6 +104,7 @@ export const NoChangesEvent: EventModelChanges = {
 }
 
 export const NoOp = () => {};
+export const AsyncNoOp = async () => {};
 
 export const EmptyOption: Option<string> = {
   value: '',

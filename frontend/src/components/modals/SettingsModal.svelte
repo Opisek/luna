@@ -1,6 +1,6 @@
 <script lang="ts">
   import { BadgeCheck, Ban, Bot, CaseSensitive, Code, Download, Eye, Gamepad2, Info, Laptop, LogOut, Microchip, Moon, Palette, Pencil, RectangleGoggles, RefreshCw, Shield, Smartphone, Sun, Tablet, Trash2, TriangleAlert, TvMinimal, User, UserRoundPlus, UserRoundX, Users, Watch } from "lucide-svelte";
-  import { NoOp } from "../../lib/client/placeholders";
+  import { AsyncNoOp, NoOp } from "../../lib/client/placeholders";
   import ButtonList from "../forms/ButtonList.svelte";
   import Modal from "./Modal.svelte";
   import TextInput from "../forms/TextInput.svelte";
@@ -35,6 +35,7 @@
   import RegistrationInviteModal from "./RegistrationInviteModal.svelte";
   import { getRegistrationInvites } from "../../lib/client/data/invites.svelte";
   import { getUsers } from "$lib/client/data/users.svelte";
+  import Spinner from "../decoration/Spinner.svelte";
 
   interface Props {
     showModal?: () => any;
@@ -251,6 +252,135 @@
       if (profilePictureGravatarIsDefault) profilePictureGravatarForceDefault = false;
     }, 100, profilePictureGravatarUrlTrue);
   })
+
+  // Resources
+
+  let themeFile: FileList | null = $state(null);
+  let themeFileId = $state("");
+  let uploadingThemeFile = $state(false);
+  let fontFile: FileList | null = $state(null);
+  let fontFileId = $state("");
+  let uploadingFontFile = $state(false);
+
+  async function uploadThemeFile() {
+    if (uploadingThemeFile) return;
+    
+    if (themeFile == null) {
+      queueNotification(ColorKeys.Danger, "Missing or corrupted theme file");
+      return;
+    }
+
+    uploadingThemeFile = true;
+
+    const themeFiles = lightThemes.concat(darkThemes).map(x => x.value.split("/").pop() + ".css");
+
+    if (themeFiles.includes(themeFile[0].name)) {
+      if (!(await new Promise<boolean>((resolve) => {
+        showConfirmation(
+          "A theme with the same file name already exists.\nContinuing will overwrite that theme.\nAre you sure you want to proceed?",
+          async () => {resolve(true)}, "", async () => {resolve(false)}
+        );
+      }))) {
+        uploadingThemeFile = false;
+        return;
+      }
+    }
+
+    const formData = new FormData();
+    formData.append("file", themeFile[0]);
+
+    await fetchResponse("/installed/themes", {
+      method: "PUT",
+      body: formData,
+    }).then(async () => {
+      fetchThemes();
+      queueNotification(ColorKeys.Success, "Theme installed successfully");
+      themeFile = null;
+    }).catch((err) => {
+      queueNotification(ColorKeys.Danger, "Failed to install theme: " + err);
+    });
+
+    uploadingThemeFile = false;
+  }
+
+  async function uploadFontFile() {
+    if (uploadingFontFile) return;
+    
+    if (fontFile == null) {
+      queueNotification(ColorKeys.Danger, "Missing or corrupted font file");
+      return;
+    }
+
+    uploadingFontFile = true;
+
+    const fontFiles = fonts.map(x => x.value.split("/").pop() + ".ttf");
+
+    if (fontFiles.includes(fontFile[0].name)) {
+      if (!(await new Promise<boolean>((resolve) => {
+        showConfirmation(
+          "A font with the same file name already exists.\nContinuing will overwrite that font.\nAre you sure you want to proceed?",
+          async () => {resolve(true)}, "", async () => {resolve(false)}
+        );
+      }))) {
+        uploadingFontFile = false;
+        return;
+      }
+    }
+
+    const formData = new FormData();
+    formData.append("file", fontFile[0]);
+
+    await fetchResponse("/installed/fonts", {
+      method: "PUT",
+      body: formData,
+    }).then(async () => {
+      fetchFonts();
+      queueNotification(ColorKeys.Success, "Font installed successfully");
+      fontFile = null;
+    }).catch((err) => {
+      queueNotification(ColorKeys.Danger, "Failed to install font: " + err);
+    });
+
+    uploadingFontFile = false;
+  }
+
+  async function deleteTheme(theme: string, name: string, isLightTheme: boolean) {
+    if (!(await new Promise<boolean>((resolve) => {
+      showConfirmation(
+        `Are you sure you want to uninstall the theme "${name}"?\nThis action is irreversible.`,
+        async () => {resolve(true)}, "", async () => {resolve(false)}
+      );
+    }))) return;
+
+    await fetchResponse(`/installed/themes/${isLightTheme ? "light" : "dark"}/${theme}`, {
+      method: "DELETE",
+    }).then(async () => {
+      fetchThemes();
+      queueNotification(ColorKeys.Success, "Theme uninstalled successfully");
+      themeFile = null;
+    }).catch((err) => {
+      queueNotification(ColorKeys.Danger, "Failed to uninstall theme: " + err);
+    });
+  }
+
+  async function deleteFont(font: string, name: string) {
+    if (!(await new Promise<boolean>((resolve) => {
+      showConfirmation(
+        `Are you sure you want to uninstall the font "${name}"?\nThis action is irreversible.`,
+        async () => {resolve(true)}, "", async () => {resolve(false)}
+      );
+    }))) return;
+
+    await fetchResponse(`/installed/fonts/${font}`, {
+      method: "DELETE",
+    }).then(async () => {
+      fetchThemes();
+      queueNotification(ColorKeys.Success, "Font uninstalled successfully");
+      themeFile = null;
+    }).catch((err) => {
+      queueNotification(ColorKeys.Danger, "Failed to uninstall font: " + err);
+    });
+  }
 
   // Changes
 
@@ -493,13 +623,15 @@
   }
   // Confirmation dialog
   let internalShowConfirmation = $state(NoOp);
-  let confirmationCallback = $state(async () => {});
+  let confirmationCallback = $state(AsyncNoOp);
+  let cancellationCallback = $state(AsyncNoOp);
   let confirmationMessage = $state("");
   let confirmationDetails = $state("");
-  function showConfirmation(message: string, callback: () => Promise<void>, details: string = "") {
+  function showConfirmation(message: string, callback: () => Promise<void>, details: string = "", cancel: () => Promise<void> = AsyncNoOp) {
     confirmationMessage = message;
     confirmationDetails = details;
     confirmationCallback = callback;
+    cancellationCallback = cancel;
     internalShowConfirmation();
   }
 </script>
@@ -1087,10 +1219,19 @@
           <FileUpload
             name="theme_file"
             placeholder="Install a Theme"
-            bind:files={profilePictureFiles}
-            bind:fileId={profilePictureFileId}
+            bind:files={themeFile}
+            bind:fileId={themeFileId}
             accept={".css"}
           />
+          {#if themeFile !== null}
+            <Button color={ColorKeys.Success} onClick={uploadThemeFile}>
+              {#if uploadingThemeFile}
+                <Spinner/> <!-- TODO: Spinner does not have the same height as text -->
+              {:else}
+                Upload Theme
+              {/if}
+            </Button>
+          {/if}
           <List
             label="Installed Themes"
             info={"Looking to change your current theme? Head to the \"Appearance\" tab."}
@@ -1102,10 +1243,19 @@
           <FileUpload
             name="theme_file"
             placeholder="Install a Font"
-            bind:files={profilePictureFiles}
-            bind:fileId={profilePictureFileId}
+            bind:files={fontFile}
+            bind:fileId={fontFileId}
             accept={".ttf"}
           />
+          {#if fontFile !== null}
+            <Button color={ColorKeys.Success} onClick={uploadFontFile}>
+              {#if uploadingFontFile}
+                <Spinner/> <!-- TODO: Spinner does not have the same height as text -->
+              {:else}
+                Upload Theme
+              {/if}
+            </Button>
+          {/if}
           <List
             label="Installed Fonts"
             info={"Looking to change your current font? Head to the \"Appearance\" tab."}
@@ -1300,6 +1450,7 @@
 
 {#snippet themeTemplate(theme: Option<string>)}
   {@const Icon = theme.icon}
+  {@const isLightTheme = theme.icon === Sun}
 
   <div class="installedResource">
     <span class="name">
@@ -1313,10 +1464,10 @@
     </span>
 
     <div class="buttons">
-      <IconButton click={() => { downloadFileToClient(`/themes/${theme.icon === Sun ? "light" : "dark"}/${theme.value}.css`) }}>
+      <IconButton click={() => { downloadFileToClient(`/themes/${isLightTheme ? "light" : "dark"}/${theme.value}.css`); }}>
         <Download size={20}/>
       </IconButton>
-      <IconButton click={() => { }}>
+      <IconButton click={() => { deleteTheme(theme.value, theme.name, isLightTheme); }}>
         <Trash2 size={20}/>
       </IconButton>
     </div>
@@ -1334,10 +1485,10 @@
     </span>
 
     <div class="buttons">
-      <IconButton click={() => { downloadFileToClient(`/fonts/${font.value}.ttf`) }}>
+      <IconButton click={() => { downloadFileToClient(`/fonts/${font.value}.ttf`); }}>
         <Download size={20}/>
       </IconButton>
-      <IconButton click={() => { }}>
+      <IconButton click={() => { deleteFont(font.value, font.name); }}>
         <Trash2 size={20}/>
       </IconButton>
     </div>
@@ -1361,6 +1512,7 @@
 <ConfirmationModal
   bind:showModal={internalShowConfirmation}
   confirmCallback={confirmationCallback}
+  cancelCallback={cancellationCallback} 
 >
   <span class="confirmation">
     {confirmationMessage}
