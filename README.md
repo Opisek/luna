@@ -398,5 +398,45 @@ Depending on the `auth_type` field, additional information may need to be passed
 - **Purpose**: Retracts all registration invites
 
 ## Additional Frontend Endpoints
-Aside from using the backend API, the frontend also provides a limited amount of "endpoints" for its own purposes.
-These are: `/installed/fonts` and `/installed/themes` to list the installed frontend fonts and themes respectively.
+Aside from using the backend API, the frontend also provides a limited amount of endpoints for its own purposes.
+They are to be used in the same way as the backend endpoints regarding authentication and body format.
+
+### Resources
+All the following endpoints require the caller to be an authenticated user.
+Additionally, both the ``PUT`` and the ``DELETE`` method requires the user to be an administrator.
+
+#### Get Fonts
+- **Path**: ``/installed/fonts``
+- **Method**: ``GET``
+- **Body**: Empty
+- **Purpose**: Returns the names and paths of installed fonts.
+
+#### Put Font
+- **Path**: ``/installed/fonts``
+- **Method**: ``PUT``
+- **Body**: ``file`` containing the font with a `.ttf` extension
+- **Purpose**: Installs a new font in the frontend.
+
+#### Delete Font
+- **Path**: ``/installed/fonts/<FILE>``
+- **Method**: ``DELETE``
+- **Body**: Empty
+- **Purpose**: Deletes an installed font from the frontend.
+
+#### Get Themes
+- **Path**: ``/installed/themes``
+- **Method**: ``GET``
+- **Body**: Empty
+- **Purpose**: Returns the names and paths of installed themes.
+
+#### Put Theme
+- **Path**: ``/installed/themes``
+- **Method**: ``PUT``
+- **Body**: ``file`` containing the theme with a `.ccs` extension
+- **Purpose**: Installs a new theme in the frontend.
+
+#### Delete Theme
+- **Path**: ``/installed/fonts/<FILE>``
+- **Method**: ``DELETE``
+- **Body**: Empty
+- **Purpose**: Deletes an installed theme from the frontend.
