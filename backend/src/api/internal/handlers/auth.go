@@ -170,8 +170,6 @@ type registerPayload struct {
 	InviteCode string `form:"invite_code"`
 }
 
-// TODO: check if registration is enabled on this instance otherwise we will
-// TODO: have some kind of invite tokens that we will have to verify
 func Register(c *gin.Context) {
 	u := util.GetUtil(c)
 

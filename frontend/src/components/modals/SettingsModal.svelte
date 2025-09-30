@@ -1354,7 +1354,6 @@
     </span>
 
     <span class="details">
-      <!-- TODO: transform invite.author into username -->
       Created {invite.created_at.toLocaleDateString()} at {invite.created_at.toLocaleTimeString()} by {users.users.filter(x => x.id == invite.author)[0]?.username || invite.author}
       {#if invite.email != ""}
         •
