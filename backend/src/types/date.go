@@ -229,26 +229,31 @@ func EventRecurrenceFromIcal(ical *ical.Props) (*EventRecurrence, error) {
 	}, nil
 }
 
-func (er *EventRecurrence) MarshalJSON() ([]byte, error) {
+func (er EventRecurrence) MarshalJSON() ([]byte, error) {
 	if er.repeats {
-		return json.Marshal(er.rule)
+		return []byte(fmt.Sprintf("\"%s\"", er.rule.String())), nil
 	} else {
 		return []byte("false"), nil
 	}
 }
 
 func (er *EventRecurrence) UnmarshalJSON(data []byte) error {
-	if string(data) == "false" {
+	str := string(data)
+	if str == "false" || str == "null" || str == "" {
 		er.repeats = false
 		return nil
 	}
 
-	var roption rrule.ROption
-	if err := json.Unmarshal(data, &roption); err == nil {
-		er.repeats = true
-		er.rule = &roption
-		return nil
+	if len(str) < 2 || str[0] != '"' || str[len(str)-1] != '"' {
+		return fmt.Errorf("invalid recurrence rule: %s", str)
 	}
 
+	roption, err := rrule.StrToROption(str[1 : len(str)-1])
+	if err != nil {
+		return fmt.Errorf("could not parse recurrence rule: %v", err)
+	}
+
+	er.repeats = true
+	er.rule = roption
 	return nil
 }
