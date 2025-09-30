@@ -16,6 +16,8 @@
   import { UserSettingKeys } from "../../types/settings";
   import { ColorKeys } from "../../types/colors";
 
+  //import { RRule } from "rrule";
+
   interface Props {
     showCreateModal?: (date: Date) => Promise<EventModel>;
     showModal?: (event: EventModel) => Promise<EventModel>;
@@ -31,6 +33,8 @@
 
   let event: EventModel = $state(EmptyEvent);
   let originalEvent: EventModel = $state(EmptyEvent);
+  let eventRecurrenceBoolean = $state(false);
+  //let eventRecurrenceObject: RRule | null = $state(null);
 
   let eventSourceType = $derived.by(() => {
     const calendar = repository.calendars.find(x => x.id === event.calendar);
@@ -71,6 +75,9 @@
       overridden: false
     };
 
+    eventRecurrenceBoolean = false;
+    //eventRecurrenceObject = null;
+
     setTimeout(showCreateModalInternal, 0);
 
     return new Promise((resolve, reject) => {
@@ -103,6 +110,9 @@
     }
 
     originalEvent = await deepCopy(original);
+
+    eventRecurrenceBoolean = event.date.recurrence != false;
+    //eventRecurrenceObject = eventRecurrenceBoolean ? RRule.fromString(event.date.recurrence) : null;
 
     setTimeout(showModalInternal, 0);
 
@@ -222,8 +232,8 @@
   onDelete={onDelete}
   onEdit={onEdit}
   onCancel={promiseReject}
-  deletable={event && eventSourceType !== "ical" && !event.date.recurrence}
-  editable={event && !event.date.recurrence}
+  deletable={event && eventSourceType !== "ical"}
+  editable={event != null}
   submittable={event.calendar !== "" && event.name !== "" && (event.date.start.getTime() < event.date.end.getTime() || (event.date.start.getTime() <= event.date.end.getTime() && event.date.allDay))}
 >
   {#if event != EmptyEvent}
@@ -236,7 +246,7 @@
       <TextInput bind:value={event.desc} name="desc" placeholder="Description" multiline={true} editable={editMode} />
     {/if}
     {#if editMode}
-        <ToggleInput bind:value={event.date.allDay} name="all_day" description="All Day"/>
+      <ToggleInput bind:value={event.date.allDay} name="all_day" description="All Day"/>
     {/if}
     <DateTimeInput bind:value={event.date.start} name="date_start" placeholder={showEndDate ? "Start" : "Date"} editable={editMode} allDay={event.date.allDay} onChange={changeStart}/>
     {#if showEndDate}
@@ -244,6 +254,21 @@
     {/if}
     {#if event.id && settings.userSettings[UserSettingKeys.DebugMode]}
       <TextInput value={event.id} name="id" placeholder="Event ID" editable={false} />
+    {/if}
+    {#if editMode}
+      <ToggleInput bind:value={eventRecurrenceBoolean} name="repeats" description="Repeats"/>
+    {/if}
+    {#if eventRecurrenceBoolean}
+      {#if editMode}
+        <SelectInput bind:value={event.date.recurrence} name="recurrence_freq" placeholder="Frequency" options={[
+          { value: "daily", name: "Daily" },
+          { value: "weekly", name: "Weekly" },
+          { value: "monthly", name: "Monthly" },
+          { value: "yearly", name: "Yearly" },
+        ]} editable={editMode} />
+      {:else}
+        Repeats xyz times or something
+      {/if}
     {/if}
   {/if}
   {#snippet extraButtonsLeft()}
