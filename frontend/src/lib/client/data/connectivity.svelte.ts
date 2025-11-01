@@ -5,6 +5,7 @@ import { browser } from "$app/environment";
 import { page } from "$app/state";
 
 import { FRONTEND_VERSION, isCompatibleWithBackend, VersionCompatibility } from "$lib/common/version";
+import { encodeRedirectUrl } from "$lib/common/url";
 import { fetchJson } from "../net";
 
 export enum Reachability {
@@ -76,7 +77,7 @@ export class Connectivity {
       document.location.pathname !== "/version" &&
       [VersionCompatibility.BackendOutdatedMajor, VersionCompatibility.FrontendOutdatedMajor].includes(this.compatibility)
     ) {
-      document.location.href = `/version?redirect=${encodeURIComponent(new URL(document.location.href).pathname)}`;
+      document.location.href = `/version?redirect=${encodeRedirectUrl(new URL(document.location.href))}`;
     } 
 
     return this.compatibility;
