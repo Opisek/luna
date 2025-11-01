@@ -696,10 +696,15 @@ export class Repository {
     const fetchStart = new Date(start);
     const fetchEnd = new Date(end);
 
+    fetchStart.setDate(1);
+    fetchStart.setHours(0, 0, 0, 0);
+    fetchEnd.setDate(1);
+    fetchEnd.setHours(0, 0, 0, 0);
+
     while (fetchStart.getTime() <= fetchEnd.getTime()) {
       const cacheKey = new Date(fetchStart);
-      cacheKey.setUTCDate(1);
       cacheKey.setUTCHours(0, 0, 0, 0);
+      cacheKey.setUTCDate(1);
       const cached = this.cacheOk(cache.get(cacheKey.getTime()));
       if (!cached) break;
       result = result.concat(await this.mapAllRecurrenceInstances(cached));
@@ -708,13 +713,17 @@ export class Repository {
 
     while (fetchEnd.getTime() >= fetchStart.getTime()) {
       const cacheKey = new Date(fetchEnd);
-      cacheKey.setUTCDate(1);
       cacheKey.setUTCHours(0, 0, 0, 0);
+      cacheKey.setUTCDate(1);
       const cached = this.cacheOk(cache.get(cacheKey.getTime()));
       if (!cached) break;
       result = result.concat(await this.mapAllRecurrenceInstances(cached));
       fetchEnd.setMonth(fetchEnd.getMonth() - 1);
     }
+
+    fetchEnd.setMonth(fetchEnd.getMonth() + 1);
+    fetchEnd.setDate(0);
+    fetchEnd.setHours(23, 59, 59, 999);
 
     if (fetchStart.getTime() > fetchEnd.getTime()) {
       return result;
