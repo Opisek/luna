@@ -376,24 +376,31 @@ export class Repository {
     if (detailsCacheEntry) detailsCacheEntry.value = modifiedSource;
     this.compileSources();
 
-    this.getCalendars(modifiedSource.id).then(async (cals) => {
-      this.compileCalendars();
-      const [_, errors] = await parallel(cals.map((cal) => this.getEventsFromCalendar(cal.id, this.eventsRangeStart, this.eventsRangeEnd))).catch((err) => {
-        throw new Error(`Failed to fetch events from ${modifiedSource.name}: ${(err.cause || err).message}`, { cause: err.cause || err });
-      });
-      errors.forEach((err) => {
+    if (changes.settings) {
+      for (const calendar of this.calendarsCache.get(modifiedSource.id)?.value || []) {
+        this.eventsCache.delete(calendar);
+        this.calendarsMap.delete(calendar);
+      }
+
+      this.getCalendars(modifiedSource.id, true).then(async (cals) => {
+        this.compileCalendars();
+        const [_, errors] = await parallel(cals.map((cal) => this.getEventsFromCalendar(cal.id, this.eventsRangeStart, this.eventsRangeEnd))).catch((err) => {
+          throw new Error(`Failed to fetch events from ${modifiedSource.name}: ${(err.cause || err).message}`, { cause: err.cause || err });
+        });
+        errors.forEach((err) => {
+          queueNotification(
+            ColorKeys.Danger,
+            `Failed to fetch events from ${cals[err[0]].name}: ${err[1].message}`
+          );
+        });
+        this.compileEvents(this.eventsRangeStart, this.eventsRangeEnd);
+      }).catch((err) => {
         queueNotification(
           ColorKeys.Danger,
-          `Failed to fetch events from ${cals[err[0]].name}: ${err[1].message}`
+          `Failed to fetch calendars from ${modifiedSource.name}: ${err.message}`
         );
       });
-      this.compileEvents(this.eventsRangeStart, this.eventsRangeEnd);
-    }).catch((err) => {
-      queueNotification(
-        ColorKeys.Danger,
-        `Failed to fetch calendars from ${modifiedSource.name}: ${err.message}`
-      );
-    });
+    }
 
     this.saveCache();
   }
