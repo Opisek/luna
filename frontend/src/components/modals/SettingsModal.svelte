@@ -961,11 +961,12 @@
               name="pfp_type"
               placeholder="Profile Picture"
               bind:value={profilePictureType}
-              options={[
-                { name: "Gravatar", value: "gravatar" },
+              options={(settings.globalSettings[GlobalSettingKeys.DisableGravatar] ? [] : [
+                { name: "Gravatar", value: "gravatar" }
+              ]).concat([
                 { name: "Upload File", value: "database" },
                 { name: "Internet Link", value: "remote" }
-              ]}
+              ])}
             />
           </div>
           <Image
@@ -1184,9 +1185,14 @@
         <ToggleInput
           name={GlobalSettingKeys.UseIpGeolocation}
           description="Determine IP Address Geolocation"
-          info={`This setting enables the frontend to display an approximate location of the user's sessions in their settings page. This feature is meant to help users determine whether illicit actors have access to their account. Since determining the geolocation of an IP address requires the use of a third-party service, using it raises some privacy concerns. If you would prefer not to use this feature, it can be disabled here. Please note that IP addresses themselves will still be stored in the database for security and audit purposes, but they are never shared with any third party outside of the behavior controlled by this toggle.`
-          }
+          info={`This setting enables the frontend to display an approximate location of the user's sessions in their settings page. This feature is meant to help users determine whether illicit actors have access to their account. Since determining the geolocation of an IP address requires the use of a third-party service, using it raises some privacy concerns. If you would prefer not to use this feature, it can be disabled here. Please note that IP addresses themselves will still be stored in the database for security and audit purposes, but they are never shared with any third party outside of the behavior controlled by this toggle.`}
           bind:value={settings.globalSettings[GlobalSettingKeys.UseIpGeolocation]}
+        />
+        <ToggleInput
+          name={GlobalSettingKeys.UseIpGeolocation}
+          description="Disable Gravatar Profile Pictures"
+          info={`Gravatar is a third party service that lets users set their profile picture once and have it associated with their e-mail address.  This is accomplished by querying said server with an MD5 hash of the user's e-mail address. This can be seen as a privacy concern, as it allows Gravatar to track users across different services. If you would prefer not to use Gravatar profile pictures, you can disable them here. This setting disables the use of Gravatar site-wide.`}
+          bind:value={settings.globalSettings[GlobalSettingKeys.DisableGravatar]}
         />
         <SelectButtons
           name={GlobalSettingKeys.LoggingVerbosity}

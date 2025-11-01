@@ -246,7 +246,7 @@ func (q *Queries) UpdateUserData(user *types.User) *errors.ErrorTrace {
 	query := `
 		UPDATE users
 		SET username = $1, email = $2, admin = $3, verified = $4, enabled = $5, searchable = $6, profile_picture = $7
-		WHERE id = $6;
+		WHERE id = $8;
 	`
 
 	_, err = q.Tx.Exec(

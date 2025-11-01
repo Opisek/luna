@@ -13,6 +13,7 @@ type GlobalSettings struct {
 	LoggingVerbosity    LoggingVerbosity    `json:"logging_verbosity"`
 	UseCdnFonts         UseCdnFonts         `json:"use_cdn_fonts"`
 	UseIpGeolocation    UseIpGeolocation    `json:"use_ip_geolocation"`
+	DisableGravatar     DisableGravatar     `json:"disable_gravatar"`
 }
 
 func (s *GlobalSettings) UpdateSetting(entry SettingsEntry) {
@@ -25,6 +26,8 @@ func (s *GlobalSettings) UpdateSetting(entry SettingsEntry) {
 		s.UseCdnFonts.UseCdn = entry.(*UseCdnFonts).UseCdn
 	case KeyUseIpGeolocation:
 		s.UseIpGeolocation.UseIpGeolocation = entry.(*UseIpGeolocation).UseIpGeolocation
+	case KeyDisableGravatar:
+		s.DisableGravatar.Disabled = entry.(*DisableGravatar).Disabled
 	default:
 		// TODO: warning
 	}

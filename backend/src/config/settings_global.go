@@ -12,6 +12,7 @@ const (
 	KeyLoggingVerbosity    = "logging_verbosity"
 	KeyUseCdnFonts         = "use_cdn_fonts"
 	KeyUseIpGeolocation    = "use_ip_geolocation"
+	KeyDisableGravatar     = "disable_gravatar"
 )
 
 func AllDefaultGlobalSettings() []SettingsEntry {
@@ -20,6 +21,7 @@ func AllDefaultGlobalSettings() []SettingsEntry {
 		&LoggingVerbosity{},
 		&UseCdnFonts{},
 		&UseIpGeolocation{},
+		&DisableGravatar{},
 	}
 
 	for _, setting := range settings {
@@ -39,6 +41,8 @@ func GetMatchingGlobalSettingStruct(key string) (SettingsEntry, *errors.ErrorTra
 		return &UseCdnFonts{}, nil
 	case KeyUseIpGeolocation:
 		return &UseIpGeolocation{}, nil
+	case KeyDisableGravatar:
+		return &DisableGravatar{}, nil
 	default:
 		return nil, errors.New().Status(http.StatusBadRequest).
 			Append(errors.LvlWordy, "Invalid setting key: %s", key).
@@ -156,5 +160,26 @@ func (entry *UseIpGeolocation) MarshalJSON() ([]byte, error) {
 }
 func (entry *UseIpGeolocation) UnmarshalJSON(data []byte) (err error) {
 	entry.UseIpGeolocation, err = common.UnmarshalBool(data)
+	return err
+}
+
+// Whether to disable Gravatar profile pictures
+// Should default to false
+// TODO: changing this to false should automatically change all gravatar profile pictures to our own defaults
+type DisableGravatar struct {
+	Disabled bool `json:"value"`
+}
+
+func (entry *DisableGravatar) Key() string {
+	return KeyDisableGravatar
+}
+func (entry *DisableGravatar) Default() {
+	entry.Disabled = true
+}
+func (entry *DisableGravatar) MarshalJSON() ([]byte, error) {
+	return common.MarshalBool(entry.Disabled), nil
+}
+func (entry *DisableGravatar) UnmarshalJSON(data []byte) (err error) {
+	entry.Disabled, err = common.UnmarshalBool(data)
 	return err
 }
