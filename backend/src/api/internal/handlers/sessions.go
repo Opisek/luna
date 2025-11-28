@@ -30,6 +30,24 @@ func GetSessions(c *gin.Context) {
 	})
 }
 
+func GetCurrentSessionPermissions(c *gin.Context) {
+	u := util.GetUtil(c)
+
+	userId := util.GetUserId(c)
+	permissions := util.GetPermissions(c)
+	isAdmin, tr := u.Tx.Queries().IsAdmin(userId)
+	if tr != nil {
+		u.Error(tr)
+		return
+	}
+
+	u.Success(&gin.H{
+		"user_id":     userId,
+		"is_admin":    isAdmin,
+		"permissions": permissions.ToList(),
+	})
+}
+
 func PutSession(c *gin.Context) {
 	u := util.GetUtil(c)
 

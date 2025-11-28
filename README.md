@@ -327,6 +327,12 @@ The description field is optional. Either the end date or the event duration is 
 - **Body**: Empty
 - **Purpose**: Returns all currently authorized sessions of the calling user
 
+#### Get Current Permissions
+- **Path**: ``/api/sessions/permissions``
+- **Method**: ``GET``
+- **Body**: Empty
+- **Purpose**: Returns the user ID, administrator status, and all permissions associated with the used session token
+
 #### Put Session
 - **Path**: ``/api/sessions``
 - **Method**: `PUT`

@@ -31,18 +31,8 @@ func GetUsers(c *gin.Context) {
 	userId := util.GetUserId(c)
 
 	all := c.Query("all") == "true"
-	if all {
-		isAdmin, tr := u.Tx.Queries().IsAdmin(userId)
-		if tr != nil {
-			u.Error(tr)
-			return
-		}
-		if !isAdmin {
-			u.Error(errors.New().Status(http.StatusForbidden).
-				Append(errors.LvlPlain, "Only administrators can view all users"),
-			)
-			return
-		}
+	if all && !util.HasAdminPrivilegesAndReportError(c) {
+		return
 	}
 
 	users, tr := u.Tx.Queries().GetUsers(all)
@@ -279,18 +269,8 @@ func DeleteUser(c *gin.Context) {
 		u.Error(tr)
 		return
 	}
-	if affectedUserId != executingUserId {
-		isAdmin, tr := u.Tx.Queries().IsAdmin(executingUserId)
-		if tr != nil {
-			u.Error(tr)
-			return
-		}
-		if !isAdmin {
-			u.Error(errors.New().Status(http.StatusForbidden).
-				Append(errors.LvlPlain, "You are not allowed to delete other user accounts"),
-			)
-			return
-		}
+	if affectedUserId != executingUserId && !util.HasAdminPrivilegesAndReportError(c) {
+		return
 	}
 
 	// Get the user's password

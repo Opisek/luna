@@ -3,7 +3,6 @@ import type { RequestEvent } from "./$types";
 import * as fs from "fs";
 import path from "path";
 import { apiProxy } from "$lib/server/api.server";
-import type { UserData } from "../../../types/settings";
 
 const validResources = [ "themes", "fonts" ];
 const validResourceFileNameRegex = new RegExp(/[a-zA-Z0-9-]+\.[a-zA-Z0-9]+/);
@@ -12,9 +11,8 @@ const validResourceFileNameRegex = new RegExp(/[a-zA-Z0-9-]+\.[a-zA-Z0-9]+/);
 // This is for telling the UI which fonts or themes are available.
 export const GET = async ({ params, request, url, getClientAddress }: RequestEvent) => {
   // Make sure the user is logged in
-  const response = await apiProxy(request, getClientAddress(), "users/self", { method: "GET", body: null }, false);
+  const response = await apiProxy(request, getClientAddress(), "sessions/permissions", { method: "GET", body: null }, false);
   if (!response.ok) return response;
-
 
   // Verify that the requested resource is valid
   const requestedResource = params.resource;
@@ -34,12 +32,10 @@ export const GET = async ({ params, request, url, getClientAddress }: RequestEve
 // It can only be used by administrators.
 export const PUT = async ({ params, request, url, getClientAddress }: RequestEvent) => {
   // Make sure the user is logged in and an admin
-  const response = await apiProxy(request, getClientAddress(), "users/self", { method: "GET", body: null }, false);
+  const response = await apiProxy(request, getClientAddress(), "sessions/permissions", { method: "GET", body: null }, false);
   if (!response.ok) return response;
-  const body = (await response.json()) as { user: UserData };
-  if (!("user" in body)) return error(501, "Internal Error");
-  const userData = body.user;
-  if (!("admin" in userData) || !userData.admin) return error(401, "Unauthorized");
+  const data = (await response.json()) as { user_id: string, is_admin: boolean, permissions: string[] };
+  if (!data.is_admin || !data.permissions.includes('administrative') || !data.permissions.includes('manage_resources')) return error(401, "Unauthorized");
 
   // Verify that the requested resource is valid
   const requestedResource = params.resource;
@@ -89,12 +85,10 @@ export const PUT = async ({ params, request, url, getClientAddress }: RequestEve
 // It can only be used by administrators.
 export const DELETE = async ({ params, request, url, getClientAddress }: RequestEvent) => {
   // Make sure the user is logged in and an admin
-  const response = await apiProxy(request, getClientAddress(), "users/self", { method: "GET", body: null }, false);
+  const response = await apiProxy(request, getClientAddress(), "sessions/permissions", { method: "GET", body: null }, false);
   if (!response.ok) return response;
-  const body = (await response.json()) as { user: UserData };
-  if (!("user" in body)) return error(501, "Internal Error");
-  const userData = body.user;
-  if (!("admin" in userData) || !userData.admin) return error(401, "Unauthorized");
+  const data = (await response.json()) as { user_id: string, is_admin: boolean, permissions: string[] };
+  if (!data.is_admin || !data.permissions.includes('administrative') || !data.permissions.includes('manage_resources')) return error(401, "Unauthorized");
 
   // Verify that the requested resource is valid
   const resourceParts = params.resource.split("/");

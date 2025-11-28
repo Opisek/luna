@@ -11,6 +11,7 @@ import (
 	"luna-backend/crypto"
 	"luna-backend/db"
 	"luna-backend/errors"
+	"luna-backend/perms"
 	"net"
 	"net/http"
 	"time"
@@ -104,17 +105,6 @@ func RequestSetup(timeout time.Duration, database *db.Database, withTransaction 
 		warnChan := make(chan *errors.ErrorTrace)
 
 		// Pass important variables to the handler
-		c.Set("transaction", tx)
-		c.Set("config", config)
-		c.Set("logger", logger)
-		c.Set("context", ctx)
-
-		// Pass important variables to the handler
-		c.Set("transaction", tx)
-		c.Set("config", config)
-		c.Set("logger", logger)
-		c.Set("context", ctx)
-
 		c.Set("handlerUtil", &util.HandlerUtility{
 			Config:       config,
 			Logger:       logger,
@@ -305,8 +295,18 @@ func RequireAuth() gin.HandlerFunc {
 			}
 		}
 
+		// Get the permissions associated with the token
+		var permissions *perms.TokenPermissions
+		if !session.IsApi {
+			permissions = perms.AllPermissions()
+		} else {
+			// TODO
+			permissions = perms.FromList([]perms.Permission{})
+		}
+
 		c.Set("user_id", parsedToken.UserId)
 		c.Set("session_id", parsedToken.SessionId)
+		c.Set("permissions", permissions)
 
 		c.Next()
 	}
@@ -329,6 +329,38 @@ func RequireAdmin() gin.HandlerFunc {
 				Append(errors.LvlPlain, "You must be an administrator to do this"))
 			c.Abort()
 			return
+		}
+
+		c.Next()
+	}
+}
+
+func RequirePermissions(requiredPerms ...perms.Permission) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		u := util.GetUtil(c)
+		permissions, exists := c.Get("permissions")
+		if !exists {
+			u.Error(errors.New().Status(http.StatusForbidden).
+				Append(errors.LvlDebug, "No permissions found in context").
+				AltStr(errors.LvlWordy, "You are missing one or more permissions").
+				Append(errors.LvlPlain, "You are not authorized to perform this action"),
+			)
+			c.Abort()
+			return
+		}
+
+		tokenPerms := permissions.(*perms.TokenPermissions)
+
+		for _, perm := range requiredPerms {
+			if !tokenPerms.Has(perm) {
+				u.Error(errors.New().Status(http.StatusForbidden).
+					Append(errors.LvlDebug, "Missing permission: %v", perm).
+					AltStr(errors.LvlWordy, "You are missing one or more permissions").
+					Append(errors.LvlPlain, "You are not authorized to perform this action"),
+				)
+				c.Abort()
+				return
+			}
 		}
 
 		c.Next()
