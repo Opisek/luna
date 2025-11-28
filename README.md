@@ -329,11 +329,17 @@ The description field is optional. Either the end date or the event duration is 
 - **Body**: Empty
 - **Purpose**: Returns all currently authorized sessions of the calling user
 
-#### Get Current Permissions
-- **Path**: ``/api/sessions/permissions``
+#### Get Session Permissions
+- **Path**: ``/api/sessions/<ID>/permissions``
 - **Method**: ``GET``
 - **Body**: Empty
-- **Purpose**: Returns the user ID, administrator status, and all permissions associated with the used session token
+- **Purpose**: Returns the administrator status and all permissions associated with the used session token
+
+#### Get Session Validity
+- **Path**: ``/api/sessions/valid``
+- **Method**: ``GET``
+- **Body**: Empty
+- **Purpose**: Returns whether the current user session is valid
 
 #### Put Session
 - **Path**: ``/api/sessions``

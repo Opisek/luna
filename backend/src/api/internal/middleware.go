@@ -300,8 +300,12 @@ func RequireAuth() gin.HandlerFunc {
 		if !session.IsApi {
 			permissions = perms.AllPermissions()
 		} else {
-			// TODO
-			permissions = perms.FromList([]perms.Permission{})
+			permissions, tr = u.Tx.Queries().GetTokenPermissions(parsedToken.SessionId)
+			if tr != nil {
+				u.Error(tr)
+				c.Abort()
+				return
+			}
 		}
 
 		c.Set("user_id", parsedToken.UserId)

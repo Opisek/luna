@@ -79,6 +79,22 @@ func FromList(perms []Permission) *TokenPermissions {
 	}
 }
 
+func FromStringList(permStrs []string) *TokenPermissions {
+	permSet := make(map[Permission]bool)
+	for _, perm := range allPermList {
+		permSet[perm] = true
+	}
+
+	validPerms := make([]Permission, 0, len(permStrs))
+	for _, perm := range permStrs {
+		if _, ok := permSet[Permission(perm)]; ok {
+			validPerms = append(validPerms, Permission(perm))
+		}
+	}
+
+	return FromList(validPerms)
+}
+
 func (tp *TokenPermissions) ToList() []Permission {
 	if tp.hasAll {
 		list := make([]Permission, len(allPermList))
@@ -98,4 +114,20 @@ func (tp *TokenPermissions) Has(perm Permission) bool {
 	}
 	granted, ok := tp.permissions[perm]
 	return ok && granted
+}
+
+func (tp *TokenPermissions) Equals(other *TokenPermissions) bool {
+	if tp.hasAll != other.hasAll {
+		return false
+	}
+	if len(tp.permissions) != len(other.permissions) {
+		return false
+	}
+	for perm, granted := range tp.permissions {
+		otherGranted, ok := other.permissions[perm]
+		if !ok || granted != otherGranted {
+			return false
+		}
+	}
+	return true
 }

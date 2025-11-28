@@ -153,6 +153,13 @@ func init() {
 				Append(errors.LvlDebug, "Could not initialize invites table")
 		}
 
+		err = q.Tables.InitializeTokenPermissionsTable()
+		if err != nil {
+			return errors.New().
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlDebug, "Could not initialize token permissions table")
+		}
+
 		return nil
 	})
 }

@@ -1,4 +1,5 @@
 import type { Option } from "../../types/options"
+import { PermissionKeys } from "../../types/permissions"
 
 export const EmptySource: SourceModel = {
   id: '',
@@ -38,6 +39,21 @@ export const EmptyCalendar: CalendarModel = {
   overridden: false
 }
 
+export const DefaultTokenPermissions = [
+  PermissionKeys.ReadEvents,
+  PermissionKeys.AddEvents,
+  PermissionKeys.EditEvents,
+  PermissionKeys.DeleteEvents,
+  PermissionKeys.ReadCalendars,
+  PermissionKeys.AddCalendars,
+  PermissionKeys.EditCalendars,
+  PermissionKeys.DeleteCalendars,
+  PermissionKeys.ReadSources,
+  PermissionKeys.AddSources,
+  PermissionKeys.EditSources,
+  PermissionKeys.DeleteSources
+]
+
 export const EmptySession: Session = {
   session_id: "",
   user_id: "",
@@ -48,7 +64,8 @@ export const EmptySession: Session = {
   last_ip_address: "",
   is_short_lived: false,
   is_api: false,
-  location: ""
+  location: "",
+  permissions: DefaultTokenPermissions
 }
 
 export const EmptyRegistrationInvite: RegistrationInvite = {

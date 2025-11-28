@@ -117,7 +117,8 @@ func run(api *util.Api) {
 
 	// /api/sessions/*
 	sessionEndpoints := authenticatedEndpoints.Group("/sessions")
-	sessionEndpoints.GET("/permissions", handlers.GetCurrentSessionPermissions)
+	sessionEndpoints.GET("/valid", handlers.IsSessionValid)
+	sessionEndpoints.GET("/:sessionId/permissions", handlers.GetSessionPermissions)
 
 	sessionManagementEndpoints := sessionEndpoints.Group("", middleware.RequirePermissions(perms.ManageSessions))
 	sessionManagementEndpoints.GET("", handlers.GetSessions)

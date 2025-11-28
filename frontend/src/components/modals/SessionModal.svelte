@@ -11,6 +11,9 @@
   import PasswordPromptModal from "./PasswordPromptModal.svelte";
   import { queueNotification } from "../../lib/client/notifications";
   import { ColorKeys } from "../../types/colors";
+  import { PermissionKeys } from "../../types/permissions";
+  import ToggleInput from "../forms/ToggleInput.svelte";
+  import SectionDivider from "../layout/SectionDivider.svelte";
   
   interface Props {
     showCreateModal?: () => Promise<Session>;
@@ -28,6 +31,8 @@
   let session: Session = $state(EmptySession);
   let originalSession: Session = $state(EmptySession);
 
+  let permissions = $state(Object.fromEntries(Object.values(PermissionKeys).map(x => [x, false]))) as Record<PermissionKeys, boolean>;
+
   let promiseResolve: (value: Session | PromiseLike<Session>) => void = $state(NoOp);
   let promiseReject: (reason?: any) => void = $state(NoOp);
 
@@ -37,6 +42,23 @@
     editMode = editable;
     session = await deepCopy(original);
     originalSession = await deepCopy(original);
+    permissions = {} as Record<PermissionKeys, boolean>;
+    for (const permission of Object.values(PermissionKeys)) {
+      permissions[permission] = false
+    }
+    if (session.session_id !== "") {
+      const sessionPermissions = await sessions.getSessionPermissions(session.session_id).catch((err) => {
+        queueNotification(ColorKeys.Danger, `Could not fetch permissions for session ${session.user_agent}: ${err.message}`);
+        return [];
+      });
+      for (const permission of sessionPermissions) {
+        permissions[permission as PermissionKeys] = true;
+      }
+    } else {
+      for (const permission of session.permissions) {
+        permissions[permission as PermissionKeys] = true;
+      }
+    }
 
     if (editMode) {
       session.is_api = true;
@@ -76,6 +98,9 @@
       throw new Error(`You must provide your password to create an API token.`);
     });
 
+    session.permissions = Object.entries(permissions)
+      .filter(([_, permitted]) => permitted)
+      .map(([key, _]) => key as PermissionKeys);
     if (session.session_id === "") {
       const tokenResponse = await sessions.requestToken(session, password).catch(err => {
         throw new Error(`Could not create API token ${session.user_agent}: ${err.message}`);
@@ -120,6 +145,17 @@
     {#if session.session_id && settings.userSettings[UserSettingKeys.DebugMode]}
       <TextInput value={session.session_id} name="id" placeholder="Session ID" editable={false} />
     {/if}
+  {/if}
+  {#if session.is_api}
+    <SectionDivider title="Permissions"/>
+    {#each Object.values(PermissionKeys) as permission}
+      {@const permissionName = permission.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+      <ToggleInput
+        name={permission} 
+        description={permissionName}
+        bind:value={permissions[permission]}
+      />
+    {/each}
   {/if}
 </EditableModal>
 
