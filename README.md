@@ -7,14 +7,19 @@ Ultimately, Luna should become a fully offline-capable *Progressive Web Applicat
 
 This approach ensures out-of-the-box platform cross-compatibility: You will be able to use Luna inside your favourite web browser, as well as install it as a PWA.
 
-Currently, this project is still very much **work-in-progress** and is nowhere near being production-ready. Nevertheless, I have high hopes for one day replacing the propriatary calendar apps I use with Luna. 
+# State of the Project
+Luna is an ambitious and large project. As such, development takes a long time.
 
-Feel free to get in contact through GitHub discussions if you are interested in contributing.
+At this point in time, Luna is nearing a usable 1.0.0 state. A lot of small and less small finishing touches still need to be done (in particular, mobile screen size support). If you'd like to see a preview of the project for yourself, refer to the [deployment](#deployment) section.
+
+Due to my busy schedule and being the sole developer, I am unable to provide a release date for 1.0.0 for now. Feel free to get in contact through GitHub discussions if you are interested in contributing.
 
 You may also follow the progress in the [development roadmap](https://todo.opisek.net/share/dvEazOyRLEYThqxohVosnqKskYLyoZ4nS8rQ63G1/auth?view=280).
 
 # Deployment
 Since Luna is not ready to be used yet, this only serves as instructions on how to get Luna up and running for development purposes!
+
+Keep in mind that Luna is provided with absolutely no warranty or liability from the authors.
 
 ## Docker
 Currently, no first-party docker images are available. Instead, you can generate and run the images simply by typing `make` in the root directory of this repository.
@@ -34,9 +39,6 @@ For the backend, create an `.env` file in the `backend` directory inside the rep
 Proceed in the same way for the frontend inside the `frontend` directory.
 
 # API
-## Current State
-The current frontend does not implement all functionality provided by the backend yet. For testing and development purposes, tools like Postman can be used to interact with the API directly. Note that everything is still very much under development and is subject to change.
-
 ## General
 - All bodies are to be passed as `multipart/form-data`.
 - All endpoints except [unauthenticated ones](#unauthenticated) require an access token received from the [Login](#login) endpoint. It is to be passed in the request header as a *bearer token* or as the cookie *token*.

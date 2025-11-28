@@ -107,16 +107,19 @@ func PatchUserData(c *gin.Context) {
 
 	var newProfilePicture *types.Url
 	if rawNewProfilePicture != "" {
-		if util.IsValidUrl(rawNewProfilePicture) != nil {
+		var err error
+		err = util.IsValidUrl(rawNewProfilePicture)
+		if err != nil {
 			u.Error(errors.New().Status(http.StatusBadRequest).
-				Append(errors.LvlPlain, "Invalid profile picture URL"))
+				Append(errors.LvlPlain, "Invalid profile picture URL").
+				AddErr(errors.LvlWordy, err))
 			return
 		}
-		var err error
 		newProfilePicture, err = types.NewUrl(rawNewProfilePicture)
 		if err != nil {
 			u.Error(errors.New().Status(http.StatusBadRequest).
-				Append(errors.LvlPlain, "Invalid profile picture url"))
+				Append(errors.LvlPlain, "Invalid profile picture URL").
+				AddErr(errors.LvlWordy, err))
 			return
 		}
 	} else if pfpFileHeader != nil {

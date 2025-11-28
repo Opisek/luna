@@ -57,8 +57,7 @@
   showModal = async (source: SourceModel): Promise<SourceModel> => {
     promiseReject();
 
-    // TODO: this should be a call to repository with force refresh = true
-    sourceDetailed = await getRepository().getSourceDetails(source.id).catch(err => {
+    sourceDetailed = await getRepository().getSourceDetails(source.id, true).catch(err => {
       queueNotification(ColorKeys.Danger, `Could not get source details: ${err.message}`);
       return Promise.reject();
     });

@@ -26,6 +26,7 @@ export enum GlobalSettingKeys {
   LoggingVerbosity = "logging_verbosity",
   UseCdnFonts = "use_cdn_fonts",
   UseIpGeolocation = "use_ip_geolocation",
+  DisableGravatar = "disable_gravatar",
 }
 
 export type UserSettings = {
@@ -56,6 +57,7 @@ export type GlobalSettings = {
   [GlobalSettingKeys.LoggingVerbosity]: number;
   [GlobalSettingKeys.UseCdnFonts]: boolean;
   [GlobalSettingKeys.UseIpGeolocation]: boolean;
+  [GlobalSettingKeys.DisableGravatar]: boolean;
 };
 
 export type UserData = {

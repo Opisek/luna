@@ -3,6 +3,7 @@ import { getRedirectPage } from "./lib/common/parsing";
 
 import "dotenv/config"
 import { loginPaths, unprivilegedPaths } from "./lib/common/paths";
+import { encodeRedirectUrl } from "./lib/common/url";
 
 export const handle: Handle = async ({ event, resolve }) => {
   const tokenPresent = event.cookies.get("tokenPresent");
@@ -54,7 +55,7 @@ export const handle: Handle = async ({ event, resolve }) => {
       return new Response(null, {
         status: 302,
         headers: {
-          location: `/login?redirect=${encodeURIComponent(new URL(event.request.url).pathname)}`,
+          location: `/login?redirect=${encodeRedirectUrl(new URL(event.request.url))}`,
         },
       })
     }
