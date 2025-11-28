@@ -992,7 +992,7 @@
             bind:value={profilePictureRemoteUrl}
           />
         {:else if profilePictureType === "gravatar"}
-          {#if !profilePictureGravatarIsDefault}
+          {#if !profilePictureGravatarIsDefault && !settings.globalSettings[GlobalSettingKeys.DisableGravatar]}
             <ToggleInput
               name="pfp_gravatar_force_default"
               description="Use Default Gravatar Profile Picture"
