@@ -149,7 +149,7 @@ func PutSession(c *gin.Context) {
 		LastIpAddress:    net.ParseIP(c.ClientIP()),
 		IsShortLived:     false,
 		IsApi:            true,
-		SecretHash:       crypto.GetSha256Hash(secret),
+		SecretHash:       []byte{},
 		Permissions:      perms.FromStringList(parsedPerms),
 	}
 	tr = u.Tx.Queries().InsertSession(session)
@@ -157,6 +157,20 @@ func PutSession(c *gin.Context) {
 		u.Error(tr.
 			Append(errors.LvlWordy, "Could not create API session").
 			AltStr(errors.LvlBroad, "Could not create API key"),
+		)
+		return
+	}
+
+	serverSecret, tr := crypto.GetSymmetricKey(u.Config, "tokenHashSecret")
+	if tr != nil {
+		u.Error(tr)
+		c.Abort()
+		return
+	}
+	tr = u.Tx.Queries().UpdateSessionHash(session.SessionId, crypto.GetSha256Hash(serverSecret, session.SessionId.Bytes(), secret))
+	if tr != nil {
+		u.Error(tr.
+			Append(errors.LvlBroad, "Could not create API key"),
 		)
 		return
 	}

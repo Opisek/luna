@@ -255,7 +255,13 @@ func RequireAuth() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		actualHash := crypto.GetSha256Hash(secret)
+		serverSecret, tr := crypto.GetSymmetricKey(u.Config, "tokenHashSecret")
+		if tr != nil {
+			u.Error(tr)
+			c.Abort()
+			return
+		}
+		actualHash := crypto.GetSha256Hash(serverSecret, parsedToken.SessionId.Bytes(), secret)
 		if !bytes.Equal(actualHash, session.SecretHash) {
 			u.Error(errors.New().Status(http.StatusUnauthorized).
 				Append(errors.LvlDebug, "Token secret value produces incorrect hash value").

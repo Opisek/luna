@@ -140,9 +140,23 @@ func Login(c *gin.Context) {
 		InitialIpAddress: net.ParseIP(c.ClientIP()),
 		IsShortLived:     c.PostForm("remember") != "true",
 		IsApi:            false,
-		SecretHash:       crypto.GetSha256Hash(secret),
+		SecretHash:       []byte{},
 	}
 	err = u.Tx.Queries().InsertSession(session)
+	if err != nil {
+		u.Error(err.
+			Append(errors.LvlBroad, "Could not log in"),
+		)
+		return
+	}
+
+	serverSecret, tr := crypto.GetSymmetricKey(u.Config, "tokenHashSecret")
+	if tr != nil {
+		u.Error(tr)
+		c.Abort()
+		return
+	}
+	err = u.Tx.Queries().UpdateSessionHash(session.SessionId, crypto.GetSha256Hash(serverSecret, session.SessionId.Bytes(), secret))
 	if err != nil {
 		u.Error(err.
 			Append(errors.LvlBroad, "Could not log in"),
@@ -302,9 +316,23 @@ func Register(c *gin.Context) {
 		LastIpAddress:    net.ParseIP(c.ClientIP()),
 		IsShortLived:     c.PostForm("remember") != "true",
 		IsApi:            false,
-		SecretHash:       crypto.GetSha256Hash(secret),
+		SecretHash:       []byte{},
 	}
 	err = u.Tx.Queries().InsertSession(session)
+	if err != nil {
+		u.Error(err.
+			Append(errors.LvlBroad, "Could not register"),
+		)
+		return
+	}
+
+	serverSecret, tr := crypto.GetSymmetricKey(u.Config, "tokenHashSecret")
+	if tr != nil {
+		u.Error(tr)
+		c.Abort()
+		return
+	}
+	err = u.Tx.Queries().UpdateSessionHash(session.SessionId, crypto.GetSha256Hash(serverSecret, session.SessionId.Bytes(), secret))
 	if err != nil {
 		u.Error(err.
 			Append(errors.LvlBroad, "Could not register"),
