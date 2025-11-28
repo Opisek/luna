@@ -53,7 +53,7 @@ func Login(c *gin.Context) {
 		)
 
 		// Hash the wrong password to prevent timing attacks
-		_, _ = auth.SecurePassword(credentials.Password)
+		_, _ = auth.SecurePassword(credentials.Password, u.Config)
 
 		return
 	}
@@ -68,13 +68,13 @@ func Login(c *gin.Context) {
 		)
 
 		// Hash the wrong password to prevent timing attacks
-		_, _ = auth.SecurePassword(credentials.Password)
+		_, _ = auth.SecurePassword(credentials.Password, u.Config)
 
 		return
 	}
 
 	// Verify the password
-	if !auth.VerifyPassword(credentials.Password, savedPassword) {
+	if !auth.VerifyPassword(credentials.Password, savedPassword, u.Config) {
 		u.Error(errors.New().Status(http.StatusUnauthorized).
 			Append(errors.LvlDebug, "Wrong password").
 			Append(errors.LvlPlain, "Invalid credentials").
@@ -86,7 +86,7 @@ func Login(c *gin.Context) {
 	// Silently update the user's password to a newer algorithm if applicable
 	if !auth.PasswordStillSecure(savedPassword) {
 		u.Logger.Infof("updating password %v for user to newer algorithm", credentials.Username)
-		newPassword, err := auth.SecurePassword(credentials.Password)
+		newPassword, err := auth.SecurePassword(credentials.Password, u.Config)
 		if err != nil {
 			u.Error(err.
 				Append(errors.LvlDebug, "Could not rehash password").
@@ -237,7 +237,7 @@ func Register(c *gin.Context) {
 	}
 
 	// Hash the password
-	securedPassword, err := auth.SecurePassword(payload.Password)
+	securedPassword, err := auth.SecurePassword(payload.Password, u.Config)
 	if err != nil {
 		u.Error(err.
 			Append(errors.LvlDebug, "Could not hash password").

@@ -193,7 +193,7 @@ func PatchUserData(c *gin.Context) {
 		}
 
 		// Verify the password
-		if !auth.VerifyPassword(password, savedPassword) {
+		if !auth.VerifyPassword(password, savedPassword, u.Config) {
 			u.Error(errors.New().Status(http.StatusUnauthorized).
 				Append(errors.LvlDebug, "Wrong password").
 				Append(errors.LvlPlain, "Invalid credentials"),
@@ -236,7 +236,7 @@ func PatchUserData(c *gin.Context) {
 
 	// Update the password
 	if newPassword != "" {
-		securedPassword, err := auth.SecurePassword(newPassword)
+		securedPassword, err := auth.SecurePassword(newPassword, u.Config)
 		if err != nil {
 			u.Error(err.
 				Append(errors.LvlDebug, "Could not hash new password"),
@@ -296,7 +296,7 @@ func DeleteUser(c *gin.Context) {
 	}
 
 	// Verify the password
-	if !auth.VerifyPassword(password, savedPassword) {
+	if !auth.VerifyPassword(password, savedPassword, u.Config) {
 		u.Error(errors.New().Status(http.StatusUnauthorized).
 			Append(errors.LvlDebug, "Wrong password").
 			Append(errors.LvlPlain, "Invalid credentials"),

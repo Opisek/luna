@@ -105,7 +105,7 @@ func PutSession(c *gin.Context) {
 	}
 
 	// Verify the password
-	if !auth.VerifyPassword(password, savedPassword) {
+	if !auth.VerifyPassword(password, savedPassword, u.Config) {
 		u.Error(errors.New().Status(http.StatusUnauthorized).
 			Append(errors.LvlDebug, "Wrong password").
 			Append(errors.LvlPlain, "Invalid credentials"),
@@ -208,7 +208,7 @@ func PatchSession(c *gin.Context) {
 	}
 
 	// Verify the password
-	if !auth.VerifyPassword(password, savedPassword) {
+	if !auth.VerifyPassword(password, savedPassword, u.Config) {
 		u.Error(errors.New().Status(http.StatusUnauthorized).
 			Append(errors.LvlDebug, "Wrong password").
 			Append(errors.LvlPlain, "Invalid credentials"),

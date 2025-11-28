@@ -13,6 +13,7 @@ const (
 )
 
 const (
-	HashPlain  = "plain"
-	HashArgon2 = "argon2"
+	HashPlain          = "plain"
+	HashArgon2         = "argon2"
+	HashArgon2Peppered = "argon2pepper"
 )
