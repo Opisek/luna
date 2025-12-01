@@ -70,8 +70,9 @@
     if (settings.userData.profile_picture_type !== userDataSnapshot.profile_picture_type) return true;
     switch (settings.userData.profile_picture_type) {
       case "static":
-      case "remote":
         return profilePictureStaticUrl !== userDataSnapshot.profile_picture_url;
+      case "remote":
+        return profilePictureRemoteUrl !== userDataSnapshot.profile_picture_url;
       case "gravatar":
         return profilePictureGravatarForceDefault !== userDataSnapshot.profile_picture_url.includes("f=y");
       case "database":

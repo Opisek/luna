@@ -206,6 +206,15 @@
     }
   })
 
+  let showSaveButton = $derived.by(() => {
+    switch (selectedCategory) {
+      case "danger":
+        return false;
+      default:
+        return submittable;
+    }
+  })
+
   let reauthenticationRequired = $derived.by(() => {
     switch (selectedCategory) {
       case "account":
@@ -430,7 +439,7 @@
   {/snippet}
 
   {#snippet buttons()}
-    {#if anyChanged || accountSettingsNewPassword !== "" || accountSettingsNewProfilePictureChosen}
+    {#if showSaveButton}
       <Button type="submit" color={ColorKeys.Success} enabled={submittable} onClick={() => { saveSettings().catch(NoOp); }}>
         {#if saving}
           <Loader/>
