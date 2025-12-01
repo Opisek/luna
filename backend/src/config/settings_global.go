@@ -8,11 +8,12 @@ import (
 )
 
 const (
-	KeyRegistrationEnabled = "registration_enabled"
-	KeyLoggingVerbosity    = "logging_verbosity"
-	KeyUseCdnFonts         = "use_cdn_fonts"
-	KeyUseIpGeolocation    = "use_ip_geolocation"
-	KeyDisableGravatar     = "disable_gravatar"
+	KeyRegistrationEnabled  = "registration_enabled"
+	KeyLoggingVerbosity     = "logging_verbosity"
+	KeyUseCdnFonts          = "use_cdn_fonts"
+	KeyUseIpGeolocation     = "use_ip_geolocation"
+	KeyEnableGravatar       = "enable_gravatar"
+	KeyCacheProfilePictures = "cache_profile_pictures"
 )
 
 func AllDefaultGlobalSettings() []SettingsEntry {
@@ -21,7 +22,8 @@ func AllDefaultGlobalSettings() []SettingsEntry {
 		&LoggingVerbosity{},
 		&UseCdnFonts{},
 		&UseIpGeolocation{},
-		&DisableGravatar{},
+		&EnableGravatar{},
+		&CacheProfilePictures{},
 	}
 
 	for _, setting := range settings {
@@ -41,8 +43,10 @@ func GetMatchingGlobalSettingStruct(key string) (SettingsEntry, *errors.ErrorTra
 		return &UseCdnFonts{}, nil
 	case KeyUseIpGeolocation:
 		return &UseIpGeolocation{}, nil
-	case KeyDisableGravatar:
-		return &DisableGravatar{}, nil
+	case KeyEnableGravatar:
+		return &EnableGravatar{}, nil
+	case KeyCacheProfilePictures:
+		return &CacheProfilePictures{}, nil
 	default:
 		return nil, errors.New().Status(http.StatusBadRequest).
 			Append(errors.LvlWordy, "Invalid setting key: %s", key).
@@ -163,23 +167,46 @@ func (entry *UseIpGeolocation) UnmarshalJSON(data []byte) (err error) {
 	return err
 }
 
-// Whether to disable Gravatar profile pictures
-// Should default to false
+// Whether to enable Gravatar profile pictures
+// Should default to true
 // TODO: changing this to false should automatically change all gravatar profile pictures to our own defaults
-type DisableGravatar struct {
-	Disabled bool `json:"value"`
+type EnableGravatar struct {
+	Enabled bool `json:"value"`
 }
 
-func (entry *DisableGravatar) Key() string {
-	return KeyDisableGravatar
+func (entry *EnableGravatar) Key() string {
+	return KeyEnableGravatar
 }
-func (entry *DisableGravatar) Default() {
-	entry.Disabled = true
+func (entry *EnableGravatar) Default() {
+	entry.Enabled = true
 }
-func (entry *DisableGravatar) MarshalJSON() ([]byte, error) {
-	return common.MarshalBool(entry.Disabled), nil
+func (entry *EnableGravatar) MarshalJSON() ([]byte, error) {
+	return common.MarshalBool(entry.Enabled), nil
 }
-func (entry *DisableGravatar) UnmarshalJSON(data []byte) (err error) {
-	entry.Disabled, err = common.UnmarshalBool(data)
+func (entry *EnableGravatar) UnmarshalJSON(data []byte) (err error) {
+	entry.Enabled, err = common.UnmarshalBool(data)
+	return err
+}
+
+// Whether to cache remote/gravatar profile pictures
+// Should default to true
+// TODO: changing this to false should delete all pfp cache
+// TODO: changing this to true should automatically create pfp cache
+// TODO: when this is false, pfp cache should not be created automatically
+type CacheProfilePictures struct {
+	Enabled bool `json:"value"`
+}
+
+func (entry *CacheProfilePictures) Key() string {
+	return KeyCacheProfilePictures
+}
+func (entry *CacheProfilePictures) Default() {
+	entry.Enabled = true
+}
+func (entry *CacheProfilePictures) MarshalJSON() ([]byte, error) {
+	return common.MarshalBool(entry.Enabled), nil
+}
+func (entry *CacheProfilePictures) UnmarshalJSON(data []byte) (err error) {
+	entry.Enabled, err = common.UnmarshalBool(data)
 	return err
 }

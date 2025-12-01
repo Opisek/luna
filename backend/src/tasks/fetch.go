@@ -3,11 +3,13 @@ package tasks
 import (
 	"encoding/json"
 	"luna-backend/auth"
+	"luna-backend/config"
 	"luna-backend/constants"
 	"luna-backend/db"
 	"luna-backend/errors"
 	"luna-backend/files"
 	"luna-backend/protocols/ical"
+	"luna-backend/types"
 	"sync"
 
 	"github.com/sirupsen/logrus"
@@ -16,7 +18,7 @@ import (
 // This method is responsible for periodically fetching remote files to keep the
 // local cache up to date, should the remote file be inaccessible when the user
 // requests it later.
-func RefetchIcalFiles(tx *db.Transaction, logger *logrus.Entry) *errors.ErrorTrace {
+func RefetchIcalFiles(tx *db.Transaction, logger *logrus.Entry, config *config.CommonConfig) *errors.ErrorTrace {
 	settings, tr := tx.Queries().GetSourceSettingsByType(constants.SourceIcal)
 
 	if tr != nil {
@@ -53,6 +55,42 @@ func RefetchIcalFiles(tx *db.Transaction, logger *logrus.Entry) *errors.ErrorTra
 				logger.Errorf("could not refetch iCal file %v: %v", icalSourceSettings.Url, tr.Serialize(errors.LvlDebug))
 			}
 		}(setting)
+	}
+
+	wg.Wait()
+	return nil
+}
+
+func RefetchProfilePictures(tx *db.Transaction, logger *logrus.Entry, config *config.CommonConfig) *errors.ErrorTrace {
+	if !config.Settings.CacheProfilePictures.Enabled {
+		logger.Infoln("skipping refetching profile pictures because profile picture caching is disabled")
+		return nil
+	}
+
+	users, tr := tx.Queries().GetUsers(true)
+	if tr != nil {
+		return tr.
+			Append(errors.LvlDebug, "Could not fetch all users")
+	}
+
+	wg := sync.WaitGroup{}
+
+	for _, user := range users {
+		wg.Add(1)
+		go func(user *types.User) {
+			defer wg.Done()
+
+			if user.ProfilePictureType != constants.ProfilePictureRemote && user.ProfilePictureType != constants.ProfilePictureGravatar {
+				return
+			}
+
+			file := files.GetRemoteFile(user.ProfilePictureUrl, "image/*", auth.NewNoAuth())
+			tr = file.ForceFetchFromRemote(tx.Queries())
+
+			if tr != nil {
+				logger.Errorf("could not refetch profile picture for user %v: %v", user.Id, tr.Serialize(errors.LvlDebug))
+			}
+		}(user)
 	}
 
 	wg.Wait()

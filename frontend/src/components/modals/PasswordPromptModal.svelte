@@ -6,7 +6,6 @@
   import { ColorKeys } from "../../types/colors";
   import TextInput from "../forms/TextInput.svelte";
   import { isValidPassword, valid } from "../../lib/client/validation";
-  import { deepCopy } from "../../lib/common/misc";
 
   interface Props {
     prompt: () => Promise<string>;

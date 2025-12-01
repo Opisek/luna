@@ -263,11 +263,13 @@ func Register(c *gin.Context) {
 
 	// Construct the user
 	user := &types.User{
-		Username:       payload.Username,
-		Email:          payload.Email,
-		Admin:          !usersExist,
-		Searchable:     true,
-		ProfilePicture: util.GetDefaultProfilePictureUrl(!u.Config.Settings.DisableGravatar.Disabled, payload.Email),
+		Username:           payload.Username,
+		Email:              payload.Email,
+		Admin:              !usersExist,
+		Searchable:         true,
+		ProfilePictureType: "static",
+		ProfilePictureFile: types.EmptyId(),
+		ProfilePictureUrl:  util.GetDefaultProfilePictureUrl(!u.Config.Settings.DisableGravatar.Enabled, payload.Email),
 	}
 
 	// Insert the user into the database

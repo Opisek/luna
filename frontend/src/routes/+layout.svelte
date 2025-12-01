@@ -65,7 +65,7 @@
     }
 
     if (notifsWrapper) {
-      notifsWrapper.hidePopover();
+      if (notifsWrapper.matches(":popover-open")) notifsWrapper.hidePopover();
       notifsWrapper.showPopover();
     }
   });

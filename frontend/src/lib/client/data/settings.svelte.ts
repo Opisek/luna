@@ -13,6 +13,9 @@ export class Settings {
     email: "",
     admin: false,
     searchable: true,
+    profile_picture_type: "static",
+    profile_picture_url: "",
+    profile_picture_file: "",
     profile_picture: "",
     verified: false,
     enabled: false,
@@ -45,6 +48,8 @@ export class Settings {
     [GlobalSettingKeys.RegistrationEnabled]: false,
     [GlobalSettingKeys.UseCdnFonts]: false,
     [GlobalSettingKeys.UseIpGeolocation]: true,
+    [GlobalSettingKeys.EnableGravatar]: true,
+    [GlobalSettingKeys.CacheProfilePictures]: true,
   });
 
   constructor(prefetchedData: { userData: UserData, userSettings: UserSettings, globalSettings: GlobalSettings } | null = null) {

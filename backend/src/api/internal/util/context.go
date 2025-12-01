@@ -104,6 +104,7 @@ func GetId(c *gin.Context, primitive string) (types.ID, *errors.ErrorTrace) {
 	if err != nil {
 		return types.EmptyId(), errors.New().Status(http.StatusBadRequest).
 			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Received id was: %v", rawId).
 			Append(errors.LvlWordy, "Malformed %v id", primitive).
 			Append(errors.LvlPlain, "Malformed request")
 	}
@@ -128,6 +129,7 @@ func GetIdOrDefault(c *gin.Context, primitive string, defaultString string, defa
 	if err != nil {
 		return types.EmptyId(), errors.New().Status(http.StatusBadRequest).
 			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Received id was: %v", rawId).
 			Append(errors.LvlWordy, "Malformed %v id", primitive).
 			Append(errors.LvlPlain, "Malformed request")
 	}

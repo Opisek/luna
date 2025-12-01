@@ -9,23 +9,25 @@ import (
 )
 
 func GetDefaultProfilePictureUrl(useGravatar bool, email string) *types.Url {
-	if useGravatar {
-		return GetGravatarUrl(email)
-	} else {
-		url, err := types.NewUrl("/img/pfps/default.png")
-		if err != nil {
-			panic(fmt.Errorf("failed to create default profile picture URL: %v", err))
-		}
+	//if useGravatar {
+	//	return GetGravatarUrl(email)
+	//} else {
 
-		return url
+	url, err := types.NewUrl("/img/pfps/default.png")
+	if err != nil {
+		panic(fmt.Errorf("failed to create default profile picture URL: %v", err))
 	}
+
+	return url
 }
 
-// I had no idea whether to put this is crypto, net, parsing or where else.
-// Because I expect this to only be used during registration, I will put it in
-// the API's util package. For subsequent profile picture change back to
-// gravatar, the frontend should generate the URL instead.
+var DefaultGravatarUrlParams string = "d=identicon"
+
 func GetGravatarUrl(email string) *types.Url {
+	return GetGravatarUrlWithParams(email, DefaultGravatarUrlParams)
+}
+
+func GetGravatarUrlWithParams(email string, params string) *types.Url {
 	// Trim email from leading and trailing whitespace
 	email = strings.TrimSpace(email)
 
@@ -39,7 +41,7 @@ func GetGravatarUrl(email string) *types.Url {
 	hex := hex.EncodeToString(hash)
 
 	// Construct gravatar url
-	rawUrl := "https://www.gravatar.com/avatar/" + hex + "?d=identicon"
+	rawUrl := "https://www.gravatar.com/avatar/" + hex + "?" + params
 
 	// Return as URL
 	// We know this will never error unless we are hit by cosmic radiation

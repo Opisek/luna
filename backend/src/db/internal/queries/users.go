@@ -1,6 +1,7 @@
 package queries
 
 import (
+	"luna-backend/constants"
 	"luna-backend/errors"
 	"luna-backend/types"
 	"net/http"
@@ -15,13 +16,13 @@ func (q *Queries) AddUser(user *types.User) (types.ID, *errors.ErrorTrace) {
 	var err error
 
 	query := `
-		INSERT INTO users (username, email, admin, verified, enabled, searchable, profile_picture)
-		VALUES ($1, $2, $3, FALSE, TRUE, $4, $5)
+		INSERT INTO users (username, email, admin, verified, enabled, searchable, profile_picture_type, profile_picture_file, profile_picture_url)
+		VALUES ($1, $2, $3, FALSE, TRUE, $4, $5, $6, $7)
 		RETURNING id;
 	`
 
 	var id types.ID
-	err = q.Tx.QueryRow(q.Context, query, user.Username, user.Email, user.Admin, user.Searchable, user.ProfilePicture).Scan(&id)
+	err = q.Tx.QueryRow(q.Context, query, user.Username, user.Email, user.Admin, user.Searchable, user.ProfilePictureType, user.ProfilePictureFile, user.ProfilePictureUrl).Scan(&id)
 
 	if err != nil {
 		return types.EmptyId(), errors.New().Status(http.StatusInternalServerError).
@@ -137,41 +138,44 @@ func (q *Queries) GetUser(userId types.ID) (*types.User, *errors.ErrorTrace) {
 	var err error
 
 	user := &types.User{}
-	var rawProfilePicture string
+	var rawProfilePictureUrl string
 
 	err = q.Tx.QueryRow(
 		q.Context,
 		`
-		SELECT *
+		SELECT id, username, email, admin, verified, enabled, searchable, profile_picture_type, COALESCE(profile_picture_file, uuid_nil()), COALESCE(profile_picture_url, ''), created_at
 		FROM users
 		WHERE id = $1;
 		`,
 		userId.UUID(),
-	).Scan(&user.Id, &user.Username, &user.Email, &user.Admin, &user.Verified, &user.Enabled, &user.Searchable, &rawProfilePicture, &user.CreatedAt)
+	).Scan(&user.Id, &user.Username, &user.Email, &user.Admin, &user.Verified, &user.Enabled, &user.Searchable, &user.ProfilePictureType, &user.ProfilePictureFile, &rawProfilePictureUrl, &user.CreatedAt)
 	switch err {
 	case nil:
 		break
 	case pgx.ErrNoRows:
 		return nil, errors.New().Status(http.StatusNotFound).
+			Append(errors.LvlDebug, "User %v does not exist", userId).
 			Append(errors.LvlDebug, "Could not get user %v", userId).
 			AltStr(errors.LvlPlain, "User not found")
 	default:
 		return nil, errors.New().Status(http.StatusInternalServerError).
 			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Database encountered an error").
 			Append(errors.LvlDebug, "Could not get user %v", userId).
 			AltStr(errors.LvlPlain, "Database error")
 	}
 
-	if rawProfilePicture == "" {
+	if rawProfilePictureUrl == "" && user.ProfilePictureType != constants.ProfilePictureDatabase {
 		return nil, errors.New().Status(http.StatusInternalServerError).
-			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "The profile picture URL is empty").
 			Append(errors.LvlDebug, "Could not get user %v", userId).
 			AltStr(errors.LvlPlain, "Database error")
 	}
-	user.ProfilePicture, err = types.NewUrl(rawProfilePicture)
+	user.ProfilePictureUrl, err = types.NewUrl(rawProfilePictureUrl)
 	if err != nil {
 		return nil, errors.New().Status(http.StatusInternalServerError).
 			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not parse the profile picture URL").
 			Append(errors.LvlDebug, "Could not get user %v", userId).
 			AltStr(errors.LvlPlain, "Database error")
 	}
@@ -187,12 +191,12 @@ func (q *Queries) GetUsers(all bool) ([]*types.User, *errors.ErrorTrace) {
 	var query string
 	if all {
 		query = `
-		SELECT *
+		SELECT id, username, email, admin, verified, enabled, searchable, profile_picture_type, COALESCE(profile_picture_file, uuid_nil()), COALESCE(profile_picture_url, ''), created_at
 		FROM users;
 		`
 	} else {
 		query = `
-		SELECT *
+		SELECT id, username, email, admin, verified, enabled, searchable, profile_picture_type, COALESCE(profile_picture_file, uuid_nil()), COALESCE(profile_picture_url, ''), created_at
 		FROM users
 		WHERE enabled = TRUE
 		AND searchable = TRUE;
@@ -216,9 +220,9 @@ func (q *Queries) GetUsers(all bool) ([]*types.User, *errors.ErrorTrace) {
 
 	for rows.Next() {
 		user := &types.User{}
-		var rawProfilePicture string
+		var rawProfilePictureUrl string
 
-		err = rows.Scan(&user.Id, &user.Username, &user.Email, &user.Admin, &user.Verified, &user.Enabled, &user.Searchable, &rawProfilePicture, &user.CreatedAt)
+		err = rows.Scan(&user.Id, &user.Username, &user.Email, &user.Admin, &user.Verified, &user.Enabled, &user.Searchable, &user.ProfilePictureType, &user.ProfilePictureFile, &rawProfilePictureUrl, &user.CreatedAt)
 		if err != nil {
 			return nil, errors.New().Status(http.StatusInternalServerError).
 				AddErr(errors.LvlDebug, err).
@@ -226,7 +230,7 @@ func (q *Queries) GetUsers(all bool) ([]*types.User, *errors.ErrorTrace) {
 				Append(errors.LvlPlain, "Database error")
 		}
 
-		user.ProfilePicture, err = types.NewUrl(rawProfilePicture)
+		user.ProfilePictureUrl, err = types.NewUrl(rawProfilePictureUrl)
 		if err != nil {
 			return nil, errors.New().Status(http.StatusInternalServerError).
 				AddErr(errors.LvlDebug, err).
@@ -245,8 +249,8 @@ func (q *Queries) UpdateUserData(user *types.User) *errors.ErrorTrace {
 
 	query := `
 		UPDATE users
-		SET username = $1, email = $2, admin = $3, verified = $4, enabled = $5, searchable = $6, profile_picture = $7
-		WHERE id = $8;
+		SET username = $1, email = $2, searchable = $3, profile_picture_type = $4, profile_picture_file = $5, profile_picture_url = $6
+		WHERE id = $7;
 	`
 
 	_, err = q.Tx.Exec(
@@ -254,11 +258,10 @@ func (q *Queries) UpdateUserData(user *types.User) *errors.ErrorTrace {
 		query,
 		user.Username,
 		user.Email,
-		user.Admin,
-		user.Verified,
-		user.Enabled,
 		user.Searchable,
-		user.ProfilePicture,
+		user.ProfilePictureType,
+		user.ProfilePictureFile,
+		user.ProfilePictureUrl,
 		user.Id.UUID(),
 	)
 

@@ -13,6 +13,13 @@ const (
 )
 
 const (
+	ProfilePictureRemote   = "remote"
+	ProfilePictureDatabase = "database"
+	ProfilePictureGravatar = "gravatar"
+	ProfilePictureStatic   = "static"
+)
+
+const (
 	HashPlain          = "plain"
 	HashArgon2         = "argon2"
 	HashArgon2Peppered = "argon2pepper"

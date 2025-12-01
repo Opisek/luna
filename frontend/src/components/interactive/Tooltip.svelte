@@ -73,7 +73,7 @@
   }
 
   function transitionEnd() {
-    if (popover && !popoverOpen) popover.hidePopover();
+    if (popover && !popoverOpen && popover.matches(":popover-open")) popover.hidePopover();
   }
 </script>
 

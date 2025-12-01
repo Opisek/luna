@@ -1,9 +1,9 @@
 package handlers
 
 import (
-	"fmt"
 	"luna-backend/api/internal/util"
 	"luna-backend/auth"
+	"luna-backend/constants"
 	"luna-backend/errors"
 	"luna-backend/files"
 	"luna-backend/types"
@@ -17,6 +17,11 @@ func GetUser(c *gin.Context) {
 
 	userId := util.GetUserId(c)
 	user, err := u.Tx.Queries().GetUser(userId)
+	if err != nil {
+		u.Error(err)
+		return
+	}
+	err = user.UpdateEffectiveProfilePicture(u.Config.Settings.CacheProfilePictures.Enabled)
 	if err != nil {
 		u.Error(err)
 		return
@@ -41,12 +46,37 @@ func GetUsers(c *gin.Context) {
 		return
 	}
 
-	// TODO: when not using all=true, we might want to hide some fields like verified, email, etc.
+	for _, user := range users {
+		tr = user.UpdateEffectiveProfilePicture(u.Config.Settings.CacheProfilePictures.Enabled)
+		if tr != nil {
+			u.Error(tr)
+			return
+		}
+	}
 
-	u.Success(&gin.H{
-		"users":   users,
-		"current": userId,
-	})
+	if all {
+		u.Success(&gin.H{
+			"users":   users,
+			"current": userId,
+		})
+	} else {
+		// When all is not set, i.e., the request comes from a non-admin user,
+		// cast User to StrippedUser to remove (potentially) sensitive information.
+		strippedUsers := make([]*types.StrippedUser, 0, len(users))
+		for _, user := range users {
+			strippedUser := &types.StrippedUser{
+				Id:                         user.Id,
+				Username:                   user.Username,
+				Admin:                      user.Admin,
+				EffectiveProfilePictureUrl: user.EffectiveProfilePictureUrl,
+			}
+			strippedUsers = append(strippedUsers, strippedUser)
+		}
+		u.Success(&gin.H{
+			"users":   strippedUsers,
+			"current": userId,
+		})
+	}
 }
 
 func PatchUserData(c *gin.Context) {
@@ -58,22 +88,24 @@ func PatchUserData(c *gin.Context) {
 	newUsername := c.PostForm("username")
 	newEmail := c.PostForm("email")
 	newPassword := c.PostForm("new_password")
-	rawNewProfilePicture := c.PostForm("pfp_url")
-	pfpFileHeader, pfpFileErr := c.FormFile("pfp_file")
+	newProfilePictureType := c.PostForm("pfp_type")
+	rawNewProfilePictureUrl := c.PostForm("pfp_url")
+	newPfpFileHeader, pfpFileErr := c.FormFile("pfp_file")
+	newProfilePictureRequested := newProfilePictureType != "" || rawNewProfilePictureUrl != "" || pfpFileErr == nil
 	rawNewSearchable := c.PostForm("searchable")
 
 	switch pfpFileErr {
 	case nil:
 		break
 	case http.ErrMissingFile:
-		pfpFileHeader = nil
+		newPfpFileHeader = nil
 	default:
 		u.Error(errors.New().Status(http.StatusBadRequest).
 			AddErr(errors.LvlDebug, pfpFileErr).
 			Append(errors.LvlPlain, "Invalid form data"))
 	}
 
-	if newUsername == "" && newEmail == "" && newPassword == "" && rawNewProfilePicture == "" && rawNewSearchable == "" && pfpFileHeader == nil {
+	if newUsername == "" && newEmail == "" && newPassword == "" && !newProfilePictureRequested {
 		u.Error(errors.New().Status(http.StatusBadRequest).
 			Append(errors.LvlPlain, "Nothing to change"))
 		return
@@ -105,72 +137,117 @@ func PatchUserData(c *gin.Context) {
 		newSearchable = rawNewSearchable == "true"
 	}
 
-	var newProfilePicture *types.Url
-	if rawNewProfilePicture != "" {
-		var err error
-		err = util.IsValidUrl(rawNewProfilePicture)
-		if err != nil {
-			u.Error(errors.New().Status(http.StatusBadRequest).
-				Append(errors.LvlPlain, "Invalid profile picture URL").
-				AddErr(errors.LvlWordy, err))
-			return
-		}
-		newProfilePicture, err = types.NewUrl(rawNewProfilePicture)
-		if err != nil {
-			u.Error(errors.New().Status(http.StatusBadRequest).
-				Append(errors.LvlPlain, "Invalid profile picture URL").
-				AddErr(errors.LvlWordy, err))
-			return
-		}
-	} else if pfpFileHeader != nil {
-		pfpFile, err := pfpFileHeader.Open()
-		if err != nil {
-			u.Error(errors.New().Status(http.StatusBadRequest).
-				AddErr(errors.LvlDebug, err).
-				Append(errors.LvlPlain, "Could not open profile picture file"))
-			return
-		}
-
-		uploadedFile, tr := files.NewDatabaseFileFromContent(pfpFileHeader.Filename, pfpFile, userId, u.Tx.Queries())
-		if tr != nil {
-			u.Error(tr.
-				Append(errors.LvlDebug, "Could not create file from content").
-				Append(errors.LvlPlain, "Could not upload profile picture"))
-			return
-		}
-
-		fileId := uploadedFile.GetId()
-		fileUrl := fmt.Sprintf("/api/files/%s", fileId.String())
-		newProfilePicture, err = types.NewUrl(fileUrl)
-		if err != nil {
-			u.Error(errors.New().Status(http.StatusInternalServerError).
-				Append(errors.LvlDebug, "Could not create file url").
-				Append(errors.LvlPlain, "Could not upload profile picture"))
-			return
-		}
-	}
-
-	// Delete old profile picture if applicable
 	oldUserStruct, tr := u.Tx.Queries().GetUser(userId)
 	if tr != nil {
 		u.Error(tr)
 		return
 	}
 
-	if newProfilePicture != nil {
-		// Check if the old profile picture is a database file
-		oldFileId, err := util.IsDatabaseFileUrl(oldUserStruct.ProfilePicture)
-		// Delete if it is
-		if err == nil {
-			oldFile := files.GetDatabaseFile(oldFileId)
-			tr := u.Tx.Queries().DeleteFilecache(oldFile, userId)
+	// Set new profile picture
+	var newProfilePictureUrl *types.Url
+	newProfilePictureId := types.EmptyId()
+	if newProfilePictureRequested {
+		// Delete old profile picture if applicable
+		oldPfpFile := *files.GetDatabaseFile(oldUserStruct.ProfilePictureFile)
+		if oldPfpFile.GetId() != types.EmptyId() {
+			tr = u.Tx.Queries().DeleteFilecache(&oldPfpFile, userId)
 			if tr != nil {
-				tr = tr.Append(errors.LvlWordy, "Could not delete old profile picture")
-				u.Warn(tr)
+				u.Error(tr.
+					Append(errors.LvlDebug, "Could not delete old profile picture file %v", oldPfpFile.GetId()).
+					Append(errors.LvlPlain, "Could not update profile picture"))
+				return
 			}
 		}
-	}
 
+		// Refresh profile picture if the email changes and gravatar is used
+		if !newProfilePictureRequested && newEmail != "" && oldUserStruct.ProfilePictureType == "gravatar" {
+			newProfilePictureType = "gravatar"
+			currentGravatarUrl, err := types.NewUrl(oldUserStruct.ProfilePictureUrl.String())
+			if err != nil {
+				u.Error(errors.New().Status(http.StatusInternalServerError).
+					AddErr(errors.LvlDebug, err).
+					Append(errors.LvlWordy, "Could not parse old gravatar profile picture").
+					Append(errors.LvlPlain, "Could not update profile picture"),
+				)
+				return
+			}
+			newProfilePictureUrl = util.GetGravatarUrlWithParams(newEmail, currentGravatarUrl.URL().RawQuery)
+		}
+
+		// Parse new profile picture
+		switch newProfilePictureType {
+		case constants.ProfilePictureGravatar:
+			fallthrough
+		case constants.ProfilePictureStatic:
+			fallthrough
+		case constants.ProfilePictureRemote:
+			if rawNewProfilePictureUrl == "" {
+				u.Error(errors.New().Status(http.StatusBadRequest).
+					Append(errors.LvlPlain, "Missing profile picture URL"))
+				return
+			}
+
+			var err error
+			err = util.IsValidUrl(rawNewProfilePictureUrl)
+			if err != nil {
+				u.Error(errors.New().Status(http.StatusBadRequest).
+					Append(errors.LvlPlain, "Invalid profile picture URL").
+					AddErr(errors.LvlWordy, err))
+				return
+			}
+			newProfilePictureUrl, err = types.NewUrl(rawNewProfilePictureUrl)
+			if err != nil {
+				u.Error(errors.New().Status(http.StatusBadRequest).
+					Append(errors.LvlPlain, "Invalid profile picture URL").
+					AddErr(errors.LvlWordy, err))
+				return
+			}
+
+		case constants.ProfilePictureDatabase:
+			if newPfpFileHeader == nil {
+				u.Error(errors.New().Status(http.StatusBadRequest).
+					Append(errors.LvlPlain, "Missing profile picture file"))
+				return
+			}
+
+			pfpFile, err := newPfpFileHeader.Open()
+			if err != nil {
+				u.Error(errors.New().Status(http.StatusBadRequest).
+					AddErr(errors.LvlDebug, err).
+					Append(errors.LvlPlain, "Could not open profile picture file"))
+				return
+			}
+
+			uploadedFile, tr := files.NewDatabaseFileFromContent(newPfpFileHeader.Filename, pfpFile, userId, u.Tx.Queries())
+			if tr != nil {
+				u.Error(tr.
+					Append(errors.LvlDebug, "Could not create file from content").
+					Append(errors.LvlPlain, "Could not upload profile picture"))
+				return
+			}
+
+			newProfilePictureId = uploadedFile.GetId()
+
+		default:
+			u.Error(errors.New().Status(http.StatusBadRequest).
+				Append(errors.LvlPlain, "Invalid profile picture type"))
+			return
+		}
+
+		// Create local profile picture cache
+		if newProfilePictureType == constants.ProfilePictureGravatar || newProfilePictureType == constants.ProfilePictureRemote {
+			pfpFile, tr := files.NewRemoteFile(newProfilePictureUrl, "image/*", auth.NewNoAuth(), userId, u.Tx.Queries())
+			if tr != nil {
+				u.Error(tr.
+					Append(errors.LvlDebug, "Could not create remote file for profile picture").
+					Append(errors.LvlPlain, "Could not upload profile picture"),
+				)
+				return
+			}
+
+			newProfilePictureId = pfpFile.GetId()
+		}
+	}
 	// Reauthenticate if needed
 	reauthenticationRequired := newUsername != "" || newEmail != "" || newPassword != ""
 
@@ -203,13 +280,16 @@ func PatchUserData(c *gin.Context) {
 	}
 
 	// Update the user
-	if newUsername != "" || newEmail != "" || rawNewSearchable != "" || newProfilePicture != nil {
-		newUserStruct := &types.User{
-			Id:             userId,
-			Username:       newUsername,
-			Email:          newEmail,
-			Searchable:     newSearchable,
-			ProfilePicture: newProfilePicture,
+	var newUserStruct *types.User
+	if newUsername != "" || newEmail != "" || rawNewSearchable != "" || newProfilePictureRequested {
+		newUserStruct = &types.User{
+			Id:                 userId,
+			Username:           newUsername,
+			Email:              newEmail,
+			Searchable:         newSearchable,
+			ProfilePictureType: newProfilePictureType,
+			ProfilePictureUrl:  newProfilePictureUrl,
+			ProfilePictureFile: newProfilePictureId,
 		}
 
 		newUserStruct.Admin = oldUserStruct.Admin
@@ -223,8 +303,10 @@ func PatchUserData(c *gin.Context) {
 		if rawNewSearchable == "" {
 			newUserStruct.Searchable = oldUserStruct.Searchable
 		}
-		if newProfilePicture == nil {
-			newUserStruct.ProfilePicture = oldUserStruct.ProfilePicture
+		if !newProfilePictureRequested {
+			newUserStruct.ProfilePictureType = oldUserStruct.ProfilePictureType
+			newUserStruct.ProfilePictureUrl = oldUserStruct.ProfilePictureUrl
+			newUserStruct.ProfilePictureFile = oldUserStruct.ProfilePictureFile
 		}
 
 		tr = u.Tx.Queries().UpdateUserData(newUserStruct)
@@ -256,8 +338,13 @@ func PatchUserData(c *gin.Context) {
 		"status": "ok",
 	}
 
-	if newProfilePicture != nil {
-		(*response)["profile_picture"] = newProfilePicture.String()
+	if newProfilePictureType != "" {
+		tr = newUserStruct.UpdateEffectiveProfilePicture(u.Config.Settings.CacheProfilePictures.Enabled)
+		if tr != nil {
+			u.Error(tr)
+			return
+		}
+		(*response)["profile_picture"] = newUserStruct.EffectiveProfilePictureUrl.String()
 	}
 
 	u.Success(response)

@@ -112,7 +112,7 @@ Luna uses its own (UU)IDs for every resource accessed through it. Therefore, the
 #### Patch User
 - **Path**: ``/api/users/<ID>``
 - **Method**: ``PATCH``
-- **Body**: Depending on which the user wants to change: `username`, `new_password`, `email`, `pfp_url`, `pfp_file`, `searchable`. The old password `password` is required if any of `username`, `new_password`, or `email` are specified.
+- **Body**: Depending on which the user wants to change: `username`, `new_password`, `email`, `pfp_type`, `pfp_url`, `pfp_file`, `searchable`. The old password `password` is required if any of `username`, `new_password`, or `email` are specified.
 - **Purpose**: Changes the user's data.
 
 #### Delete User

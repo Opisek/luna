@@ -23,6 +23,19 @@ func init() {
 				Append(errors.LvlDebug, "Could not create extension pgcrypto")
 		}
 
+		_, err = q.Tx.Exec(
+			q.Context,
+			`
+			CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+			`,
+		)
+
+		if err != nil {
+			return errors.New().
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlDebug, "Could not create extension uuid-ossp")
+		}
+
 		// Sources enum
 		_, err = q.Tx.Exec(
 			q.Context,
@@ -54,6 +67,24 @@ func init() {
 			return errors.New().
 				AddErr(errors.LvlDebug, err).
 				Append(errors.LvlDebug, "Could not create AUTH_TYPE enum")
+		}
+
+		// Profile picture enum
+		_, err = q.Tx.Exec(
+			q.Context,
+			`
+			CREATE TYPE PFP_TYPE_ENUM AS ENUM (
+				'remote',
+				'database',
+				'gravatar',
+				'static'
+			);
+			`,
+		)
+		if err != nil {
+			return errors.New().
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlDebug, "Could not create SOURCE_TYPE enum")
 		}
 
 		// Tables

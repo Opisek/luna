@@ -9,11 +9,12 @@ type SettingsEntry interface {
 
 // All global settings as a struct
 type GlobalSettings struct {
-	RegistrationEnabled RegistrationEnabled `json:"registration_enabled"`
-	LoggingVerbosity    LoggingVerbosity    `json:"logging_verbosity"`
-	UseCdnFonts         UseCdnFonts         `json:"use_cdn_fonts"`
-	UseIpGeolocation    UseIpGeolocation    `json:"use_ip_geolocation"`
-	DisableGravatar     DisableGravatar     `json:"disable_gravatar"`
+	RegistrationEnabled  RegistrationEnabled  `json:"registration_enabled"`
+	LoggingVerbosity     LoggingVerbosity     `json:"logging_verbosity"`
+	UseCdnFonts          UseCdnFonts          `json:"use_cdn_fonts"`
+	UseIpGeolocation     UseIpGeolocation     `json:"use_ip_geolocation"`
+	DisableGravatar      EnableGravatar       `json:"enable_gravatar"`
+	CacheProfilePictures CacheProfilePictures `json:"cache_profile_pictures"`
 }
 
 func (s *GlobalSettings) UpdateSetting(entry SettingsEntry) {
@@ -26,8 +27,10 @@ func (s *GlobalSettings) UpdateSetting(entry SettingsEntry) {
 		s.UseCdnFonts.UseCdn = entry.(*UseCdnFonts).UseCdn
 	case KeyUseIpGeolocation:
 		s.UseIpGeolocation.UseIpGeolocation = entry.(*UseIpGeolocation).UseIpGeolocation
-	case KeyDisableGravatar:
-		s.DisableGravatar.Disabled = entry.(*DisableGravatar).Disabled
+	case KeyEnableGravatar:
+		s.DisableGravatar.Enabled = entry.(*EnableGravatar).Enabled
+	case KeyCacheProfilePictures:
+		s.CacheProfilePictures.Enabled = entry.(*CacheProfilePictures).Enabled
 	default:
 		// TODO: warning
 	}

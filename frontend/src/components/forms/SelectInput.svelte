@@ -61,7 +61,7 @@
       window.removeEventListener("click", clickOutside);
       window.removeEventListener("keydown", keyboardClick);
       document.removeEventListener("scroll", scrollEvent, true);
-      optionsWrapper.hidePopover();
+      if (optionsWrapper.matches(":popover-open")) optionsWrapper.hidePopover();
     }
   })
 

@@ -147,6 +147,7 @@ func RequestSetup(timeout time.Duration, database *db.Database, withTransaction 
 				responseFileName = responseFile.GetName(tx.Queries())
 				responseFileBody, responseErr = responseFile.GetBytes(tx.Queries())
 				if responseErr != nil {
+					// TODO: i don't think this kills the request properly
 					return
 				}
 			}
@@ -155,6 +156,7 @@ func RequestSetup(timeout time.Duration, database *db.Database, withTransaction 
 			if withTransaction {
 				responseErr = tx.Commit(logger)
 				if responseErr != nil {
+					// TODO: i don't think this kills the request properly
 					return
 				}
 			}

@@ -109,7 +109,7 @@ func setupDb(commonConfig *config.CommonConfig, mainLogger *logrus.Entry, dbLogg
 	return db, tx.Commit(mainLogger)
 }
 
-func createTask(name string, task func(*db.Transaction, *logrus.Entry) *errors.ErrorTrace, db *db.Database, cronLogger *logrus.Entry) func() {
+func createTask(name string, task func(*db.Transaction, *logrus.Entry, *config.CommonConfig) *errors.ErrorTrace, db *db.Database, cronLogger *logrus.Entry, config *config.CommonConfig) func() {
 	return func() {
 		cronLogger.Infof("running cron task %v", name)
 
@@ -123,7 +123,7 @@ func createTask(name string, task func(*db.Transaction, *logrus.Entry) *errors.E
 			return
 		}
 
-		err = task(tx, cronLogger.WithField("task", name))
+		err = task(tx, cronLogger.WithField("task", name), config)
 		if err != nil {
 			cronLogger.Errorf("failure running cron task %v: %v", name, err.Serialize(errors.LvlDebug))
 			return
@@ -185,11 +185,12 @@ func main() {
 	// Scheduled tasks
 	cronLogger := logger.WithField("module", "cron")
 	c := cron.New()
-	c.AddFunc("*/30 * * * *", createTask("RefetchIcalFiles", tasks.RefetchIcalFiles, db, cronLogger))
-	c.AddFunc("0 * * * *", createTask("DeleteExpiredShortLivedSessions", tasks.DeleteStaleShortLivedSessions, db, cronLogger))
-	c.AddFunc("0 0 * * *", createTask("DeleteExpiredLongLivedSessions", tasks.DeleteStaleLongLivedSessions, db, cronLogger))
-	c.AddFunc("0 * * * *", createTask("DeleteExpiredRegistrationInvites", tasks.DeleteExpiredRegistrationInvites, db, cronLogger))
-	c.AddFunc("*/10 * * * *", createTask("DeleteStaleRequestThrottleEntries", tasks.DeleteStaleRequestThrottleEntries(api.Throttle), db, cronLogger))
+	c.AddFunc("*/30 * * * *", createTask("RefetchIcalFiles", tasks.RefetchIcalFiles, db, cronLogger, commonConfig))
+	c.AddFunc("*/15 * * * *", createTask("RefetchProfilePictures", tasks.RefetchProfilePictures, db, cronLogger, commonConfig))
+	c.AddFunc("0 * * * *", createTask("DeleteExpiredShortLivedSessions", tasks.DeleteStaleShortLivedSessions, db, cronLogger, commonConfig))
+	c.AddFunc("0 0 * * *", createTask("DeleteExpiredLongLivedSessions", tasks.DeleteStaleLongLivedSessions, db, cronLogger, commonConfig))
+	c.AddFunc("0 * * * *", createTask("DeleteExpiredRegistrationInvites", tasks.DeleteExpiredRegistrationInvites, db, cronLogger, commonConfig))
+	c.AddFunc("*/10 * * * *", createTask("DeleteStaleRequestThrottleEntries", tasks.DeleteStaleRequestThrottleEntries(api.Throttle), db, cronLogger, commonConfig))
 
 	// Token invalidation service
 	tokenInvalidationLogger := logger.WithField("module", "token_invalidation")
