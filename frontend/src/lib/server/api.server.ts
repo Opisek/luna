@@ -26,7 +26,7 @@ export async function secureApiCall(request: Request, func: () => Promise<Respon
 }
 
 // Forward the request to the backend.
-export async function apiProxy(request: Request, clientAddress: string, endpoint: string, init?: RequestInit, stream?: boolean): Promise<Response> {
+export async function apiProxy(request: Request, getClientAddress: () => string, endpoint: string, init?: RequestInit, stream?: boolean): Promise<Response> {
   return secureApiCall(request, async () => {
     const originalHeaders: HeadersInit = [ ...request.headers ];
     if (!init) init = {};
@@ -34,11 +34,26 @@ export async function apiProxy(request: Request, clientAddress: string, endpoint
     if (stream) init.duplex = "half";
     init.headers = [
       ...originalHeaders.filter(entry => !(stream ? [] : ["content-length", "content-type"]).includes(entry[0].toLowerCase())),
-      [ "X-Forwarded-For", clientAddress ],
+      [ "X-Forwarded-For", determineClientAddress(request, getClientAddress) ],
     ];
     const response = await fetch(`${process.env.API_URL}/api/${endpoint}`, init).catch((error) => {
       throw error; // TODO: maybe format as return json(...) too?
     });
     return response;
   });
+}
+
+// Try to determine the client IP address
+export function determineClientAddress(request: Request, getClientAddress: () => string): string {
+  console.log('-------------')
+  console.log(request.url);
+  console.log(...request.headers.entries());
+  let addr = "127.0.0.1";
+  try {
+    addr = getClientAddress();
+  } catch (e) {
+    console.log(`get client address failed: ${e}`);
+  }
+  console.log(addr);
+  return addr;
 }
