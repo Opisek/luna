@@ -45,15 +45,18 @@ export async function apiProxy(request: Request, getClientAddress: () => string,
 
 // Try to determine the client IP address
 export function determineClientAddress(request: Request, getClientAddress: () => string): string {
-  console.log('-------------')
-  console.log(request.url);
-  console.log(...request.headers.entries());
-  let addr = "127.0.0.1";
-  try {
-    addr = getClientAddress();
-  } catch (e) {
-    console.log(`get client address failed: ${e}`);
+  let addr: string;
+  if (request.headers.has("X-Real-IP")) {
+    addr = request.headers.get("X-Real-IP") as string;
+    if (addr.length > 0) return addr;
   }
-  console.log(addr);
-  return addr;
+  if (request.headers.has("True-Client-IP")) {
+    addr = request.headers.get("True-Client-IP") as string;
+    if (addr.length > 0) return addr;
+  }
+  if (request.headers.has("X-Forwarded-For")) {
+    addr = ((request.headers.get("X-Forwarded-For") as string).split(",")[0] || "").trim();
+    if (addr.length > 0) return addr;
+  }
+  return getClientAddress();
 }
