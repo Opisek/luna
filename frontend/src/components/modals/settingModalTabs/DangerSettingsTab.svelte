@@ -6,7 +6,6 @@
 
   interface Props {
     settings: Settings;
-    requirePasswordForAccountDeletion: boolean;
     showConfirmation: (message: string, onConfirm: () => Promise<void>, confirmText?: string, onCancel?: () => Promise<void>, cancelText?: string) => void;
     deleteAccount: () => void;
     refetchProfilePicture: () => void;
@@ -15,7 +14,6 @@
 
   let {
     settings,
-    requirePasswordForAccountDeletion = $bindable(),
     showConfirmation,
     deleteAccount,
     refetchProfilePicture,

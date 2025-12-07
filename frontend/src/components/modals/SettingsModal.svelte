@@ -59,8 +59,6 @@
   let accountSettingsNewProfilePictureFile: File | null = $state(null);
   let refetchProfilePicture = $state<() => void>(NoOp);
 
-  let dangerSettingsReauthenticationRequired = $state(false);
-
   // Loading
   let loaderAnimation = $state(false);
   function forceRefresh() {
@@ -199,8 +197,10 @@
     switch (selectedCategory) {
       case "account":
         return accountSettingsSubmittable && (userDataChanged || userSettingsChanged || accountSettingsNewPassword !== "" || accountSettingsNewProfilePictureChosen);
+      case "users":
+        return accountDeletionReauthenticationRequired;
       case "danger":
-        return true;
+        return accountDeletionReauthenticationRequired;
       default:
         return anyChanged;
     }
@@ -215,14 +215,18 @@
     }
   })
 
+
+  let accountDeletionReauthenticationRequired = $state(false);
   let reauthenticationRequired = $derived.by(() => {
     switch (selectedCategory) {
       case "account":
         return accountSettingsReauthenticationRequired;
       case "danger":
-        return dangerSettingsReauthenticationRequired;
+        return accountDeletionReauthenticationRequired;
+      case "users":
+        return accountDeletionReauthenticationRequired;
       default:
-        return false;
+        return true;
     }
   })
 
@@ -232,14 +236,20 @@
   function deleteAccount(id: string = "self") {
     const ownAccount = id === "self" || id === users.currentUser;
     showConfirmation(`Are you sure you want to delete ${ownAccount ? "your" : "this"} account?\nThis action is irreversible.`, async () => {
-      dangerSettingsReauthenticationRequired = true;
+      accountDeletionReauthenticationRequired = true;
       const password = await new Promise<string>(resolve => setTimeout(async () => resolve(await passwordPrompt().catch(() => "")), 0));
-      dangerSettingsReauthenticationRequired = false;
+      accountDeletionReauthenticationRequired = false;
       if (password == "") return;
       const body = new FormData();
       body.append("password", password);
-      await fetchResponse(`/api/users/${id}`, { method: "DELETE", body: body });
+      await fetchResponse(`/api/users/${id}`, { method: "DELETE", body: body }).then(() => {
+        queueNotification(ColorKeys.Success, `Successfully deleted ${ownAccount ? "your" : "the user"} account.`);
+      }).catch((err) => {
+        queueNotification(ColorKeys.Danger, `Could not delete ${ownAccount ? "your" : "the user"} account: ${err.message}`);
+        throw err;
+      });
       if (ownAccount) clearSession();
+      else users.fetchAll();
     }, `All ${ownAccount ? "your" : "user"} data will be deleted.`);
   }
 
@@ -505,7 +515,6 @@
       {:else if selectedCategory === "danger"}
         <DangerSettingsTab
           settings={settings}
-          bind:requirePasswordForAccountDeletion={dangerSettingsReauthenticationRequired}
           showConfirmation={showConfirmation}
           deleteAccount={deleteAccount}
           refetchProfilePicture={refetchProfilePicture}
