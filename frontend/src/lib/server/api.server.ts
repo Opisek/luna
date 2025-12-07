@@ -34,7 +34,7 @@ export async function apiProxy(request: Request, getClientAddress: () => string,
     if (stream) init.duplex = "half";
     init.headers = [
       ...originalHeaders.filter(entry => !(stream ? [] : ["content-length", "content-type"]).includes(entry[0].toLowerCase())),
-      [ "X-Forwarded-For", determineClientAddress(request, getClientAddress) ],
+      [ "X-Real-IP", determineClientAddress(request, getClientAddress) ],
     ];
     const response = await fetch(`${process.env.API_URL}/api/${endpoint}`, init).catch((error) => {
       throw error; // TODO: maybe format as return json(...) too?

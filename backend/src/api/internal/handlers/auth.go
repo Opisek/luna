@@ -6,7 +6,6 @@ import (
 	"luna-backend/crypto"
 	"luna-backend/errors"
 	"luna-backend/types"
-	"net"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -136,8 +135,8 @@ func Login(c *gin.Context) {
 	session := &types.Session{
 		UserId:           userId,
 		UserAgent:        c.Request.UserAgent(),
-		LastIpAddress:    net.ParseIP(c.ClientIP()),
-		InitialIpAddress: net.ParseIP(c.ClientIP()),
+		LastIpAddress:    util.DetermineClientAddress(c),
+		InitialIpAddress: util.DetermineClientAddress(c),
 		IsShortLived:     c.PostForm("remember") != "true",
 		IsApi:            false,
 		SecretHash:       []byte{},
@@ -314,8 +313,8 @@ func Register(c *gin.Context) {
 	session := &types.Session{
 		UserId:           userId,
 		UserAgent:        c.Request.UserAgent(),
-		InitialIpAddress: net.ParseIP(c.ClientIP()),
-		LastIpAddress:    net.ParseIP(c.ClientIP()),
+		InitialIpAddress: util.DetermineClientAddress(c),
+		LastIpAddress:    util.DetermineClientAddress(c),
 		IsShortLived:     c.PostForm("remember") != "true",
 		IsApi:            false,
 		SecretHash:       []byte{},

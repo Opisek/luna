@@ -12,7 +12,6 @@ import (
 	"luna-backend/db"
 	"luna-backend/errors"
 	"luna-backend/perms"
-	"net"
 	"net/http"
 	"time"
 
@@ -238,7 +237,7 @@ func RequireAuth() gin.HandlerFunc {
 		}
 
 		// Find the session in the database => Verifies that the session has not been revoked and that the user exists
-		session, tr := u.Tx.Queries().GetSessionAndUpdateLastSeen(parsedToken.UserId, parsedToken.SessionId, net.ParseIP(c.ClientIP()))
+		session, tr := u.Tx.Queries().GetSessionAndUpdateLastSeen(parsedToken.UserId, parsedToken.SessionId, util.DetermineClientAddress(c))
 		if tr != nil {
 			u.Error(tr)
 			c.Abort()
@@ -383,7 +382,7 @@ func DynamicThrottle(throttle *util.Throttle) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		u := util.GetUtil(c)
 
-		ip := net.ParseIP(c.ClientIP()).String()
+		ip := util.DetermineClientAddress(c).String()
 
 		failCount := throttle.GetFailedAttempts(ip)
 		if failCount > 50 {

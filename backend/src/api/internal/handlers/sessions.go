@@ -8,7 +8,6 @@ import (
 	"luna-backend/errors"
 	"luna-backend/perms"
 	"luna-backend/types"
-	"net"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -145,8 +144,8 @@ func PutSession(c *gin.Context) {
 	session := &types.Session{
 		UserId:           userId,
 		UserAgent:        apiTokenName,
-		InitialIpAddress: net.ParseIP(c.ClientIP()),
-		LastIpAddress:    net.ParseIP(c.ClientIP()),
+		InitialIpAddress: util.DetermineClientAddress(c),
+		LastIpAddress:    util.DetermineClientAddress(c),
 		IsShortLived:     false,
 		IsApi:            true,
 		SecretHash:       []byte{},
