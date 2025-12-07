@@ -269,7 +269,7 @@ func Register(c *gin.Context) {
 		Searchable:         true,
 		ProfilePictureType: "static",
 		ProfilePictureFile: types.EmptyId(),
-		ProfilePictureUrl:  util.GetDefaultProfilePictureUrl(!u.Config.Settings.DisableGravatar.Enabled, payload.Email),
+		ProfilePictureUrl:  util.GetDefaultProfilePictureUrl(!u.Config.Settings.EnableGravatar.Enabled, payload.Email),
 	}
 
 	// Insert the user into the database

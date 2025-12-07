@@ -50,6 +50,7 @@ export class Settings {
     [GlobalSettingKeys.UseIpGeolocation]: true,
     [GlobalSettingKeys.EnableGravatar]: true,
     [GlobalSettingKeys.CacheProfilePictures]: true,
+    [GlobalSettingKeys.EnableProfilePicturesUpload]: true,
   });
 
   constructor(prefetchedData: { userData: UserData, userSettings: UserSettings, globalSettings: GlobalSettings } | null = null) {

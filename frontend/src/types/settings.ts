@@ -28,6 +28,7 @@ export enum GlobalSettingKeys {
   UseIpGeolocation = "use_ip_geolocation",
   EnableGravatar = "enable_gravatar",
   CacheProfilePictures = "cache_profile_pictures",
+  EnableProfilePicturesUpload = "enable_profile_pictures_upload",
 }
 
 export type UserSettings = {
@@ -60,6 +61,7 @@ export type GlobalSettings = {
   [GlobalSettingKeys.UseIpGeolocation]: boolean;
   [GlobalSettingKeys.EnableGravatar]: boolean;
   [GlobalSettingKeys.CacheProfilePictures]: boolean;
+  [GlobalSettingKeys.EnableProfilePicturesUpload]: boolean;
 };
 
 export type UserData = {

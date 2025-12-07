@@ -94,6 +94,21 @@ func PatchUserData(c *gin.Context) {
 	newProfilePictureRequested := newProfilePictureType != "" || rawNewProfilePictureUrl != "" || pfpFileErr == nil
 	rawNewSearchable := c.PostForm("searchable")
 
+	switch newProfilePictureType {
+	case constants.ProfilePictureGravatar:
+		if !u.Config.Settings.EnableGravatar.Enabled {
+			u.Error(errors.New().Status(http.StatusBadRequest).
+				Append(errors.LvlPlain, "Gravatar profile pictures are disabled"))
+			return
+		}
+	case constants.ProfilePictureDatabase:
+		if !u.Config.Settings.EnableProfilePicturesUpload.Enabled {
+			u.Error(errors.New().Status(http.StatusBadRequest).
+				Append(errors.LvlPlain, "Profile picture uploads are disabled"))
+			return
+		}
+	}
+
 	switch pfpFileErr {
 	case nil:
 		break

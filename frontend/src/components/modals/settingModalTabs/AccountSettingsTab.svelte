@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { Settings } from "../../../lib/client/data/settings.svelte";
+  import type { Option } from "../../../types/options";
   import { isValidEmail, isValidPassword, isValidRepeatPassword, isValidUsername, valid } from "../../../lib/client/validation";
   import { getSha256Hash } from "../../../lib/common/crypto";
   import { GlobalSettingKeys, UserSettingKeys, type UserData } from "../../../types/settings";
@@ -247,13 +248,14 @@
       name="pfp_type"
       placeholder="Profile Picture"
       bind:value={settings.userData.profile_picture_type}
-      options={(!settings.globalSettings[GlobalSettingKeys.EnableGravatar] ? [] : [
-        { name: "Gravatar", value: "gravatar" }
-      ]).concat([
-        { name: "Upload File", value: "database" },
-        { name: "Internet Link", value: "remote" },
-        { name: "Luna Art", value: "static" }
-      ])}
+      options={
+        ([
+          [ { name: "Gravatar", value: "gravatar" }, settings.globalSettings[GlobalSettingKeys.EnableGravatar] ],
+          [ { name: "Upload File", value: "database" }, settings.globalSettings[GlobalSettingKeys.EnableProfilePicturesUpload] ],
+          [ { name: "Internet Link", value: "remote" }, true],
+          [ { name: "Luna Art", value: "static" }, true ]
+        ] as [Option<string>, boolean][]).filter(x => x[1]).map(x => x[0])
+      }
     />
   </div>
   <Image

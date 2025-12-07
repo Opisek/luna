@@ -63,6 +63,12 @@
   info={`Whether profile pictures from remote websites (including Gravatar) should be cached locally. Caching profile pictures can improve performance and privacy, but it introduces the risk of hosting illicit content if a malicious user uses it as their profile picture. The same risk exists if users upload profile pictures directly.`}
   bind:value={settings.globalSettings[GlobalSettingKeys.CacheProfilePictures]}
 />
+<ToggleInput
+  name={GlobalSettingKeys.EnableProfilePicturesUpload}
+  description="Enable Profile Picture Uploads"
+  info={`Allow users to upload their own profile pictures directly to the server. This introduces the risk of hosting illicit content if a malicious user uploads such an image as their profile picture. The same risk exists if caching of remote profile pictures is enabled.`}
+  bind:value={settings.globalSettings[GlobalSettingKeys.EnableProfilePicturesUpload]}
+/>
 <SelectButtons
   name={GlobalSettingKeys.LoggingVerbosity}
   bind:value={settings.globalSettings[GlobalSettingKeys.LoggingVerbosity]}

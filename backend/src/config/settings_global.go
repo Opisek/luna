@@ -8,12 +8,13 @@ import (
 )
 
 const (
-	KeyRegistrationEnabled  = "registration_enabled"
-	KeyLoggingVerbosity     = "logging_verbosity"
-	KeyUseCdnFonts          = "use_cdn_fonts"
-	KeyUseIpGeolocation     = "use_ip_geolocation"
-	KeyEnableGravatar       = "enable_gravatar"
-	KeyCacheProfilePictures = "cache_profile_pictures"
+	KeyRegistrationEnabled         = "registration_enabled"
+	KeyLoggingVerbosity            = "logging_verbosity"
+	KeyUseCdnFonts                 = "use_cdn_fonts"
+	KeyUseIpGeolocation            = "use_ip_geolocation"
+	KeyEnableGravatar              = "enable_gravatar"
+	KeyCacheProfilePictures        = "cache_profile_pictures"
+	KeyEnableProfilePicturesUpload = "enable_profile_pictures_upload"
 )
 
 func AllDefaultGlobalSettings() []SettingsEntry {
@@ -24,6 +25,7 @@ func AllDefaultGlobalSettings() []SettingsEntry {
 		&UseIpGeolocation{},
 		&EnableGravatar{},
 		&CacheProfilePictures{},
+		&EnableProfilePicturesUpload{},
 	}
 
 	for _, setting := range settings {
@@ -47,6 +49,8 @@ func GetMatchingGlobalSettingStruct(key string) (SettingsEntry, *errors.ErrorTra
 		return &EnableGravatar{}, nil
 	case KeyCacheProfilePictures:
 		return &CacheProfilePictures{}, nil
+	case KeyEnableProfilePicturesUpload:
+		return &EnableProfilePicturesUpload{}, nil
 	default:
 		return nil, errors.New().Status(http.StatusBadRequest).
 			Append(errors.LvlWordy, "Invalid setting key: %s", key).
@@ -169,7 +173,6 @@ func (entry *UseIpGeolocation) UnmarshalJSON(data []byte) (err error) {
 
 // Whether to enable Gravatar profile pictures
 // Should default to true
-// TODO: changing this to false should automatically change all gravatar profile pictures to our own defaults
 type EnableGravatar struct {
 	Enabled bool `json:"value"`
 }
@@ -207,6 +210,26 @@ func (entry *CacheProfilePictures) MarshalJSON() ([]byte, error) {
 	return common.MarshalBool(entry.Enabled), nil
 }
 func (entry *CacheProfilePictures) UnmarshalJSON(data []byte) (err error) {
+	entry.Enabled, err = common.UnmarshalBool(data)
+	return err
+}
+
+// Whether to allow uploading own profile pictueres
+// Should default to true
+type EnableProfilePicturesUpload struct {
+	Enabled bool `json:"value"`
+}
+
+func (entry *EnableProfilePicturesUpload) Key() string {
+	return KeyEnableProfilePicturesUpload
+}
+func (entry *EnableProfilePicturesUpload) Default() {
+	entry.Enabled = true
+}
+func (entry *EnableProfilePicturesUpload) MarshalJSON() ([]byte, error) {
+	return common.MarshalBool(entry.Enabled), nil
+}
+func (entry *EnableProfilePicturesUpload) UnmarshalJSON(data []byte) (err error) {
 	entry.Enabled, err = common.UnmarshalBool(data)
 	return err
 }

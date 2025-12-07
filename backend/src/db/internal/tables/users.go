@@ -3,6 +3,7 @@ package tables
 func (q *Tables) InitializeUsersTable() error {
 	// Users table:
 	// id username email admin verified enabled searchable pfp created_at
+	// TODO: pfp file should reference filecache and be nullable (instead of setting empty UUID)
 	_, err := q.Tx.Exec(
 		q.Context,
 		`
