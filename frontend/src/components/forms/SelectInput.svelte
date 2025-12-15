@@ -172,6 +172,7 @@
   }
 
   button.editable {
+    color: colors.$foregroundSecondary;
     background: colors.$backgroundSecondary;
     cursor: pointer;
     user-select: none;
