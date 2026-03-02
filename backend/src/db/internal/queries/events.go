@@ -14,8 +14,21 @@ import (
 
 func (q *Queries) insertEvents(events []types.Event) *errors.ErrorTrace {
 	rows := [][]any{}
+	uniqueIds := make(map[types.ID]bool)
 
 	for _, event := range events {
+		if _, exists := uniqueIds[event.GetId()]; exists {
+			// This might happen due to recurring events. In that case, the details of
+			// the instances of the events should be the same, differing only in the
+			// RECURRENCE-ID. Since "all" that the events table is meant to do is map
+			// events to their calendars, we can safely ignore duplicate events here.
+
+			// TODO: We should check whether the events really are instances of the
+			// same recurrence and error/warning if they are not.
+			continue
+		}
+		uniqueIds[event.GetId()] = true
+
 		row := []any{
 			event.GetId(),
 			event.GetCalendar().GetId(),
