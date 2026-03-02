@@ -43,6 +43,24 @@ func (q *Queries) InsertSession(session *types.Session) *errors.ErrorTrace {
 	return nil
 }
 
+func (q *Queries) UpdateSessionHash(sessionId types.ID, hash []byte) *errors.ErrorTrace {
+	query := `
+		UPDATE sessions
+		SET hash = $1
+		WHERE sessionid = $2;
+	`
+
+	_, err := q.Tx.Exec(q.Context, query, hash, sessionId)
+	if err != nil {
+		return errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not execute query").
+			Append(errors.LvlWordy, "Could not update session hash").
+			Append(errors.LvlPlain, "Database error")
+	}
+	return nil
+}
+
 func (q *Queries) UpdateSession(session *types.Session) *errors.ErrorTrace {
 	query := `
 		UPDATE sessions

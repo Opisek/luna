@@ -1,16 +1,24 @@
 package handlers
 
 import (
+	"encoding/json"
 	"luna-backend/api/internal/util"
 	"luna-backend/auth"
 	"luna-backend/crypto"
 	"luna-backend/errors"
+	"luna-backend/perms"
 	"luna-backend/types"
-	"net"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
+
+func IsSessionValid(c *gin.Context) {
+	// All the validation is done by the various middleware instances
+	util.GetUtil(c).Success(&gin.H{
+		"valid": true,
+	})
+}
 
 func GetSessions(c *gin.Context) {
 	u := util.GetUtil(c)
@@ -30,6 +38,48 @@ func GetSessions(c *gin.Context) {
 	})
 }
 
+func GetSessionPermissions(c *gin.Context) {
+	u := util.GetUtil(c)
+
+	userId := util.GetUserId(c)
+	isAdmin, tr := u.Tx.Queries().IsAdmin(userId)
+	if tr != nil {
+		u.Error(tr)
+		return
+	}
+
+	var permissions *perms.TokenPermissions
+
+	if c.Param("sessionId") == "current" {
+		permissions = util.GetPermissions(c)
+	} else if util.HasPermission(c, perms.ManageSessions) {
+		sessionId, tr := util.GetId(c, "session")
+		if tr != nil {
+			u.Error(tr)
+			return
+		}
+
+		sessionPermissions, tx := u.Tx.Queries().GetTokenPermissions(sessionId)
+		if tx != nil {
+			u.Error(tx)
+			return
+		}
+		permissions = sessionPermissions
+	} else {
+		u.Error(errors.New().Status(http.StatusForbidden).
+			Append(errors.LvlPlain, "You are not authorized to perform this action").
+			AltStr(errors.LvlWordy, "You are missing one or more permissions").
+			Append(errors.LvlDebug, "Missing permission: %v", perms.ManageSessions),
+		)
+		return
+	}
+
+	u.Success(&gin.H{
+		"is_admin":    isAdmin,
+		"permissions": permissions.ToList(),
+	})
+}
+
 func PutSession(c *gin.Context) {
 	u := util.GetUtil(c)
 
@@ -44,9 +94,9 @@ func PutSession(c *gin.Context) {
 		return
 	}
 	// Get the user's password
-	savedPassword, err := u.Tx.Queries().GetPassword(userId)
-	if err != nil {
-		u.Error(err.Status(http.StatusUnauthorized).
+	savedPassword, tr := u.Tx.Queries().GetPassword(userId)
+	if tr != nil {
+		u.Error(tr.Status(http.StatusUnauthorized).
 			Append(errors.LvlDebug, "Could not get password for user %v", userId.String()).
 			Append(errors.LvlPlain, "Invalid credentials"),
 		)
@@ -54,7 +104,7 @@ func PutSession(c *gin.Context) {
 	}
 
 	// Verify the password
-	if !auth.VerifyPassword(password, savedPassword) {
+	if !auth.VerifyPassword(password, savedPassword, u.Config) {
 		u.Error(errors.New().Status(http.StatusUnauthorized).
 			Append(errors.LvlDebug, "Wrong password").
 			Append(errors.LvlPlain, "Invalid credentials"),
@@ -71,9 +121,20 @@ func PutSession(c *gin.Context) {
 		return
 	}
 
-	secret, err := crypto.GenerateRandomBytes(256)
+	requestedPerms := c.Request.FormValue("permissions")
+	var parsedPerms []string
+	// Parse list of permissions []:
+	err := json.Unmarshal([]byte(requestedPerms), &parsedPerms)
 	if err != nil {
-		u.Error(err.
+		u.Error(errors.New().Status(http.StatusBadRequest).
+			Append(errors.LvlPlain, "Missing or malformed permissions list"),
+		)
+		return
+	}
+
+	secret, tr := crypto.GenerateRandomBytes(256)
+	if tr != nil {
+		u.Error(tr.
 			Append(errors.LvlWordy, "Could not generate random bytes").
 			AltStr(errors.LvlBroad, "Could not create API key"),
 		)
@@ -83,25 +144,49 @@ func PutSession(c *gin.Context) {
 	session := &types.Session{
 		UserId:           userId,
 		UserAgent:        apiTokenName,
-		InitialIpAddress: net.ParseIP(c.ClientIP()),
-		LastIpAddress:    net.ParseIP(c.ClientIP()),
+		InitialIpAddress: util.DetermineClientAddress(c),
+		LastIpAddress:    util.DetermineClientAddress(c),
 		IsShortLived:     false,
 		IsApi:            true,
-		SecretHash:       crypto.GetSha256Hash(secret),
+		SecretHash:       []byte{},
+		Permissions:      perms.FromStringList(parsedPerms),
 	}
-	err = u.Tx.Queries().InsertSession(session)
-	if err != nil {
-		u.Error(err.
+	tr = u.Tx.Queries().InsertSession(session)
+	if tr != nil {
+		u.Error(tr.
 			Append(errors.LvlWordy, "Could not create API session").
 			AltStr(errors.LvlBroad, "Could not create API key"),
 		)
 		return
 	}
 
+	serverSecret, tr := crypto.GetSymmetricKey(u.Config, "tokenHashSecret")
+	if tr != nil {
+		u.Error(tr)
+		c.Abort()
+		return
+	}
+	tr = u.Tx.Queries().UpdateSessionHash(session.SessionId, crypto.GetSha256Hash(serverSecret, session.SessionId.Bytes(), secret))
+	if tr != nil {
+		u.Error(tr.
+			Append(errors.LvlBroad, "Could not create API key"),
+		)
+		return
+	}
+
+	tr = u.Tx.Queries().UpdateTokenPermissions(session.SessionId, session.Permissions)
+	if tr != nil {
+		u.Error(tr.
+			Append(errors.LvlWordy, "Could not set API token permissions").
+			AltStr(errors.LvlBroad, "Could not create API key"),
+		)
+		return
+	}
+
 	// Generate the token
-	token, err := auth.NewToken(u.Config, u.Tx, userId, session.SessionId, secret)
-	if err != nil {
-		u.Error(err.
+	token, tr := auth.NewToken(u.Config, u.Tx, userId, session.SessionId, secret)
+	if tr != nil {
+		u.Error(tr.
 			Append(errors.LvlWordy, "Could not generate API token").
 			AltStr(errors.LvlBroad, "Could not create API key"),
 		)
@@ -126,9 +211,9 @@ func PatchSession(c *gin.Context) {
 		return
 	}
 	// Get the user's password
-	savedPassword, err := u.Tx.Queries().GetPassword(userId)
-	if err != nil {
-		u.Error(err.Status(http.StatusUnauthorized).
+	savedPassword, tr := u.Tx.Queries().GetPassword(userId)
+	if tr != nil {
+		u.Error(tr.Status(http.StatusUnauthorized).
 			Append(errors.LvlDebug, "Could not get password for user %v", userId.String()).
 			Append(errors.LvlPlain, "Invalid credentials"),
 		)
@@ -136,7 +221,7 @@ func PatchSession(c *gin.Context) {
 	}
 
 	// Verify the password
-	if !auth.VerifyPassword(password, savedPassword) {
+	if !auth.VerifyPassword(password, savedPassword, u.Config) {
 		u.Error(errors.New().Status(http.StatusUnauthorized).
 			Append(errors.LvlDebug, "Wrong password").
 			Append(errors.LvlPlain, "Invalid credentials"),
@@ -147,7 +232,6 @@ func PatchSession(c *gin.Context) {
 	currentSessionId := util.GetSessionId(c)
 
 	var sessionId types.ID
-	var tr *errors.ErrorTrace
 	if c.Param("sessionId") == "current" {
 		sessionId = currentSessionId
 	} else {
@@ -179,18 +263,49 @@ func PatchSession(c *gin.Context) {
 		return
 	}
 
-	if session.UserAgent == apiTokenName {
-		u.Error(errors.New().Status(http.StatusBadRequest).
-			Append(errors.LvlPlain, "Nothing to change"),
-		)
-		return
+	differentName := apiTokenName != session.UserAgent
+	if differentName {
+		tr = u.Tx.Queries().UpdateSession(session)
+		if tr != nil {
+			u.Error(tr)
+			return
+		}
 	}
 
 	session.UserAgent = apiTokenName
 
-	tr = u.Tx.Queries().UpdateSession(session)
+	requestedPerms := c.Request.FormValue("permissions")
+	var parsedPerms []string
+	// Parse list of permissions []:
+	err := json.Unmarshal([]byte(requestedPerms), &parsedPerms)
+	if err != nil {
+		u.Error(errors.New().Status(http.StatusBadRequest).
+			Append(errors.LvlPlain, "Missing or malformed permissions list"),
+		)
+		return
+	}
+	session.Permissions = perms.FromStringList(parsedPerms)
+
+	currentPermissions, tr := u.Tx.Queries().GetTokenPermissions(session.SessionId)
 	if tr != nil {
 		u.Error(tr)
+		return
+	}
+
+	differentPermissions := !session.Permissions.Equals(currentPermissions)
+
+	if differentPermissions {
+		tr = u.Tx.Queries().UpdateTokenPermissions(session.SessionId, session.Permissions)
+		if tr != nil {
+			u.Error(tr)
+			return
+		}
+	}
+
+	if !differentName && !differentPermissions {
+		u.Error(errors.New().Status(http.StatusBadRequest).
+			Append(errors.LvlPlain, "Nothing to change"),
+		)
 		return
 	}
 

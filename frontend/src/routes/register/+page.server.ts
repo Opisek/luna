@@ -18,7 +18,7 @@ export const actions = {
       };
     }
 
-    const res = await apiProxy(request, getClientAddress(), "register", { method: "POST", body: formData }, false);
+    const res = await apiProxy(request, getClientAddress, "register", { method: "POST", body: formData }, false);
 
     if (res.ok) {
       const body = await res.json();

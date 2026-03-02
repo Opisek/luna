@@ -76,6 +76,7 @@
     font-size: text.$fontSize;
   }
   span.date {
+    color: colors.$foregroundSecondary;
     text-align: center;
     width: 100%;
     display: block;

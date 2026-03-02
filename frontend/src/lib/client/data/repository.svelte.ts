@@ -376,24 +376,31 @@ export class Repository {
     if (detailsCacheEntry) detailsCacheEntry.value = modifiedSource;
     this.compileSources();
 
-    this.getCalendars(modifiedSource.id).then(async (cals) => {
-      this.compileCalendars();
-      const [_, errors] = await parallel(cals.map((cal) => this.getEventsFromCalendar(cal.id, this.eventsRangeStart, this.eventsRangeEnd))).catch((err) => {
-        throw new Error(`Failed to fetch events from ${modifiedSource.name}: ${(err.cause || err).message}`, { cause: err.cause || err });
-      });
-      errors.forEach((err) => {
+    if (changes.settings) {
+      for (const calendar of this.calendarsCache.get(modifiedSource.id)?.value || []) {
+        this.eventsCache.delete(calendar);
+        this.calendarsMap.delete(calendar);
+      }
+
+      this.getCalendars(modifiedSource.id, true).then(async (cals) => {
+        this.compileCalendars();
+        const [_, errors] = await parallel(cals.map((cal) => this.getEventsFromCalendar(cal.id, this.eventsRangeStart, this.eventsRangeEnd))).catch((err) => {
+          throw new Error(`Failed to fetch events from ${modifiedSource.name}: ${(err.cause || err).message}`, { cause: err.cause || err });
+        });
+        errors.forEach((err) => {
+          queueNotification(
+            ColorKeys.Danger,
+            `Failed to fetch events from ${cals[err[0]].name}: ${err[1].message}`
+          );
+        });
+        this.compileEvents(this.eventsRangeStart, this.eventsRangeEnd);
+      }).catch((err) => {
         queueNotification(
           ColorKeys.Danger,
-          `Failed to fetch events from ${cals[err[0]].name}: ${err[1].message}`
+          `Failed to fetch calendars from ${modifiedSource.name}: ${err.message}`
         );
       });
-      this.compileEvents(this.eventsRangeStart, this.eventsRangeEnd);
-    }).catch((err) => {
-      queueNotification(
-        ColorKeys.Danger,
-        `Failed to fetch calendars from ${modifiedSource.name}: ${err.message}`
-      );
-    });
+    }
 
     this.saveCache();
   }
@@ -696,10 +703,15 @@ export class Repository {
     const fetchStart = new Date(start);
     const fetchEnd = new Date(end);
 
+    fetchStart.setDate(1);
+    fetchStart.setHours(0, 0, 0, 0);
+    fetchEnd.setDate(1);
+    fetchEnd.setHours(0, 0, 0, 0);
+
     while (fetchStart.getTime() <= fetchEnd.getTime()) {
       const cacheKey = new Date(fetchStart);
-      cacheKey.setUTCDate(1);
       cacheKey.setUTCHours(0, 0, 0, 0);
+      cacheKey.setUTCDate(1);
       const cached = this.cacheOk(cache.get(cacheKey.getTime()));
       if (!cached) break;
       result = result.concat(await this.mapAllRecurrenceInstances(cached));
@@ -708,13 +720,17 @@ export class Repository {
 
     while (fetchEnd.getTime() >= fetchStart.getTime()) {
       const cacheKey = new Date(fetchEnd);
-      cacheKey.setUTCDate(1);
       cacheKey.setUTCHours(0, 0, 0, 0);
+      cacheKey.setUTCDate(1);
       const cached = this.cacheOk(cache.get(cacheKey.getTime()));
       if (!cached) break;
       result = result.concat(await this.mapAllRecurrenceInstances(cached));
       fetchEnd.setMonth(fetchEnd.getMonth() - 1);
     }
+
+    fetchEnd.setMonth(fetchEnd.getMonth() + 1);
+    fetchEnd.setDate(0);
+    fetchEnd.setHours(23, 59, 59, 999);
 
     if (fetchStart.getTime() > fetchEnd.getTime()) {
       return result;

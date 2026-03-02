@@ -26,6 +26,9 @@ export enum GlobalSettingKeys {
   LoggingVerbosity = "logging_verbosity",
   UseCdnFonts = "use_cdn_fonts",
   UseIpGeolocation = "use_ip_geolocation",
+  EnableGravatar = "enable_gravatar",
+  CacheProfilePictures = "cache_profile_pictures",
+  EnableProfilePicturesUpload = "enable_profile_pictures_upload",
 }
 
 export type UserSettings = {
@@ -56,6 +59,9 @@ export type GlobalSettings = {
   [GlobalSettingKeys.LoggingVerbosity]: number;
   [GlobalSettingKeys.UseCdnFonts]: boolean;
   [GlobalSettingKeys.UseIpGeolocation]: boolean;
+  [GlobalSettingKeys.EnableGravatar]: boolean;
+  [GlobalSettingKeys.CacheProfilePictures]: boolean;
+  [GlobalSettingKeys.EnableProfilePicturesUpload]: boolean;
 };
 
 export type UserData = {
@@ -63,6 +69,9 @@ export type UserData = {
   username: string;
   email: string;
   searchable: boolean;
+  profile_picture_type: string;
+  profile_picture_url: string;
+  profile_picture_file: string;
   profile_picture: string;
   admin: boolean;
   verified: boolean;

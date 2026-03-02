@@ -29,5 +29,5 @@ COPY package.json .
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY --from=build /app/build ./build
 USER bun:bun
-HEALTHCHECK --interval=15s --timeout=3s --retries=2 CMD wget -O /dev/null http://localhost:${PORT:-8080}/api/health
+HEALTHCHECK --interval=15s --timeout=3s --retries=2 CMD wget -O- http://127.0.0.1:${PORT:-8080}/api/health
 ENTRYPOINT [ "bun", "./build/index.js" ]

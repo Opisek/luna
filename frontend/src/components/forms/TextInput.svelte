@@ -139,13 +139,15 @@
   input, textarea {
     all: unset;
     flex-grow: 1;
-    color: colors.$foregroundPrimary;
     margin: dimensions.$gapSmall 0;
     padding: 0;
   }
 
   div.wrapper.editable {
     background: colors.$backgroundSecondary;
+  }
+  div.wrapper.editable > input, div.wrapper.editable > textarea {
+    color: colors.$foregroundSecondary;
   }
   div.noneditable {
     --barFocusIndicatorColor: transparent;

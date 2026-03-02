@@ -78,13 +78,13 @@
     switch (view) {
       case "month":
         rangeStart.setDate(1);
-        rangeStart.setDate(rangeStart.getDate() - getDayIndex(date));
+        rangeStart.setDate(rangeStart.getDate() - getDayIndex(rangeStart));
         rangeEnd.setMonth(rangeEnd.getMonth() + 1);
         rangeEnd.setDate(0);
-        rangeEnd.setDate(rangeEnd.getDate() + 7 - getDayIndex(date));
+        rangeEnd.setDate(rangeEnd.getDate() + 6 - getDayIndex(rangeEnd));
         break;
       case "week":
-        rangeStart.setDate(date.getDate() - getDayIndex(date));
+        rangeStart.setDate(date.getDate() - getDayIndex(rangeStart));
         rangeEnd.setDate(rangeStart.getDate() + 7);
         break;
       case "day":

@@ -6,6 +6,7 @@ import (
 	"luna-backend/config"
 	"luna-backend/db"
 	"luna-backend/errors"
+	"luna-backend/perms"
 	"luna-backend/types"
 	"net/http"
 	"strings"
@@ -103,6 +104,7 @@ func GetId(c *gin.Context, primitive string) (types.ID, *errors.ErrorTrace) {
 	if err != nil {
 		return types.EmptyId(), errors.New().Status(http.StatusBadRequest).
 			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Received id was: %v", rawId).
 			Append(errors.LvlWordy, "Malformed %v id", primitive).
 			Append(errors.LvlPlain, "Malformed request")
 	}
@@ -127,6 +129,7 @@ func GetIdOrDefault(c *gin.Context, primitive string, defaultString string, defa
 	if err != nil {
 		return types.EmptyId(), errors.New().Status(http.StatusBadRequest).
 			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Received id was: %v", rawId).
 			Append(errors.LvlWordy, "Malformed %v id", primitive).
 			Append(errors.LvlPlain, "Malformed request")
 	}
@@ -150,4 +153,50 @@ func GetBearerToken(c *gin.Context) (string, *errors.ErrorTrace) {
 	}
 
 	return parts[1], nil
+}
+
+func GetPermissions(c *gin.Context) *perms.TokenPermissions {
+	permissions, exists := c.Get("permissions")
+	if !exists {
+		return perms.FromList([]perms.Permission{})
+	}
+	return permissions.(*perms.TokenPermissions)
+}
+
+func HasPermission(c *gin.Context, permission perms.Permission) bool {
+	permissions, exists := c.Get("permissions")
+	if !exists {
+		return false
+	}
+	return permissions.(*perms.TokenPermissions).Has(permission)
+}
+
+func HasAdminPrivilegesAndReportError(c *gin.Context) bool {
+	u := GetUtil(c)
+	userId := GetUserId(c)
+
+	isAdmin, tr := u.Tx.Queries().IsAdmin(userId)
+	if tr != nil {
+		u.Error(tr)
+		return false
+	}
+
+	if !isAdmin {
+		u.Error(errors.New().Status(http.StatusForbidden).
+			Append(errors.LvlPlain, "Only administrators can view all users"),
+		)
+		return false
+	}
+
+	adminPerms := GetPermissions(c).Has(perms.Administrative)
+	if !adminPerms {
+		u.Error(errors.New().Status(http.StatusForbidden).
+			Append(errors.LvlPlain, "You are not authorized to perform this action").
+			AltStr(errors.LvlWordy, "You are missing one or more permissions").
+			Append(errors.LvlDebug, "Missing permission: %v", perms.Administrative),
+		)
+		return false
+	}
+
+	return true
 }

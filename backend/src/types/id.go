@@ -35,6 +35,10 @@ func (id ID) UUID() uuid.UUID {
 	return uuid.UUID(id)
 }
 
+func (id ID) IsEmpty() bool {
+	return uuid.UUID(id) == uuid.Nil
+}
+
 func (id ID) Bytes() []byte {
 	return []byte(id.String())
 }

@@ -18,5 +18,11 @@ func GetFile(c *gin.Context) {
 
 	file := files.GetDatabaseFile(fileId)
 
+	_, tr = file.GetContent(u.Tx.Queries())
+	if tr != nil {
+		u.Error(tr)
+		return
+	}
+
 	u.ResponseWithFile(file)
 }

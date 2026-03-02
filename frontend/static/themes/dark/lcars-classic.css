@@ -1,0 +1,55 @@
+/* https://www.thelcars.com/colors.php */
+html[data-theme="dark"] {
+  --lcars-black: #000000;
+  --lcars-african-violet: #cc99ff;
+  --lcars-almond: #ffaa90;
+  --lcars-almond-creme: #ffbbaa;
+  --lcars-blue: #5566ff;
+  --lcars-bluey: #8899ff;
+  --lcars-butterscotch: #ff9966;
+  --lcars-gold: #ffaa00;
+  --lcars-golden-orange: #ff9900;
+  --lcars-gray: #666688;
+  --lcars-green: #999933;
+  --lcars-ice: #99ccff;
+  --lcars-lilac: #cc55ff;
+  --lcars-lima-bean: #cccc66;
+  --lcars-magenta: #cc5599;
+  --lcars-mars: #ff2200;
+  --lcars-moonlit-violet: #9966ff;
+  --lcars-orange: #ff8800;
+  --lcars-peach: #ff8866;
+  --lcars-red: #cc4444;
+  --lcars-sky: #aaaaff;
+  --lcars-space-white: #f5f6fa;
+  --lcars-sunflower: #ffcc99;
+  --lcars-tomato: #ff5555;
+  --lcars-violet-creme: #ddbbff;
+
+  --colorForegroundDark: var(--lcars-black);
+  --colorForegroundBright: var(--lcars-african-violet);
+  --colorForegroundLink: var(--lcars-lilac, #C16FFF);
+
+  --colorBackgroundPrimary: var(--lcars-black);
+  --colorForegroundPrimary: var(--colorForegroundBright);
+
+  --colorBackgroundSecondary: var(--lcars-red);
+  --colorForegroundSecondary: var(--colorForegroundDark);
+
+  --colorBackgroundTertiary: var(--lcars-peach);
+  --colorForegroundTertiary: var(--colorForegroundDark);
+
+  --colorBackgroundSuccess: var(--lcars-green);
+  --colorForegroundSuccess: var(--colorForegroundDark);
+
+  --colorBackgroundWarning: var(--lcars-gold);
+  --colorForegroundWarning: var(--colorForegroundDark);
+
+  --colorBackgroundDanger: var(--lcars-mars);
+  --colorForegroundDanger: var(--colorForegroundDark);
+
+  --colorBackgroundAccent: var(--lcars-orange);
+  --colorForegroundAccent: var(--colorForegroundDark);
+
+  --colorForegroundSunday: var(--lcars-violet-creme);
+}

@@ -11,7 +11,7 @@ import (
 	"luna-backend/crypto"
 	"luna-backend/db"
 	"luna-backend/errors"
-	"net"
+	"luna-backend/perms"
 	"net/http"
 	"time"
 
@@ -104,17 +104,6 @@ func RequestSetup(timeout time.Duration, database *db.Database, withTransaction 
 		warnChan := make(chan *errors.ErrorTrace)
 
 		// Pass important variables to the handler
-		c.Set("transaction", tx)
-		c.Set("config", config)
-		c.Set("logger", logger)
-		c.Set("context", ctx)
-
-		// Pass important variables to the handler
-		c.Set("transaction", tx)
-		c.Set("config", config)
-		c.Set("logger", logger)
-		c.Set("context", ctx)
-
 		c.Set("handlerUtil", &util.HandlerUtility{
 			Config:       config,
 			Logger:       logger,
@@ -157,6 +146,7 @@ func RequestSetup(timeout time.Duration, database *db.Database, withTransaction 
 				responseFileName = responseFile.GetName(tx.Queries())
 				responseFileBody, responseErr = responseFile.GetBytes(tx.Queries())
 				if responseErr != nil {
+					// TODO: i don't think this kills the request properly
 					return
 				}
 			}
@@ -165,6 +155,7 @@ func RequestSetup(timeout time.Duration, database *db.Database, withTransaction 
 			if withTransaction {
 				responseErr = tx.Commit(logger)
 				if responseErr != nil {
+					// TODO: i don't think this kills the request properly
 					return
 				}
 			}
@@ -246,7 +237,7 @@ func RequireAuth() gin.HandlerFunc {
 		}
 
 		// Find the session in the database => Verifies that the session has not been revoked and that the user exists
-		session, tr := u.Tx.Queries().GetSessionAndUpdateLastSeen(parsedToken.UserId, parsedToken.SessionId, net.ParseIP(c.ClientIP()))
+		session, tr := u.Tx.Queries().GetSessionAndUpdateLastSeen(parsedToken.UserId, parsedToken.SessionId, util.DetermineClientAddress(c))
 		if tr != nil {
 			u.Error(tr)
 			c.Abort()
@@ -265,7 +256,13 @@ func RequireAuth() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		actualHash := crypto.GetSha256Hash(secret)
+		serverSecret, tr := crypto.GetSymmetricKey(u.Config, "tokenHashSecret")
+		if tr != nil {
+			u.Error(tr)
+			c.Abort()
+			return
+		}
+		actualHash := crypto.GetSha256Hash(serverSecret, parsedToken.SessionId.Bytes(), secret)
 		if !bytes.Equal(actualHash, session.SecretHash) {
 			u.Error(errors.New().Status(http.StatusUnauthorized).
 				Append(errors.LvlDebug, "Token secret value produces incorrect hash value").
@@ -305,8 +302,22 @@ func RequireAuth() gin.HandlerFunc {
 			}
 		}
 
+		// Get the permissions associated with the token
+		var permissions *perms.TokenPermissions
+		if !session.IsApi {
+			permissions = perms.AllPermissions()
+		} else {
+			permissions, tr = u.Tx.Queries().GetTokenPermissions(parsedToken.SessionId)
+			if tr != nil {
+				u.Error(tr)
+				c.Abort()
+				return
+			}
+		}
+
 		c.Set("user_id", parsedToken.UserId)
 		c.Set("session_id", parsedToken.SessionId)
+		c.Set("permissions", permissions)
 
 		c.Next()
 	}
@@ -335,11 +346,43 @@ func RequireAdmin() gin.HandlerFunc {
 	}
 }
 
+func RequirePermissions(requiredPerms ...perms.Permission) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		u := util.GetUtil(c)
+		permissions, exists := c.Get("permissions")
+		if !exists {
+			u.Error(errors.New().Status(http.StatusForbidden).
+				Append(errors.LvlDebug, "No permissions found in context").
+				AltStr(errors.LvlWordy, "You are missing one or more permissions").
+				Append(errors.LvlPlain, "You are not authorized to perform this action"),
+			)
+			c.Abort()
+			return
+		}
+
+		tokenPerms := permissions.(*perms.TokenPermissions)
+
+		for _, perm := range requiredPerms {
+			if !tokenPerms.Has(perm) {
+				u.Error(errors.New().Status(http.StatusForbidden).
+					Append(errors.LvlDebug, "Missing permission: %v", perm).
+					AltStr(errors.LvlWordy, "You are missing one or more permissions").
+					Append(errors.LvlPlain, "You are not authorized to perform this action"),
+				)
+				c.Abort()
+				return
+			}
+		}
+
+		c.Next()
+	}
+}
+
 func DynamicThrottle(throttle *util.Throttle) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		u := util.GetUtil(c)
 
-		ip := net.ParseIP(c.ClientIP()).String()
+		ip := util.DetermineClientAddress(c).String()
 
 		failCount := throttle.GetFailedAttempts(ip)
 		if failCount > 50 {

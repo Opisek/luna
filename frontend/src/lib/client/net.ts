@@ -4,7 +4,7 @@ import { clearSession } from "./data/sessions.svelte";
 export async function fetchResponse(url: string, options: RequestInit = {}): Promise<Response> {
   const response = await fetch(url, options).catch((err) => {
     if (!err) err = new Error("Could not reach the server");
-    if (err.includes("NetworkError when attempting to fetch resource.")) err = "Could not reach the server";
+    if (err.message.includes("NetworkError when attempting to fetch resource.")) err = "Could not reach the server";
     throw new Error(err, { cause: new Error("504") });
   });
   if (response.ok) {

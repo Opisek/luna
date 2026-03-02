@@ -61,7 +61,7 @@
       window.removeEventListener("click", clickOutside);
       window.removeEventListener("keydown", keyboardClick);
       document.removeEventListener("scroll", scrollEvent, true);
-      optionsWrapper.hidePopover();
+      if (optionsWrapper.matches(":popover-open")) optionsWrapper.hidePopover();
     }
   })
 
@@ -172,6 +172,7 @@
   }
 
   button.editable {
+    color: colors.$foregroundSecondary;
     background: colors.$backgroundSecondary;
     cursor: pointer;
     user-select: none;

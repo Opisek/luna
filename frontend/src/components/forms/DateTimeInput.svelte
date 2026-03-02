@@ -79,6 +79,7 @@
   }
 
   div.editable button {
+    color: colors.$foregroundSecondary;
     background: colors.$backgroundSecondary;
     cursor: pointer;
     margin: 0;

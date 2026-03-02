@@ -20,6 +20,7 @@ services:
       PORT: 8080
       PUBLIC_URL: http://pc.opi:8080
       API_URL: http://luna-backend:3000
+      #ADDRESS_HEADER: X-Real-IP
     build:
       context: frontend
       dockerfile: Dockerfile

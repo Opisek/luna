@@ -162,6 +162,9 @@
     backgroundPertentageInterval = null;
   }
 
+  setTimeout(() => {
+    recalculateBackgroundPercentage();
+  }, 0);
   $effect(() => {
     // @ts-ignore
     rawValue, value, recalculateBackgroundPercentage();

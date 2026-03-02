@@ -4,9 +4,11 @@ import (
 	"crypto/sha256"
 )
 
-func GetSha256Hash(data []byte) []byte {
+func GetSha256Hash(data ...[]byte) []byte {
 	hash := sha256.New()
-	hash.Write(data)
+	for _, d := range data {
+		hash.Write(d)
+	}
 	digest := hash.Sum(nil)
 	return digest
 }

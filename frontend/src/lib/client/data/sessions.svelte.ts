@@ -54,9 +54,16 @@ export class ActiveSessions {
     });
   }
 
+  public async getSessionPermissions(sessionId: string): Promise<string[]> {
+    return fetchJson(`/api/sessions/${sessionId}/permissions`).then((data: { permissions: string[] }) => {
+      return data.permissions;
+    });
+  }
+
   public async requestToken(session: Session, password: string): Promise<{ token: string, session: Session }> {
     const body = new FormData();
     body.append("name", session.user_agent);
+    body.append("permissions", JSON.stringify(session.permissions));
     body.append("password", password);
 
     const token = (await fetchJson(`/api/sessions`, { method: "PUT", body: body })).token;
@@ -71,6 +78,7 @@ export class ActiveSessions {
   public async updateSession(session: Session, password: string): Promise<Session> {
     const body = new FormData();
     body.append("name", session.user_agent);
+    body.append("permissions", JSON.stringify(session.permissions));
     body.append("password", password);
 
     const token = (await fetchJson(`/api/sessions/${session.session_id}`, { method: "PATCH", body: body })).token;

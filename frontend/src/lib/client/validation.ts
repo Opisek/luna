@@ -31,8 +31,8 @@ export const isValidUsername: InputValidation = async (username) => {
 export const isValidPassword: InputValidation = async (password) => {
   if (password.length < 8)
     return invalidResponse("Password must be at least 8 characters long.");
-  if (password.length > 50)
-    return invalidResponse("Password must be at most 50 characters long.");
+  if (password.length > 1000)
+    return invalidResponse("Password must be at most 1000 characters long.");
   return valid;
 }
 

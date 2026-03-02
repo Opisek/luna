@@ -9,4 +9,5 @@ type Session = {
   is_short_lived: boolean;
   is_api: boolean;
   location: string;
+  permissions: PermissionKeys[];
 }

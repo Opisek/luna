@@ -185,6 +185,26 @@ func (tr *ErrorTrace) AltErr(detailLevel int, err error) *ErrorTrace {
 	return tr.AltStr(detailLevel, err.Error())
 }
 
+func (tr *ErrorTrace) Remove(detailLevel int) *ErrorTrace {
+	newTrace := make([][]*errEntry, 0)
+
+	for _, disjunction := range tr.trace {
+		newDisjunction := make([]*errEntry, 0)
+		for _, option := range disjunction {
+			if option.detailLevel != detailLevel {
+				newDisjunction = append(newDisjunction, option)
+			}
+		}
+		if len(newDisjunction) > 0 {
+			newTrace = append(newTrace, newDisjunction)
+		}
+	}
+
+	tr.trace = newTrace
+
+	return tr
+}
+
 // For lowering the exposed level of details
 func (tr *ErrorTrace) ConvertTo(detailLevel int) *ErrorTrace {
 	for _, disjunction := range tr.trace {

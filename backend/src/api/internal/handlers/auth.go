@@ -6,7 +6,6 @@ import (
 	"luna-backend/crypto"
 	"luna-backend/errors"
 	"luna-backend/types"
-	"net"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -53,7 +52,7 @@ func Login(c *gin.Context) {
 		)
 
 		// Hash the wrong password to prevent timing attacks
-		_, _ = auth.SecurePassword(credentials.Password)
+		_, _ = auth.SecurePassword(credentials.Password, u.Config)
 
 		return
 	}
@@ -68,13 +67,13 @@ func Login(c *gin.Context) {
 		)
 
 		// Hash the wrong password to prevent timing attacks
-		_, _ = auth.SecurePassword(credentials.Password)
+		_, _ = auth.SecurePassword(credentials.Password, u.Config)
 
 		return
 	}
 
 	// Verify the password
-	if !auth.VerifyPassword(credentials.Password, savedPassword) {
+	if !auth.VerifyPassword(credentials.Password, savedPassword, u.Config) {
 		u.Error(errors.New().Status(http.StatusUnauthorized).
 			Append(errors.LvlDebug, "Wrong password").
 			Append(errors.LvlPlain, "Invalid credentials").
@@ -86,7 +85,7 @@ func Login(c *gin.Context) {
 	// Silently update the user's password to a newer algorithm if applicable
 	if !auth.PasswordStillSecure(savedPassword) {
 		u.Logger.Infof("updating password %v for user to newer algorithm", credentials.Username)
-		newPassword, err := auth.SecurePassword(credentials.Password)
+		newPassword, err := auth.SecurePassword(credentials.Password, u.Config)
 		if err != nil {
 			u.Error(err.
 				Append(errors.LvlDebug, "Could not rehash password").
@@ -136,13 +135,27 @@ func Login(c *gin.Context) {
 	session := &types.Session{
 		UserId:           userId,
 		UserAgent:        c.Request.UserAgent(),
-		LastIpAddress:    net.ParseIP(c.ClientIP()),
-		InitialIpAddress: net.ParseIP(c.ClientIP()),
+		LastIpAddress:    util.DetermineClientAddress(c),
+		InitialIpAddress: util.DetermineClientAddress(c),
 		IsShortLived:     c.PostForm("remember") != "true",
 		IsApi:            false,
-		SecretHash:       crypto.GetSha256Hash(secret),
+		SecretHash:       []byte{},
 	}
 	err = u.Tx.Queries().InsertSession(session)
+	if err != nil {
+		u.Error(err.
+			Append(errors.LvlBroad, "Could not log in"),
+		)
+		return
+	}
+
+	serverSecret, tr := crypto.GetSymmetricKey(u.Config, "tokenHashSecret")
+	if tr != nil {
+		u.Error(tr)
+		c.Abort()
+		return
+	}
+	err = u.Tx.Queries().UpdateSessionHash(session.SessionId, crypto.GetSha256Hash(serverSecret, session.SessionId.Bytes(), secret))
 	if err != nil {
 		u.Error(err.
 			Append(errors.LvlBroad, "Could not log in"),
@@ -237,7 +250,7 @@ func Register(c *gin.Context) {
 	}
 
 	// Hash the password
-	securedPassword, err := auth.SecurePassword(payload.Password)
+	securedPassword, err := auth.SecurePassword(payload.Password, u.Config)
 	if err != nil {
 		u.Error(err.
 			Append(errors.LvlDebug, "Could not hash password").
@@ -249,11 +262,13 @@ func Register(c *gin.Context) {
 
 	// Construct the user
 	user := &types.User{
-		Username:       payload.Username,
-		Email:          payload.Email,
-		Admin:          !usersExist,
-		Searchable:     true,
-		ProfilePicture: util.GetGravatarUrl(payload.Email),
+		Username:           payload.Username,
+		Email:              payload.Email,
+		Admin:              !usersExist,
+		Searchable:         true,
+		ProfilePictureType: "static",
+		ProfilePictureFile: types.EmptyId(),
+		ProfilePictureUrl:  util.GetDefaultProfilePictureUrl(!u.Config.Settings.EnableGravatar.Enabled, payload.Email),
 	}
 
 	// Insert the user into the database
@@ -298,13 +313,27 @@ func Register(c *gin.Context) {
 	session := &types.Session{
 		UserId:           userId,
 		UserAgent:        c.Request.UserAgent(),
-		InitialIpAddress: net.ParseIP(c.ClientIP()),
-		LastIpAddress:    net.ParseIP(c.ClientIP()),
+		InitialIpAddress: util.DetermineClientAddress(c),
+		LastIpAddress:    util.DetermineClientAddress(c),
 		IsShortLived:     c.PostForm("remember") != "true",
 		IsApi:            false,
-		SecretHash:       crypto.GetSha256Hash(secret),
+		SecretHash:       []byte{},
 	}
 	err = u.Tx.Queries().InsertSession(session)
+	if err != nil {
+		u.Error(err.
+			Append(errors.LvlBroad, "Could not register"),
+		)
+		return
+	}
+
+	serverSecret, tr := crypto.GetSymmetricKey(u.Config, "tokenHashSecret")
+	if tr != nil {
+		u.Error(tr)
+		c.Abort()
+		return
+	}
+	err = u.Tx.Queries().UpdateSessionHash(session.SessionId, crypto.GetSha256Hash(serverSecret, session.SessionId.Bytes(), secret))
 	if err != nil {
 		u.Error(err.
 			Append(errors.LvlBroad, "Could not register"),

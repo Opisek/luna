@@ -95,6 +95,10 @@
     left: -12.5%;
     top: -12.5%;
   }
+
+  button:hover, button:focus, a:hover, a:focus {
+    color: colors.$foregroundSecondary;
+  }
 </style>
 
 {#if info == ""}
