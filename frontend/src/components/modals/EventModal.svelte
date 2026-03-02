@@ -15,6 +15,7 @@
   import { getSettings } from "$lib/client/data/settings.svelte";
   import { UserSettingKeys } from "../../types/settings";
   import { ColorKeys } from "../../types/colors";
+  import Horizontal from "../layout/Horizontal.svelte";
 
   //import { RRule } from "rrule";
 
@@ -248,10 +249,12 @@
     {#if editMode}
       <ToggleInput bind:value={event.date.allDay} name="all_day" description="All Day"/>
     {/if}
-    <DateTimeInput bind:value={event.date.start} name="date_start" placeholder={showEndDate ? "Start" : "Date"} editable={editMode} allDay={event.date.allDay} onChange={changeStart}/>
-    {#if showEndDate}
-      <DateTimeInput bind:value={event.date.end} name="date_end" placeholder="End" editable={editMode} allDay={event.date.allDay} onChange={changeEnd}/>
-    {/if}
+    <Horizontal position="left">
+      <DateTimeInput bind:value={event.date.start} name="date_start" placeholder={showEndDate ? "Start" : "Date"} editable={editMode} allDay={event.date.allDay} onChange={changeStart} wrap={true}/>
+      {#if showEndDate}
+        <DateTimeInput bind:value={event.date.end} name="date_end" placeholder="End" editable={editMode} allDay={event.date.allDay} onChange={changeEnd} wrap={true}/>
+      {/if}
+    </Horizontal>
     {#if event.id && settings.userSettings[UserSettingKeys.DebugMode]}
       <TextInput value={event.id} name="id" placeholder="Event ID" editable={false} />
     {/if}
@@ -260,7 +263,7 @@
     {/if}
     {#if eventRecurrenceBoolean}
       {#if editMode}
-        <SelectInput bind:value={event.date.recurrence} name="recurrence_freq" placeholder="Frequency" options={[
+        <SelectInput bind:value={event.date.recurrence} name="recurrence_freq" placeholder="Frequency" showLabel={true} options={[
           { value: "daily", name: "Daily" },
           { value: "weekly", name: "Weekly" },
           { value: "monthly", name: "Monthly" },

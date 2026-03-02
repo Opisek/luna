@@ -8,7 +8,6 @@
   import { calculateOptimalPopupPosition } from "$lib/common/calculations";
   import { focusIndicator } from "$lib/client/decoration";
   import type { Option } from "../../types/options";
-  import Event from "../calendar/Event.svelte";
 
   let active = $state(false);
   let optionsAbove = $state(false);
@@ -19,6 +18,7 @@
     name: string;
     editable?: boolean;
     options: Option<T>[];
+    showLabel?: boolean;
   }
 
   let {
@@ -26,7 +26,8 @@
     placeholder,
     name,
     editable = true,
-    options
+    options,
+    showLabel = true
   }: Props = $props();
 
   let selectedOption: Option<T> | null = $derived(options.filter(x => x.value === value)[0] || null);
@@ -247,7 +248,9 @@
   }
 </style>
 
-<Label name={name}>{placeholder}</Label>
+{#if showLabel}
+  <Label name={name}>{placeholder}</Label>
+{/if}
 <div class="wrapper" class:editable={editable}>
   <select
     bind:value={value}

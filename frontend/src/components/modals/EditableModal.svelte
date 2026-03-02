@@ -46,7 +46,6 @@
     extraButtonsRight,
   }: Props = $props(); import Modal from "./Modal.svelte";
   import { ColorKeys } from "../../types/colors";
-  import { D } from "svelte-simples";
 
   let creating = false;
 
