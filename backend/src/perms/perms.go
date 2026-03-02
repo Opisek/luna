@@ -17,6 +17,7 @@ const (
 	DeleteSources        Permission = "delete_sources"
 	ManageInvites        Permission = "manage_invites"
 	ManageUsers          Permission = "manage_users"
+	ManageOauthClients   Permission = "manage_oauth_clients"
 	ManageGlobalSettings Permission = "manage_global_settings"
 	ManageUserSettings   Permission = "manage_user_settings"
 	ManageSessions       Permission = "manage_sessions"
@@ -48,6 +49,7 @@ var allPermList = []Permission{
 	DeleteSources,
 	ManageInvites,
 	ManageUsers,
+	ManageOauthClients,
 	ManageGlobalSettings,
 	ManageUserSettings,
 	ManageSessions,

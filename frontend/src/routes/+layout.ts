@@ -13,6 +13,7 @@ import { Repository } from "../lib/client/data/repository.svelte";
 import { Theme } from "../lib/client/data/theme.svelte";
 import { Users } from "../lib/client/data/users.svelte";
 import { Settings } from "../lib/client/data/settings.svelte";
+import { OauthClients } from "../lib/client/data/oauth.svelte";
 
 function getSingletons(version: string, preloadedSettings: { userData: any, userSettings: any, globalSettings: any } | null = null): {
   connectivity: Connectivity;
@@ -23,6 +24,7 @@ function getSingletons(version: string, preloadedSettings: { userData: any, user
   settings: Settings;
   theme: Theme;
   users: Users;
+  oauthClients: OauthClients;
 } {
   let rep: Repository | null = null;
   let recalculateEvents = () => {
@@ -38,6 +40,7 @@ function getSingletons(version: string, preloadedSettings: { userData: any, user
   let sessions = new ActiveSessions(settings);
   let theme = new Theme(settings);
   let users = new Users();
+  let oauthClients = new OauthClients();
 
   rep = repository;
 
@@ -49,7 +52,8 @@ function getSingletons(version: string, preloadedSettings: { userData: any, user
     sessions,
     settings,
     theme,
-    users
+    users,
+    oauthClients
   };
 }
 

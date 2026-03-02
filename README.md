@@ -411,6 +411,38 @@ Depending on the `auth_type` field, additional information may need to be passed
 - **Body**: Empty
 - **Purpose**: Retracts all registration invites
 
+### OAuth 2.0 Clients
+#### Get Clients
+- **Path**: ``/api/oauth/clients``
+- **Method**: ``GET``
+- **Body**: Empty
+- **Purpose**: Returns all registered OAuth 2.0 clients with client secrets redacted
+
+#### Get Client
+- **Path**: ``/api/oauth/clients/<ID>``
+- **Method**: ``GET``
+- **Body**: Empty
+- **Purpose**: Returns the specified OAuth 2.0 client including the client secret
+
+#### Put Client
+- **Path**: ``/api/oauth/clients``
+- **Method**: ``PUT``
+- **Body**: `name`, `client_id`, `client_secret`, `authorization_url`
+- **Purpose**: Registers a new OAuth 2.0 client
+
+#### Patch Client
+- **Path**: ``/api/oauth/clients/<ID>``
+- **Method**: ``PATCH``
+- **Body**: `name`, `client_id`, `client_secret`, `authorization_url`
+- **Purpose**: Edits an already registered OAuth 2.0 client
+- **Note**: If `client_secret` is left empty, it is not modified.
+
+#### Delete Client
+- **Path**: ``/api/oauth/clients/<ID>``
+- **Method**: ``DELETE``
+- **Body**: Empty
+- **Purpose**: Deletes a regestired OAuth 2.0 client
+
 ## Additional Frontend Endpoints
 Aside from using the backend API, the frontend also provides a limited amount of endpoints for its own purposes.
 They are to be used in the same way as the backend endpoints regarding authentication and body format.

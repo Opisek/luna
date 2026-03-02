@@ -77,6 +77,14 @@ export const EmptyRegistrationInvite: RegistrationInvite = {
   code: ""
 }
 
+export const EmptyOauthClient: OauthClientModel = {
+  id: "",
+  name: "",
+  client_id: "",
+  client_secret: "",
+  authorization_url: ""
+}
+
 export const AllChangesCalendar: CalendarModelChanges = {
   name: true,
   desc: true,

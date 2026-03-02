@@ -13,6 +13,7 @@ export enum PermissionKeys {
 	DeleteSources = "delete_sources",
 	ManageInvites = "manage_invites",
 	ManageUsers = "manage_users",
+	ManageOauthClients = "manage_oauth_clients",
 	ManageGlobalSettings = "manage_global_settings",
 	ManageUserSettings = "manage_user_settings",
 	ManageSessions = "manage_sessions",

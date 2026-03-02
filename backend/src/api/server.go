@@ -135,6 +135,14 @@ func run(api *util.Api) {
 	inviteEndpoints.DELETE("/:inviteId", handlers.DeleteInvite)
 	inviteEndpoints.DELETE("", handlers.DeleteInvites)
 
+	// /api/oauth/clients/*
+	oauthClientEndpoints := administratorEndpoints.Group("/oauth/clients", middleware.RequirePermissions(perms.ManageOauthClients))
+	oauthClientEndpoints.GET("", handlers.GetOauthClients)
+	oauthClientEndpoints.GET("/:clientId", handlers.GetOauthClient)
+	oauthClientEndpoints.PUT("", handlers.PutOauthClient)
+	oauthClientEndpoints.PATCH("/:clientId", handlers.PatchOauthClient)
+	oauthClientEndpoints.DELETE("/:clientId", handlers.DeleteOauthClient)
+
 	// /api/* the rest
 	authenticatedEndpoints.POST("/url", handlers.CheckUrl)
 
