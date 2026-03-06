@@ -2,6 +2,7 @@ package net
 
 import (
 	"context"
+	"encoding/json"
 	"io"
 	"luna-backend/errors"
 	"luna-backend/types"
@@ -39,4 +40,55 @@ func FetchFile(url *types.Url, auth types.AuthMethod, accept string, ctx context
 	}
 
 	return res.Body, nil
+}
+
+func FetchJson(url *types.Url, auth types.AuthMethod, ctx context.Context, target any) *errors.ErrorTrace {
+	req, err := http.NewRequest("GET", url.String(), nil)
+	if err != nil {
+		return errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not create request").
+			Append(errors.LvlWordy, "Could not fetch response from %v", url).
+			AltStr(errors.LvlPlain, "Could not fetch response")
+	}
+
+	req.Header.Set("Accept", "application/json")
+	req = req.WithContext(ctx)
+
+	res, err := auth.Do(req)
+	if err != nil {
+		return errors.InterpretRemoteError(err, "object", "object").
+			Append(errors.LvlDebug, "Could not fulfill request").
+			Append(errors.LvlWordy, "Could not fetch response from %v", url).
+			AltStr(errors.LvlPlain, "Could not fetch response")
+	}
+
+	if res.StatusCode != http.StatusOK {
+		return errors.New().Status(res.StatusCode).
+			Append(errors.LvlPlain, res.Status).
+			Append(errors.LvlWordy, "Error %v", res.StatusCode).
+			Append(errors.LvlDebug, "Server returned an error code").
+			Append(errors.LvlWordy, "Could not fetch response from %v", url).
+			AltStr(errors.LvlPlain, "Could not fetch response")
+	}
+
+	data, err := io.ReadAll(res.Body)
+
+	if err != nil {
+		return errors.New().Status(http.StatusInternalServerError).
+			Append(errors.LvlDebug, "Could not read body").
+			Append(errors.LvlWordy, "Could not fetch response from %v", url).
+			AltStr(errors.LvlPlain, "Could not fetch response")
+	}
+
+	err = json.Unmarshal(data, target)
+	if err != nil {
+		return errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not unmarshal the JSON object").
+			Append(errors.LvlWordy, "Could not fetch response from %v", url).
+			AltStr(errors.LvlPlain, "Could not fetch response")
+	}
+
+	return nil
 }

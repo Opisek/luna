@@ -3,6 +3,7 @@ package handlers
 import (
 	"luna-backend/api/internal/util"
 	"luna-backend/errors"
+	"luna-backend/oauth"
 	"luna-backend/types"
 	"net/http"
 
@@ -76,42 +77,54 @@ func PutOauthClient(c *gin.Context) {
 		return
 	}
 
-	// Oauth client authorization URL
-	rawAuthUrl := c.Request.FormValue("authorization_url")
-	if rawAuthUrl == "" {
+	// Oauth client base URL
+	rawBaseUrl := c.Request.FormValue("base_url")
+	if rawBaseUrl == "" {
 		u.Error(errors.New().Status(http.StatusBadRequest).
-			Append(errors.LvlPlain, "Authorization URL may not be empty"),
+			Append(errors.LvlPlain, "Base URL may not be empty"),
 		)
 		return
 	}
 
 	var err error
-	err = util.IsValidUrl(rawAuthUrl)
+	err = util.IsValidUrl(rawBaseUrl)
 	if err != nil {
 		u.Error(errors.New().Status(http.StatusBadRequest).
-			Append(errors.LvlPlain, "Invalid authorization URL").
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlPlain, "Invalid base URL").
 			AddErr(errors.LvlWordy, err),
 		)
 		return
 	}
-	authUrl, err := types.NewUrl(rawAuthUrl)
+	baseUrl, err := types.NewUrl(rawBaseUrl)
 	if err != nil {
 		u.Error(errors.New().Status(http.StatusBadRequest).
-			Append(errors.LvlPlain, "Invalid authorization URL").
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlPlain, "Invalid base URL").
 			AddErr(errors.LvlWordy, err),
 		)
 		return
+	}
+
+	// Check if the client is valid
+	client := &types.OauthClient{
+		Name:         clientName,
+		ClientId:     clientId,
+		ClientSecret: clientSecret,
+		BaseUrl:      baseUrl,
+		Scope:        c.Request.FormValue("scope"),
+	}
+
+	tr := oauth.FetchOauthUrls(client, u.Context)
+	if tr != nil {
+		u.Error(errors.New().Status(http.StatusBadRequest).
+			Append(errors.LvlPlain, "Invalid base URL").
+			AddErr(errors.LvlWordy, err),
+		)
 	}
 
 	// Insert
-	client := &types.OauthClient{
-		Name:             clientName,
-		ClientId:         clientId,
-		ClientSecret:     clientSecret,
-		AuthorizationUrl: authUrl,
-	}
-
-	tr := u.Tx.Queries().InsertOauthClient(client)
+	tr = u.Tx.Queries().InsertOauthClient(client)
 	if tr != nil {
 		u.Error(tr)
 		return
@@ -153,43 +166,55 @@ func PatchOauthClient(c *gin.Context) {
 	// New client secret
 	newClientSecret := c.Request.FormValue("client_secret")
 
-	// New client authorization URL
-	rawAuthUrl := c.Request.FormValue("authorization_url")
-	if rawAuthUrl == "" {
+	// New client base URL
+	rawBaseUrl := c.Request.FormValue("base_url")
+	if rawBaseUrl == "" {
 		u.Error(errors.New().Status(http.StatusBadRequest).
-			Append(errors.LvlPlain, "Authorization URL may not be empty"),
+			Append(errors.LvlPlain, "Base URL may not be empty"),
 		)
 		return
 	}
 
 	var err error
-	err = util.IsValidUrl(rawAuthUrl)
+	err = util.IsValidUrl(rawBaseUrl)
 	if err != nil {
 		u.Error(errors.New().Status(http.StatusBadRequest).
-			Append(errors.LvlPlain, "Invalid authorization URL").
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlPlain, "Invalid base URL").
 			AddErr(errors.LvlWordy, err),
 		)
 		return
 	}
 
-	newAuthUrl, err := types.NewUrl(rawAuthUrl)
+	newBaseUrl, err := types.NewUrl(rawBaseUrl)
 	if err != nil {
 		u.Error(errors.New().Status(http.StatusBadRequest).
-			Append(errors.LvlPlain, "Invalid authorization URL").
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlPlain, "Invalid base URL").
 			AddErr(errors.LvlWordy, err),
 		)
 		return
+	}
+
+	// Check if the client is valid
+	client := &types.OauthClient{
+		Id:           clientId,
+		Name:         newClientName,
+		ClientId:     newClientId,
+		ClientSecret: newClientSecret,
+		BaseUrl:      newBaseUrl,
+		Scope:        c.Request.FormValue("scope"),
+	}
+
+	tr = oauth.FetchOauthUrls(client, u.Context)
+	if tr != nil {
+		u.Error(errors.New().Status(http.StatusBadRequest).
+			Append(errors.LvlPlain, "Invalid base URL").
+			AddErr(errors.LvlWordy, err),
+		)
 	}
 
 	// Update
-	client := &types.OauthClient{
-		Id:               clientId,
-		Name:             newClientName,
-		ClientId:         newClientId,
-		ClientSecret:     newClientSecret,
-		AuthorizationUrl: newAuthUrl,
-	}
-
 	tr = u.Tx.Queries().UpdateOauthClient(client)
 	if tr != nil {
 		u.Error(tr)

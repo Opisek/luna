@@ -18,17 +18,18 @@ func (q *Queries) InsertOauthClient(client *types.OauthClient) *errors.ErrorTrac
 	}
 
 	query := `
-		INSERT INTO oauth_clients (name, client_id, client_secret, authorization_url)
-		VALUES ($1, $2, PGP_SYM_ENCRYPT($3, $5), $4)
+		INSERT INTO oauth_clients (name, client_id, client_secret, base_url, scope)
+		VALUES ($1, $2, PGP_SYM_ENCRYPT($3, $6), $4, $5)
 		RETURNING id;
 	`
 
-	params := make([]any, 5)
+	params := make([]any, 6)
 	params[0] = client.Name
 	params[1] = client.ClientId
 	params[2] = client.ClientSecret
-	params[3] = client.AuthorizationUrl
-	params[4] = encryptionKey
+	params[3] = client.BaseUrl
+	params[4] = client.Scope
+	params[5] = encryptionKey
 
 	err := q.Tx.
 		QueryRow(
@@ -55,7 +56,7 @@ func (q *Queries) GetOauthClientById(id types.ID) (*types.OauthClient, *errors.E
 	}
 
 	query := `
-		SELECT id, name, client_id, PGP_SYM_DECRYPT(client_secret, $2), authorization_url
+		SELECT id, name, client_id, PGP_SYM_DECRYPT(client_secret, $2), base_url, scope
 		FROM oauth_clients
 		WHERE id = $1;
 	`
@@ -63,14 +64,14 @@ func (q *Queries) GetOauthClientById(id types.ID) (*types.OauthClient, *errors.E
 	fmt.Println("decryption key:", decryptionKey)
 
 	client := &types.OauthClient{}
-	var rawAuthUrl string
+	var rawBaseUrl string
 
 	err := q.Tx.QueryRow(
 		q.Context,
 		query,
 		id.UUID(),
 		decryptionKey,
-	).Scan(&client.Id, &client.Name, &client.ClientId, &client.ClientSecret, &rawAuthUrl)
+	).Scan(&client.Id, &client.Name, &client.ClientId, &client.ClientSecret, &rawBaseUrl, &client.Scope)
 
 	switch err {
 	case nil:
@@ -89,18 +90,18 @@ func (q *Queries) GetOauthClientById(id types.ID) (*types.OauthClient, *errors.E
 			Append(errors.LvlPlain, "Database error")
 	}
 
-	if rawAuthUrl == "" {
+	if rawBaseUrl == "" {
 		return nil, errors.New().Status(http.StatusInternalServerError).
 			Append(errors.LvlDebug, "The authorization URL is empty").
 			Append(errors.LvlDebug, "Could not get oauth client %v", id).
 			AltStr(errors.LvlWordy, "Could not get oauth client").
 			Append(errors.LvlPlain, "Database error")
 	}
-	client.AuthorizationUrl, err = types.NewUrl(rawAuthUrl)
+	client.BaseUrl, err = types.NewUrl(rawBaseUrl)
 	if err != nil {
 		return nil, errors.New().Status(http.StatusInternalServerError).
 			AddErr(errors.LvlDebug, err).
-			Append(errors.LvlDebug, "Could not parse authorization URL").
+			Append(errors.LvlDebug, "Could not parse base URL").
 			Append(errors.LvlDebug, "Could not get oauth client %v", id).
 			AltStr(errors.LvlWordy, "Could not get oauth client").
 			Append(errors.LvlPlain, "Database error")
@@ -127,22 +128,22 @@ func (q *Queries) GetOauthClients() ([]*types.OauthClient, *errors.ErrorTrace) {
 	clients := make([]*types.OauthClient, 0)
 	for rows.Next() {
 		client := &types.OauthClient{}
-		var rawAuthUrl string
-		err = rows.Scan(&client.Id, &client.Name, &client.ClientId, &rawAuthUrl)
+		var rawBaseUrl string
+		err = rows.Scan(&client.Id, &client.Name, &client.ClientId, &rawBaseUrl)
 		if err != nil {
 			return nil, errors.New().Status(http.StatusInternalServerError).
 				AddErr(errors.LvlDebug, err).
 				Append(errors.LvlWordy, "Could not scan oauth client").
 				Append(errors.LvlPlain, "Database error")
 		}
-		if rawAuthUrl == "" {
+		if rawBaseUrl == "" {
 			return nil, errors.New().Status(http.StatusInternalServerError).
 				Append(errors.LvlDebug, "The authorization URL is empty").
 				Append(errors.LvlDebug, "Could not get oauth client %v", client.Id).
 				AltStr(errors.LvlWordy, "Could not get oauth clients").
 				Append(errors.LvlPlain, "Database error")
 		}
-		client.AuthorizationUrl, err = types.NewUrl(rawAuthUrl)
+		client.BaseUrl, err = types.NewUrl(rawBaseUrl)
 		if err != nil {
 			return nil, errors.New().Status(http.StatusInternalServerError).
 				AddErr(errors.LvlDebug, err).
@@ -164,23 +165,24 @@ func (q *Queries) UpdateOauthClient(client *types.OauthClient) *errors.ErrorTrac
 	if client.ClientSecret == "" {
 		query = `
 			UPDATE oauth_clients
-			SET name = $1, client_id = $2, authorization_url = $3
-			WHERE id = $4;
+			SET name = $1, client_id = $2, base_url = $3, scope = $4
+			WHERE id = $5;
 		`
-		params = make([]any, 4)
+		params = make([]any, 5)
 	} else {
 		query = `
 			UPDATE oauth_clients
-			SET name = $1, client_id = $2, client_secret = PGP_SYM_ENCRYPT($5, $6), authorization_url = $3
-			WHERE id = $4;
+			SET name = $1, client_id = $2, client_secret = PGP_SYM_ENCRYPT($6, $7), base_url = $3, scope = $4
+			WHERE id = $5;
 		`
-		params = make([]any, 6)
+		params = make([]any, 7)
 	}
 
 	params[0] = client.Name
 	params[1] = client.ClientId
-	params[2] = client.AuthorizationUrl
-	params[3] = client.Id.UUID()
+	params[2] = client.BaseUrl
+	params[3] = client.Scope
+	params[4] = client.Id.UUID()
 	if client.ClientSecret != "" {
 		encryptionKey, tr := util.GetGlobalEncryptionKey(q.CommonConfig)
 		if tr != nil {
@@ -189,8 +191,8 @@ func (q *Queries) UpdateOauthClient(client *types.OauthClient) *errors.ErrorTrac
 				AltStr(errors.LvlWordy, "Could not update oauth client")
 		}
 
-		params[4] = client.ClientSecret
-		params[5] = encryptionKey
+		params[5] = client.ClientSecret
+		params[6] = encryptionKey
 	}
 
 	_, err := q.Tx.Exec(q.Context, query, params...)

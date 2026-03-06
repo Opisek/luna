@@ -22,7 +22,8 @@ export class OauthClients {
     formData.append("name", client.name);
     formData.append("client_id", client.client_id);
     formData.append("client_secret", client.client_secret);
-    formData.append("authorization_url", client.authorization_url);
+    formData.append("base_url", client.base_url);
+    formData.append("scope", client.scope);
 
     return await fetchJson("/api/oauth/clients", { method: "PUT", body: formData }).then((data: { client: OauthClientModel }) => {
       this.clients.push(data.client);
@@ -35,7 +36,8 @@ export class OauthClients {
     formData.append("name", client.name);
     formData.append("client_id", client.client_id);
     formData.append("client_secret", client.client_secret);
-    formData.append("authorization_url", client.authorization_url);
+    formData.append("base_url", client.base_url);
+    formData.append("scope", client.scope);
     
     return await fetchJson(`/api/oauth/clients/${client.id}`, { method: "POST", body: formData }).then((data: { client: OauthClientModel }) => {
       this.clients = this.clients.map(x => x.id == client.id ? data.client : x);

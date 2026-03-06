@@ -3,5 +3,6 @@ type OauthClientModel = {
   name: string;
   client_id: string;
   client_secret: string;
-  authorization_url: string;
+  base_url: string;
+  scope: string;
 }

@@ -35,6 +35,10 @@ func (u *Url) String() string {
 	return u.URL().String()
 }
 
+func (u *Url) Subpage(subpages ...string) *Url {
+	return (*Url)(u.URL().JoinPath(subpages...))
+}
+
 func NewUrl(rawUrl string) (*Url, error) {
 	URL, err := url.Parse(rawUrl)
 	if err != nil {

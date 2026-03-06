@@ -33,14 +33,16 @@
     client = await deepCopy(original);
     originalClient = await deepCopy(original);
 
-    const details = await clients.getClientDetails(client.id).catch((err) => {
-      queueNotification(ColorKeys.Danger, `Could not get OAuth 2.0 client details: ${err.message}`);
-        return Promise.reject();
-      });
-    client.client_secret = details.client_secret;
 
     if (editMode) setTimeout(showCreateModalInternal(), 0);
-    else setTimeout(showModalInternal(), 0);
+    else {
+      const details = await clients.getClientDetails(client.id).catch((err) => {
+        queueNotification(ColorKeys.Danger, `Could not get OAuth 2.0 client details: ${err.message}`);
+          return Promise.reject();
+        });
+      client.client_secret = details.client_secret;
+      setTimeout(showModalInternal(), 0);
+    }
 
     // TODO: what if we only show but the modal and the close? memory leak?
     return new Promise((resolve, reject) => {
@@ -80,20 +82,12 @@
       editMode = false;
 
       promiseResolve(newClient);
-
-      setTimeout(() => {
-        showModal(newClient, false);
-      }, 50);
     } else {
       const updatedClient = await clients.updateClient(client).catch(err => {
         throw new Error(`Could not update OAuth 2.0 client: ${err.message}`);
       });
 
       promiseResolve(updatedClient);
-
-      setTimeout(() => {
-        showModal(updatedClient, false);
-      }, 50);
     }
   };
 </script>
@@ -114,6 +108,7 @@
   <TextInput bind:value={client.name} name="name" placeholder="Name" editable={editMode}/>
   <TextInput bind:value={client.client_id} name="client_id" placeholder="Client ID" editable={editMode}/>
   <TextInput bind:value={client.client_secret} name="client_secret" placeholder="Client Secret" editable={editMode} password={true}/>
-  <TextInput bind:value={client.authorization_url} name="authorization_url" placeholder="Authorization URL" editable={editMode}/>
+  <TextInput bind:value={client.base_url} name="base_url" placeholder="Base URL" editable={editMode}/>
+  <TextInput bind:value={client.scope} name="scope" placeholder="Scope" editable={editMode}/>
 
 </EditableModal>
