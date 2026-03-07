@@ -198,6 +198,13 @@ func init() {
 				Append(errors.LvlDebug, "Could not initialize oauth clients table")
 		}
 
+		err = q.Tables.InitializeOauthAuthorizationRequestsTable()
+		if err != nil {
+			return errors.New().
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlDebug, "Could not initialize oauth authorization requests table")
+		}
+
 		err = q.Tables.InitializeOauthTokensTable()
 		if err != nil {
 			return errors.New().

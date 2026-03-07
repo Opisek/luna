@@ -8,6 +8,7 @@ import (
 type CommonConfig struct {
 	Version                  types.Version
 	Env                      *Environmental
+	PublicUrl                *types.Url
 	Settings                 *GlobalSettings
 	TokenInvalidationChannel chan *types.Session
 }

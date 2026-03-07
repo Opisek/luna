@@ -10,6 +10,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+//
+// OAuth 2.0 Clients
+//
+
 func GetOauthClient(c *gin.Context) {
 	u := util.GetUtil(c)
 
@@ -243,4 +247,62 @@ func DeleteOauthClient(c *gin.Context) {
 	}
 
 	u.Success(nil)
+}
+
+//
+// OAuth 2.0 Authorization Requests
+//
+
+func CreateOauthAuthorizationRequest(c *gin.Context) {
+	u := util.GetUtil(c)
+
+	// Client ID
+	clientId, tr := util.GetId(c, "client")
+	if tr != nil {
+		u.Error(tr)
+		return
+	}
+
+	// Insert
+	request := &types.OauthAuthorizationRequest{
+		ClientId: clientId,
+		UserId:   util.GetUserId(c),
+	}
+
+	tr = u.Tx.Queries().InsertOauthAuthorizationRequest(request)
+	if tr != nil {
+		u.Error(tr)
+		return
+	}
+
+	// Build URL
+	client, tr := u.Tx.Queries().GetOauthClientById(clientId)
+	if tr != nil {
+		u.Error(tr)
+		return
+	}
+
+	tr = oauth.FetchOauthUrls(client, c)
+	if tr != nil {
+		u.Error(tr)
+		return
+	}
+
+	consentUrl := *client.AuthorizationUrl.URL()
+	queryParams := consentUrl.Query()
+
+	// RFC 6749 4.1.1
+	queryParams.Add("response_type", "code")
+	queryParams.Add("client_id", client.ClientId)
+	queryParams.Add("redirect_uri", u.Config.PublicUrl.Subpage("/oauth").String())
+	if client.Scope != "" {
+		queryParams.Add("scope", client.Scope)
+	}
+	queryParams.Add("state", request.Id.String())
+
+	consentUrl.RawQuery = queryParams.Encode()
+
+	u.Success(&gin.H{
+		"url": consentUrl.String(),
+	})
 }

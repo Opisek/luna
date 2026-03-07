@@ -135,13 +135,26 @@ func run(api *util.Api) {
 	inviteEndpoints.DELETE("/:inviteId", handlers.DeleteInvite)
 	inviteEndpoints.DELETE("", handlers.DeleteInvites)
 
+	// /api/oauth/*
+	oauthEndpoints := authenticatedEndpoints.Group("/oauth")
+	oauthAdminEndpoints := administratorEndpoints.Group("/oauth", middleware.RequirePermissions(perms.ManageOauthClients))
+
 	// /api/oauth/clients/*
-	oauthClientEndpoints := administratorEndpoints.Group("/oauth/clients", middleware.RequirePermissions(perms.ManageOauthClients))
-	oauthClientEndpoints.GET("", handlers.GetOauthClients)
-	oauthClientEndpoints.GET("/:clientId", handlers.GetOauthClient)
-	oauthClientEndpoints.PUT("", handlers.PutOauthClient)
-	oauthClientEndpoints.PATCH("/:clientId", handlers.PatchOauthClient)
-	oauthClientEndpoints.DELETE("/:clientId", handlers.DeleteOauthClient)
+	oauthClientEndpoints := oauthEndpoints.Group("/clients")
+	oauthClientAdminEndpoints := oauthAdminEndpoints.Group("/clients")
+
+	oauthClientEndpoints.GET("", handlers.GetOauthClients) // users must be able to see what auth providers they may use, but we must not return client secrets here
+	oauthClientAdminEndpoints.GET("/:clientId", handlers.GetOauthClient)
+	oauthClientAdminEndpoints.PUT("", handlers.PutOauthClient)
+	oauthClientAdminEndpoints.PATCH("/:clientId", handlers.PatchOauthClient)
+	oauthClientAdminEndpoints.DELETE("/:clientId", handlers.DeleteOauthClient)
+
+	// /api/oauth/authorization/*
+	oauthAuthRequestsEndpoints := oauthEndpoints.Group("/authorization")
+
+	oauthAuthRequestsEndpoints.PUT("/:clientId", handlers.CreateOauthAuthorizationRequest)
+	//oauthClientAdminEndpoints.POST("/:requestId", handlers.FinalizeOauthAuthorizationRequest)
+	//oauthClientAdminEndpoints.DELETE("/:requestId", handlers.CancelOauthAuthorizationRequest)
 
 	// /api/* the rest
 	authenticatedEndpoints.POST("/url", handlers.CheckUrl)

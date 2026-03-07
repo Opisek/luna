@@ -21,19 +21,39 @@ func (q *Tables) InitializeOauthClientsTable() error {
 	return err
 }
 
+// Warning: The client_id in the following tables is NOT to be confused with the client_id in the clients table.
+// When other tables refer to an OAuth 2.0 client, they do so by the internal UUID.
+func (q *Tables) InitializeOauthAuthorizationRequestsTable() error {
+	// Oauth authorization requests table:
+	// request_id oauth_client_id user_id expires_at
+	_, err := q.Tx.Exec(
+		q.Context,
+		`
+		CREATE TABLE oauth_authorization_requests (
+			request_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			client_id UUID NOT NULL REFERENCES oauth_clients(id) ON DELETE CASCADE,
+			user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+			expires_at TIMESTAMP NOT NULL DEFAULT NOW() + INTERVAL '10 minutes'
+		)
+		`,
+	)
+
+	return err
+}
+
 func (q *Tables) InitializeOauthTokensTable() error {
 	// Oauth tokens table:
-	// oath_client_id user_id access_token refresh_token expires_at
+	// oauth_client_id user_id access_token refresh_token expires_at
 	_, err := q.Tx.Exec(
 		q.Context,
 		`
 		CREATE TABLE oauth_tokens (
-			oauth_client_id UUID NOT NULL REFERENCES oauth_clients(id) ON DELETE CASCADE,
+			client_id UUID NOT NULL REFERENCES oauth_clients(id) ON DELETE CASCADE,
 			user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 			access_token BYTEA NOT NULL,
-			refresh_token BYTEA NOT NULL,
+			refresh_token BYTEA,
 			expires_at TIMESTAMP NOT NULL,
-			PRIMARY KEY (oauth_client_id, user_id)
+			PRIMARY KEY (client_id, user_id)
 		);
 		`,
 	)
