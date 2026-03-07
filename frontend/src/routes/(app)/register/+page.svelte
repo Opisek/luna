@@ -1,21 +1,21 @@
 <script lang="ts">
   import type { ActionData } from './$types';
 
-  import Form from '../../components/forms/Form.svelte';
-  import Link from '../../components/forms/Link.svelte';
-  import SimplePage from '../../components/layout/SimplePage.svelte';
-  import TextInput from '../../components/forms/TextInput.svelte';
-  import ToggleInput from '../../components/forms/ToggleInput.svelte';
-  import { ColorKeys } from '../../types/colors';
+  import Form from '../../../components/forms/Form.svelte';
+  import Link from '../../../components/forms/Link.svelte';
+  import SimplePage from '../../../components/layout/SimplePage.svelte';
+  import TextInput from '../../../components/forms/TextInput.svelte';
+  import ToggleInput from '../../../components/forms/ToggleInput.svelte';
+  import { ColorKeys } from '../../../types/colors';
 
   import { afterNavigate, invalidateAll } from '$app/navigation';
   import { page } from '$app/state';
 
   import { isValidEmail, isValidInviteCode, isValidPassword, isValidRepeatPassword, isValidUsername, valid } from '$lib/client/validation';
   import { queueNotification } from '$lib/client/notifications';
-  import Title from '../../components/layout/Title.svelte';
-  import Paragraph from '../../components/layout/Paragraph.svelte';
-  import Box from '../../components/layout/Box.svelte';
+  import Title from '../../../components/layout/Title.svelte';
+  import Paragraph from '../../../components/layout/Paragraph.svelte';
+  import Box from '../../../components/layout/Box.svelte';
   import { browser } from '$app/environment';
   import type { ActionResult } from '@sveltejs/kit';
 

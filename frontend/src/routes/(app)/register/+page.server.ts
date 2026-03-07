@@ -3,13 +3,22 @@ import { fail, redirect, type Actions } from "@sveltejs/kit";
 import { COOKIE_MAX_AGE } from "$lib/server/constants.server";
 import { apiProxy } from "$lib/server/api.server";
 import { getRedirectPage } from "$lib/common/parsing";
-import { invalidateAll } from "$app/navigation";
 
 export const actions = {
   default: async ({cookies, request, getClientAddress}) => {
     const formData = await request.formData();
 
-    const res = await apiProxy(request, getClientAddress, "login", { method: "POST", body: formData }, false);
+    const password = formData.get("password");
+    const passwordRepeat = formData.get("password_repeat");
+
+    if (password !== passwordRepeat) {
+      return {
+        status: 400,
+        error: "Passwords do not match"
+      };
+    }
+
+    const res = await apiProxy(request, getClientAddress, "register", { method: "POST", body: formData }, false);
 
     if (res.ok) {
       const body = await res.json();
@@ -18,8 +27,7 @@ export const actions = {
         path: "/",
         httpOnly: false,
         maxAge: undefined as number | undefined,
-        sameSite: "strict" as boolean | "strict" | "lax" | "none",
-        secure: !(process.env.PUBLIC_URL?.startsWith("http://") || false),
+        sameSite: "lax" as boolean | "strict" | "lax" | "none",
       };
 
       if (formData.get("remember") === "true") {

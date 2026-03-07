@@ -8,17 +8,7 @@ export const actions = {
   default: async ({cookies, request, getClientAddress}) => {
     const formData = await request.formData();
 
-    const password = formData.get("password");
-    const passwordRepeat = formData.get("password_repeat");
-
-    if (password !== passwordRepeat) {
-      return {
-        status: 400,
-        error: "Passwords do not match"
-      };
-    }
-
-    const res = await apiProxy(request, getClientAddress, "register", { method: "POST", body: formData }, false);
+    const res = await apiProxy(request, getClientAddress, "login", { method: "POST", body: formData }, false);
 
     if (res.ok) {
       const body = await res.json();
@@ -27,7 +17,8 @@ export const actions = {
         path: "/",
         httpOnly: false,
         maxAge: undefined as number | undefined,
-        sameSite: "strict" as boolean | "strict" | "lax" | "none",
+        sameSite: "lax" as boolean | "strict" | "lax" | "none",
+        secure: !(process.env.PUBLIC_URL?.startsWith("http://") || false),
       };
 
       if (formData.get("remember") === "true") {

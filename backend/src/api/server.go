@@ -153,8 +153,8 @@ func run(api *util.Api) {
 	oauthAuthRequestsEndpoints := oauthEndpoints.Group("/authorization")
 
 	oauthAuthRequestsEndpoints.PUT("/:clientId", handlers.CreateOauthAuthorizationRequest)
-	//oauthClientAdminEndpoints.POST("/:requestId", handlers.FinalizeOauthAuthorizationRequest)
-	//oauthClientAdminEndpoints.DELETE("/:requestId", handlers.CancelOauthAuthorizationRequest)
+	oauthAuthRequestsEndpoints.POST("/:requestId", handlers.FinalizeOauthAuthorizationRequest)
+	oauthAuthRequestsEndpoints.DELETE("/:requestId", handlers.CancelOauthAuthorizationRequest)
 
 	// /api/* the rest
 	authenticatedEndpoints.POST("/url", handlers.CheckUrl)

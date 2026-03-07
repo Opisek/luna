@@ -1,12 +1,13 @@
 <script lang="ts">
-  import Notification from "../components/interactive/Notification.svelte";
+  import Notification from "../../components/interactive/Notification.svelte";
 
   import { notificationExpireTime, notifications } from "$lib/client/notifications";
   import { getSettings } from "$lib/client/data/settings.svelte";
-  import { UserSettingKeys, type GlobalSettings, type UserData, type UserSettings } from "../types/settings";
+  import { UserSettingKeys, type GlobalSettings, type UserData, type UserSettings } from "../../types/settings";
   import { getTheme } from "$lib/client/data/theme.svelte";
-  import type { NotificationModel } from "../types/notification";
+  import type { NotificationModel } from "../../types/notification";
   import { getConnectivity } from "$lib/client/data/connectivity.svelte";
+  import { browser } from "$app/environment";
 
   interface PageProps {
     children?: import('svelte').Snippet;
@@ -76,6 +77,27 @@
     root.setAttribute("data-frost", settings.userSettings[UserSettingKeys.AppearenceFrostedGlass] ? "true" : "false");
   })
 
+  // Remove expired localStorage entries
+  const oauthRequestIdRegex = /oauth\/([^\/]+)\/(response|expiry)/;
+  if (browser) {
+    let ids = new Set();
+
+    for (let i = 0; i < localStorage.length; i++) {
+      const matches = localStorage.key(i)?.match(oauthRequestIdRegex);
+      if (matches && matches.length > 1) ids.add(matches[1]);
+    }
+
+    const now = Date.now();
+    ids.forEach(x => {
+      const rawExpiry = localStorage.getItem(`oauth/${x}/expiry`);
+
+      if (!rawExpiry && rawExpiry == "" && new Date(rawExpiry).getTime() > now) return;
+
+      localStorage.removeItem(`oauth/${x}/expiry`);
+      localStorage.removeItem(`oauth/${x}/response`);
+    })
+  }
+
   // Prevent "flashing" by unloading the previous theme/font only after loading the next one.
   let currentThemeLight = $derived(settings.userSettings[UserSettingKeys.ThemeLight]);
   let currentThemeDark = $derived(settings.userSettings[UserSettingKeys.ThemeDark]);
@@ -121,9 +143,9 @@
 </script>
 
 <style lang="scss">
-  @use "../styles/colors.scss";
-  @use "../styles/dimensions.scss";
-  @use "../styles/text.scss";
+  @use "../../styles/colors.scss";
+  @use "../../styles/dimensions.scss";
+  @use "../../styles/text.scss";
   
   :global(*) {
     box-sizing: border-box;

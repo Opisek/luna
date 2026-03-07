@@ -3,7 +3,7 @@ import type { RequestEvent } from "./$types";
 import * as fs from "fs";
 import path from "path";
 import { apiProxy } from "$lib/server/api.server";
-import { PermissionKeys } from "../../../types/permissions";
+import { PermissionKeys } from "../../../../types/permissions";
 
 const validResources = [ "themes", "fonts" ];
 const validResourceFileNameRegex = new RegExp(/[a-zA-Z0-9-]+\.[a-zA-Z0-9]+/);

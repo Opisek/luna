@@ -14,15 +14,16 @@ type OauthClient struct {
 }
 
 type OauthAuthorizationRequest struct {
-	Id       ID `json:"request_id" db:"request_id" encrypted:"false"`
-	ClientId ID `json:"client_id" db:"client_id" encrypted:"false"`
-	UserId   ID `json:"user_id" db:"user_id" encrypted:"false"`
+	Id       ID        `json:"request_id" db:"request_id" encrypted:"false"`
+	ClientId ID        `json:"client_id" db:"client_id" encrypted:"false"`
+	UserId   ID        `json:"user_id" db:"user_id" encrypted:"false"`
+	Expires  time.Time `json:"expires_at" db:"expires_at" encrpted:"false"`
 }
 
 type OauthTokens struct {
 	ClientId     ID        `json:"client_id" db:"client_id" encrypted:"false"`
 	UserId       ID        `json:"user_id" db:"user_id" encrypted:"false"`
-	AccessToken  []byte    `json:"-" db:"access_token" encrypted:"true"`
-	RefreshToken []byte    `json:"-" db:"refresh_token" encrypted:"true"`
+	AccessToken  string    `json:"-" db:"access_token" encrypted:"true"`
+	RefreshToken string    `json:"-" db:"refresh_token" encrypted:"true"`
 	Expires      time.Time `json:"expires_at" db:"expires_at" encrypted:"false"`
 }

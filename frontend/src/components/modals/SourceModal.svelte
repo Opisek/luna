@@ -9,10 +9,14 @@
   import { isValidIcalFile, isValidPath, isValidUrl, valid } from "$lib/client/validation";
   import { queueNotification } from "$lib/client/notifications";
   import FileUpload from "../forms/FileUpload.svelte";
-  import { fetchFileById, fetchResponse } from "../../lib/client/net";
+  import { fetchFileById, fetchJson } from "../../lib/client/net";
   import { UserSettingKeys } from "../../types/settings";
   import { getSettings } from "$lib/client/data/settings.svelte";
   import { ColorKeys } from "../../types/colors";
+  import { getOauthClients } from "$lib/client/data/oauth.svelte";
+  import SelectInput from "../forms/SelectInput.svelte";
+  import Button from "../interactive/Button.svelte";
+  import Spinner from "../decoration/Spinner.svelte";
 
   interface Props {
     showCreateModal?: () => Promise<SourceModel>;
@@ -25,6 +29,7 @@
   }: Props = $props();
 
   const settings = getSettings();
+  const oauthClients = getOauthClients();
 
   let sourceDetailed: SourceModel = $state(EmptySource);
   let originalSource: SourceModel;
@@ -34,6 +39,8 @@
 
   showCreateModal = () => {
     promiseReject();
+
+    oauthClients.fetch();
 
     sourceDetailed = {
       id: "",
@@ -56,6 +63,8 @@
   }
   showModal = async (source: SourceModel): Promise<SourceModel> => {
     promiseReject();
+
+    oauthClients.fetch();
 
     sourceDetailed = await getRepository().getSourceDetails(source.id, true).catch(err => {
       queueNotification(ColorKeys.Danger, `Could not get source details: ${err.message}`);
@@ -140,6 +149,57 @@
       (sourceDetailed.settings.location === "local"    && icalPathValidity?.valid)
     ))
   ));
+
+  let selectedOauthClientId: string = $state("");
+  let selectedOauthClient: OauthClientModel | null = $derived(oauthClients.clients.find(client => client.id === selectedOauthClientId) ?? null);
+
+  let oauthPending = $state(false);
+  let oauthRequestId = $state("");
+
+  async function startOauthAuthorization() {
+    if (!selectedOauthClient) return;
+    if (oauthPending) return;
+    oauthPending = true;
+
+    const json = await fetchJson(`/api/oauth/authorization/${selectedOauthClient.id}`, { method: "PUT" }).catch((err) => {
+      oauthPending = false;
+      queueNotification(ColorKeys.Danger, err.message)
+    });
+    if (!json || !json.url || !json.request?.request_id) return;
+
+    oauthRequestId = json.request.request_id;
+    localStorage.setItem(`oauth/${oauthRequestId}/expiry`, json.request.expires_at);
+
+    window.addEventListener("storage", oauthAuthorizationResponseListener);
+
+    window.open(json.url, "_blank")?.focus();
+  }
+
+  function oauthAuthorizationResponseListener() {
+    const rawResponse = localStorage.getItem(`oauth/${oauthRequestId}/response`);
+  
+    if (!rawResponse) return;
+
+    const response = JSON.parse(rawResponse);
+
+    if (!response) return;
+
+    window.removeEventListener("storage", oauthAuthorizationResponseListener);
+
+    localStorage.removeItem(`oauth/${oauthRequestId}/response`);
+    localStorage.removeItem(`oauth/${oauthRequestId}/expiry`);
+
+    if (response?.warnings) {
+      for (const warning of response.warnings) 
+        queueNotification(ColorKeys.Warning, warning);
+    } else if (response?.status === "ok") {
+      queueNotification(ColorKeys.Success, `Logged into ${selectedOauthClient?.name} successfully`);
+    } else {
+      queueNotification(ColorKeys.Danger, response?.error || "Unknown error");
+    }
+
+    oauthPending = false;
+  }
 </script>
 
 <EditableModal
@@ -215,6 +275,10 @@
           value: "bearer",
           name: "Token",
         },
+        {
+          value: "oauth",
+          name: "OAuth 2.0",
+        },
       ]}/>
       {#if sourceDetailed.auth_type === "basic"}
         <TextInput bind:value={sourceDetailed.auth.username} name="auth_username" placeholder="Username" editable={editMode} />
@@ -222,6 +286,18 @@
       {/if}
       {#if sourceDetailed.auth_type === "bearer"}
         <TextInput bind:value={sourceDetailed.auth.token} name="auth_token" placeholder="Token" editable={editMode} password={true} />
+      {/if}
+      {#if sourceDetailed.auth_type === "oauth"}
+        <SelectInput bind:value={selectedOauthClientId} name="oauth_client" placeholder="Authorization Provider" editable={editMode} options={oauthClients.clients.map(client => ({ value: client.id, name: client.name }))}/>
+        {#if selectedOauthClientId != ""}
+          <Button color={ColorKeys.Accent} onClick={startOauthAuthorization} enabled={!oauthPending}>
+            {#if oauthPending}
+              <Spinner/>
+            {:else}
+              Sign in with {selectedOauthClient?.name}
+            {/if}
+          </Button>
+        {/if}
       {/if}
     {/if}
 

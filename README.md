@@ -441,7 +441,27 @@ Depending on the `auth_type` field, additional information may need to be passed
 - **Path**: ``/api/oauth/clients/<ID>``
 - **Method**: ``DELETE``
 - **Body**: Empty
-- **Purpose**: Deletes a regestired OAuth 2.0 client
+- **Purpose**: Deletes a registered OAuth 2.0 client
+
+### OAuth 2.0 Authorization
+#### Put Request
+- **Path**: ``/api/oauth/authorization/<ID>``
+- **Method**: ``PUT``
+- **Body**: Empty
+- **Purpose**: Begins a new OAuth 2.0 authorization flow with the client whose internal ID is passed and returns the authorization "state" (request ID)
+- **Note**: The way that the client ID is passed might change to the form body later
+
+#### Post Request
+- **Path**: ``/api/oauth/authorization/<ID>``
+- **Method**: ``POST``
+- **Body**: ``authorization_code``
+- **Purpose**: Successfully finishes the authorization flow whose ID is given and internally fetches OAuth 2.0 tokens using the supplied authorization code
+
+#### Delete Request
+- **Path**: ``/api/oauth/authorization/<ID>``
+- **Method**: ``DELETE``
+- **Body**: Empty
+- **Purpose**: Fails the authorization flow whose ID is given
 
 ## Additional Frontend Endpoints
 Aside from using the backend API, the frontend also provides a limited amount of endpoints for its own purposes.

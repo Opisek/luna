@@ -263,12 +263,27 @@ func CreateOauthAuthorizationRequest(c *gin.Context) {
 		return
 	}
 
-	// Insert
+	// Check if tokens already exist
 	request := &types.OauthAuthorizationRequest{
 		ClientId: clientId,
 		UserId:   util.GetUserId(c),
 	}
 
+	exist, tr := u.Tx.Queries().CheckOauthTokensExist(request.ClientId, request.UserId)
+	if tr != nil {
+		u.Error(tr)
+		return
+	}
+	if exist {
+		u.Error(errors.New().Status(http.StatusConflict).
+			Append(errors.LvlDebug, "OAuth 2.0 tokens for client %v (user %v) already exist", request.ClientId, request.UserId).
+			AltStr(errors.LvlWordy, "OAuth 2.0 tokens already exist").
+			AltStr(errors.LvlPlain, "Already signed in"),
+		)
+		return
+	}
+
+	// Insert
 	tr = u.Tx.Queries().InsertOauthAuthorizationRequest(request)
 	if tr != nil {
 		u.Error(tr)
@@ -294,7 +309,7 @@ func CreateOauthAuthorizationRequest(c *gin.Context) {
 	// RFC 6749 4.1.1
 	queryParams.Add("response_type", "code")
 	queryParams.Add("client_id", client.ClientId)
-	queryParams.Add("redirect_uri", u.Config.PublicUrl.Subpage("/oauth").String())
+	queryParams.Add("redirect_uri", oauth.GetOauthRedirectUrl(u.Config).String())
 	if client.Scope != "" {
 		queryParams.Add("scope", client.Scope)
 	}
@@ -303,6 +318,115 @@ func CreateOauthAuthorizationRequest(c *gin.Context) {
 	consentUrl.RawQuery = queryParams.Encode()
 
 	u.Success(&gin.H{
-		"url": consentUrl.String(),
+		"request": request,
+		"url":     consentUrl.String(),
 	})
+}
+
+func FinalizeOauthAuthorizationRequest(c *gin.Context) {
+	u := util.GetUtil(c)
+
+	// Request ID
+	requestId, tr := util.GetId(c, "request")
+	if tr != nil {
+		u.Error(tr)
+		return
+	}
+
+	// Authorization code
+	authCode := c.Request.FormValue("authorization_code")
+	if authCode == "" {
+		u.Error(errors.New().Status(http.StatusBadRequest).
+			Append(errors.LvlWordy, "Missing authorization coder"),
+		)
+		return
+	}
+
+	// Fetch outstanding request
+	request, tr := u.Tx.Queries().GetOauthAuthorizationRequest(requestId)
+	if tr != nil {
+		u.Error(tr)
+		return
+	}
+
+	// If the user ID does not match, error
+	if request.UserId != util.GetUserId(c) {
+		u.Error(errors.New().Status(http.StatusUnauthorized).
+			Append(errors.LvlDebug, "The outstanding request %v is not associated with the executing user %v", requestId, request.UserId).
+			Append(errors.LvlWordy, "The outstanding request is not associated with the executing user"),
+		)
+		return
+	}
+
+	// Fetch OAuth 2.0 client
+	client, tr := u.Tx.Queries().GetOauthClientById(request.ClientId)
+	if tr != nil {
+		u.Error(tr)
+		return
+	}
+
+	// Use the authorization code to fetch tokens
+	tr = oauth.FetchOauthUrls(client, c)
+	if tr != nil {
+		u.Error(tr)
+		return
+	}
+
+	tokens, tr := oauth.FetchOauthTokensUsingAuthorizationCode(client, authCode, c, u.Config)
+	if tr != nil {
+		u.Error(tr)
+		return
+	}
+	tokens.UserId = request.UserId
+
+	// Check if tokens already exist
+	exist, tr := u.Tx.Queries().CheckOauthTokensExist(request.ClientId, request.UserId)
+	if tr != nil {
+		u.Error(tr)
+		return
+	}
+
+	if exist {
+		u.Warn(errors.New().
+			Append(errors.LvlDebug, "OAuth 2.0 tokens for client %v (user %v) already exist", request.ClientId, request.UserId).
+			AltStr(errors.LvlWordy, "OAuth 2.0 tokens already exist").
+			AltStr(errors.LvlPlain, "Already signed in"),
+		)
+	} else {
+		// Save tokens
+		tr = u.Tx.Queries().InsertOauthTokens(tokens)
+		if tr != nil {
+			u.Error(tr)
+			return
+		}
+	}
+
+	// Remove all matching requests
+	tr = u.Tx.Queries().DeleteOauthAuthorizationRequests(request.ClientId, request.UserId)
+	if tr != nil {
+		u.Error(tr)
+		return
+	}
+
+	u.Success(nil)
+}
+
+func CancelOauthAuthorizationRequest(c *gin.Context) {
+	u := util.GetUtil(c)
+
+	// Request ID
+	requestId, tr := util.GetId(c, "request")
+	if tr != nil {
+		u.Error(tr)
+		return
+	}
+
+	// Delete
+	tr = u.Tx.Queries().DeleteOauthAuthorizationRequest(requestId, util.GetUserId(c))
+	if tr != nil {
+		u.Error(tr)
+		return
+	}
+
+	u.Success(nil)
 }

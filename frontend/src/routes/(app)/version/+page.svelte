@@ -1,20 +1,20 @@
 <script lang="ts">
   import { browser } from "$app/environment";
 
-  import Box from "../../components/layout/Box.svelte";
-  import Button from "../../components/interactive/Button.svelte";
-  import Horizontal from "../../components/layout/Horizontal.svelte";
-  import SimplePage from "../../components/layout/SimplePage.svelte";
-  import Title from "../../components/layout/Title.svelte";
+  import Box from "../../../components/layout/Box.svelte";
+  import Button from "../../../components/interactive/Button.svelte";
+  import Horizontal from "../../../components/layout/Horizontal.svelte";
+  import SimplePage from "../../../components/layout/SimplePage.svelte";
+  import Title from "../../../components/layout/Title.svelte";
   import { VersionCompatibility } from "$lib/common/version";
   import { afterNavigate } from "$app/navigation";
   import { getConnectivity } from "$lib/client/data/connectivity.svelte";
-  import Paragraph from "../../components/layout/Paragraph.svelte";
-  import Bold from "../../components/layout/Bold.svelte";
-  import Divider from "../../components/layout/Divider.svelte";
-  import Loader from "../../components/decoration/Loader.svelte";
-  import { getRedirectPage } from "../../lib/common/parsing";
-  import { ColorKeys } from "../../types/colors";
+  import Paragraph from "../../../components/layout/Paragraph.svelte";
+  import Bold from "../../../components/layout/Bold.svelte";
+  import Divider from "../../../components/layout/Divider.svelte";
+  import Loader from "../../../components/decoration/Loader.svelte";
+  import { getRedirectPage } from "../../../lib/common/parsing";
+  import { ColorKeys } from "../../../types/colors";
 
   let versions: ({ frontend: string, backend: string, compatibility: VersionCompatibility } | undefined) = $state();
   let isCompatible = $derived(versions !== undefined && ![VersionCompatibility.BackendOutdatedMajor, VersionCompatibility.FrontendOutdatedMajor].includes(versions.compatibility));

@@ -1,19 +1,19 @@
 import { redirect, type LoadEvent } from "@sveltejs/kit";
-import { fetchJsonFromEvent } from "../lib/client/net";
+import { fetchJsonFromEvent } from "../../lib/client/net";
 import type { PageLoad } from "./register/$types";
-import { unprivilegedPaths } from "../lib/common/paths";
+import { unprivilegedPaths } from "$lib/common/paths";
 import { NoOp } from "$lib/client/placeholders";
 import { isCompatibleWithBackend, VersionCompatibility } from "$lib/common/version";
 
-import { ActiveSessions } from "../lib/client/data/sessions.svelte";
-import { Connectivity } from "../lib/client/data/connectivity.svelte";
-import { Metadata } from "../lib/client/data/metadata.svelte";
-import { RegistrationInvites } from "../lib/client/data/invites.svelte";
-import { Repository } from "../lib/client/data/repository.svelte";
-import { Theme } from "../lib/client/data/theme.svelte";
-import { Users } from "../lib/client/data/users.svelte";
-import { Settings } from "../lib/client/data/settings.svelte";
-import { OauthClients } from "../lib/client/data/oauth.svelte";
+import { ActiveSessions } from "$lib/client/data/sessions.svelte";
+import { Connectivity } from "$lib/client/data/connectivity.svelte";
+import { Metadata } from "$lib/client/data/metadata.svelte";
+import { RegistrationInvites } from "$lib/client/data/invites.svelte";
+import { Repository } from "$lib/client/data/repository.svelte";
+import { Theme } from "$lib/client/data/theme.svelte";
+import { Users } from "$lib/client/data/users.svelte";
+import { Settings } from "$lib/client/data/settings.svelte";
+import { OauthClients } from "$lib/client/data/oauth.svelte";
 
 function getSingletons(version: string, preloadedSettings: { userData: any, userSettings: any, globalSettings: any } | null = null): {
   connectivity: Connectivity;

@@ -141,7 +141,7 @@ func (tr *ErrorTrace) AddErr(detailLevel int, err error) *ErrorTrace {
 
 // Add more errors to the last level of abstraction
 func (tr *ErrorTrace) AndStr(msg string, args ...any) *ErrorTrace {
-	lastDisjunction := tr.trace[len(tr.trace)-1]
+	lastDisjunction := tr.trace[0]
 	lastErr := lastDisjunction[len(lastDisjunction)-1]
 	newMsg := fmt.Sprintf(msg, args...)
 
@@ -169,14 +169,14 @@ func (tr *ErrorTrace) AltStr(detailLevel int, msg string, args ...any) *ErrorTra
 		return tr.Append(detailLevel, msg, args...)
 	}
 
-	disjunction := tr.trace[len(tr.trace)-1]
+	disjunction := tr.trace[0]
 
 	disjunction = append(disjunction, &errEntry{
 		detailLevel: detailLevel,
 		message:     fmt.Sprintf(msg, args...),
 	})
 
-	tr.trace[len(tr.trace)-1] = disjunction
+	tr.trace[0] = disjunction
 
 	return tr
 }

@@ -267,7 +267,7 @@ func (q *Queries) InsertOauthAuthorizationRequest(request *types.OauthAuthorizat
 	query := `
 		INSERT INTO	oauth_authorization_requests (client_id, user_id)
 		VALUES ($1, $2)
-		RETURNING request_id;
+		RETURNING request_id, expires_at;
 	`
 
 	err := q.Tx.
@@ -276,7 +276,7 @@ func (q *Queries) InsertOauthAuthorizationRequest(request *types.OauthAuthorizat
 			query,
 			request.ClientId.UUID(),
 			request.UserId.UUID(),
-		).Scan(&request.Id)
+		).Scan(&request.Id, &request.Expires)
 	if err != nil {
 		return errors.New().Status(http.StatusInternalServerError).
 			AddErr(errors.LvlDebug, err).
@@ -287,17 +287,17 @@ func (q *Queries) InsertOauthAuthorizationRequest(request *types.OauthAuthorizat
 	return nil
 }
 
-func (q *Queries) DeleteOauthAuthorizationRequest(id types.ID) *errors.ErrorTrace {
+func (q *Queries) DeleteOauthAuthorizationRequest(requestId types.ID, userId types.ID) *errors.ErrorTrace {
 	query := `
 		DELETE FROM oauth_authorization_requests
-		WHERE request_id = $1;
+		WHERE request_id = $1 && user_id = $2;
 	`
 
-	_, err := q.Tx.Exec(q.Context, query, id.UUID())
+	_, err := q.Tx.Exec(q.Context, query, requestId.UUID(), userId.UUID())
 	if err != nil {
 		return errors.New().Status(http.StatusInternalServerError).
 			AddErr(errors.LvlDebug, err).
-			Append(errors.LvlDebug, "Could not delete OAuth 2.0 authorization request %v", id).
+			Append(errors.LvlDebug, "Could not delete OAuth 2.0 authorization request %v", requestId).
 			AltStr(errors.LvlWordy, "Could not delete OAuth 2.0 authorization request").
 			Append(errors.LvlPlain, "Database error")
 	}
@@ -343,6 +343,32 @@ func (q *Queries) DeleteExpiredOauthAuthorizationRequests() *errors.ErrorTrace {
 //
 // OAuth 2.0 Tokens
 //
+
+func (q *Queries) CheckOauthTokensExist(clientId types.ID, userId types.ID) (bool, *errors.ErrorTrace) {
+	// TODO: rewrite with EXISTS?
+	rows, err := q.Tx.Query(
+		q.Context,
+		`
+		SELECT 1
+		FROM oauth_tokens
+		WHERE client_id = $1 AND user_id = $2;
+		`,
+		clientId.UUID(),
+		userId.UUID(),
+	)
+
+	if err != nil {
+		return false, errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not check the presence of OAuth 2.0 tokens for client %v (user %v)", clientId, userId).
+			AltStr(errors.LvlWordy, "Could not check the presence of OAuth 2.0")
+	}
+
+	exists := rows.Next()
+	rows.Close()
+
+	return exists, nil
+}
 
 func (q *Queries) GetOauthTokens(clientId types.ID, userId types.ID) (*types.OauthTokens, *errors.ErrorTrace) {
 	decryptionKey, tr := util.GetUserDecryptionKey(q.CommonConfig, userId)

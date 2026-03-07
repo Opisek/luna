@@ -1,12 +1,14 @@
 package net
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"io"
 	"luna-backend/errors"
 	"luna-backend/types"
 	"net/http"
+	"net/url"
 )
 
 func FetchFile(url *types.Url, auth types.AuthMethod, accept string, ctx context.Context) (io.Reader, *errors.ErrorTrace) {
@@ -31,8 +33,15 @@ func FetchFile(url *types.Url, auth types.AuthMethod, accept string, ctx context
 	}
 
 	if res.StatusCode != http.StatusOK {
-		return nil, errors.New().Status(res.StatusCode).
-			Append(errors.LvlPlain, res.Status).
+		tr := errors.New().Status(res.StatusCode)
+
+		body, err := io.ReadAll(res.Body)
+		if err == nil {
+			tr.Append(errors.LvlDebug, string(body))
+		}
+
+		return nil, tr.
+			Append(errors.LvlPlain, "%v", res.Status).
 			Append(errors.LvlWordy, "Error %v", res.StatusCode).
 			Append(errors.LvlDebug, "Server returned an error code").
 			Append(errors.LvlWordy, "Could not fetch resource from %v", url).
@@ -42,14 +51,23 @@ func FetchFile(url *types.Url, auth types.AuthMethod, accept string, ctx context
 	return res.Body, nil
 }
 
-func FetchJson(url *types.Url, auth types.AuthMethod, ctx context.Context, target any) *errors.ErrorTrace {
-	req, err := http.NewRequest("GET", url.String(), nil)
+func FetchJson(url *types.Url, httpMethod string, auth types.AuthMethod, body *url.Values, bodyType string, ctx context.Context, target any) *errors.ErrorTrace {
+	var payload io.Reader = nil
+	if body != nil {
+		payload = bytes.NewBufferString(body.Encode())
+	}
+
+	req, err := http.NewRequest(httpMethod, url.String(), payload)
 	if err != nil {
 		return errors.New().Status(http.StatusInternalServerError).
 			AddErr(errors.LvlDebug, err).
 			Append(errors.LvlDebug, "Could not create request").
 			Append(errors.LvlWordy, "Could not fetch response from %v", url).
 			AltStr(errors.LvlPlain, "Could not fetch response")
+	}
+
+	if payload != nil && bodyType != "" {
+		req.Header.Set("Content-Type", bodyType)
 	}
 
 	req.Header.Set("Accept", "application/json")
@@ -64,8 +82,15 @@ func FetchJson(url *types.Url, auth types.AuthMethod, ctx context.Context, targe
 	}
 
 	if res.StatusCode != http.StatusOK {
-		return errors.New().Status(res.StatusCode).
-			Append(errors.LvlPlain, res.Status).
+		tr := errors.New().Status(res.StatusCode)
+
+		body, err := io.ReadAll(res.Body)
+		if err == nil {
+			tr.Append(errors.LvlDebug, string(body))
+		}
+
+		return tr.
+			Append(errors.LvlPlain, "%v", res.Status).
 			Append(errors.LvlWordy, "Error %v", res.StatusCode).
 			Append(errors.LvlDebug, "Server returned an error code").
 			Append(errors.LvlWordy, "Could not fetch response from %v", url).

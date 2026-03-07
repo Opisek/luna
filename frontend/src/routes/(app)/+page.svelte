@@ -3,39 +3,39 @@
   import { Copyleft, PlusIcon, RefreshCw, Settings, WifiOff } from "lucide-svelte";
   import { setContext, untrack } from "svelte";
 
-  import Calendar from "../components/calendar/Calendar.svelte";
-  import CalendarEntry from "../components/calendar/CalendarEntry.svelte";
-  import CalendarModal from "../components/modals/CalendarModal.svelte";
-  import EventModal from "../components/modals/EventModal.svelte";
-  import Horizontal from "../components/layout/Horizontal.svelte";
-  import IconButton from "../components/interactive/IconButton.svelte";
-  import MonthSelection from "../components/interactive/MonthSelection.svelte";
-  import SelectButtons from "../components/forms/SelectButtons.svelte";
-  import SourceEntry from "../components/calendar/SourceEntry.svelte";
-  import SourceModal from "../components/modals/SourceModal.svelte";
-  import Title from "../components/layout/Title.svelte";
+  import Calendar from "../../components/calendar/Calendar.svelte";
+  import CalendarEntry from "../../components/calendar/CalendarEntry.svelte";
+  import CalendarModal from "../../components/modals/CalendarModal.svelte";
+  import EventModal from "../../components/modals/EventModal.svelte";
+  import Horizontal from "../../components/layout/Horizontal.svelte";
+  import IconButton from "../../components/interactive/IconButton.svelte";
+  import MonthSelection from "../../components/interactive/MonthSelection.svelte";
+  import SelectButtons from "../../components/forms/SelectButtons.svelte";
+  import SourceEntry from "../../components/calendar/SourceEntry.svelte";
+  import SourceModal from "../../components/modals/SourceModal.svelte";
+  import Title from "../../components/layout/Title.svelte";
 
   import { afterNavigate, beforeNavigate } from "$app/navigation";
   import { browser } from "$app/environment";
 
-  import SmallCalendar from "../components/interactive/SmallCalendar.svelte";
+  import SmallCalendar from "../../components/interactive/SmallCalendar.svelte";
   import { NoOp } from "$lib/client/placeholders";
   import { getMetadata } from "$lib/client/data/metadata.svelte";
   import { getRepository } from "$lib/client/data/repository.svelte";
   import { queueNotification } from "$lib/client/notifications";
   import { getConnectivity, Reachability } from "$lib/client/data/connectivity.svelte";
-  import Button from "../components/interactive/Button.svelte";
-  import DayViewModal from "../components/modals/DayViewModal.svelte";
-  import { getDayIndex, isInRange } from "../lib/common/date";
-  import { compareEventsByStartDate } from "../lib/common/comparators";
-  import SourceWizardModal from "../components/modals/SourceWizardModal.svelte";
-  import SettingsModal from "../components/modals/SettingsModal.svelte";
+  import Button from "../../components/interactive/Button.svelte";
+  import DayViewModal from "../../components/modals/DayViewModal.svelte";
+  import { getDayIndex, isInRange } from "../../lib/common/date";
+  import { compareEventsByStartDate } from "../../lib/common/comparators";
+  import SourceWizardModal from "../../components/modals/SourceWizardModal.svelte";
+  import SettingsModal from "../../components/modals/SettingsModal.svelte";
   import { getSettings } from "$lib/client/data/settings.svelte";
-  import { UserSettingKeys } from "../types/settings";
-  import ThemeToggle from "../components/interactive/ThemeToggle.svelte";
-  import { ColorKeys } from "../types/colors";
+  import { UserSettingKeys } from "../../types/settings";
+  import ThemeToggle from "../../components/interactive/ThemeToggle.svelte";
+  import { ColorKeys } from "../../types/colors";
   import { page } from "$app/state";
-  import CreditsModal from "../components/modals/CreditsModal.svelte";
+  import CreditsModal from "../../components/modals/CreditsModal.svelte";
 
   /* Singletons */
   const settings = getSettings();
@@ -198,10 +198,10 @@
 </script>
 
 <style lang="scss">
-  @use "../styles/animations.scss";
-  @use "../styles/colors.scss";
-  @use "../styles/dimensions.scss";
-  @use "../styles/text.scss";
+  @use "../../styles/animations.scss";
+  @use "../../styles/colors.scss";
+  @use "../../styles/dimensions.scss";
+  @use "../../styles/text.scss";
 
   :global(body) {
     display: flex;

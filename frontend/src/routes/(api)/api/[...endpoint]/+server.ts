@@ -1,4 +1,4 @@
-import { apiProxy } from "../../../lib/server/api.server";
+import { apiProxy } from "$lib/server/api.server";
 import type { RequestEvent } from "./$types";
 import { error } from "@sveltejs/kit";
 
