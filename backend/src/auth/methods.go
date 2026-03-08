@@ -142,7 +142,7 @@ func (auth *OauthAuth) SupplyContext(userId types.ID, ctx context.Context, confi
 	auth.ctx = ctx
 	auth.userId = userId
 
-	// I really don't like having to do the following, but I found no other way to
+	// I really don't like having to do the following hack, but I found no other way to
 	// bring the current transaction into this struct without running into a lot of circular dependencies.
 	// Sadly, I did not think this far when initially designing the auth package, because OAuth 2.0 was a faraway future back then.
 	// Passing this reference via the context at least limits the amount of unsafe casts that we have to do to one.
