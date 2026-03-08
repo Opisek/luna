@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"luna-backend/auth"
-	"luna-backend/config"
 	"luna-backend/constants"
 	"luna-backend/errors"
 	"luna-backend/protocols/caldav"
@@ -19,7 +18,7 @@ func GetPrimitivesParser() PrimitivesParser {
 	return PrimitivesParser{}
 }
 
-func (PrimitivesParser) ParseSource(entry *types.SourceDatabaseEntry, userId types.ID, ctx context.Context, config *config.CommonConfig) (types.Source, *errors.ErrorTrace) {
+func (PrimitivesParser) ParseSource(entry *types.SourceDatabaseEntry, userId types.ID, ctx context.Context) (types.Source, *errors.ErrorTrace) {
 	var err error
 
 	var authMethod types.AuthMethod
@@ -55,7 +54,7 @@ func (PrimitivesParser) ParseSource(entry *types.SourceDatabaseEntry, userId typ
 				Append(errors.LvlDebug, "Could not unmarshal OAuth 2.0 authentication").
 				Append(errors.LvlWordy, "Could not unmarshal authentication")
 		}
-		oauthAuth.SupplyContext(userId, ctx, config)
+		oauthAuth.SupplyContext(userId, ctx)
 		authMethod = oauthAuth
 	default:
 		return nil, errors.New().Status(http.StatusInternalServerError).

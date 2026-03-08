@@ -133,7 +133,7 @@ func parseAuthMethod(c *gin.Context) (types.AuthMethod, *errors.ErrorTrace) {
 		sourceAuth = auth.NewOauthAuth(clientId)
 
 		u := util.GetUtil(c)
-		sourceAuth.(*auth.OauthAuth).SupplyContext(util.GetUserId(c), u.Context, u.Config)
+		sourceAuth.(*auth.OauthAuth).SupplyContext(util.GetUserId(c), u.Context)
 	case "":
 		return nil, errors.New().Status(http.StatusBadRequest).
 			Append(errors.LvlPlain, "Missing authentication type")

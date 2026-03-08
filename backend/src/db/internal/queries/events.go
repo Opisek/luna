@@ -189,7 +189,7 @@ func (q *Queries) GetEvent(userId types.ID, eventId types.ID, ctx context.Contex
 			AltStr(errors.LvlBroad, "Could not get event")
 	}
 
-	event, tr := scanner.GetEvent(userId, ctx, config)
+	event, tr := scanner.GetEvent(userId, ctx)
 	if tr != nil {
 		return nil, tr.
 			Append(errors.LvlDebug, "Could not parse event %v for user %v", eventId, userId).

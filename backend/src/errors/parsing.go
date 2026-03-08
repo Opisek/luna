@@ -11,46 +11,46 @@ func InterpretRemoteError(tr *ErrorTrace, resource string, wordyResource string)
 	switch {
 	// HTTP response codes
 	case strings.Contains(errMsg, http.StatusText(http.StatusUnauthorized)):
-		return New().Status(http.StatusUnauthorized).
+		return tr.Status(http.StatusUnauthorized).
 			Append(LvlWordy, "Unauthorized access to %v", wordyResource).
 			AltStr(LvlPlain, "Wrong credentials")
 	case strings.Contains(errMsg, http.StatusText(http.StatusNotFound)):
-		return New().Status(http.StatusNotFound).
+		return tr.Status(http.StatusNotFound).
 			Append(LvlWordy, "%v not found", wordyResource).
 			AltStr(LvlPlain, "%v not found", resource)
 	case strings.Contains(errMsg, http.StatusText(http.StatusForbidden)):
-		return New().Status(http.StatusForbidden).
+		return tr.Status(http.StatusForbidden).
 			Append(LvlWordy, "Access to %v forbidden", wordyResource).
 			AltStr(LvlPlain, "Access forbidden")
 	case strings.Contains(errMsg, http.StatusText(http.StatusServiceUnavailable)):
-		return New().Status(http.StatusServiceUnavailable).
+		return tr.Status(http.StatusServiceUnavailable).
 			Append(LvlWordy, "%v temporarily unavailable", wordyResource).
 			AltStr(LvlPlain, "%v temporarily unavailable", resource)
 	case strings.Contains(errMsg, http.StatusText(http.StatusInternalServerError)):
-		return New().Status(http.StatusInternalServerError).
+		return tr.Status(http.StatusInternalServerError).
 			Append(LvlPlain, "Remote server returned an error")
 	case strings.Contains(errMsg, http.StatusText(http.StatusBadRequest)):
 		fallthrough
 	case strings.Contains(errMsg, http.StatusText(http.StatusMethodNotAllowed)):
-		return New().Status(http.StatusBadRequest).
+		return tr.Status(http.StatusBadRequest).
 			Append(LvlWordy, "Bad request to %v", wordyResource).
 			AltStr(LvlPlain, "Bad request to %v, are you sure the URL is correct?", resource)
 
 	// Connection errors
 	case strings.Contains(errMsg, "dial tcp"):
-		return New().Status(http.StatusServiceUnavailable).
+		return tr.Status(http.StatusServiceUnavailable).
 			Append(LvlWordy, "Could not connect to %v", wordyResource).
 			AltStr(LvlPlain, "Could not connect to %v", resource)
 	case strings.Contains(errMsg, "no such host"):
-		return New().Status(http.StatusServiceUnavailable).
+		return tr.Status(http.StatusServiceUnavailable).
 			Append(LvlWordy, "Could not resolve %v", wordyResource).
 			AltStr(LvlPlain, "Could not resolve %v", resource)
 	case strings.Contains(errMsg, "connection refused"):
-		return New().Status(http.StatusServiceUnavailable).
+		return tr.Status(http.StatusServiceUnavailable).
 			Append(LvlWordy, "Connection to %v refused", wordyResource).
 			AltStr(LvlPlain, "Connection refused to %v", resource)
 	case strings.Contains(errMsg, "connection reset by peer"):
-		return New().Status(http.StatusServiceUnavailable).
+		return tr.Status(http.StatusServiceUnavailable).
 			Append(LvlWordy, "Connection to %v reset by peer", wordyResource).
 			AltStr(LvlPlain, "Connection to %v reset by peer", resource)
 

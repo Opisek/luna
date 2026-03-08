@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"luna-backend/config"
 	"luna-backend/constants"
 	"luna-backend/db"
 	"luna-backend/errors"
@@ -129,16 +128,14 @@ func NewBearerAuth(token string) types.AuthMethod {
 // OAuth2
 
 type OauthAuth struct {
-	ClientId types.ID             `json:"client_id" form:"client_id"`
-	client   *types.OauthClient   `json:"-" form:""`
-	config   *config.CommonConfig `json:"-" form:""`
-	ctx      context.Context      `json:"-" form:""`
-	tx       *db.Transaction      `json:"-" form:""`
-	userId   types.ID             `json:"-" form:""`
+	ClientId types.ID           `json:"client_id" form:"client_id"`
+	client   *types.OauthClient `json:"-" form:""`
+	ctx      context.Context    `json:"-" form:""`
+	tx       *db.Transaction    `json:"-" form:""`
+	userId   types.ID           `json:"-" form:""`
 }
 
-func (auth *OauthAuth) SupplyContext(userId types.ID, ctx context.Context, config *config.CommonConfig) {
-	auth.config = config
+func (auth *OauthAuth) SupplyContext(userId types.ID, ctx context.Context) {
 	auth.ctx = ctx
 	auth.userId = userId
 
@@ -173,7 +170,7 @@ func (auth *OauthAuth) Do(req *http.Request) (*http.Response, *errors.ErrorTrace
 		}
 
 		refreshToken := tokens.RefreshToken
-		tokens, tr = FetchOauthTokensUsingRefreshToken(auth.client, refreshToken, auth.ctx, auth.config)
+		tokens, tr = FetchOauthTokensUsingRefreshToken(auth.client, refreshToken, auth.ctx)
 		if tr != nil {
 			return nil, tr
 		}

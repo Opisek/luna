@@ -66,7 +66,7 @@ type oauthTokenResponse struct {
 	Scope        string `json:"scope"`
 }
 
-func fetchOauthTokens(oauthClient *types.OauthClient, form *url.Values, ctx context.Context, config *config.CommonConfig) (*types.OauthTokens, *errors.ErrorTrace) {
+func fetchOauthTokens(oauthClient *types.OauthClient, form *url.Values, ctx context.Context) (*types.OauthTokens, *errors.ErrorTrace) {
 	// RFC 6749 4.1.3, 6
 	form.Add("client_id", oauthClient.ClientId)
 	form.Add("client_secret", oauthClient.ClientSecret)
@@ -110,6 +110,13 @@ func fetchOauthTokens(oauthClient *types.OauthClient, form *url.Values, ctx cont
 			AltStr(errors.LvlWordy, "Could not fetch tokens for OAuth 2.0 client")
 	}
 
+	if res.RefreshToken == "" {
+		return nil, errors.New().Status(http.StatusInternalServerError).
+			Append(errors.LvlDebug, "Received an empty refresh token").
+			Append(errors.LvlDebug, "Could not fetch tokens for OAuth 2.0 client %v", oauthClient.Name).
+			AltStr(errors.LvlWordy, "Could not fetch tokens for OAuth 2.0 client")
+	}
+
 	timestamp = timestamp.Add(time.Duration(res.Expires) * time.Second)
 
 	return &types.OauthTokens{
@@ -128,15 +135,15 @@ func FetchOauthTokensUsingAuthorizationCode(oauthClient *types.OauthClient, auth
 	form.Add("code", authCode)
 	form.Add("redirect_uri", GetOauthRedirectUrl(config).String())
 
-	return fetchOauthTokens(oauthClient, &form, ctx, config)
+	return fetchOauthTokens(oauthClient, &form, ctx)
 }
 
-func FetchOauthTokensUsingRefreshToken(oauthClient *types.OauthClient, refreshToken string, ctx context.Context, config *config.CommonConfig) (*types.OauthTokens, *errors.ErrorTrace) {
+func FetchOauthTokensUsingRefreshToken(oauthClient *types.OauthClient, refreshToken string, ctx context.Context) (*types.OauthTokens, *errors.ErrorTrace) {
 	form := make(url.Values)
 
 	// RFC 6749 6
 	form.Add("grant_type", "refresh_token")
 	form.Add("refresh_token", refreshToken)
 
-	return fetchOauthTokens(oauthClient, &form, ctx, config)
+	return fetchOauthTokens(oauthClient, &form, ctx)
 }
