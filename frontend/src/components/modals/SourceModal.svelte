@@ -143,8 +143,8 @@
   let icalFileValidity: Validity = $state(valid);
   let icalPathValidity: Validity = $state(valid);
 
-  let selectedOauthClient: OauthClientModel | null = $derived(oauthClients.clients.find(client => client.id === sourceDetailed.auth.client) ?? null);
-  let selectedOauthClientAuthorized: boolean = $derived(sourceDetailed.auth.client == "" ? false : oauthClients.clientsWithTokens.has(sourceDetailed.auth.client));
+  let selectedOauthClient: OauthClientModel | null = $derived(oauthClients.clients.find(client => client.id === sourceDetailed.auth.client_id) ?? null);
+  let selectedOauthClientAuthorized: boolean = $derived(sourceDetailed.auth.client_id == "" ? false : oauthClients.clientsWithTokens.has(sourceDetailed.auth.client_id));
 
   let oauthPending = $state(false);
   let oauthRequestId = $state("");
@@ -305,8 +305,8 @@
         <TextInput bind:value={sourceDetailed.auth.token} name="auth_token" placeholder="Token" editable={editMode} password={true} />
       {/if}
       {#if sourceDetailed.auth_type === "oauth"}
-        <SelectInput bind:value={sourceDetailed.auth.client} name="oauth_client" placeholder="Authorization Provider" editable={editMode} options={oauthClients.clients.map(client => ({ value: client.id, name: client.name }))}/>
-        {#if sourceDetailed.auth.client != "" && selectedOauthClient?.name}
+        <SelectInput bind:value={sourceDetailed.auth.client_id} name="oauth_client" placeholder="Authorization Provider" editable={editMode} options={oauthClients.clients.map(client => ({ value: client.id, name: client.name }))}/>
+        {#if editMode && sourceDetailed.auth.client_id != "" && selectedOauthClient?.name}
           <Button color={selectedOauthClientAuthorized ? ColorKeys.Success : ColorKeys.Accent} onClick={startOauthAuthorization} enabled={!oauthPending && !selectedOauthClientAuthorized}>
             {#if oauthPending}
               <Spinner/>
