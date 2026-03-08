@@ -33,7 +33,7 @@ func (q *Tables) InitializeOauthAuthorizationRequestsTable() error {
 			request_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 			client_id UUID NOT NULL REFERENCES oauth_clients(id) ON DELETE CASCADE,
 			user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-			expires_at TIMESTAMP NOT NULL DEFAULT NOW() + INTERVAL '10 minutes'
+			expires_at TIMESTAMPTZ NOT NULL DEFAULT NOW() + INTERVAL '10 minutes'
 		)
 		`,
 	)
@@ -52,7 +52,7 @@ func (q *Tables) InitializeOauthTokensTable() error {
 			user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 			access_token BYTEA NOT NULL,
 			refresh_token BYTEA,
-			expires_at TIMESTAMP NOT NULL,
+			expires_at TIMESTAMPTZ NOT NULL,
 			PRIMARY KEY (client_id, user_id)
 		);
 		`,

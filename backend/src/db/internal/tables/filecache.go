@@ -13,7 +13,7 @@ func (q *Tables) InitializeFilecacheTable() error {
 		`
 		CREATE TABLE filecache (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-			date TIMESTAMP NOT NULL,
+			date TIMESTAMPTZ NOT NULL,
 			name TEXT NOT NULL,
 			file BYTEA,
 			owner UUID REFERENCES users(id) ON DELETE CASCADE
