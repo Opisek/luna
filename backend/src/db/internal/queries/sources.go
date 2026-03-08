@@ -1,7 +1,9 @@
 package queries
 
 import (
+	"context"
 	"fmt"
+	"luna-backend/config"
 	"luna-backend/db/internal/parsing"
 	"luna-backend/db/internal/util"
 	"luna-backend/errors"
@@ -13,7 +15,7 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func (q *Queries) GetSource(userId types.ID, sourceId types.ID) (types.Source, *errors.ErrorTrace) {
+func (q *Queries) GetSource(userId types.ID, sourceId types.ID, ctx context.Context, config *config.CommonConfig) (types.Source, *errors.ErrorTrace) {
 	decryptionKey, tr := util.GetUserDecryptionKey(q.CommonConfig, userId)
 	if tr != nil {
 		return nil, tr.
@@ -57,7 +59,7 @@ func (q *Queries) GetSource(userId types.ID, sourceId types.ID) (types.Source, *
 			AltStr(errors.LvlBroad, "Could not get source")
 	}
 
-	source, tr := scanner.GetSource()
+	source, tr := scanner.GetSource(userId, ctx, config)
 	if tr != nil {
 		return nil, tr.
 			Append(errors.LvlDebug, "Could not parse aource %v for user %v", sourceId, userId).
@@ -69,7 +71,7 @@ func (q *Queries) GetSource(userId types.ID, sourceId types.ID) (types.Source, *
 
 }
 
-func (q *Queries) GetSourcesByUser(userId types.ID) ([]types.Source, *errors.ErrorTrace) {
+func (q *Queries) GetSourcesByUser(userId types.ID, ctx context.Context, config *config.CommonConfig) ([]types.Source, *errors.ErrorTrace) {
 	decryptionKey, tr := util.GetUserDecryptionKey(q.CommonConfig, userId)
 	if tr != nil {
 		return nil, tr.
@@ -114,7 +116,7 @@ func (q *Queries) GetSourcesByUser(userId types.ID) ([]types.Source, *errors.Err
 	sources := []types.Source{}
 	for rows.Next() {
 		rows.Scan(params...) // TODO: we might have to "reset" the scanner each time due to pass by reference
-		source, err := scanner.GetSource()
+		source, err := scanner.GetSource(userId, ctx, config)
 		if err != nil {
 			return nil, err.
 				Append(errors.LvlDebug, "Could not parse sources for user %v", userId).

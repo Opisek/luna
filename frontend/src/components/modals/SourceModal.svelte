@@ -306,7 +306,7 @@
       {/if}
       {#if sourceDetailed.auth_type === "oauth"}
         <SelectInput bind:value={sourceDetailed.auth.client} name="oauth_client" placeholder="Authorization Provider" editable={editMode} options={oauthClients.clients.map(client => ({ value: client.id, name: client.name }))}/>
-        {#if sourceDetailed.auth.client != ""}
+        {#if sourceDetailed.auth.client != "" && selectedOauthClient?.name}
           <Button color={selectedOauthClientAuthorized ? ColorKeys.Success : ColorKeys.Accent} onClick={startOauthAuthorization} enabled={!oauthPending && !selectedOauthClientAuthorized}>
             {#if oauthPending}
               <Spinner/>

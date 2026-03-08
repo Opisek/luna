@@ -33,7 +33,7 @@ type exposedDetailedSource struct {
 }
 
 func getSources(u *util.HandlerUtility, userId types.ID) ([]types.Source, *errors.ErrorTrace) {
-	srcs, err := u.Tx.Queries().GetSourcesByUser(userId)
+	srcs, err := u.Tx.Queries().GetSourcesByUser(userId, u.Context, u.Config)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +74,7 @@ func GetSource(c *gin.Context) {
 
 	userId := util.GetUserId(c)
 
-	source, err := u.Tx.Queries().GetSource(userId, sourceId)
+	source, err := u.Tx.Queries().GetSource(userId, sourceId, u.Context, u.Config)
 	if err != nil {
 		u.Error(err)
 		return
@@ -116,6 +116,24 @@ func parseAuthMethod(c *gin.Context) (types.AuthMethod, *errors.ErrorTrace) {
 		}
 
 		sourceAuth = auth.NewBearerAuth(token)
+	case constants.AuthOauth:
+		rawClientId := c.PostForm("auth_client")
+		if rawClientId == "" {
+			return nil, errors.New().Status(http.StatusBadRequest).
+				Append(errors.LvlPlain, "Missing OAuth 2.0 client ID")
+		}
+
+		clientId, err := types.IdFromString(rawClientId)
+		if err != nil {
+			return nil, errors.New().Status(http.StatusBadRequest).
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlPlain, "Improperly formatted OAuth 2.0 client ID")
+		}
+
+		sourceAuth = auth.NewOauthAuth(clientId)
+
+		u := util.GetUtil(c)
+		sourceAuth.(*auth.OauthAuth).SupplyContext(util.GetUserId(c), u.Context, u.Config)
 	case "":
 		return nil, errors.New().Status(http.StatusBadRequest).
 			Append(errors.LvlPlain, "Missing authentication type")
@@ -300,7 +318,7 @@ func PatchSource(c *gin.Context) {
 		return
 	}
 
-	source, err := u.Tx.Queries().GetSource(userId, sourceId)
+	source, err := u.Tx.Queries().GetSource(userId, sourceId, u.Context, u.Config)
 	if err != nil {
 		u.Error(err)
 		return
@@ -358,7 +376,7 @@ func DeleteSource(c *gin.Context) {
 		return
 	}
 
-	source, err := u.Tx.Queries().GetSource(userId, sourceId)
+	source, err := u.Tx.Queries().GetSource(userId, sourceId, u.Context, u.Config)
 	if err != nil {
 		u.Warn(err)
 	} else {

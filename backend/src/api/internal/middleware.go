@@ -98,6 +98,11 @@ func RequestSetup(timeout time.Duration, database *db.Database, withTransaction 
 			}
 		}
 
+		// Note that we technically should not be using a string for the key here.
+		// I choose to ignore this, because this whole thing is a hack anyway.
+		// See auth/methods.go for more context.
+		ctx = context.WithValue(ctx, "transaction", tx)
+
 		// The handler will report back with a response body or an error trace
 		responseChan := make(chan *util.Response)
 		errChan := make(chan *errors.ErrorTrace)

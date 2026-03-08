@@ -5,21 +5,16 @@
 <style lang="scss">
     @use "../../styles/animations.scss";
 
-    .wrapper {
+    .spinner {
         display: flex;
         justify-content: center;
         align-items: center;
         height: 100%;
         animation: spin animations.$animationSpeedSlow linear infinite;
     }
-
-    .wrapper::before {
-        content: "a"; // This forces the spinner to take the same amount of space as text would.
-        visibility: hidden;
-    }
 </style>
 
-<span class="wrapper">
+<span class="spinner">
     <LoaderCircle size={16}/>
     <!--<Loader/>-->
     <!--<RefreshCw/>-->

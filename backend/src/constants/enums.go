@@ -10,6 +10,7 @@ const (
 	AuthNone   = "none"
 	AuthBasic  = "basic"
 	AuthBearer = "bearer"
+	AuthOauth  = "oauth"
 )
 
 const (

@@ -1,7 +1,9 @@
 package parsing
 
 import (
+	"context"
 	"fmt"
+	"luna-backend/config"
 	"luna-backend/errors"
 	"luna-backend/types"
 	"reflect"
@@ -109,12 +111,12 @@ func (s *PgxScanner) GetEventEntry() *types.EventDatabaseEntry {
 	return s.event
 }
 
-func (s *PgxScanner) GetSource() (types.Source, *errors.ErrorTrace) {
-	return s.primitivesParser.ParseSource(s.source)
+func (s *PgxScanner) GetSource(userId types.ID, ctx context.Context, config *config.CommonConfig) (types.Source, *errors.ErrorTrace) {
+	return s.primitivesParser.ParseSource(s.source, userId, ctx, config)
 }
 
-func (s *PgxScanner) GetCalendar() (types.Calendar, *errors.ErrorTrace) {
-	source, err := s.GetSource()
+func (s *PgxScanner) GetCalendar(userId types.ID, ctx context.Context, config *config.CommonConfig) (types.Calendar, *errors.ErrorTrace) {
+	source, err := s.GetSource(userId, ctx, config)
 	if err != nil {
 		return nil, err
 	}
@@ -132,8 +134,8 @@ func (s *PgxScanner) GetCalendar() (types.Calendar, *errors.ErrorTrace) {
 	return calendar, nil
 }
 
-func (s *PgxScanner) GetEvent() (types.Event, *errors.ErrorTrace) {
-	calendar, err := s.GetCalendar()
+func (s *PgxScanner) GetEvent(userId types.ID, ctx context.Context, config *config.CommonConfig) (types.Event, *errors.ErrorTrace) {
+	calendar, err := s.GetCalendar(userId, ctx, config)
 	if err != nil {
 		return nil, err
 	}

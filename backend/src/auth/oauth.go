@@ -1,4 +1,4 @@
-package oauth
+package auth
 
 import (
 	"context"
@@ -6,7 +6,6 @@ import (
 	"net/url"
 	"time"
 
-	"luna-backend/auth"
 	"luna-backend/config"
 	"luna-backend/errors"
 	"luna-backend/net"
@@ -23,7 +22,7 @@ func FetchOauthUrls(oauthClient *types.OauthClient, ctx context.Context) *errors
 
 	res := &oauthUrlsResponse{}
 
-	tr := net.FetchJson(oidcUrl, "GET", auth.NewNoAuth(), nil, "", ctx, res)
+	tr := net.FetchJson(oidcUrl, "GET", NewNoAuth(), nil, "", ctx, res)
 	if tr != nil {
 		return tr.
 			Append(errors.LvlDebug, "Could not resolve OpenID connect configuration %v", oidcUrl.String()).
@@ -67,13 +66,8 @@ type oauthTokenResponse struct {
 	Scope        string `json:"scope"`
 }
 
-func FetchOauthTokensUsingAuthorizationCode(oauthClient *types.OauthClient, authCode string, ctx context.Context, config *config.CommonConfig) (*types.OauthTokens, *errors.ErrorTrace) {
-	form := make(url.Values)
-
-	// RFC 6749 4.1.3
-	form.Add("grant_type", "authorization_code")
-	form.Add("code", authCode)
-	form.Add("redirect_uri", GetOauthRedirectUrl(config).String())
+func fetchOauthTokens(oauthClient *types.OauthClient, form *url.Values, ctx context.Context, config *config.CommonConfig) (*types.OauthTokens, *errors.ErrorTrace) {
+	// RFC 6749 4.1.3, 6
 	form.Add("client_id", oauthClient.ClientId)
 	form.Add("client_secret", oauthClient.ClientSecret)
 
@@ -81,7 +75,7 @@ func FetchOauthTokensUsingAuthorizationCode(oauthClient *types.OauthClient, auth
 
 	timestamp := time.Now()
 
-	tr := net.FetchJson(oauthClient.TokenUrl, "POST", auth.NewNoAuth(), &form, "application/x-www-form-urlencoded", ctx, res)
+	tr := net.FetchJson(oauthClient.TokenUrl, "POST", NewNoAuth(), form, "application/x-www-form-urlencoded", ctx, res)
 	if tr != nil {
 		return nil, tr.
 			Append(errors.LvlDebug, "Could not fetch tokens for OAuth 2.0 client %v", oauthClient.Name).
@@ -102,6 +96,13 @@ func FetchOauthTokensUsingAuthorizationCode(oauthClient *types.OauthClient, auth
 			AltStr(errors.LvlWordy, "Could not fetch tokens for OAuth 2.0 client")
 	}
 
+	if res.TokenType != "Bearer" {
+		return nil, errors.New().Status(http.StatusInternalServerError).
+			Append(errors.LvlDebug, "Only bearer tokens are currently supported").
+			Append(errors.LvlDebug, "Could not fetch tokens for OAuth 2.0 client %v", oauthClient.Name).
+			AltStr(errors.LvlWordy, "Could not fetch tokens for OAuth 2.0 client")
+	}
+
 	if res.AccessToken == "" {
 		return nil, errors.New().Status(http.StatusInternalServerError).
 			Append(errors.LvlDebug, "Received an empty access token").
@@ -117,4 +118,25 @@ func FetchOauthTokensUsingAuthorizationCode(oauthClient *types.OauthClient, auth
 		RefreshToken: res.RefreshToken,
 		Expires:      timestamp,
 	}, nil
+}
+
+func FetchOauthTokensUsingAuthorizationCode(oauthClient *types.OauthClient, authCode string, ctx context.Context, config *config.CommonConfig) (*types.OauthTokens, *errors.ErrorTrace) {
+	form := make(url.Values)
+
+	// RFC 6749 4.1.3
+	form.Add("grant_type", "authorization_code")
+	form.Add("code", authCode)
+	form.Add("redirect_uri", GetOauthRedirectUrl(config).String())
+
+	return fetchOauthTokens(oauthClient, &form, ctx, config)
+}
+
+func FetchOauthTokensUsingRefreshToken(oauthClient *types.OauthClient, refreshToken string, ctx context.Context, config *config.CommonConfig) (*types.OauthTokens, *errors.ErrorTrace) {
+	form := make(url.Values)
+
+	// RFC 6749 6
+	form.Add("grant_type", "refresh_token")
+	form.Add("refresh_token", refreshToken)
+
+	return fetchOauthTokens(oauthClient, &form, ctx, config)
 }

@@ -24,9 +24,9 @@ func FetchFile(url *types.Url, auth types.AuthMethod, accept string, ctx context
 	req.Header.Set("Accept", accept)
 	req = req.WithContext(ctx)
 
-	res, err := auth.Do(req)
-	if err != nil {
-		return nil, errors.InterpretRemoteError(err, "file", "remote file").
+	res, tr := auth.Do(req)
+	if tr != nil {
+		return nil, errors.InterpretRemoteError(tr, "file", "remote file").
 			Append(errors.LvlDebug, "Could not fulfill request").
 			Append(errors.LvlWordy, "Could not fetch resource from %v", url).
 			AltStr(errors.LvlPlain, "Could not fetch resource")
@@ -73,9 +73,9 @@ func FetchJson(url *types.Url, httpMethod string, auth types.AuthMethod, body *u
 	req.Header.Set("Accept", "application/json")
 	req = req.WithContext(ctx)
 
-	res, err := auth.Do(req)
-	if err != nil {
-		return errors.InterpretRemoteError(err, "object", "object").
+	res, tr := auth.Do(req)
+	if tr != nil {
+		return errors.InterpretRemoteError(tr, "object", "object").
 			Append(errors.LvlDebug, "Could not fulfill request").
 			Append(errors.LvlWordy, "Could not fetch response from %v", url).
 			AltStr(errors.LvlPlain, "Could not fetch response")

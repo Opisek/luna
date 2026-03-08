@@ -1,7 +1,10 @@
 package queries
 
 import (
+	"context"
 	"fmt"
+	"luna-backend/config"
+
 	"luna-backend/db/internal/parsing"
 	"luna-backend/db/internal/util"
 	"luna-backend/errors"
@@ -140,7 +143,7 @@ func (q *Queries) OverrideCalendar(calendar types.Calendar) (types.Calendar, *er
 	return cals[0], nil
 }
 
-func (q *Queries) GetCalendar(userId types.ID, calendarId types.ID) (types.Calendar, *errors.ErrorTrace) {
+func (q *Queries) GetCalendar(userId types.ID, calendarId types.ID, ctx context.Context, config *config.CommonConfig) (types.Calendar, *errors.ErrorTrace) {
 	decryptionKey, tr := util.GetUserDecryptionKey(q.CommonConfig, userId)
 	if tr != nil {
 		return nil, tr.
@@ -186,7 +189,7 @@ func (q *Queries) GetCalendar(userId types.ID, calendarId types.ID) (types.Calen
 			AltStr(errors.LvlBroad, "Could not get calendar")
 	}
 
-	event, tr := scanner.GetCalendar()
+	event, tr := scanner.GetCalendar(userId, ctx, config)
 	if tr != nil {
 		return nil, tr.
 			Append(errors.LvlDebug, "Could not parse calendar %v for user %v", calendarId, userId).

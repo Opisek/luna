@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"luna-backend/api/internal/util"
+	"luna-backend/auth"
 	"luna-backend/errors"
-	"luna-backend/oauth"
 	"luna-backend/types"
 	"net/http"
 
@@ -119,7 +119,7 @@ func PutOauthClient(c *gin.Context) {
 		Scope:        c.Request.FormValue("scope"),
 	}
 
-	tr := oauth.FetchOauthUrls(client, u.Context)
+	tr := auth.FetchOauthUrls(client, u.Context)
 	if tr != nil {
 		u.Error(errors.New().Status(http.StatusBadRequest).
 			Append(errors.LvlPlain, "Invalid base URL").
@@ -210,7 +210,7 @@ func PatchOauthClient(c *gin.Context) {
 		Scope:        c.Request.FormValue("scope"),
 	}
 
-	tr = oauth.FetchOauthUrls(client, u.Context)
+	tr = auth.FetchOauthUrls(client, u.Context)
 	if tr != nil {
 		u.Error(errors.New().Status(http.StatusBadRequest).
 			Append(errors.LvlPlain, "Invalid base URL").
@@ -297,7 +297,7 @@ func CreateOauthAuthorizationRequest(c *gin.Context) {
 		return
 	}
 
-	tr = oauth.FetchOauthUrls(client, c)
+	tr = auth.FetchOauthUrls(client, u.Context)
 	if tr != nil {
 		u.Error(tr)
 		return
@@ -309,11 +309,15 @@ func CreateOauthAuthorizationRequest(c *gin.Context) {
 	// RFC 6749 4.1.1
 	queryParams.Add("response_type", "code")
 	queryParams.Add("client_id", client.ClientId)
-	queryParams.Add("redirect_uri", oauth.GetOauthRedirectUrl(u.Config).String())
+	queryParams.Add("redirect_uri", auth.GetOauthRedirectUrl(u.Config).String())
 	if client.Scope != "" {
 		queryParams.Add("scope", client.Scope)
 	}
 	queryParams.Add("state", request.Id.String())
+
+	// This is non-standard but required for Google: https://developers.google.com/identity/protocols/oauth2/web-server#offline
+	// TODO: See if this disturbs other authorization providers, in which case we need to make this configurable.
+	queryParams.Add("access_type", "offline")
 
 	consentUrl.RawQuery = queryParams.Encode()
 
@@ -366,13 +370,13 @@ func FinalizeOauthAuthorizationRequest(c *gin.Context) {
 	}
 
 	// Use the authorization code to fetch tokens
-	tr = oauth.FetchOauthUrls(client, c)
+	tr = auth.FetchOauthUrls(client, u.Context)
 	if tr != nil {
 		u.Error(tr)
 		return
 	}
 
-	tokens, tr := oauth.FetchOauthTokensUsingAuthorizationCode(client, authCode, c, u.Config)
+	tokens, tr := auth.FetchOauthTokensUsingAuthorizationCode(client, authCode, u.Context, u.Config)
 	if tr != nil {
 		u.Error(tr)
 		return

@@ -74,7 +74,7 @@ func (source *CaldavSource) getClient() (*caldav.Client, *errors.ErrorTrace) {
 	if source.settings.client == nil {
 		var err error
 		source.settings.client, err = caldav.NewClient(
-			source.auth,
+			source.auth.HttpClient(),
 			source.settings.Url.URL().String(),
 		)
 
@@ -95,7 +95,7 @@ func (source *CaldavSource) GetCalendars(q types.DatabaseQueries) ([]types.Calen
 
 	cals, err := client.FindCalendars(q.GetContext(), "")
 	if err != nil {
-		return nil, errors.InterpretRemoteError(err, "source", "CalDAV source").
+		return nil, errors.InterpretRemoteError(errors.New().AddErr(errors.LvlDebug, err), "source", "CalDAV source").
 			Append(errors.LvlBroad, "Could not get calendars")
 	}
 
@@ -125,7 +125,7 @@ func (source *CaldavSource) GetCalendar(settings types.CalendarSettings, q types
 
 	cals, err := client.FindCalendars(q.GetContext(), caldavSettings.Url.Path)
 	if err != nil {
-		return nil, errors.InterpretRemoteError(err, "source", "CalDAV source").
+		return nil, errors.InterpretRemoteError(errors.New().AddErr(errors.LvlDebug, err), "source", "CalDAV source").
 			Append(errors.LvlBroad, "Could not get calendar")
 	}
 

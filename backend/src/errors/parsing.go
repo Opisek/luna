@@ -5,14 +5,10 @@ import (
 	"strings"
 )
 
-func InterpretRemoteError(err error, resource string, wordyResource string) *ErrorTrace {
-	errMsg := err.Error()
+func InterpretRemoteError(tr *ErrorTrace, resource string, wordyResource string) *ErrorTrace {
+	errMsg := tr.SerializeError(LvlDebug).Error()
 
 	switch {
-	// No error
-	case err == nil:
-		return nil
-
 	// HTTP response codes
 	case strings.Contains(errMsg, http.StatusText(http.StatusUnauthorized)):
 		return New().Status(http.StatusUnauthorized).
@@ -60,8 +56,6 @@ func InterpretRemoteError(err error, resource string, wordyResource string) *Err
 
 	// Other errors
 	default:
-		return New().Status(http.StatusInternalServerError).
-			AddErr(LvlDebug, err).
-			Append(LvlDebug, "Could not query CalDAV source")
+		return tr
 	}
 }

@@ -30,7 +30,7 @@ func GetCalendars(c *gin.Context) {
 	}
 
 	// Get the specified source
-	source, err := u.Tx.Queries().GetSource(userId, sourceId)
+	source, err := u.Tx.Queries().GetSource(userId, sourceId, u.Context, u.Config)
 	if err != nil {
 		u.Error(err)
 		return
@@ -79,7 +79,7 @@ func GetCalendar(c *gin.Context) {
 	}
 
 	// Get calendar
-	calFromSource, err := u.Tx.Queries().GetCalendar(userId, calendarId)
+	calFromSource, err := u.Tx.Queries().GetCalendar(userId, calendarId, u.Context, u.Config)
 	if err != nil {
 		u.Error(err)
 		return
@@ -116,7 +116,7 @@ func PutCalendar(c *gin.Context) {
 		return
 	}
 
-	source, tr := u.Tx.Queries().GetSource(userId, sourceId)
+	source, tr := u.Tx.Queries().GetSource(userId, sourceId, u.Context, u.Config)
 	if tr != nil {
 		u.Error(tr)
 		return
@@ -163,7 +163,7 @@ func PatchCalendar(c *gin.Context) {
 		return
 	}
 
-	calendar, err := u.Tx.Queries().GetCalendar(userId, calendarId)
+	calendar, err := u.Tx.Queries().GetCalendar(userId, calendarId, u.Context, u.Config)
 	if err != nil {
 		u.Error(err)
 		return
@@ -211,7 +211,7 @@ func DeleteCalendar(c *gin.Context) {
 		return
 	}
 
-	calendar, err := u.Tx.Queries().GetCalendar(userId, calendarId)
+	calendar, err := u.Tx.Queries().GetCalendar(userId, calendarId, u.Context, u.Config)
 	if err != nil {
 		u.Error(err)
 		return

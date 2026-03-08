@@ -32,7 +32,7 @@ func GetEvents(c *gin.Context) {
 	}
 
 	// Get the requested calendar
-	calendar, tr := u.Tx.Queries().GetCalendar(userId, calendarId)
+	calendar, tr := u.Tx.Queries().GetCalendar(userId, calendarId, u.Context, u.Config)
 	if tr != nil {
 		u.Error(tr)
 		return
@@ -131,7 +131,7 @@ func GetEvent(c *gin.Context) {
 	}
 
 	// Get event
-	eventFromCal, err := u.Tx.Queries().GetEvent(userId, eventId)
+	eventFromCal, err := u.Tx.Queries().GetEvent(userId, eventId, u.Context, u.Config)
 	if err != nil {
 		u.Error(err)
 		return
@@ -169,7 +169,7 @@ func PutEvent(c *gin.Context) {
 		return
 	}
 
-	calendar, tr := u.Tx.Queries().GetCalendar(userId, calendarId)
+	calendar, tr := u.Tx.Queries().GetCalendar(userId, calendarId, u.Context, u.Config)
 	if tr != nil {
 		u.Error(tr)
 		return
@@ -251,7 +251,7 @@ func PatchEvent(c *gin.Context) {
 		return
 	}
 
-	event, err := u.Tx.Queries().GetEvent(userId, eventId)
+	event, err := u.Tx.Queries().GetEvent(userId, eventId, u.Context, u.Config)
 	if err != nil {
 		u.Error(err)
 		return
@@ -343,7 +343,7 @@ func DeleteEvent(c *gin.Context) {
 	}
 
 	// Get event first
-	event, err := u.Tx.Queries().GetEvent(userId, eventId)
+	event, err := u.Tx.Queries().GetEvent(userId, eventId, u.Context, u.Config)
 	if err != nil {
 		u.Error(err)
 		return
