@@ -4,10 +4,17 @@ import { fetchJson, fetchResponse } from "../net";
 
 export class OauthClients {
   public clients = $state<OauthClientModel[]>([]);
+  public clientsWithTokens = $state<Set<string>>(new Set());
 
   public async fetch() {
     await fetchJson("/api/oauth/clients").then((data: { clients: OauthClientModel[] }) => {
       this.clients = data.clients;
+    });
+  }
+
+  public async fetchTokenStatus() {
+    await fetchJson("/api/oauth/tokens").then((data: { clients: string[] }) => {
+      this.clientsWithTokens = new Set(data.clients);
     });
   }
 

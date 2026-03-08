@@ -143,6 +143,9 @@ export class Repository {
         case "bearer":
           formData.set("auth_token", source.auth.token);
           break;
+        case "oauth":
+          formData.set("auth_client", source.auth.client);
+          break;
         default:
           throw new Error("Unsupported auth type");
       }

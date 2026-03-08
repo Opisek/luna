@@ -463,6 +463,13 @@ Depending on the `auth_type` field, additional information may need to be passed
 - **Body**: Empty
 - **Purpose**: Fails the authorization flow whose ID is given
 
+### OAuth 2.0 Tokens
+#### Get Clients with Tokens
+- **Path**: ``/api/oauth/tokens``
+- **Method**: ``GET``
+- **Body**: Empty
+- **Purpose**: Returns the internal IDs of those OAuth 2.0 clients, which the calling user already authorized
+
 ## Additional Frontend Endpoints
 Aside from using the backend API, the frontend also provides a limited amount of endpoints for its own purposes.
 They are to be used in the same way as the backend endpoints regarding authentication and body format.

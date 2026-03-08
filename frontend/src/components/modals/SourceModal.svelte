@@ -41,6 +41,7 @@
     promiseReject();
 
     oauthClients.fetch();
+    oauthClients.fetchTokenStatus();
 
     sourceDetailed = {
       id: "",
@@ -65,6 +66,7 @@
     promiseReject();
 
     oauthClients.fetch();
+    oauthClients.fetchTokenStatus();
 
     sourceDetailed = await getRepository().getSourceDetails(source.id, true).catch(err => {
       queueNotification(ColorKeys.Danger, `Could not get source details: ${err.message}`);
@@ -141,17 +143,8 @@
   let icalFileValidity: Validity = $state(valid);
   let icalPathValidity: Validity = $state(valid);
 
-  let canSubmit: boolean = $derived(sourceDetailed && sourceDetailed.name !== "" && sourceDetailed.type !== "" && (
-    (sourceDetailed.type === "caldav" && caldavLinkValidity?.valid) ||
-    (sourceDetailed.type === "ical" && (
-      (sourceDetailed.settings.location === "remote"   && icalLinkValidity?.valid) ||
-      (sourceDetailed.settings.location === "database" && icalFileValidity?.valid) ||
-      (sourceDetailed.settings.location === "local"    && icalPathValidity?.valid)
-    ))
-  ));
-
-  let selectedOauthClientId: string = $state("");
-  let selectedOauthClient: OauthClientModel | null = $derived(oauthClients.clients.find(client => client.id === selectedOauthClientId) ?? null);
+  let selectedOauthClient: OauthClientModel | null = $derived(oauthClients.clients.find(client => client.id === sourceDetailed.auth.client) ?? null);
+  let selectedOauthClientAuthorized: boolean = $derived(sourceDetailed.auth.client == "" ? false : oauthClients.clientsWithTokens.has(sourceDetailed.auth.client));
 
   let oauthPending = $state(false);
   let oauthRequestId = $state("");
@@ -192,14 +185,38 @@
     if (response?.warnings) {
       for (const warning of response.warnings) 
         queueNotification(ColorKeys.Warning, warning);
+      oauthClients.fetchTokenStatus();
     } else if (response?.status === "ok") {
       queueNotification(ColorKeys.Success, `Logged into ${selectedOauthClient?.name} successfully`);
+      oauthClients.fetchTokenStatus();
     } else {
       queueNotification(ColorKeys.Danger, response?.error || "Unknown error");
     }
 
     oauthPending = false;
   }
+
+  // Whether to enable the submit button
+  let canSubmit: boolean = $derived(
+    sourceDetailed &&
+    sourceDetailed.name !== "" &&
+    sourceDetailed.type !== "" &&
+    (
+      (sourceDetailed.type === "caldav" && caldavLinkValidity?.valid) ||
+      (
+        sourceDetailed.type === "ical" &&
+        (
+          (sourceDetailed.settings.location === "remote"   && icalLinkValidity?.valid) ||
+          (sourceDetailed.settings.location === "database" && icalFileValidity?.valid) ||
+          (sourceDetailed.settings.location === "local"    && icalPathValidity?.valid)
+        )
+      )
+    ) &&
+    (
+      (sourceDetailed.auth_type === "oauth" && !oauthPending && selectedOauthClientAuthorized) ||
+      (sourceDetailed.auth_type !== "oauth")
+    )
+  );
 </script>
 
 <EditableModal
@@ -288,11 +305,13 @@
         <TextInput bind:value={sourceDetailed.auth.token} name="auth_token" placeholder="Token" editable={editMode} password={true} />
       {/if}
       {#if sourceDetailed.auth_type === "oauth"}
-        <SelectInput bind:value={selectedOauthClientId} name="oauth_client" placeholder="Authorization Provider" editable={editMode} options={oauthClients.clients.map(client => ({ value: client.id, name: client.name }))}/>
-        {#if selectedOauthClientId != ""}
-          <Button color={ColorKeys.Accent} onClick={startOauthAuthorization} enabled={!oauthPending}>
+        <SelectInput bind:value={sourceDetailed.auth.client} name="oauth_client" placeholder="Authorization Provider" editable={editMode} options={oauthClients.clients.map(client => ({ value: client.id, name: client.name }))}/>
+        {#if sourceDetailed.auth.client != ""}
+          <Button color={selectedOauthClientAuthorized ? ColorKeys.Success : ColorKeys.Accent} onClick={startOauthAuthorization} enabled={!oauthPending && !selectedOauthClientAuthorized}>
             {#if oauthPending}
               <Spinner/>
+            {:else if selectedOauthClientAuthorized}
+              Authorized
             {:else}
               Sign in with {selectedOauthClient?.name}
             {/if}

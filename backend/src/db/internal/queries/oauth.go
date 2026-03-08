@@ -370,6 +370,38 @@ func (q *Queries) CheckOauthTokensExist(clientId types.ID, userId types.ID) (boo
 	return exists, nil
 }
 
+func (q *Queries) GetOauthClientIdsWithTokens(userId types.ID) ([]types.ID, *errors.ErrorTrace) {
+	query := `
+		SELECT client_id
+		FROM oauth_tokens	
+		WHERE user_id = $1;
+	`
+
+	rows, err := q.Tx.Query(q.Context, query, userId)
+	if err != nil {
+		return nil, errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlWordy, "Could not get oauth clients with tokens").
+			Append(errors.LvlPlain, "Database error")
+	}
+	defer rows.Close()
+
+	clients := make([]types.ID, 0)
+	for rows.Next() {
+		id := types.ID{}
+		err = rows.Scan(&id)
+		if err != nil {
+			return nil, errors.New().Status(http.StatusInternalServerError).
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlWordy, "Could not scan oauth client ID").
+				Append(errors.LvlPlain, "Database error")
+		}
+		clients = append(clients, id)
+	}
+
+	return clients, nil
+}
+
 func (q *Queries) GetOauthTokens(clientId types.ID, userId types.ID) (*types.OauthTokens, *errors.ErrorTrace) {
 	decryptionKey, tr := util.GetUserDecryptionKey(q.CommonConfig, userId)
 	if tr != nil {

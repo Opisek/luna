@@ -430,3 +430,22 @@ func CancelOauthAuthorizationRequest(c *gin.Context) {
 
 	u.Success(nil)
 }
+
+//
+// OAuth 2.0 Tokens
+//
+
+func GetOauthClientsWithTokens(c *gin.Context) {
+	u := util.GetUtil(c)
+
+	// Get IDs
+	clients, tr := u.Tx.Queries().GetOauthClientIdsWithTokens(util.GetUserId(c))
+	if tr != nil {
+		u.Error(tr)
+		return
+	}
+
+	u.Success(&gin.H{
+		"clients": clients,
+	})
+}
