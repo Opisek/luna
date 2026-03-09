@@ -14,6 +14,7 @@
   import { queueNotification } from "../../lib/client/notifications";
   import { getRepository } from "../../lib/client/data/repository.svelte";
   import { ColorKeys } from "../../types/colors";
+  import Paragraph from "../forms/Paragraph.svelte";
 
   interface Props {
     showModal?: () => Promise<SourceModel>;
@@ -261,6 +262,10 @@
       value: "holidays",
       name: "Public Holidays",
     },
+    {
+      value: "google",
+      name: "Google Calendar",
+    },
   ]}/>
 
   {#if inputType === "link"}
@@ -292,7 +297,9 @@
   {:else if inputType === "file"}
     <FileUpload bind:files={files} name="file" placeholder="File" accept=".ical,.ics,.ifb,.icalendar" validation={isValidIcalFile} bind:validity={fileValid} />
   {:else if inputType === "holidays"}
+    <Paragraph>
       Feature not yet available
+    </Paragraph>
   {/if}
 
   <Horizontal position="right">

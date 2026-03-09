@@ -46,3 +46,11 @@ func NewUrl(rawUrl string) (*Url, error) {
 	}
 	return (*Url)(URL), nil
 }
+
+func NewUrlSafe(rawUrl string) *Url {
+	url, err := NewUrl(rawUrl)
+	if err != nil {
+		panic(err)
+	}
+	return url
+}

@@ -185,7 +185,8 @@
           (sourceDetailed.settings.location === "database" && icalFileValidity?.valid) ||
           (sourceDetailed.settings.location === "local"    && icalPathValidity?.valid)
         )
-      )
+      ) ||
+      sourceDetailed.type === "google"
     ) &&
     (
       (sourceDetailed.auth_type === "oauth" && !oauthPending && selectedOauthClientAuthorized) ||
@@ -208,16 +209,25 @@
   {#if sourceDetailed}
     <TextInput bind:value={sourceDetailed.name} name="name" placeholder="Name" editable={editMode} />
 
-    <SelectButtons bind:value={sourceDetailed.type} name="type" placeholder={"Type"} editable={editMode} options={[
-      {
-        value: "caldav",
-        name: "CalDav"
-      },
-      {
-        value: "ical",
-        name: "iCal"
-      }
-    ]}/>
+    <SelectButtons bind:value={sourceDetailed.type} name="type" placeholder={"Type"} editable={editMode}
+      options={[
+        {
+          value: "caldav",
+          name: "CalDav"
+        },
+        {
+          value: "ical",
+          name: "iCal"
+        },
+        {
+          value: "google",
+          name: "Google Calendar"
+        }
+      ]}
+      onClick={(value) => {
+        if (value === "google") sourceDetailed.auth_type = "oauth";
+      }}
+    />
 
 
     {#if sourceDetailed.type === "ical"}
@@ -254,24 +264,26 @@
     {/if}
     
     {#if !(sourceDetailed.type === "ical" && sourceDetailed.settings.location !== "remote")}
-      <SelectButtons bind:value={sourceDetailed.auth_type} name="auth_type" placeholder={"Authentication Type"} editable={editMode} options={[
-        {
-          value: "none",
-          name: "None",
-        },
-        {
-          value: "basic",
-          name: "Password",
-        },
-        {
-          value: "bearer",
-          name: "Token",
-        },
-        {
-          value: "oauth",
-          name: "OAuth 2.0",
-        },
-      ]}/>
+      {#if sourceDetailed.type !== "google"}
+        <SelectButtons bind:value={sourceDetailed.auth_type} name="auth_type" placeholder={"Authentication Type"} editable={editMode} options={[
+          {
+            value: "none",
+            name: "None",
+          },
+          {
+            value: "basic",
+            name: "Password",
+          },
+          {
+            value: "bearer",
+            name: "Token",
+          },
+          {
+            value: "oauth",
+            name: "OAuth 2.0",
+          },
+        ]}/>
+      {/if}
       {#if sourceDetailed.auth_type === "basic"}
         <TextInput bind:value={sourceDetailed.auth.username} name="auth_username" placeholder="Username" editable={editMode} />
         <TextInput bind:value={sourceDetailed.auth.password} name="auth_password" placeholder="Password" editable={editMode} password={true} />
@@ -280,7 +292,7 @@
         <TextInput bind:value={sourceDetailed.auth.token} name="auth_token" placeholder="Token" editable={editMode} password={true} />
       {/if}
       {#if sourceDetailed.auth_type === "oauth"}
-        <SelectInput bind:value={sourceDetailed.auth.client_id} name="oauth_client" placeholder="Authorization Provider" editable={editMode} options={oauthClients.clients.map(client => ({ value: client.id, name: client.name }))}/>
+          <SelectInput bind:value={sourceDetailed.auth.client_id} name="oauth_client" placeholder="Authorization Provider" editable={editMode} options={oauthClients.clients.map(client => ({ value: client.id, name: client.name }))}/>
         {#if editMode && sourceDetailed.auth.client_id != "" && selectedOauthClient?.name}
           <Button color={selectedOauthClientAuthorized ? ColorKeys.Success : ColorKeys.Accent} onClick={startOauthAuthorization} enabled={!oauthPending && !selectedOauthClientAuthorized}>
             {#if oauthPending}

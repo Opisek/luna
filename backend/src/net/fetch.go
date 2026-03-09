@@ -51,7 +51,7 @@ func FetchFile(url *types.Url, auth types.AuthMethod, accept string, ctx context
 	return res.Body, nil
 }
 
-func FetchJson(url *types.Url, httpMethod string, auth types.AuthMethod, body *url.Values, bodyType string, ctx context.Context, target any) *errors.ErrorTrace {
+func FetchBytes(url *types.Url, httpMethod string, auth types.AuthMethod, body *url.Values, bodyType string, ctx context.Context) ([]byte, *errors.ErrorTrace) {
 	var payload io.Reader = nil
 	if body != nil {
 		payload = bytes.NewBufferString(body.Encode())
@@ -59,7 +59,7 @@ func FetchJson(url *types.Url, httpMethod string, auth types.AuthMethod, body *u
 
 	req, err := http.NewRequest(httpMethod, url.String(), payload)
 	if err != nil {
-		return errors.New().Status(http.StatusInternalServerError).
+		return nil, errors.New().Status(http.StatusInternalServerError).
 			AddErr(errors.LvlDebug, err).
 			Append(errors.LvlDebug, "Could not create request").
 			Append(errors.LvlWordy, "Could not fetch response from %v", url).
@@ -75,7 +75,7 @@ func FetchJson(url *types.Url, httpMethod string, auth types.AuthMethod, body *u
 
 	res, tr := auth.Do(req)
 	if tr != nil {
-		return errors.InterpretRemoteError(tr, "object", "object").
+		return nil, errors.InterpretRemoteError(tr, "object", "object").
 			Append(errors.LvlDebug, "Could not fulfill request").
 			Append(errors.LvlWordy, "Could not fetch response from %v", url).
 			AltStr(errors.LvlPlain, "Could not fetch response")
@@ -89,7 +89,7 @@ func FetchJson(url *types.Url, httpMethod string, auth types.AuthMethod, body *u
 			tr.Append(errors.LvlDebug, string(body))
 		}
 
-		return tr.
+		return nil, tr.
 			Append(errors.LvlPlain, "%v", res.Status).
 			Append(errors.LvlWordy, "Error %v", res.StatusCode).
 			Append(errors.LvlDebug, "Server returned an error code").
@@ -100,13 +100,22 @@ func FetchJson(url *types.Url, httpMethod string, auth types.AuthMethod, body *u
 	data, err := io.ReadAll(res.Body)
 
 	if err != nil {
-		return errors.New().Status(http.StatusInternalServerError).
+		return nil, errors.New().Status(http.StatusInternalServerError).
 			Append(errors.LvlDebug, "Could not read body").
 			Append(errors.LvlWordy, "Could not fetch response from %v", url).
 			AltStr(errors.LvlPlain, "Could not fetch response")
 	}
 
-	err = json.Unmarshal(data, target)
+	return data, nil
+}
+
+func FetchJson(url *types.Url, httpMethod string, auth types.AuthMethod, body *url.Values, bodyType string, ctx context.Context, target any) *errors.ErrorTrace {
+	data, tr := FetchBytes(url, httpMethod, auth, body, bodyType, ctx)
+	if tr != nil {
+		return tr
+	}
+
+	err := json.Unmarshal(data, target)
 	if err != nil {
 		return errors.New().Status(http.StatusInternalServerError).
 			AddErr(errors.LvlDebug, err).

@@ -127,6 +127,8 @@ export class Repository {
               throw new Error("Unsupported iCal file location");
           }
           break;
+        case "google":
+          break;
         default:
           throw new Error("Unsupported source type");
       }

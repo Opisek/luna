@@ -42,7 +42,8 @@ func init() {
 			`
 			CREATE TYPE SOURCE_TYPE_ENUM AS ENUM (
 				'caldav',
-				'ical'
+				'ical',
+				'google'
 			);
 			`,
 		)
@@ -53,13 +54,15 @@ func init() {
 		}
 
 		// Auth enum
+		// Not (currently) used because we encrypt auth type in the database
 		_, err = q.Tx.Exec(
 			q.Context,
 			`
 			CREATE TYPE AUTH_TYPE_ENUM AS ENUM (
 				'none',
 				'basic',
-				'bearer'
+				'bearer',
+				'oauth'
 			);
 			`,
 		)

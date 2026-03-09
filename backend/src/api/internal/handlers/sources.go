@@ -11,6 +11,7 @@ import (
 	"luna-backend/errors"
 	"luna-backend/files"
 	"luna-backend/protocols/caldav"
+	"luna-backend/protocols/google"
 	"luna-backend/protocols/ical"
 	"luna-backend/types"
 
@@ -182,6 +183,7 @@ func parseSource(c *gin.Context, sourceName string, sourceAuth types.AuthMethod,
 		}
 
 		source = caldav.NewCaldavSource(sourceName, sourceUrl, sourceAuth)
+
 	case constants.SourceIcal:
 		locationType := c.PostForm("location")
 		if locationType == "" {
@@ -267,8 +269,8 @@ func parseSource(c *gin.Context, sourceName string, sourceAuth types.AuthMethod,
 		}
 
 	case constants.SourceGoogle:
-		// TODO: google calendar source
-		return nil, errors.New().Status(http.StatusNotImplemented)
+		// TODO: do we need anything more or is that it?
+		source = google.NewGoogleSource(sourceName, sourceAuth)
 
 	case "":
 		return nil, errors.New().Status(http.StatusBadRequest).

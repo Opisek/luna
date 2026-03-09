@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"luna-backend/constants"
 	"luna-backend/errors"
+	"luna-backend/net"
+	google "luna-backend/protocols/google/internal"
 	"luna-backend/types"
 	"net/http"
 )
@@ -15,7 +17,9 @@ type GoogleSource struct {
 	auth     types.AuthMethod
 }
 
-type GoogleSourceSettings struct{}
+type GoogleSourceSettings struct {
+	colors *google.Colors `json:"-"`
+}
 
 func (settings *GoogleSourceSettings) GetBytes() []byte {
 	bytes, err := json.Marshal(settings)
@@ -23,6 +27,46 @@ func (settings *GoogleSourceSettings) GetBytes() []byte {
 		panic(err)
 	}
 	return bytes
+}
+
+func (source *GoogleSource) getColorById(id string, isCalendar bool, q types.DatabaseQueries) (*types.Color, *types.Color, *errors.ErrorTrace) {
+	if source.settings.colors == nil {
+		var res google.Colors
+
+		tr := net.FetchJson(google.ApiUrl().Subpage("colors"), "GET", source.auth, nil, "", q.GetContext(), &res)
+		if tr != nil {
+			return nil, nil, tr
+		}
+
+		source.settings.colors = &res
+	}
+
+	var col google.ColorDefinition
+	var exists bool
+	if isCalendar {
+		col, exists = source.settings.colors.Calendar[id]
+	} else {
+		col, exists = source.settings.colors.Calendar[id]
+	}
+
+	if !exists {
+		return nil, nil, errors.New().Status(http.StatusInternalServerError).
+			Append(errors.LvlDebug, "No colors found for color id %v", id)
+	}
+
+	bgCol, err := types.ParseColor(col.Background)
+	if err != nil {
+		return nil, nil, errors.New().Status(http.StatusInternalServerError).
+			Append(errors.LvlDebug, "Could not parse background color %v for color id %v", col.Background, id)
+	}
+
+	fgCol, err := types.ParseColor(col.Foreground)
+	if err != nil {
+		return nil, nil, errors.New().Status(http.StatusInternalServerError).
+			Append(errors.LvlDebug, "Could not parse foreground color %v for color id %v", col.Background, id)
+	}
+
+	return bgCol, fgCol, nil
 }
 
 func (source *GoogleSource) GetType() string {
@@ -45,7 +89,7 @@ func (source *GoogleSource) GetSettings() types.SourceSettings {
 	return source.settings
 }
 
-func NewGoogleSource(name string, url *types.Url, auth types.AuthMethod) *GoogleSource {
+func NewGoogleSource(name string, auth types.AuthMethod) *GoogleSource {
 	return &GoogleSource{
 		id:       types.EmptyId(), // Placeholder until the database assigns an ID
 		name:     name,
@@ -64,7 +108,29 @@ func PackeGoogleSource(id types.ID, name string, settings *GoogleSourceSettings,
 }
 
 func (source *GoogleSource) GetCalendars(q types.DatabaseQueries) ([]types.Calendar, *errors.ErrorTrace) {
-	return []types.Calendar{}, errors.New().Status(http.StatusNotImplemented)
+	var res struct {
+		Items []*google.CalendarListEntry `json:"items"`
+	}
+
+	tr := net.FetchJson(google.ApiUrl().Subpage("users", "me", "calendarList"), "GET", source.auth, nil, "", q.GetContext(), &res)
+	if tr != nil {
+		return nil, tr
+	}
+
+	result := make([]types.Calendar, len(res.Items))
+	for i, calendar := range res.Items {
+		converted, err := source.calendarFromGoogle(calendar, q)
+		if err != nil {
+			return nil, err.
+				Append(errors.LvlBroad, "Could not get calendars")
+		}
+
+		casted := (types.Calendar)(converted)
+
+		result[i] = casted
+	}
+
+	return result, nil
 }
 
 func (source *GoogleSource) GetCalendar(settings types.CalendarSettings, q types.DatabaseQueries) (types.Calendar, *errors.ErrorTrace) {
