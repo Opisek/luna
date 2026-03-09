@@ -128,16 +128,17 @@ func NewBearerAuth(token string) types.AuthMethod {
 // OAuth2
 
 type OauthAuth struct {
-	ClientId types.ID           `json:"client_id" form:"client_id"`
-	client   *types.OauthClient `json:"-" form:""`
-	ctx      context.Context    `json:"-" form:""`
-	tx       *db.Transaction    `json:"-" form:""`
-	userId   types.ID           `json:"-" form:""`
+	TokensID types.ID `json:"tokens_id" form:"tokens_id"`
+	ClientId types.ID `json:"client_id" form:"client_id"`
+	UserId   types.ID `json:"user_id" form:"user_id"`
+
+	client *types.OauthClient `json:"-" form:""`
+	ctx    context.Context    `json:"-" form:""`
+	tx     *db.Transaction    `json:"-" form:""`
 }
 
-func (auth *OauthAuth) SupplyContext(userId types.ID, ctx context.Context) {
+func (auth *OauthAuth) SupplyContext(ctx context.Context) {
 	auth.ctx = ctx
-	auth.userId = userId
 
 	// I really don't like having to do the following hack, but I found no other way to
 	// bring the current transaction into this struct without running into a lot of circular dependencies.
@@ -158,7 +159,7 @@ func (auth *OauthAuth) Do(req *http.Request) (*http.Response, *errors.ErrorTrace
 		}
 	}
 
-	tokens, tr := auth.tx.Queries().GetOauthTokens(auth.ClientId, auth.userId)
+	tokens, tr := auth.tx.Queries().GetOauthTokens(auth.TokensID, auth.UserId)
 	if tr != nil {
 		return nil, tr
 	}
@@ -174,6 +175,7 @@ func (auth *OauthAuth) Do(req *http.Request) (*http.Response, *errors.ErrorTrace
 		if tr != nil {
 			return nil, tr
 		}
+		tokens.UserId = auth.UserId
 
 		if tokens.RefreshToken == "" {
 			tokens.RefreshToken = refreshToken
@@ -209,6 +211,10 @@ func (auth *OauthAuth) HttpClient() types.HttpClientInterface {
 	return &httpClient{auth: auth}
 }
 
-func NewOauthAuth(clientId types.ID) types.AuthMethod {
-	return &OauthAuth{ClientId: clientId}
+func NewOauthAuth(tokensId types.ID, clientId types.ID, userId types.ID) types.AuthMethod {
+	return &OauthAuth{
+		TokensID: tokensId,
+		ClientId: clientId,
+		UserId:   userId,
+	}
 }

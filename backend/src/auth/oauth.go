@@ -4,6 +4,8 @@ import (
 	"context"
 	"net/http"
 	"net/url"
+	"slices"
+	"strings"
 	"time"
 
 	"luna-backend/config"
@@ -12,15 +14,16 @@ import (
 	"luna-backend/types"
 )
 
-type oauthUrlsResponse struct {
+type oidcDiscoveryResponse struct {
 	AuthorizationEndpoint string `json:"authorization_endpoint"`
 	TokenEndpoint         string `json:"token_endpoint"`
+	UserinfoEndpoint      string `json:"userinfo_endpoint"`
 }
 
 func FetchOauthUrls(oauthClient *types.OauthClient, ctx context.Context) *errors.ErrorTrace {
 	oidcUrl := oauthClient.BaseUrl.Subpage(".well-known", "openid-configuration")
 
-	res := &oauthUrlsResponse{}
+	res := &oidcDiscoveryResponse{}
 
 	tr := net.FetchJson(oidcUrl, "GET", NewNoAuth(), nil, "", ctx, res)
 	if tr != nil {
@@ -50,6 +53,15 @@ func FetchOauthUrls(oauthClient *types.OauthClient, ctx context.Context) *errors
 			AltStr(errors.LvlWordy, "Could not fetch URLs for OAuth 2.0 client")
 	}
 
+	oauthClient.UserinfoUrl, err = types.NewUrl(res.UserinfoEndpoint)
+	if err != nil {
+		return errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not parse user info URL %v", res.UserinfoEndpoint).
+			Append(errors.LvlDebug, "Could not fetch URLs for OAuth 2.0 client %v", oauthClient.Name).
+			AltStr(errors.LvlWordy, "Could not fetch URLs for OAuth 2.0 client")
+	}
+
 	return nil
 }
 
@@ -66,7 +78,7 @@ type oauthTokenResponse struct {
 	Scope        string `json:"scope"`
 }
 
-func fetchOauthTokens(oauthClient *types.OauthClient, form *url.Values, ctx context.Context) (*types.OauthTokens, *errors.ErrorTrace) {
+func fetchOauthTokens(oauthClient *types.OauthClient, expectRefresh bool, form *url.Values, ctx context.Context) (*types.OauthTokens, *errors.ErrorTrace) {
 	// RFC 6749 4.1.3, 6
 	form.Add("client_id", oauthClient.ClientId)
 	form.Add("client_secret", oauthClient.ClientSecret)
@@ -82,7 +94,12 @@ func fetchOauthTokens(oauthClient *types.OauthClient, form *url.Values, ctx cont
 			AltStr(errors.LvlWordy, "Could not fetch tokens for OAuth 2.0 client")
 	}
 
-	if res.Scope != "" && res.Scope != oauthClient.Scope {
+	// Google OAuth 2.0 returns the scopes in a potentially different order
+	resScopeSlice := strings.Split(res.Scope, " ")
+	clientScopeSlice := strings.Split(res.Scope, " ")
+	slices.Sort(resScopeSlice)
+	slices.Sort(clientScopeSlice)
+	if res.Scope != "" && strings.Join(resScopeSlice, " ") != strings.Join(clientScopeSlice, " ") {
 		return nil, errors.New().Status(http.StatusInternalServerError).
 			Append(errors.LvlDebug, "Returned scope %v does not match the requested scope %v", res.Scope, oauthClient.Scope).
 			Append(errors.LvlDebug, "Could not fetch tokens for OAuth 2.0 client %v", oauthClient.Name).
@@ -110,7 +127,7 @@ func fetchOauthTokens(oauthClient *types.OauthClient, form *url.Values, ctx cont
 			AltStr(errors.LvlWordy, "Could not fetch tokens for OAuth 2.0 client")
 	}
 
-	if res.RefreshToken == "" {
+	if res.RefreshToken == "" && expectRefresh {
 		return nil, errors.New().Status(http.StatusInternalServerError).
 			Append(errors.LvlDebug, "Received an empty refresh token").
 			Append(errors.LvlDebug, "Could not fetch tokens for OAuth 2.0 client %v", oauthClient.Name).
@@ -135,7 +152,7 @@ func FetchOauthTokensUsingAuthorizationCode(oauthClient *types.OauthClient, auth
 	form.Add("code", authCode)
 	form.Add("redirect_uri", GetOauthRedirectUrl(config).String())
 
-	return fetchOauthTokens(oauthClient, &form, ctx)
+	return fetchOauthTokens(oauthClient, true, &form, ctx)
 }
 
 func FetchOauthTokensUsingRefreshToken(oauthClient *types.OauthClient, refreshToken string, ctx context.Context) (*types.OauthTokens, *errors.ErrorTrace) {
@@ -145,5 +162,49 @@ func FetchOauthTokensUsingRefreshToken(oauthClient *types.OauthClient, refreshTo
 	form.Add("grant_type", "refresh_token")
 	form.Add("refresh_token", refreshToken)
 
-	return fetchOauthTokens(oauthClient, &form, ctx)
+	return fetchOauthTokens(oauthClient, false, &form, ctx)
+}
+
+type oidcUserinfoResponse struct {
+	AccountId string `json:"sub"`
+	Name      string `json:"name"`
+	Email     string `json:"email"`
+}
+
+func FetchOauthAccountIdentifier(oauthClient *types.OauthClient, userId types.ID, accessToken string, ctx context.Context) (string, string, *errors.ErrorTrace) {
+	tr := FetchOauthUrls(oauthClient, ctx)
+	if tr != nil {
+		return "", "", tr.
+			Append(errors.LvlDebug, "Could not fetch OpenID userinfo for client %v (user %v)", oauthClient.Id, userId).
+			AltStr(errors.LvlWordy, "Could not fetch OpenID userinfo")
+	}
+
+	res := &oidcUserinfoResponse{}
+
+	tr = net.FetchJson(oauthClient.UserinfoUrl, "GET", NewBearerAuth(accessToken), nil, "application/x-www-form-urlencoded", ctx, res)
+	if tr != nil {
+		return "", "", tr.
+			Append(errors.LvlDebug, "Could not fetch OpenID userinfo for client %v (user %v)", oauthClient.Id, userId).
+			AltStr(errors.LvlWordy, "Could not fetch OpenID userinfo")
+	}
+
+	if res.AccountId == "" {
+		return "", "", errors.New().Status(http.StatusInternalServerError).
+			Append(errors.LvlDebug, "Received no subject identifier").
+			Append(errors.LvlDebug, "Could not fetch OpenID userinfo for client %v (user %v)", oauthClient.Id, userId).
+			AltStr(errors.LvlWordy, "Could not fetch OpenID userinfo")
+	}
+
+	if res.Name != "" {
+		return res.AccountId, res.Name, nil
+	}
+
+	if res.Email != "" {
+		return res.AccountId, res.Email, nil
+	}
+
+	return "", "", errors.New().Status(http.StatusInternalServerError).
+		Append(errors.LvlDebug, "Received neither name nor an email address").
+		Append(errors.LvlDebug, "Could not fetch OpenID userinfo for client %v (user %v)", oauthClient.Id, userId).
+		AltStr(errors.LvlWordy, "Could not fetch OpenID userinfo")
 }

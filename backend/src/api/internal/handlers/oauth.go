@@ -269,20 +269,6 @@ func CreateOauthAuthorizationRequest(c *gin.Context) {
 		UserId:   util.GetUserId(c),
 	}
 
-	exist, tr := u.Tx.Queries().CheckOauthTokensExist(request.ClientId, request.UserId)
-	if tr != nil {
-		u.Error(tr)
-		return
-	}
-	if exist {
-		u.Error(errors.New().Status(http.StatusConflict).
-			Append(errors.LvlDebug, "OAuth 2.0 tokens for client %v (user %v) already exist", request.ClientId, request.UserId).
-			AltStr(errors.LvlWordy, "OAuth 2.0 tokens already exist").
-			AltStr(errors.LvlPlain, "Already signed in"),
-		)
-		return
-	}
-
 	// Insert
 	tr = u.Tx.Queries().InsertOauthAuthorizationRequest(request)
 	if tr != nil {
@@ -383,8 +369,17 @@ func FinalizeOauthAuthorizationRequest(c *gin.Context) {
 	}
 	tokens.UserId = request.UserId
 
+	// Get userinfo
+	accountId, accountName, tr := auth.FetchOauthAccountIdentifier(client, request.UserId, tokens.AccessToken, u.Context)
+	if tr != nil {
+		u.Error(tr)
+		return
+	}
+	tokens.AccountId = accountId
+	tokens.AccountName = accountName
+
 	// Check if tokens already exist
-	exist, tr := u.Tx.Queries().CheckOauthTokensExist(request.ClientId, request.UserId)
+	exist, tr := u.Tx.Queries().CheckOauthTokensExist(request.ClientId, request.UserId, tokens.AccountId)
 	if tr != nil {
 		u.Error(tr)
 		return
@@ -392,7 +387,7 @@ func FinalizeOauthAuthorizationRequest(c *gin.Context) {
 
 	if exist {
 		u.Warn(errors.New().
-			Append(errors.LvlDebug, "OAuth 2.0 tokens for client %v (user %v) already exist", request.ClientId, request.UserId).
+			Append(errors.LvlDebug, "OAuth 2.0 tokens for client %v (user %v, account %v) already exist", request.ClientId, request.UserId, tokens.AccountId).
 			AltStr(errors.LvlWordy, "OAuth 2.0 tokens already exist").
 			AltStr(errors.LvlPlain, "Already signed in"),
 		)
@@ -412,7 +407,9 @@ func FinalizeOauthAuthorizationRequest(c *gin.Context) {
 		return
 	}
 
-	u.Success(nil)
+	u.Success(&gin.H{
+		"id": tokens.Id,
+	})
 }
 
 func CancelOauthAuthorizationRequest(c *gin.Context) {
@@ -443,13 +440,13 @@ func GetOauthClientsWithTokens(c *gin.Context) {
 	u := util.GetUtil(c)
 
 	// Get IDs
-	clients, tr := u.Tx.Queries().GetOauthClientIdsWithTokens(util.GetUserId(c))
+	tokens, tr := u.Tx.Queries().GetOauthClientIdsWithTokens(util.GetUserId(c))
 	if tr != nil {
 		u.Error(tr)
 		return
 	}
 
 	u.Success(&gin.H{
-		"clients": clients,
+		"tokens": tokens,
 	})
 }

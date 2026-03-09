@@ -5,11 +5,11 @@
 
   import { EmptySource, NoOp } from "$lib/client/placeholders";
   import { getRepository } from "$lib/client/data/repository.svelte";
-  import { deepCopy, deepEquality } from "$lib/common/misc";
+  import { deepCopy, deepEquality, sleep } from "$lib/common/misc";
   import { isValidIcalFile, isValidPath, isValidUrl, valid } from "$lib/client/validation";
   import { queueNotification } from "$lib/client/notifications";
   import FileUpload from "../forms/FileUpload.svelte";
-  import { fetchFileById, fetchJson } from "../../lib/client/net";
+  import { fetchFileById } from "../../lib/client/net";
   import { UserSettingKeys } from "../../types/settings";
   import { getSettings } from "$lib/client/data/settings.svelte";
   import { ColorKeys } from "../../types/colors";
@@ -17,6 +17,9 @@
   import SelectInput from "../forms/SelectInput.svelte";
   import Button from "../interactive/Button.svelte";
   import Spinner from "../decoration/Spinner.svelte";
+  import OauthTokensModal from "./OauthTokensModal.svelte";
+  import Horizontal from "../layout/Horizontal.svelte";
+  import Link from "../forms/Link.svelte";
 
   interface Props {
     showCreateModal?: () => Promise<SourceModel>;
@@ -41,7 +44,7 @@
     promiseReject();
 
     oauthClients.fetch();
-    oauthClients.fetchTokenStatus();
+    oauthClients.fetchTokens();
 
     sourceDetailed = {
       id: "",
@@ -66,7 +69,7 @@
     promiseReject();
 
     oauthClients.fetch();
-    oauthClients.fetchTokenStatus();
+    oauthClients.fetchTokens();
 
     sourceDetailed = await getRepository().getSourceDetails(source.id, true).catch(err => {
       queueNotification(ColorKeys.Danger, `Could not get source details: ${err.message}`);
@@ -144,56 +147,28 @@
   let icalPathValidity: Validity = $state(valid);
 
   let selectedOauthClient: OauthClientModel | null = $derived(oauthClients.clients.find(client => client.id === sourceDetailed.auth.client_id) ?? null);
-  let selectedOauthClientAuthorized: boolean = $derived(sourceDetailed.auth.client_id == "" ? false : oauthClients.clientsWithTokens.has(sourceDetailed.auth.client_id));
+  let selectedOauthClientAuthorized: boolean = $derived(
+    sourceDetailed.auth.tokens_id &&
+    sourceDetailed.auth.tokens_id != "" &&
+    oauthClients.tokenClients.get(sourceDetailed.auth.tokens_id) == sourceDetailed.auth.client_id
+  );
 
   let oauthPending = $state(false);
-  let oauthRequestId = $state("");
-
+  let performOauthAuhorization: (clientId: string) => Promise<string> = $state(async () => "");
   async function startOauthAuthorization() {
     if (!selectedOauthClient) return;
     if (oauthPending) return;
     oauthPending = true;
 
-    const json = await fetchJson(`/api/oauth/authorization/${selectedOauthClient.id}`, { method: "PUT" }).catch((err) => {
+    await sleep(0);
+    
+    await performOauthAuhorization(sourceDetailed.auth.client_id).then((id) => {
+      sourceDetailed.auth.tokens_id = id;
+    }).catch(() => {
+      queueNotification(ColorKeys.Danger, "Authorization aborted");
+    }).finally(() => {
       oauthPending = false;
-      queueNotification(ColorKeys.Danger, err.message)
     });
-    if (!json || !json.url || !json.request?.request_id) return;
-
-    oauthRequestId = json.request.request_id;
-    localStorage.setItem(`oauth/${oauthRequestId}/expiry`, json.request.expires_at);
-
-    window.addEventListener("storage", oauthAuthorizationResponseListener);
-
-    window.open(json.url, "_blank")?.focus();
-  }
-
-  function oauthAuthorizationResponseListener() {
-    const rawResponse = localStorage.getItem(`oauth/${oauthRequestId}/response`);
-  
-    if (!rawResponse) return;
-
-    const response = JSON.parse(rawResponse);
-
-    if (!response) return;
-
-    window.removeEventListener("storage", oauthAuthorizationResponseListener);
-
-    localStorage.removeItem(`oauth/${oauthRequestId}/response`);
-    localStorage.removeItem(`oauth/${oauthRequestId}/expiry`);
-
-    if (response?.warnings) {
-      for (const warning of response.warnings) 
-        queueNotification(ColorKeys.Warning, warning);
-      oauthClients.fetchTokenStatus();
-    } else if (response?.status === "ok") {
-      queueNotification(ColorKeys.Success, `Logged into ${selectedOauthClient?.name} successfully`);
-      oauthClients.fetchTokenStatus();
-    } else {
-      queueNotification(ColorKeys.Danger, response?.error || "Unknown error");
-    }
-
-    oauthPending = false;
   }
 
   // Whether to enable the submit button
@@ -316,6 +291,11 @@
               Sign in with {selectedOauthClient?.name}
             {/if}
           </Button>
+          {#if selectedOauthClientAuthorized}
+            <Horizontal position="right">
+              <Link onClick={startOauthAuthorization}>Choose a different account</Link>
+            </Horizontal>
+          {/if}
         {/if}
       {/if}
     {/if}
@@ -325,3 +305,7 @@
     {/if}
   {/if}
 </EditableModal>
+
+{#if oauthPending}
+  <OauthTokensModal bind:authorize={performOauthAuhorization} />
+{/if}

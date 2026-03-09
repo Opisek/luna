@@ -4,7 +4,8 @@ import { fetchJson, fetchResponse } from "../net";
 
 export class OauthClients {
   public clients = $state<OauthClientModel[]>([]);
-  public clientsWithTokens = $state<Set<string>>(new Set());
+  public clientTokens = $state<Map<string, OauthTokensModel[]>>(new Map());
+  public tokenClients = $state<Map<string, string>>(new Map());
 
   public async fetch() {
     await fetchJson("/api/oauth/clients").then((data: { clients: OauthClientModel[] }) => {
@@ -12,9 +13,17 @@ export class OauthClients {
     });
   }
 
-  public async fetchTokenStatus() {
-    await fetchJson("/api/oauth/tokens").then((data: { clients: string[] }) => {
-      this.clientsWithTokens = new Set(data.clients);
+  public async fetchTokens() {
+    await fetchJson("/api/oauth/tokens").then((data: { tokens: OauthTokensModel[] }) => {
+      const clientsMap = new Map<string, OauthTokensModel[]>();
+      const tokensMap = new Map<string, string>();
+      for (const tokensEntry of data.tokens) {
+        if (!clientsMap.has(tokensEntry.client_id)) clientsMap.set(tokensEntry.client_id, []);
+        clientsMap.get(tokensEntry.client_id)?.push(tokensEntry)
+        tokensMap.set(tokensEntry.id, tokensEntry.client_id);
+      }
+      this.clientTokens = clientsMap;
+      this.tokenClients = tokensMap;
     });
   }
 

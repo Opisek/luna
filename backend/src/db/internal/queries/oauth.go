@@ -344,17 +344,18 @@ func (q *Queries) DeleteExpiredOauthAuthorizationRequests() *errors.ErrorTrace {
 // OAuth 2.0 Tokens
 //
 
-func (q *Queries) CheckOauthTokensExist(clientId types.ID, userId types.ID) (bool, *errors.ErrorTrace) {
+func (q *Queries) CheckOauthTokensExist(clientId types.ID, userId types.ID, accountId string) (bool, *errors.ErrorTrace) {
 	// TODO: rewrite with EXISTS?
 	rows, err := q.Tx.Query(
 		q.Context,
 		`
 		SELECT 1
 		FROM oauth_tokens
-		WHERE client_id = $1 AND user_id = $2;
+		WHERE client_id = $1 AND user_id = $2 AND account_id = $3;
 		`,
 		clientId.UUID(),
 		userId.UUID(),
+		accountId,
 	)
 
 	if err != nil {
@@ -370,9 +371,9 @@ func (q *Queries) CheckOauthTokensExist(clientId types.ID, userId types.ID) (boo
 	return exists, nil
 }
 
-func (q *Queries) GetOauthClientIdsWithTokens(userId types.ID) ([]types.ID, *errors.ErrorTrace) {
+func (q *Queries) GetOauthClientIdsWithTokens(userId types.ID) ([]*types.OauthTokens, *errors.ErrorTrace) {
 	query := `
-		SELECT client_id
+		SELECT id, client_id, account_id, account_name
 		FROM oauth_tokens	
 		WHERE user_id = $1;
 	`
@@ -386,65 +387,63 @@ func (q *Queries) GetOauthClientIdsWithTokens(userId types.ID) ([]types.ID, *err
 	}
 	defer rows.Close()
 
-	clients := make([]types.ID, 0)
+	tokens := make([]*types.OauthTokens, 0)
 	for rows.Next() {
-		id := types.ID{}
-		err = rows.Scan(&id)
+		token := &types.OauthTokens{
+			UserId: userId,
+		}
+		err = rows.Scan(&token.Id, &token.ClientId, &token.AccountId, &token.AccountName)
 		if err != nil {
 			return nil, errors.New().Status(http.StatusInternalServerError).
 				AddErr(errors.LvlDebug, err).
-				Append(errors.LvlWordy, "Could not scan oauth client ID").
+				Append(errors.LvlWordy, "Could not scan oauth token info").
 				Append(errors.LvlPlain, "Database error")
 		}
-		clients = append(clients, id)
+		tokens = append(tokens, token)
 	}
 
-	return clients, nil
+	return tokens, nil
 }
 
-func (q *Queries) GetOauthTokens(clientId types.ID, userId types.ID) (*types.OauthTokens, *errors.ErrorTrace) {
+func (q *Queries) GetOauthTokens(tokensId types.ID, userId types.ID) (*types.OauthTokens, *errors.ErrorTrace) {
 	decryptionKey, tr := util.GetUserDecryptionKey(q.CommonConfig, userId)
 	if tr != nil {
 		return nil, tr.
-			Append(errors.LvlDebug, "Could not get tokens for OAuth 2.0 client %v (user %v)", clientId, userId).
+			Append(errors.LvlDebug, "Could not get OAuth 2.0 tokens %v for user %v", tokensId, userId).
 			AltStr(errors.LvlWordy, "Could not get OAuth 2.0 tokens").
 			Append(errors.LvlPlain, "Database error")
 	}
 
 	query := `
-		SELECT PGP_SYM_DECRYPT(access_token, $3), COALESCE(PGP_SYM_DECRYPT(refresh_token, $3), ''), expires_at
+		SELECT client_id, PGP_SYM_DECRYPT(access_token, $2), COALESCE(PGP_SYM_DECRYPT(refresh_token, $2), ''), expires_at
 		FROM oauth_tokens
-		WHERE client_id = $1 AND user_id = $2;
+		WHERE id = $1;
 	`
 
-	tokens := &types.OauthTokens{
-		ClientId: clientId,
-		UserId:   userId,
-	}
+	tokens := &types.OauthTokens{UserId: userId}
 
 	err := q.Tx.
 		QueryRow(
 			q.Context,
 			query,
-			clientId.UUID(),
-			userId.UUID(),
+			tokensId.UUID(),
 			decryptionKey,
-		).Scan(&tokens.AccessToken, &tokens.RefreshToken, &tokens.Expires)
+		).Scan(&tokens.ClientId, &tokens.AccessToken, &tokens.RefreshToken, &tokens.Expires)
 
 	switch err {
 	case nil:
 		return tokens, nil
 	case pgx.ErrNoRows:
 		return nil, errors.New().Status(http.StatusNotFound).
-			Append(errors.LvlDebug, "OAuth 2.0 tokens for client %v (user %v) not found", clientId, userId).
-			AltStr(errors.LvlPlain, "OAUth 2.0 tokens not found").
-			Append(errors.LvlDebug, "Could not get tokens for OAuth 2.0 client %v (user %v)", clientId, userId).
+			Append(errors.LvlDebug, "OAuth 2.0 tokens %v for user %v not found", tokensId, userId).
+			AltStr(errors.LvlWordy, "OAuth 2.0 tokens not found").
+			Append(errors.LvlDebug, "Could not get OAuth 2.0 tokens %v for user %v", tokensId, userId).
 			AltStr(errors.LvlWordy, "Could not get OAuth 2.0 tokens").
 			Append(errors.LvlPlain, "Database error")
 	default:
 		return nil, errors.New().Status(http.StatusInternalServerError).
 			AddErr(errors.LvlDebug, err).
-			Append(errors.LvlDebug, "Could not get tokens for OAuth 2.0 client %v (user %v)", clientId, userId).
+			Append(errors.LvlDebug, "Could not get OAuth 2.0 tokens %v for user %v", tokensId, userId).
 			AltStr(errors.LvlWordy, "Could not get OAuth 2.0 tokens").
 			Append(errors.LvlPlain, "Database error")
 	}
@@ -460,21 +459,24 @@ func (q *Queries) InsertOauthTokens(tokens *types.OauthTokens) *errors.ErrorTrac
 	}
 
 	query := `
-		INSERT INTO oauth_tokens (client_id, user_id, access_token, refresh_token, expires_at)
-		VALUES ($1, $2, PGP_SYM_ENCRYPT($3, $6), PGP_SYM_ENCRYPT($4, $6), $5);
+		INSERT INTO oauth_tokens (client_id, user_id, account_id, account_name, access_token, refresh_token, expires_at)
+		VALUES ($1, $2, $3, $4, PGP_SYM_ENCRYPT($5, $8), PGP_SYM_ENCRYPT($6, $8), $7)
+		RETURNING id;
 	`
 
-	_, err := q.Tx.
-		Exec(
+	err := q.Tx.
+		QueryRow(
 			q.Context,
 			query,
 			tokens.ClientId.UUID(),
 			tokens.UserId.UUID(),
+			tokens.AccountId,
+			tokens.AccountName,
 			tokens.AccessToken,
 			tokens.RefreshToken,
 			tokens.Expires,
 			encryptionKey,
-		)
+		).Scan(&tokens.Id)
 
 	if err != nil {
 		return errors.New().Status(http.StatusInternalServerError).
@@ -498,16 +500,15 @@ func (q *Queries) UpdateOauthTokens(tokens *types.OauthTokens) *errors.ErrorTrac
 
 	query := `
 		UPDATE oauth_tokens
-		SET access_token = PGP_SYM_ENCRYPT($3, $6), refresh_token = PGP_SYM_ENCRYPT($4, $6), expires_at = $5
-		WHERE client_id = $1 AND user_id = $2;
+		SET access_token = PGP_SYM_ENCRYPT($2, $5), refresh_token = PGP_SYM_ENCRYPT($3, $5), expires_at = $4
+		WHERE id = $1;
 	`
 
 	_, err := q.Tx.
 		Exec(
 			q.Context,
 			query,
-			tokens.ClientId.UUID(),
-			tokens.UserId.UUID(),
+			tokens.Id.UUID(),
 			tokens.AccessToken,
 			tokens.RefreshToken,
 			tokens.Expires,
@@ -525,17 +526,17 @@ func (q *Queries) UpdateOauthTokens(tokens *types.OauthTokens) *errors.ErrorTrac
 	return nil
 }
 
-func (q *Queries) DeleteOauthTokens(clientId types.ID, userId types.ID) *errors.ErrorTrace {
+func (q *Queries) DeleteOauthTokens(tokensId types.ID) *errors.ErrorTrace {
 	query := `
 		DELETE FROM oauth_tokens
-		WHERE client_id = $1 AND user_id = $2;
+		WHERE id = $1; 
 	`
 
-	_, err := q.Tx.Exec(q.Context, query, clientId.UUID(), userId.UUID())
+	_, err := q.Tx.Exec(q.Context, query, tokensId.UUID())
 	if err != nil {
 		return errors.New().Status(http.StatusInternalServerError).
 			AddErr(errors.LvlDebug, err).
-			Append(errors.LvlDebug, "Could not delete tokens for OAuth 2.0 client %v (user %v)", clientId, userId).
+			Append(errors.LvlDebug, "Could not delete OAuth 2.0 tokens %v", tokensId).
 			AltStr(errors.LvlWordy, "Could not delete OAuth 2.0 tokens").
 			Append(errors.LvlPlain, "Database error")
 	}

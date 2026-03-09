@@ -145,6 +145,7 @@ export class Repository {
           break;
         case "oauth":
           formData.set("auth_client", source.auth.client_id);
+          formData.set("auth_tokens", source.auth.tokens_id);
           break;
         default:
           throw new Error("Unsupported auth type");

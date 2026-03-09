@@ -108,5 +108,4 @@
   <TextInput bind:value={client.client_secret} name="client_secret" placeholder="Client Secret" editable={editMode} password={true}/>
   <TextInput bind:value={client.base_url} name="base_url" placeholder="Base URL" editable={editMode}/>
   <TextInput bind:value={client.scope} name="scope" placeholder="Scope" editable={editMode}/>
-
 </EditableModal>

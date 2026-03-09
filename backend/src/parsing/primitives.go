@@ -7,6 +7,7 @@ import (
 	"luna-backend/constants"
 	"luna-backend/errors"
 	"luna-backend/protocols/caldav"
+	"luna-backend/protocols/google"
 	"luna-backend/protocols/ical"
 	"luna-backend/types"
 	"net/http"
@@ -18,7 +19,7 @@ func GetPrimitivesParser() PrimitivesParser {
 	return PrimitivesParser{}
 }
 
-func (PrimitivesParser) ParseSource(entry *types.SourceDatabaseEntry, userId types.ID, ctx context.Context) (types.Source, *errors.ErrorTrace) {
+func (PrimitivesParser) ParseSource(entry *types.SourceDatabaseEntry, ctx context.Context) (types.Source, *errors.ErrorTrace) {
 	var err error
 
 	var authMethod types.AuthMethod
@@ -54,7 +55,7 @@ func (PrimitivesParser) ParseSource(entry *types.SourceDatabaseEntry, userId typ
 				Append(errors.LvlDebug, "Could not unmarshal OAuth 2.0 authentication").
 				Append(errors.LvlWordy, "Could not unmarshal authentication")
 		}
-		oauthAuth.SupplyContext(userId, ctx)
+		oauthAuth.SupplyContext(ctx)
 		authMethod = oauthAuth
 	default:
 		return nil, errors.New().Status(http.StatusInternalServerError).
@@ -97,6 +98,22 @@ func (PrimitivesParser) ParseSource(entry *types.SourceDatabaseEntry, userId typ
 			return nil, tr
 		}
 		return icalSource, nil
+	case constants.SourceGoogle:
+		settings := &google.GoogleSourceSettings{}
+		err = json.Unmarshal(entry.Settings, settings)
+		if err != nil {
+			return nil, errors.New().Status(http.StatusInternalServerError).
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlDebug, "Could not unmarshal Google Calendar settings").
+				Append(errors.LvlWordy, "Could not unmarshal settings")
+		}
+		googleSource := google.PackeGoogleSource(
+			entry.Id,
+			entry.Name,
+			settings,
+			authMethod,
+		)
+		return googleSource, nil
 	default:
 		return nil, errors.New().Status(http.StatusInternalServerError).
 			Append(errors.LvlWordy, "Unknown source type: %v", entry.Type)

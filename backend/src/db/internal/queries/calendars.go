@@ -189,7 +189,7 @@ func (q *Queries) GetCalendar(userId types.ID, calendarId types.ID, ctx context.
 			AltStr(errors.LvlBroad, "Could not get calendar")
 	}
 
-	event, tr := scanner.GetCalendar(userId, ctx)
+	event, tr := scanner.GetCalendar(ctx)
 	if tr != nil {
 		return nil, tr.
 			Append(errors.LvlDebug, "Could not parse calendar %v for user %v", calendarId, userId).

@@ -130,10 +130,23 @@ func parseAuthMethod(c *gin.Context) (types.AuthMethod, *errors.ErrorTrace) {
 				Append(errors.LvlPlain, "Improperly formatted OAuth 2.0 client ID")
 		}
 
-		sourceAuth = auth.NewOauthAuth(clientId)
+		rawTokensId := c.PostForm("auth_tokens")
+		if rawTokensId == "" {
+			return nil, errors.New().Status(http.StatusBadRequest).
+				Append(errors.LvlPlain, "Missing OAuth 2.0 tokens ID")
+		}
+
+		tokensId, err := types.IdFromString(rawTokensId)
+		if err != nil {
+			return nil, errors.New().Status(http.StatusBadRequest).
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlPlain, "Improperly formatted OAuth 2.0 tokens ID")
+		}
+
+		sourceAuth = auth.NewOauthAuth(tokensId, clientId, util.GetUserId(c))
 
 		u := util.GetUtil(c)
-		sourceAuth.(*auth.OauthAuth).SupplyContext(util.GetUserId(c), u.Context)
+		sourceAuth.(*auth.OauthAuth).SupplyContext(u.Context)
 	case "":
 		return nil, errors.New().Status(http.StatusBadRequest).
 			Append(errors.LvlPlain, "Missing authentication type")
@@ -252,6 +265,10 @@ func parseSource(c *gin.Context, sourceName string, sourceAuth types.AuthMethod,
 				return nil, tr
 			}
 		}
+
+	case constants.SourceGoogle:
+		// TODO: google calendar source
+		return nil, errors.New().Status(http.StatusNotImplemented)
 
 	case "":
 		return nil, errors.New().Status(http.StatusBadRequest).

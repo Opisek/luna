@@ -6,3 +6,10 @@ type OauthClientModel = {
   base_url: string;
   scope: string;
 }
+
+type OauthTokensModel = {
+  id: string;
+  client_id: string;
+  account_id: string;
+  account_name: string;
+}

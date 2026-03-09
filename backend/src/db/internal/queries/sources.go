@@ -59,7 +59,7 @@ func (q *Queries) GetSource(userId types.ID, sourceId types.ID, ctx context.Cont
 			AltStr(errors.LvlBroad, "Could not get source")
 	}
 
-	source, tr := scanner.GetSource(userId, ctx)
+	source, tr := scanner.GetSource(ctx)
 	if tr != nil {
 		return nil, tr.
 			Append(errors.LvlDebug, "Could not parse aource %v for user %v", sourceId, userId).
@@ -116,7 +116,7 @@ func (q *Queries) GetSourcesByUser(userId types.ID, ctx context.Context, config 
 	sources := []types.Source{}
 	for rows.Next() {
 		rows.Scan(params...) // TODO: we might have to "reset" the scanner each time due to pass by reference
-		source, err := scanner.GetSource(userId, ctx)
+		source, err := scanner.GetSource(ctx)
 		if err != nil {
 			return nil, err.
 				Append(errors.LvlDebug, "Could not parse sources for user %v", userId).

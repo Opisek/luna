@@ -4,6 +4,7 @@ const (
 	SourceUnknown = "unknown"
 	SourceCaldav  = "caldav"
 	SourceIcal    = "ical"
+	SourceGoogle  = "google"
 )
 
 const (

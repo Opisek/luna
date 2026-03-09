@@ -33,7 +33,9 @@ export const load: PageServerLoad = async({url, request, getClientAddress}) => {
   if (res.ok) {
     let response: any = { status: "ok", request: requestId };
     const json = await res.json().catch(() => ([]));
-    if (json && json.warnings) response.warnings = json.warnings;
+    if (!json) return { status: "error", request: requestId, error: "Could not parse response" };
+    if (json.warnings) response.warnings = json.warnings;
+    response.token = json.id;
     return response;
   } else {
     const error = await res.json().catch(() => ({ error: `${res.statusText}` }));

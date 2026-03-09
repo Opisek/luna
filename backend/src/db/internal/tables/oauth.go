@@ -48,12 +48,19 @@ func (q *Tables) InitializeOauthTokensTable() error {
 		q.Context,
 		`
 		CREATE TABLE oauth_tokens (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
 			client_id UUID NOT NULL REFERENCES oauth_clients(id) ON DELETE CASCADE,
 			user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+
+			account_id VARCHAR(255) NOT NULL,
+			account_name VARCHAR(255) NOT NULL,
+
 			access_token BYTEA NOT NULL,
 			refresh_token BYTEA,
 			expires_at TIMESTAMPTZ NOT NULL,
-			PRIMARY KEY (client_id, user_id)
+
+			UNIQUE(client_id, user_id, account_id)
 		);
 		`,
 	)
