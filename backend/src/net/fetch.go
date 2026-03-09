@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"luna-backend/errors"
 	"luna-backend/types"
@@ -106,8 +105,6 @@ func FetchJson(url *types.Url, httpMethod string, auth types.AuthMethod, body *u
 			Append(errors.LvlWordy, "Could not fetch response from %v", url).
 			AltStr(errors.LvlPlain, "Could not fetch response")
 	}
-
-	fmt.Println(string(data))
 
 	err = json.Unmarshal(data, target)
 	if err != nil {

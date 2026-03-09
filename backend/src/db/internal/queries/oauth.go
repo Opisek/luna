@@ -498,7 +498,7 @@ func (q *Queries) UpdateOauthTokens(tokens *types.OauthTokens) *errors.ErrorTrac
 
 	query := `
 		UPDATE oauth_tokens
-		SET access_token = PGP_SYM_ENCRYPT($3, $6), refresh_token = PGP_SYM_ENCRYPT($4, $6), expires_at = %5
+		SET access_token = PGP_SYM_ENCRYPT($3, $6), refresh_token = PGP_SYM_ENCRYPT($4, $6), expires_at = $5
 		WHERE client_id = $1 AND user_id = $2;
 	`
 
