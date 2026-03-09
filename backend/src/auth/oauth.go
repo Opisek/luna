@@ -96,7 +96,7 @@ func fetchOauthTokens(oauthClient *types.OauthClient, expectRefresh bool, form *
 
 	// Google OAuth 2.0 returns the scopes in a potentially different order
 	resScopeSlice := strings.Split(res.Scope, " ")
-	clientScopeSlice := strings.Split(res.Scope, " ")
+	clientScopeSlice := strings.Split(oauthClient.Scope, " ")
 	slices.Sort(resScopeSlice)
 	slices.Sort(clientScopeSlice)
 	if res.Scope != "" && strings.Join(resScopeSlice, " ") != strings.Join(clientScopeSlice, " ") {

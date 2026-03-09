@@ -4,11 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"luna-backend/config"
 	"luna-backend/constants"
 	"luna-backend/db"
 	"luna-backend/errors"
 	"luna-backend/types"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -149,6 +151,16 @@ func (auth *OauthAuth) SupplyContext(ctx context.Context) {
 	auth.tx = ctx.Value("transaction").(*db.Transaction)
 }
 
+func (auth *OauthAuth) expired() *errors.ErrorTrace {
+	// Same as above
+	(auth.ctx.Value("config").(*config.CommonConfig)).OauthInvalidationChannel <- auth.TokensID
+
+	return errors.New().Status(http.StatusUnauthorized).
+		Append(errors.LvlDebug, "OAuth 2.0 tokens %v for client %v and user %v expired or were revoked", auth.TokensID, auth.ClientId, auth.UserId).
+		AltStr(errors.LvlWordy, "OAuth 2.0 tokens expired or were revoked").
+		Append(errors.LvlPlain, "Please authorize yourself again")
+}
+
 func (auth *OauthAuth) Do(req *http.Request) (*http.Response, *errors.ErrorTrace) {
 	var tr *errors.ErrorTrace
 
@@ -173,6 +185,9 @@ func (auth *OauthAuth) Do(req *http.Request) (*http.Response, *errors.ErrorTrace
 		refreshToken := tokens.RefreshToken
 		tokens, tr = FetchOauthTokensUsingRefreshToken(auth.client, refreshToken, auth.ctx)
 		if tr != nil {
+			if strings.Contains(tr.Serialize(errors.LvlDebug), "invalid_grant") {
+				return nil, auth.expired()
+			}
 			return nil, tr
 		}
 		tokens.UserId = auth.UserId
@@ -190,6 +205,9 @@ func (auth *OauthAuth) Do(req *http.Request) (*http.Response, *errors.ErrorTrace
 	req.Header.Set("Authorization", "Bearer "+tokens.AccessToken)
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
+		if strings.Contains(err.Error(), "invalid_grant") {
+			return nil, auth.expired()
+		}
 		return nil, errors.New().AddErr(errors.LvlDebug, err)
 	}
 	return res, nil

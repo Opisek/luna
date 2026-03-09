@@ -203,9 +203,14 @@ func main() {
 	tokenInvalidationLogger := logger.WithField("module", "token_invalidation")
 	tokenInvalidationService := services.NewTokenInvalidationService(db, commonConfig, tokenInvalidationLogger)
 
+	// OAuth 2.0 invalidation service
+	oauthInvalidationLogger := logger.WithField("module", "oauth_invalidation")
+	oauthInvalidationService := services.NewOauthInvalidationService(db, commonConfig, oauthInvalidationLogger)
+
 	// Wait for goroutines to finish
 	var wg sync.WaitGroup
 	startGoroutine(tokenInvalidationService.Start, &wg)
+	startGoroutine(oauthInvalidationService.Start, &wg)
 	startGoroutine(c.Start, &wg)
 	startGoroutine(api.Start, &wg)
 	wg.Wait()

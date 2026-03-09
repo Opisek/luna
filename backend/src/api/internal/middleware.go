@@ -102,6 +102,7 @@ func RequestSetup(timeout time.Duration, database *db.Database, withTransaction 
 		// I choose to ignore this, because this whole thing is a hack anyway.
 		// See auth/methods.go for more context.
 		ctx = context.WithValue(ctx, "transaction", tx)
+		ctx = context.WithValue(ctx, "config", config)
 
 		// The handler will report back with a response body or an error trace
 		responseChan := make(chan *util.Response)

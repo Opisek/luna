@@ -11,6 +11,7 @@ type CommonConfig struct {
 	PublicUrl                *types.Url
 	Settings                 *GlobalSettings
 	TokenInvalidationChannel chan *types.Session
+	OauthInvalidationChannel chan types.ID
 }
 
 func (c *CommonConfig) LoggingVerbosity() int {
