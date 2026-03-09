@@ -33,16 +33,14 @@
     client = await deepCopy(original);
     originalClient = await deepCopy(original);
 
-
-    if (editMode) setTimeout(showCreateModalInternal(), 0);
-    else {
+    if (client.id !== "") {
       const details = await clients.getClientDetails(client.id).catch((err) => {
         queueNotification(ColorKeys.Danger, `Could not get OAuth 2.0 client details: ${err.message}`);
           return Promise.reject();
         });
       client.client_secret = details.client_secret;
       setTimeout(showModalInternal(), 0);
-    }
+    } else setTimeout(showCreateModalInternal(), 0);
 
     // TODO: what if we only show but the modal and the close? memory leak?
     return new Promise((resolve, reject) => {
@@ -97,7 +95,7 @@
   deleteConfirmation={`Are you sure you want to delete the OAuth 2.0 client?`}
   bind:editMode={editMode}
   bind:showCreateModal={showCreateModalInternal}
-  bind:showModal={showModalInternal}
+  bind:showEditModal={showModalInternal}
   onDelete={onDelete}
   onEdit={onEdit}
   onCancel={promiseReject}

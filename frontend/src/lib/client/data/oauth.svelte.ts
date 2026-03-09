@@ -46,7 +46,7 @@ export class OauthClients {
     formData.append("base_url", client.base_url);
     formData.append("scope", client.scope);
     
-    return await fetchJson(`/api/oauth/clients/${client.id}`, { method: "POST", body: formData }).then((data: { client: OauthClientModel }) => {
+    return await fetchJson(`/api/oauth/clients/${client.id}`, { method: "PATCH", body: formData }).then((data: { client: OauthClientModel }) => {
       this.clients = this.clients.map(x => x.id == client.id ? data.client : x);
       return data.client;
     });
