@@ -55,7 +55,7 @@ func (entry *cacheEntry) expired() bool {
 
 type Cache struct {
 	dictionary map[string]cacheEntry
-	lock       *sync.RWMutex
+	lock       sync.RWMutex
 }
 
 func NewCache() *Cache {
