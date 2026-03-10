@@ -142,6 +142,16 @@ func (PrimitivesParser) ParseCalendarSettings(sourceType string, settings []byte
 				Append(errors.LvlWordy, "Could not unmarshal settings")
 		}
 		return parsedSettings, nil
+	case constants.SourceGoogle:
+		parsedSettings := &google.GoogleCalendarSettings{}
+		err := json.Unmarshal(settings, parsedSettings)
+		if err != nil {
+			return nil, errors.New().Status(http.StatusInternalServerError).
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlDebug, "Could not unmarshal Google Calendar settings").
+				Append(errors.LvlWordy, "Could not unmarshal settings")
+		}
+		return parsedSettings, nil
 	default:
 		return nil, errors.New().Status(http.StatusInternalServerError).
 			Append(errors.LvlWordy, "Unknown source type: %v", sourceType)
@@ -167,6 +177,16 @@ func (PrimitivesParser) ParseEventSettings(sourceType string, settings []byte) (
 			return nil, errors.New().Status(http.StatusInternalServerError).
 				AddErr(errors.LvlDebug, err).
 				Append(errors.LvlDebug, "Could not unmarshal iCal settings").
+				Append(errors.LvlWordy, "Could not unmarshal settings")
+		}
+		return parsedSettings, nil
+	case constants.SourceGoogle:
+		parsedSettings := &google.GoogleEventSettings{}
+		err := json.Unmarshal(settings, parsedSettings)
+		if err != nil {
+			return nil, errors.New().Status(http.StatusInternalServerError).
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlDebug, "Could not unmarshal Google Calendar settings").
 				Append(errors.LvlWordy, "Could not unmarshal settings")
 		}
 		return parsedSettings, nil

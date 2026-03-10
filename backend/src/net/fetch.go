@@ -51,7 +51,14 @@ func FetchFile(url *types.Url, auth types.AuthMethod, accept string, ctx context
 	return res.Body, nil
 }
 
-func FetchBytes(url *types.Url, httpMethod string, auth types.AuthMethod, body *url.Values, bodyType string, ctx context.Context) ([]byte, *errors.ErrorTrace) {
+func FetchBytes(
+	url *types.Url,
+	httpMethod string,
+	auth types.AuthMethod,
+	body *url.Values,
+	bodyType string,
+	ctx context.Context,
+) ([]byte, *errors.ErrorTrace) {
 	var payload io.Reader = nil
 	if body != nil {
 		payload = bytes.NewBufferString(body.Encode())
@@ -109,7 +116,15 @@ func FetchBytes(url *types.Url, httpMethod string, auth types.AuthMethod, body *
 	return data, nil
 }
 
-func FetchJson(url *types.Url, httpMethod string, auth types.AuthMethod, body *url.Values, bodyType string, ctx context.Context, target any) *errors.ErrorTrace {
+func FetchJson(
+	url *types.Url,
+	httpMethod string,
+	auth types.AuthMethod,
+	body *url.Values,
+	bodyType string,
+	ctx context.Context,
+	target any,
+) *errors.ErrorTrace {
 	data, tr := FetchBytes(url, httpMethod, auth, body, bodyType, ctx)
 	if tr != nil {
 		return tr

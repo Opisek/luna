@@ -46,7 +46,7 @@ func (source *GoogleSource) getColorById(id string, isCalendar bool, q types.Dat
 	if isCalendar {
 		col, exists = source.settings.colors.Calendar[id]
 	} else {
-		col, exists = source.settings.colors.Calendar[id]
+		col, exists = source.settings.colors.Event[id]
 	}
 
 	if !exists {
@@ -134,7 +134,24 @@ func (source *GoogleSource) GetCalendars(q types.DatabaseQueries) ([]types.Calen
 }
 
 func (source *GoogleSource) GetCalendar(settings types.CalendarSettings, q types.DatabaseQueries) (types.Calendar, *errors.ErrorTrace) {
-	return nil, errors.New().Status(http.StatusNotImplemented)
+	googleSettings := settings.(*GoogleCalendarSettings)
+
+	var res google.CalendarListEntry
+
+	tr := net.FetchJson(google.ApiUrl().Subpage("users", "me", "calendarList", googleSettings.GoogleId), "GET", source.auth, nil, "", q.GetContext(), &res)
+	if tr != nil {
+		return nil, tr
+	}
+
+	converted, err := source.calendarFromGoogle(&res, q)
+	if err != nil {
+		return nil, err.
+			Append(errors.LvlBroad, "Could not get calendars")
+	}
+
+	casted := (types.Calendar)(converted)
+
+	return casted, nil
 }
 
 func (source *GoogleSource) AddCalendar(name string, color *types.Color, _ types.DatabaseQueries) (types.Calendar, *errors.ErrorTrace) {

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"luna-backend/crypto"
 	"luna-backend/errors"
+	"luna-backend/net"
 	google "luna-backend/protocols/google/internal"
 	"luna-backend/types"
 	"net/http"
@@ -20,7 +21,7 @@ type GoogleCalendar struct {
 }
 
 type GoogleCalendarSettings struct {
-	InternalId string `json:"google_id"`
+	GoogleId string `json:"google_id"`
 }
 
 func (source *GoogleSource) calendarFromGoogle(calListEntry *google.CalendarListEntry, q types.DatabaseQueries) (*GoogleCalendar, *errors.ErrorTrace) {
@@ -46,7 +47,7 @@ func (source *GoogleSource) calendarFromGoogle(calListEntry *google.CalendarList
 	}
 
 	settings := &GoogleCalendarSettings{
-		InternalId: calListEntry.Id,
+		GoogleId: calListEntry.Id,
 	}
 
 	calendar := &GoogleCalendar{
@@ -69,12 +70,12 @@ func (settings *GoogleCalendarSettings) Bytes() []byte {
 	return bytes
 }
 
-func genCalId(sourceId types.ID, path string) types.ID {
-	return crypto.DeriveID(sourceId, path)
+func genCalId(sourceId types.ID, googleId string) types.ID {
+	return crypto.DeriveID(sourceId, googleId)
 }
 
 func (calendar *GoogleCalendar) GetId() types.ID {
-	return genCalId(calendar.source.id, calendar.settings.InternalId)
+	return genCalId(calendar.source.id, calendar.settings.GoogleId)
 }
 
 func (calendar *GoogleCalendar) GetName() string {
@@ -122,11 +123,58 @@ func (calendar *GoogleCalendar) SetOverridden(overridden bool) {
 }
 
 func (calendar *GoogleCalendar) GetEvents(start time.Time, end time.Time, q types.DatabaseQueries) ([]types.Event, *errors.ErrorTrace) {
-	return nil, errors.New().Status(http.StatusNotImplemented)
+	var res struct {
+		Items []*google.Event `json:"items"`
+	}
+
+	url := google.ApiUrl().Subpage("calendars", calendar.settings.GoogleId, "events")
+	query := url.Query()
+	query.Set("timeMin", start.Format(time.RFC3339))
+	query.Set("timeMax", end.Format(time.RFC3339))
+	url.SetQuery(query)
+
+	tr := net.FetchJson(url, "GET", calendar.source.auth, nil, "", q.GetContext(), &res)
+	if tr != nil {
+		return nil, tr
+	}
+
+	result := make([]types.Event, len(res.Items))
+	for i, event := range res.Items {
+		converted, err := calendar.eventFromGoogle(event, q)
+		if err != nil {
+			return nil, err.
+				Append(errors.LvlBroad, "Could not get events")
+		}
+
+		casted := (types.Event)(converted)
+
+		result[i] = casted
+	}
+
+	return result, nil
 }
 
 func (calendar *GoogleCalendar) GetEvent(settings types.EventSettings, q types.DatabaseQueries) (types.Event, *errors.ErrorTrace) {
-	return nil, errors.New().Status(http.StatusNotImplemented)
+	googleSettings := settings.(*GoogleEventSettings)
+
+	var res google.Event
+
+	url := google.ApiUrl().Subpage("calendars", calendar.settings.GoogleId, "events", googleSettings.GoogleId)
+
+	tr := net.FetchJson(url, "GET", calendar.source.auth, nil, "", q.GetContext(), &res)
+	if tr != nil {
+		return nil, tr
+	}
+
+	converted, err := calendar.eventFromGoogle(&res, q)
+	if err != nil {
+		return nil, err.
+			Append(errors.LvlBroad, "Could not get event")
+	}
+
+	casted := (types.Event)(converted)
+
+	return casted, nil
 }
 
 func (calendar *GoogleCalendar) AddEvent(name string, desc string, color *types.Color, date *types.EventDate, q types.DatabaseQueries) (types.Event, *errors.ErrorTrace) {
