@@ -1,28 +1,28 @@
-package perms
+package types
 
 type Permission string
 
 const (
-	ReadEvents           Permission = "read_events"
-	AddEvents            Permission = "add_events"
-	EditEvents           Permission = "edit_events"
-	DeleteEvents         Permission = "delete_events"
-	ReadCalendars        Permission = "read_calendars"
-	AddCalendars         Permission = "add_calendars"
-	EditCalendars        Permission = "edit_calendars"
-	DeleteCalendars      Permission = "delete_calendars"
-	ReadSources          Permission = "read_sources"
-	AddSources           Permission = "add_sources"
-	EditSources          Permission = "edit_sources"
-	DeleteSources        Permission = "delete_sources"
-	ManageInvites        Permission = "manage_invites"
-	ManageUsers          Permission = "manage_users"
-	ManageOauthClients   Permission = "manage_oauth_clients"
-	ManageGlobalSettings Permission = "manage_global_settings"
-	ManageUserSettings   Permission = "manage_user_settings"
-	ManageSessions       Permission = "manage_sessions"
-	ManageResources      Permission = "manage_resources"
-	Administrative       Permission = "administrative"
+	PermReadEvents           Permission = "read_events"
+	PermAddEvents            Permission = "add_events"
+	PermEditEvents           Permission = "edit_events"
+	PermDeleteEvents         Permission = "delete_events"
+	PermReadCalendars        Permission = "read_calendars"
+	PermAddCalendars         Permission = "add_calendars"
+	PermEditCalendars        Permission = "edit_calendars"
+	PermDeleteCalendars      Permission = "delete_calendars"
+	PermReadSources          Permission = "read_sources"
+	PermAddSources           Permission = "add_sources"
+	PermEditSources          Permission = "edit_sources"
+	PermDeleteSources        Permission = "delete_sources"
+	PermManageInvites        Permission = "manage_invites"
+	PermManageUsers          Permission = "manage_users"
+	PermManageOauthClients   Permission = "manage_oauth_clients"
+	PermManageGlobalSettings Permission = "manage_global_settings"
+	PermManageUserSettings   Permission = "manage_user_settings"
+	PermManageSessions       Permission = "manage_sessions"
+	PermManageResources      Permission = "manage_resources"
+	PermAdministrative       Permission = "administrative"
 )
 
 // Administrative:
@@ -35,26 +35,26 @@ const (
 // 3. Check whether the token has additional permissions
 
 var allPermList = []Permission{
-	ReadEvents,
-	AddEvents,
-	EditEvents,
-	DeleteEvents,
-	ReadCalendars,
-	AddCalendars,
-	EditCalendars,
-	DeleteCalendars,
-	ReadSources,
-	AddSources,
-	EditSources,
-	DeleteSources,
-	ManageInvites,
-	ManageUsers,
-	ManageOauthClients,
-	ManageGlobalSettings,
-	ManageUserSettings,
-	ManageSessions,
-	ManageResources,
-	Administrative,
+	PermReadEvents,
+	PermAddEvents,
+	PermEditEvents,
+	PermDeleteEvents,
+	PermReadCalendars,
+	PermAddCalendars,
+	PermEditCalendars,
+	PermDeleteCalendars,
+	PermReadSources,
+	PermAddSources,
+	PermEditSources,
+	PermDeleteSources,
+	PermManageInvites,
+	PermManageUsers,
+	PermManageOauthClients,
+	PermManageGlobalSettings,
+	PermManageUserSettings,
+	PermManageSessions,
+	PermManageResources,
+	PermAdministrative,
 }
 
 type TokenPermissions struct {
@@ -69,7 +69,7 @@ func AllPermissions() *TokenPermissions {
 	}
 }
 
-func FromList(perms []Permission) *TokenPermissions {
+func TokenPermsFromPermsList(perms []Permission) *TokenPermissions {
 	permMap := make(map[Permission]bool)
 	for _, p := range perms {
 		permMap[p] = true
@@ -81,7 +81,7 @@ func FromList(perms []Permission) *TokenPermissions {
 	}
 }
 
-func FromStringList(permStrs []string) *TokenPermissions {
+func TokenPermsFromStringList(permStrs []string) *TokenPermissions {
 	permSet := make(map[Permission]bool)
 	for _, perm := range allPermList {
 		permSet[perm] = true
@@ -94,7 +94,7 @@ func FromStringList(permStrs []string) *TokenPermissions {
 		}
 	}
 
-	return FromList(validPerms)
+	return TokenPermsFromPermsList(validPerms)
 }
 
 func (tp *TokenPermissions) ToList() []Permission {

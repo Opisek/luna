@@ -11,7 +11,7 @@ import (
 	"luna-backend/crypto"
 	"luna-backend/db"
 	"luna-backend/errors"
-	"luna-backend/perms"
+	"luna-backend/types"
 	"net/http"
 	"time"
 
@@ -309,9 +309,9 @@ func RequireAuth() gin.HandlerFunc {
 		}
 
 		// Get the permissions associated with the token
-		var permissions *perms.TokenPermissions
+		var permissions *types.TokenPermissions
 		if !session.IsApi {
-			permissions = perms.AllPermissions()
+			permissions = types.AllPermissions()
 		} else {
 			permissions, tr = u.Tx.Queries().GetTokenPermissions(parsedToken.SessionId)
 			if tr != nil {
@@ -352,7 +352,7 @@ func RequireAdmin() gin.HandlerFunc {
 	}
 }
 
-func RequirePermissions(requiredPerms ...perms.Permission) gin.HandlerFunc {
+func RequirePermissions(requiredPerms ...types.Permission) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		u := util.GetUtil(c)
 		permissions, exists := c.Get("permissions")
@@ -366,7 +366,7 @@ func RequirePermissions(requiredPerms ...perms.Permission) gin.HandlerFunc {
 			return
 		}
 
-		tokenPerms := permissions.(*perms.TokenPermissions)
+		tokenPerms := permissions.(*types.TokenPermissions)
 
 		for _, perm := range requiredPerms {
 			if !tokenPerms.Has(perm) {
