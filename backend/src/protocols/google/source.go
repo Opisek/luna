@@ -1,7 +1,9 @@
 package google
 
 import (
+	"context"
 	"encoding/json"
+	"luna-backend/auth"
 	"luna-backend/constants"
 	"luna-backend/errors"
 	"luna-backend/net"
@@ -167,3 +169,9 @@ func (source *GoogleSource) DeleteCalendar(calendar types.Calendar, _ types.Data
 }
 
 func (source *GoogleSource) Cleanup(_ types.DatabaseQueries) *errors.ErrorTrace { return nil }
+
+func (source *GoogleSource) SupplyContext(ctx context.Context) {
+	if source.auth.GetType() == constants.AuthOauth {
+		source.auth.(*auth.OauthAuth).SupplyContext(ctx)
+	}
+}

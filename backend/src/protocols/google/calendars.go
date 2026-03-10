@@ -1,6 +1,7 @@
 package google
 
 import (
+	"context"
 	"encoding/json"
 	"luna-backend/crypto"
 	"luna-backend/errors"
@@ -187,4 +188,8 @@ func (calendar *GoogleCalendar) EditEvent(originalEvent types.Event, name string
 
 func (calendar *GoogleCalendar) DeleteEvent(event types.Event, q types.DatabaseQueries) *errors.ErrorTrace {
 	return errors.New().Status(http.StatusNotImplemented)
+}
+
+func (calendar *GoogleCalendar) SupplyContext(ctx context.Context) {
+	calendar.source.SupplyContext(ctx)
 }

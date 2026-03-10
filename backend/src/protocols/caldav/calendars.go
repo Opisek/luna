@@ -1,6 +1,7 @@
 package caldav
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"luna-backend/crypto"
@@ -358,4 +359,8 @@ func (calendar *CaldavCalendar) DeleteEvent(event types.Event, q types.DatabaseQ
 	}
 
 	return nil
+}
+
+func (calendar *CaldavCalendar) SupplyContext(ctx context.Context) {
+	calendar.source.SupplyContext(ctx)
 }

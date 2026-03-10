@@ -1,7 +1,9 @@
 package caldav
 
 import (
+	"context"
 	"encoding/json"
+	"luna-backend/auth"
 	"luna-backend/constants"
 	"luna-backend/errors"
 	"luna-backend/types"
@@ -215,3 +217,9 @@ func (source *CaldavSource) DeleteCalendar(calendar types.Calendar, _ types.Data
 }
 
 func (source *CaldavSource) Cleanup(_ types.DatabaseQueries) *errors.ErrorTrace { return nil }
+
+func (source *CaldavSource) SupplyContext(ctx context.Context) {
+	if source.auth.GetType() == constants.AuthOauth {
+		source.auth.(*auth.OauthAuth).SupplyContext(ctx)
+	}
+}

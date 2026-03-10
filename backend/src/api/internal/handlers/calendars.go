@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"luna-backend/api/internal/util"
+	"luna-backend/cache"
 	"luna-backend/errors"
 	"luna-backend/types"
 	"net/http"
@@ -30,7 +31,9 @@ func GetCalendars(c *gin.Context) {
 	}
 
 	// Get the specified source
-	source, err := u.Tx.Queries().GetSource(userId, sourceId, u.Context, u.Config)
+	source, err := cache.GetCached(u.Config.Cache, userId, sourceId, u.Context, func() (types.Source, *errors.ErrorTrace) {
+		return u.Tx.Queries().GetSource(userId, sourceId, u.Context, u.Config)
+	})
 	if err != nil {
 		u.Error(err)
 		return
@@ -53,6 +56,8 @@ func GetCalendars(c *gin.Context) {
 	// Convert to exposed format
 	convertedCals := make([]exposedCalendar, len(cals))
 	for i, cal := range cals {
+		u.Config.Cache.Cache(userId, cal)
+
 		convertedCals[i] = exposedCalendar{
 			Id:         cal.GetId(),
 			Source:     cal.GetSource().GetId(),
@@ -91,6 +96,8 @@ func GetCalendar(c *gin.Context) {
 		return
 	}
 
+	u.Config.Cache.Cache(userId, cal)
+
 	// Convert to exposed format
 	convertedCal := exposedCalendar{
 		Id:         cal.GetId(),
@@ -116,7 +123,9 @@ func PutCalendar(c *gin.Context) {
 		return
 	}
 
-	source, tr := u.Tx.Queries().GetSource(userId, sourceId, u.Context, u.Config)
+	source, tr := cache.GetCached(u.Config.Cache, userId, sourceId, u.Context, func() (types.Source, *errors.ErrorTrace) {
+		return u.Tx.Queries().GetSource(userId, sourceId, u.Context, u.Config)
+	})
 	if tr != nil {
 		u.Error(tr)
 		return

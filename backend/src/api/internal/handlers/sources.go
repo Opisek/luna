@@ -54,6 +54,8 @@ func GetSources(c *gin.Context) {
 
 	exposedSources := make([]exposedSource, len(sources))
 	for i, source := range sources {
+		u.Config.Cache.Cache(userId, source)
+
 		exposedSources[i] = exposedSource{
 			Id:   source.GetId(),
 			Name: source.GetName(),
@@ -80,6 +82,8 @@ func GetSource(c *gin.Context) {
 		u.Error(err)
 		return
 	}
+
+	u.Config.Cache.Cache(userId, source)
 
 	exposedSource := exposedDetailedSource{
 		Id:       source.GetId(),

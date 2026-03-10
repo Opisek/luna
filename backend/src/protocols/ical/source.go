@@ -1,6 +1,7 @@
 package ical
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"luna-backend/auth"
@@ -216,4 +217,10 @@ func (source *IcalSource) Cleanup(q types.DatabaseQueries) *errors.ErrorTrace {
 		return tr.Append(errors.LvlWordy, "Could not get file owner")
 	}
 	return q.DeleteFilecache(source.settings.file, sourceOwner)
+}
+
+func (source *IcalSource) SupplyContext(ctx context.Context) {
+	if source.auth.GetType() == constants.AuthOauth {
+		source.auth.(*auth.OauthAuth).SupplyContext(ctx)
+	}
 }

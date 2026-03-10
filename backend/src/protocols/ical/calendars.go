@@ -1,6 +1,7 @@
 package ical
 
 import (
+	"context"
 	"encoding/json"
 	"luna-backend/crypto"
 	"luna-backend/errors"
@@ -222,4 +223,8 @@ func (calendar *IcalCalendar) EditEvent(event types.Event, name string, desc str
 
 func (calendar *IcalCalendar) DeleteEvent(event types.Event, q types.DatabaseQueries) *errors.ErrorTrace {
 	return errors.New().Status(http.StatusMethodNotAllowed)
+}
+
+func (calendar *IcalCalendar) SupplyContext(ctx context.Context) {
+	calendar.source.SupplyContext(ctx)
 }

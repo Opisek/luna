@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"luna-backend/api"
+	"luna-backend/cache"
 	"luna-backend/config"
 	"luna-backend/db"
 	"luna-backend/errors"
@@ -40,7 +41,8 @@ func setupConfig() (*logrus.Logger, *logrus.Entry, *config.CommonConfig, *errors
 	}
 
 	commonConfig := &config.CommonConfig{
-		Env: &env,
+		Env:   &env,
+		Cache: cache.NewCache(),
 	}
 	commonConfig.Version, err = types.ParseVersion(version)
 	if err != nil {
@@ -198,6 +200,7 @@ func main() {
 	c.AddFunc("0 * * * *", createTask("DeleteExpiredRegistrationInvites", tasks.DeleteExpiredRegistrationInvites, db, cronLogger, commonConfig))
 	c.AddFunc("0 * * * *", createTask("DeleteExpiredOauthAuthorizationRequests", tasks.DeleteExpiredOauthAuthorizationRequests, db, cronLogger, commonConfig))
 	c.AddFunc("*/10 * * * *", createTask("DeleteStaleRequestThrottleEntries", tasks.DeleteStaleRequestThrottleEntries(api.Throttle), db, cronLogger, commonConfig))
+	c.AddFunc("*/10 * * * *", createTask("DeleteStaleMemoryCacheEntries", tasks.ClearStaleCache, db, cronLogger, commonConfig))
 
 	// Token invalidation service
 	tokenInvalidationLogger := logger.WithField("module", "token_invalidation")
