@@ -182,24 +182,26 @@ func (auth *OauthAuth) Do(req *http.Request) (*http.Response, *errors.ErrorTrace
 			return nil, tr
 		}
 
-		refreshToken := tokens.RefreshToken
-		tokens, tr = FetchOauthTokensUsingRefreshToken(auth.client, refreshToken, auth.ctx)
+		newTokens, tr := FetchOauthTokensUsingRefreshToken(auth.client, tokens.RefreshToken, auth.ctx)
 		if tr != nil {
 			if strings.Contains(tr.Serialize(errors.LvlDebug), "invalid_grant") {
 				return nil, auth.expired()
 			}
 			return nil, tr
 		}
-		tokens.UserId = auth.UserId
+		newTokens.Id = tokens.Id
+		newTokens.UserId = tokens.UserId
 
-		if tokens.RefreshToken == "" {
-			tokens.RefreshToken = refreshToken
+		if newTokens.RefreshToken == "" {
+			newTokens.RefreshToken = tokens.RefreshToken
 		}
 
-		tr = auth.tx.Queries().UpdateOauthTokens(tokens)
+		tr = auth.tx.Queries().UpdateOauthTokens(newTokens)
 		if tr != nil {
 			return nil, tr
 		}
+
+		tokens = newTokens
 	}
 
 	req.Header.Set("Authorization", "Bearer "+tokens.AccessToken)

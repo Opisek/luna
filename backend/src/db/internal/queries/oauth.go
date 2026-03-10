@@ -420,7 +420,10 @@ func (q *Queries) GetOauthTokens(tokensId types.ID, userId types.ID) (*types.Oau
 		WHERE id = $1;
 	`
 
-	tokens := &types.OauthTokens{UserId: userId}
+	tokens := &types.OauthTokens{
+		Id:     tokensId,
+		UserId: userId,
+	}
 
 	err := q.Tx.
 		QueryRow(
