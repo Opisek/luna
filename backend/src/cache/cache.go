@@ -83,9 +83,14 @@ func GetCached[T Cacheable](cache *Cache, userId types.ID, objectId types.ID, ct
 		return obj.item.(T), nil
 	}
 
-	cache.lock.Lock()
-	defer cache.lock.Unlock()
-	return fallback()
+	item, tr := fallback()
+	if tr != nil {
+		return item, tr
+	}
+
+	cache.Cache(userId, item)
+
+	return item, nil
 }
 
 func (cache *Cache) Cache(userId types.ID, object Cacheable) {
@@ -94,6 +99,7 @@ func (cache *Cache) Cache(userId types.ID, object Cacheable) {
 
 	cache.dictionary[getCacheKey(userId, object.GetId())] = cacheEntry{
 		item:      object,
+		userId:    userId,
 		timestamp: time.Now(),
 	}
 }
