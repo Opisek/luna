@@ -179,7 +179,7 @@ func (source *IcalSource) GetCalendar(settings types.CalendarSettings, q types.D
 
 /* Ical source is read-only */
 
-func (source *IcalSource) AddCalendar(name string, color *types.Color, q types.DatabaseQueries) (types.Calendar, *errors.ErrorTrace) {
+func (source *IcalSource) AddCalendar(name string, desc string, color *types.Color, q types.DatabaseQueries) (types.Calendar, *errors.ErrorTrace) {
 	return nil, errors.New().Status(http.StatusMethodNotAllowed)
 }
 

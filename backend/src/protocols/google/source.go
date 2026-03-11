@@ -204,12 +204,109 @@ func (source *GoogleSource) GetCalendar(settings types.CalendarSettings, q types
 	return casted, nil
 }
 
-func (source *GoogleSource) AddCalendar(name string, color *types.Color, _ types.DatabaseQueries) (types.Calendar, *errors.ErrorTrace) {
-	return nil, errors.New().Status(http.StatusNotImplemented)
+func (source *GoogleSource) AddCalendar(name string, desc string, color *types.Color, q types.DatabaseQueries) (types.Calendar, *errors.ErrorTrace) {
+	var tr *errors.ErrorTrace
+
+	calendar := google.Calendar{
+		Name:        name,
+		Description: desc,
+	}
+
+	url := google.ApiUrl().Subpage("calendars")
+
+	var insertedCalendar google.Calendar
+
+	tr = net.FetchJson(url, "POST", source.auth, &calendar, "application/json", q.GetContext(), &insertedCalendar)
+	if tr != nil {
+		return nil, tr.
+			AltStr(errors.LvlBroad, "Could not post calendar").
+			Append(errors.LvlDebug, "Could not add calendar to source %v", source.GetId()).
+			AltStr(errors.LvlBroad, "Could not add calendar")
+	}
+
+	var foreground string
+	if color.IsDark() {
+		foreground = "#ffffff"
+	} else {
+		foreground = "#000000"
+	}
+
+	calendarListEntry := google.CalendarListEntry{
+		Name:            name,
+		Description:     desc,
+		BackgroundColor: color.String(),
+		ForegroundColor: foreground,
+	}
+
+	url = google.ApiUrl().Subpage("users", "me", "calendarList", insertedCalendar.Id)
+	query := url.Query()
+	query.Set("colorRgbFormat", "true")
+	url.SetQuery(query)
+
+	var insertedCalendarListEntry google.CalendarListEntry
+
+	tr = net.FetchJson(url, "PATCH", source.auth, &calendarListEntry, "application/json", q.GetContext(), &insertedCalendarListEntry)
+	if tr != nil {
+		return nil, tr.
+			AltStr(errors.LvlBroad, "Could not post calendar list entry").
+			Append(errors.LvlDebug, "Could not add calendar to source %v", source.GetId()).
+			AltStr(errors.LvlBroad, "Could not add calendar")
+	}
+
+	converted, tr := source.calendarFromGoogle(&insertedCalendarListEntry, q)
+	if tr != nil {
+		return nil, tr.
+			AltStr(errors.LvlBroad, "Could not parse returned calendar list entry").
+			Append(errors.LvlDebug, "Could not add calendar to source %v", source.GetId()).
+			AltStr(errors.LvlBroad, "Could not add calendar")
+	}
+
+	casted := (types.Calendar)(converted)
+
+	return casted, nil
 }
 
 func (source *GoogleSource) EditCalendar(calendar types.Calendar, name string, desc string, color *types.Color, override bool, q types.DatabaseQueries) (types.Calendar, *errors.ErrorTrace) {
-	return nil, errors.New().Status(http.StatusNotImplemented)
+	var foreground string
+	if color.IsDark() {
+		foreground = "#ffffff"
+	} else {
+		foreground = "#000000"
+	}
+
+	calendarListEntry := google.CalendarListEntry{
+		Name:            name,
+		Description:     desc,
+		BackgroundColor: color.String(),
+		ForegroundColor: foreground,
+	}
+
+	url := google.ApiUrl().Subpage("users", "me", "calendarList", calendar.GetSettings().(*GoogleCalendarSettings).GoogleId)
+	query := url.Query()
+	query.Set("colorRgbFormat", "true")
+	url.SetQuery(query)
+
+	var insertedCalendarListEntry google.CalendarListEntry
+
+	tr := net.FetchJson(url, "PATCH", source.auth, &calendarListEntry, "application/json", q.GetContext(), &insertedCalendarListEntry)
+	if tr != nil {
+		return nil, tr.
+			AltStr(errors.LvlBroad, "Could not patch calendar list entry").
+			Append(errors.LvlDebug, "Could not edit calendar %v of source %v", calendar.GetId(), source.GetId()).
+			AltStr(errors.LvlBroad, "Could not edit calendar")
+	}
+
+	converted, tr := source.calendarFromGoogle(&insertedCalendarListEntry, q)
+	if tr != nil {
+		return nil, tr.
+			AltStr(errors.LvlBroad, "Could not parse returned calendar list entry").
+			Append(errors.LvlDebug, "Could not edit calendar %v of source %v", calendar.GetId(), source.GetId()).
+			AltStr(errors.LvlBroad, "Could not edit calendar")
+	}
+
+	casted := (types.Calendar)(converted)
+
+	return casted, nil
 }
 
 func (source *GoogleSource) DeleteCalendar(calendar types.Calendar, q types.DatabaseQueries) *errors.ErrorTrace {

@@ -30,14 +30,7 @@ func (source *GoogleSource) calendarFromGoogle(calListEntry *google.CalendarList
 	var tr *errors.ErrorTrace
 
 	var col *types.Color
-	if calListEntry.BackgroundColor == "" {
-		col, _, tr = source.getColorById(calListEntry.ColorId, true, q)
-		if tr != nil {
-			return nil, tr.
-				Append(errors.LvlDebug, "Could not parse calendar %v", calListEntry.Id).
-				AltStr(errors.LvlWordy, "Could not parse calendar")
-		}
-	} else {
+	if calListEntry.BackgroundColor != "" {
 		var err error
 		col, err = types.ParseColor(calListEntry.BackgroundColor)
 		if err != nil {
@@ -46,6 +39,15 @@ func (source *GoogleSource) calendarFromGoogle(calListEntry *google.CalendarList
 				Append(errors.LvlDebug, "Could not parse calendar %v", calListEntry.Id).
 				AltStr(errors.LvlWordy, "Could not parse calendar")
 		}
+	} else if calListEntry.ColorId != "" {
+		col, _, tr = source.getColorById(calListEntry.ColorId, true, q)
+		if tr != nil {
+			return nil, tr.
+				Append(errors.LvlDebug, "Could not parse calendar %v", calListEntry.Id).
+				AltStr(errors.LvlWordy, "Could not parse calendar")
+		}
+	} else {
+		col = types.ColorEmpty.Clone()
 	}
 
 	settings := &GoogleCalendarSettings{

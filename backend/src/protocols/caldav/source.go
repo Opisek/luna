@@ -160,7 +160,7 @@ func (source *CaldavSource) GetCalendar(settings types.CalendarSettings, q types
 
 // TODO: Add, Edit, and Delete are not supported by upstream yet
 
-func (source *CaldavSource) AddCalendar(name string, color *types.Color, _ types.DatabaseQueries) (types.Calendar, *errors.ErrorTrace) {
+func (source *CaldavSource) AddCalendar(name string, desc string, color *types.Color, _ types.DatabaseQueries) (types.Calendar, *errors.ErrorTrace) {
 	//caldavCal := calendar.(*CaldavCalendar)
 
 	//client, err := source.getClient()

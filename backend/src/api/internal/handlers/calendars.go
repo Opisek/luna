@@ -147,6 +147,8 @@ func PutCalendar(c *gin.Context) {
 		return
 	}
 
+	calDesc := c.PostForm("desc")
+
 	calColor, err := types.ParseColor(c.PostForm("color"))
 	if err != nil {
 		u.Error(errors.New().Status(http.StatusBadRequest).
@@ -155,7 +157,7 @@ func PutCalendar(c *gin.Context) {
 		return
 	}
 
-	cal, tr := source.AddCalendar(calName, calColor, u.Tx.Queries())
+	cal, tr := source.AddCalendar(calName, calDesc, calColor, u.Tx.Queries())
 	if tr != nil {
 		u.Error(tr)
 		return

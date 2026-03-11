@@ -2,14 +2,20 @@ package google
 
 // https://developers.google.com/workspace/calendar/api/v3/reference/
 
+type Calendar struct {
+	Id          string `json:"id,omitempty"`
+	Name        string `json:"summary"`
+	Description string `json:"description,omitempty"`
+}
+
 type CalendarListEntry struct {
 	Id              string `json:"id"`
 	Name            string `json:"summary"`
-	Description     string `json:"description"`
-	ColorId         string `json:"colorId"`
-	BackgroundColor string `json:"backgroundColor"`
-	ForegroundColor string `json:"foregroundColor"`
-	Primary         bool   `json:"primary"`
+	Description     string `json:"description,omitempty"`
+	ColorId         string `json:"colorId,omitempty"`
+	BackgroundColor string `json:"backgroundColor,omitempty"`
+	ForegroundColor string `json:"foregroundColor,omitempty"`
+	Primary         bool   `json:"primary,omitempty"`
 }
 
 type ColorDefinition struct {

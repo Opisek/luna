@@ -217,3 +217,8 @@ func (c *Color) Clone() *Color {
 
 	return ColorFromRGBA(c.RGBA())
 }
+
+func (c *Color) IsDark() bool {
+	brightness := int(math.Round((float64(c.col.R)*299 + float64(c.col.G)*587 + float64(c.col.B)*114) / 1000))
+	return brightness <= 141
+}
