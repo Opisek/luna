@@ -117,6 +117,18 @@ func (calendar *CaldavCalendar) SetOverridden(overridden bool) {
 	calendar.overridden = overridden
 }
 
+func (calendar *CaldavCalendar) CanEdit() bool {
+	return false
+}
+
+func (calendar *CaldavCalendar) CanDelete() bool {
+	return false
+}
+
+func (calendar *CaldavCalendar) CanAddEvents() bool {
+	return true
+}
+
 func (calendar *CaldavCalendar) convertEvent(event *caldav.CalendarObject, q types.DatabaseQueries) (types.Event, *errors.ErrorTrace) {
 	convertedEvent, err := calendar.eventFromCaldav(event, q)
 	if err != nil {

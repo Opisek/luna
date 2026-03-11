@@ -25,12 +25,13 @@ type exposedSource struct {
 }
 
 type exposedDetailedSource struct {
-	Id       types.ID    `json:"id"`
-	Name     string      `json:"name"`
-	Type     string      `json:"type"`
-	Settings interface{} `json:"settings"`
-	AuthType string      `json:"auth_type"`
-	Auth     interface{} `json:"auth"`
+	Id              types.ID `json:"id"`
+	Name            string   `json:"name"`
+	Type            string   `json:"type"`
+	Settings        any      `json:"settings"`
+	AuthType        string   `json:"auth_type"`
+	Auth            any      `json:"auth"`
+	CanAddCalendars bool     `json:"can_add_calendars"`
 }
 
 func getSources(u *util.HandlerUtility, userId types.ID) ([]types.Source, *errors.ErrorTrace) {
@@ -86,12 +87,13 @@ func GetSource(c *gin.Context) {
 	u.Config.Cache.Cache(userId, source)
 
 	exposedSource := exposedDetailedSource{
-		Id:       source.GetId(),
-		Name:     source.GetName(),
-		Settings: source.GetSettings(),
-		Type:     source.GetType(),
-		AuthType: source.GetAuth().GetType(),
-		Auth:     source.GetAuth(),
+		Id:              source.GetId(),
+		Name:            source.GetName(),
+		Settings:        source.GetSettings(),
+		Type:            source.GetType(),
+		AuthType:        source.GetAuth().GetType(),
+		Auth:            source.GetAuth(),
+		CanAddCalendars: source.CanAddCalendars(),
 	}
 
 	u.Success(&gin.H{"source": exposedSource})

@@ -125,3 +125,11 @@ func (event *IcalEvent) Clone() types.Event {
 		eventDate:  event.eventDate.Clone(),
 	}
 }
+
+func (event *IcalEvent) CanEdit() bool {
+	return false
+}
+
+func (event *IcalEvent) CanDelete() bool {
+	return false
+}

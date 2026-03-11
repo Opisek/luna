@@ -200,3 +200,11 @@ func (event *GoogleEvent) Clone() types.Event {
 		eventDate:  event.eventDate.Clone(),
 	}
 }
+
+func (event *GoogleEvent) CanEdit() bool {
+	return !event.eventDate.Recurrence().Repeats()
+}
+
+func (event *GoogleEvent) CanDelete() bool {
+	return !event.eventDate.Recurrence().Repeats()
+}

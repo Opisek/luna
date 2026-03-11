@@ -9,6 +9,7 @@ type CalendarListEntry struct {
 	ColorId         string `json:"colorId"`
 	BackgroundColor string `json:"backgroundColor"`
 	ForegroundColor string `json:"foregroundColor"`
+	Primary         bool   `json:"primary"`
 }
 
 type ColorDefinition struct {

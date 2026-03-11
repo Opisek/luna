@@ -19,6 +19,7 @@ type GoogleCalendar struct {
 	overridden bool
 	settings   *GoogleCalendarSettings
 	source     *GoogleSource
+	primary    bool
 }
 
 type GoogleCalendarSettings struct {
@@ -58,6 +59,7 @@ func (source *GoogleSource) calendarFromGoogle(calListEntry *google.CalendarList
 		overridden: false,
 		settings:   settings,
 		source:     source,
+		primary:    calListEntry.Primary,
 	}
 
 	return calendar, nil
@@ -121,6 +123,18 @@ func (calendar *GoogleCalendar) GetOverridden() bool {
 
 func (calendar *GoogleCalendar) SetOverridden(overridden bool) {
 	calendar.overridden = overridden
+}
+
+func (calendar *GoogleCalendar) CanEdit() bool {
+	return true
+}
+
+func (calendar *GoogleCalendar) CanDelete() bool {
+	return !calendar.primary
+}
+
+func (calendar *GoogleCalendar) CanAddEvents() bool {
+	return true
 }
 
 func (calendar *GoogleCalendar) GetEvents(start time.Time, end time.Time, q types.DatabaseQueries) ([]types.Event, *errors.ErrorTrace) {
@@ -187,7 +201,16 @@ func (calendar *GoogleCalendar) EditEvent(originalEvent types.Event, name string
 }
 
 func (calendar *GoogleCalendar) DeleteEvent(event types.Event, q types.DatabaseQueries) *errors.ErrorTrace {
-	return errors.New().Status(http.StatusNotImplemented)
+	googleSettings := event.GetSettings().(*GoogleEventSettings)
+
+	url := google.ApiUrl().Subpage("calendars", calendar.settings.GoogleId, "events", googleSettings.GoogleId)
+
+	_, tr := net.FetchBytes(url, "DELETE", calendar.source.auth, nil, "", q.GetContext())
+	if tr != nil {
+		return tr
+	}
+
+	return nil
 }
 
 func (calendar *GoogleCalendar) SupplyContext(ctx context.Context) {

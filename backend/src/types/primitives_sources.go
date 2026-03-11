@@ -10,6 +10,9 @@ type Source interface {
 	GetId() ID
 	GetName() string
 	GetAuth() AuthMethod
+
+	CanAddCalendars() bool
+
 	GetSettings() SourceSettings
 
 	GetCalendars(q DatabaseQueries) ([]Calendar, *errors.ErrorTrace)

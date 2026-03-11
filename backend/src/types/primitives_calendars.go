@@ -19,6 +19,10 @@ type Calendar interface {
 	GetOverridden() bool
 	SetOverridden(overridden bool)
 
+	CanEdit() bool
+	CanDelete() bool
+	CanAddEvents() bool
+
 	GetSettings() CalendarSettings
 
 	GetEvents(start time.Time, end time.Time, q DatabaseQueries) ([]Event, *errors.ErrorTrace)

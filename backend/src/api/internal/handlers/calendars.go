@@ -11,12 +11,15 @@ import (
 )
 
 type exposedCalendar struct {
-	Id         types.ID     `json:"id"`
-	Source     types.ID     `json:"source"`
-	Name       string       `json:"name"`
-	Desc       string       `json:"desc"`
-	Color      *types.Color `json:"color"`
-	Overridden bool         `json:"overridden"`
+	Id           types.ID     `json:"id"`
+	Source       types.ID     `json:"source"`
+	Name         string       `json:"name"`
+	Desc         string       `json:"desc"`
+	Color        *types.Color `json:"color"`
+	Overridden   bool         `json:"overridden"`
+	CanEdit      bool         `json:"can_edit"` // TODO: might exclude from here and add to "detailed" view instead
+	CanDelete    bool         `json:"can_delete"`
+	CanAddEvents bool         `json:"can_add_events"`
 }
 
 func GetCalendars(c *gin.Context) {
@@ -66,6 +69,9 @@ func GetCalendars(c *gin.Context) {
 			Color:      cal.GetColor(),
 			Overridden: cal.GetOverridden(),
 			//Settings: cal.GetSettings(),
+			CanEdit:      cal.CanEdit(),
+			CanDelete:    cal.CanDelete(),
+			CanAddEvents: cal.CanAddEvents(),
 		}
 	}
 
@@ -107,6 +113,9 @@ func GetCalendar(c *gin.Context) {
 		Color:      cal.GetColor(),
 		Overridden: cal.GetOverridden(),
 		//Settings: cal.GetSettings(),
+		CanEdit:      cal.CanEdit(),
+		CanDelete:    cal.CanDelete(),
+		CanAddEvents: cal.CanAddEvents(),
 	}
 
 	u.Success(&gin.H{"calendar": convertedCal})

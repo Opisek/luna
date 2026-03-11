@@ -131,6 +131,18 @@ func (calendar *IcalCalendar) SetOverridden(overridden bool) {
 	calendar.overridden = overridden
 }
 
+func (calendar *IcalCalendar) CanEdit() bool {
+	return false
+}
+
+func (calendar *IcalCalendar) CanDelete() bool {
+	return false
+}
+
+func (calendar *IcalCalendar) CanAddEvents() bool {
+	return false
+}
+
 func (calendar *IcalCalendar) GetEvents(start time.Time, end time.Time, q types.DatabaseQueries) ([]types.Event, *errors.ErrorTrace) {
 	res := make([]types.Event, len(calendar.icalCalendar.Children))
 

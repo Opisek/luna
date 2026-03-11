@@ -91,6 +91,10 @@ func (source *GoogleSource) GetSettings() types.SourceSettings {
 	return source.settings
 }
 
+func (source *GoogleSource) CanAddCalendars() bool {
+	return true
+}
+
 func NewGoogleSource(name string, auth types.AuthMethod) *GoogleSource {
 	return &GoogleSource{
 		id:       types.EmptyId(), // Placeholder until the database assigns an ID
@@ -164,8 +168,17 @@ func (source *GoogleSource) EditCalendar(calendar types.Calendar, name string, d
 	return nil, errors.New().Status(http.StatusNotImplemented)
 }
 
-func (source *GoogleSource) DeleteCalendar(calendar types.Calendar, _ types.DatabaseQueries) *errors.ErrorTrace {
-	return errors.New().Status(http.StatusNotImplemented)
+func (source *GoogleSource) DeleteCalendar(calendar types.Calendar, q types.DatabaseQueries) *errors.ErrorTrace {
+	googleSettings := calendar.GetSettings().(*GoogleCalendarSettings)
+
+	url := google.ApiUrl().Subpage("calendars", googleSettings.GoogleId)
+
+	_, tr := net.FetchBytes(url, "DELETE", source.auth, nil, "", q.GetContext())
+	if tr != nil {
+		return tr
+	}
+
+	return nil
 }
 
 func (source *GoogleSource) Cleanup(_ types.DatabaseQueries) *errors.ErrorTrace { return nil }

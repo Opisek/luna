@@ -57,6 +57,7 @@
       },
       auth_type: "none",
       auth: {},
+      can_add_calendars: true,
     };
 
     showCreateModalInternal();

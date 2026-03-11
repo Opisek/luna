@@ -19,6 +19,8 @@ type exposedEvent struct {
 	Color      *types.Color     `json:"color"`
 	Date       *types.EventDate `json:"date"`
 	Overridden bool             `json:"overridden"`
+	CanEdit    bool             `json:"can_edit"` // TODO: might exclude from here and add to "detailed" view instead
+	CanDelete  bool             `json:"can_delete"`
 }
 
 func GetEvents(c *gin.Context) {
@@ -116,6 +118,8 @@ func GetEvents(c *gin.Context) {
 			Color:      event.GetColor(),
 			Date:       event.GetDate(),
 			Overridden: event.GetOverridden(),
+			CanEdit:    event.CanEdit(),
+			CanDelete:  event.CanDelete(),
 		}
 	}
 
@@ -156,6 +160,8 @@ func GetEvent(c *gin.Context) {
 		Date:       event.GetDate(),
 		Overridden: event.GetOverridden(),
 		//Settings: event.GetSettings(),
+		CanEdit:   event.CanEdit(),
+		CanDelete: event.CanDelete(),
 	}
 
 	u.Success(&gin.H{"event": convertedCal})

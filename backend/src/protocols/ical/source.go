@@ -81,6 +81,10 @@ func (source *IcalSource) GetSettings() types.SourceSettings {
 	return source.settings
 }
 
+func (source *IcalSource) CanAddCalendars() bool {
+	return false
+}
+
 func NewRemoteIcalSource(name string, url *types.Url, auth types.AuthMethod, user types.ID, q types.DatabaseQueries) (*IcalSource, *errors.ErrorTrace) {
 	file, err := files.NewRemoteFile(url, "text/calendar", auth, user, q)
 	if err != nil {

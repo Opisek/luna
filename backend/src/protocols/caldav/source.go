@@ -52,6 +52,10 @@ func (source *CaldavSource) GetSettings() types.SourceSettings {
 	return source.settings
 }
 
+func (source *CaldavSource) CanAddCalendars() bool {
+	return false
+}
+
 func NewCaldavSource(name string, url *types.Url, auth types.AuthMethod) *CaldavSource {
 	return &CaldavSource{
 		id:   types.EmptyId(), // Placeholder until the database assigns an ID

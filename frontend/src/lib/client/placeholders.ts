@@ -13,7 +13,8 @@ export const EmptySource: SourceModel = {
     username: '',
     password: '',
     token: '',
-  }
+  },
+  can_add_calendars: false
 }
 
 export const AllChangesSource: SourceModelChanges = {
@@ -36,7 +37,10 @@ export const EmptyCalendar: CalendarModel = {
   name: "",
   desc: "",
   color: "",
-  overridden: false
+  overridden: false,
+  can_edit: false,
+  can_delete: false,
+  can_add_events: false,
 }
 
 export const DefaultTokenPermissions = [
@@ -82,7 +86,8 @@ export const EmptyOauthClient: OauthClientModel = {
   name: "",
   client_id: "",
   client_secret: "",
-  authorization_url: ""
+  base_url: "",
+  scope: "",
 }
 
 export const AllChangesCalendar: CalendarModelChanges = {
@@ -111,7 +116,9 @@ export const EmptyEvent: EventModel = {
     allDay: false,
     recurrence: false
   },
-  overridden: false
+  overridden: false,
+  can_edit: false,
+  can_delete: false,
 }
 
 export const AllChangesEvent: EventModelChanges = {
