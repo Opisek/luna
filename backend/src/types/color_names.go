@@ -174,7 +174,7 @@ func ColorToName(col *Color) (string, bool) {
 
 	// TODO: there are smarter ways to do this algorithmically, but given the low amount of colors (~100) it is fine for the time being
 	for k, c := range namedColors {
-		currentDist := col.distance(c)
+		currentDist := col.Distance(c)
 		if currentDist < closestDist {
 			closestDist = currentDist
 			closestCol = k

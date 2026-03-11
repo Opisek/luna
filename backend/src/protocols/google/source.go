@@ -17,11 +17,11 @@ type GoogleSource struct {
 	name     string
 	settings *GoogleSourceSettings
 	auth     types.AuthMethod
+
+	colors *google.Colors
 }
 
-type GoogleSourceSettings struct {
-	colors *google.Colors `json:"-"`
-}
+type GoogleSourceSettings struct{}
 
 func (settings *GoogleSourceSettings) GetBytes() []byte {
 	bytes, err := json.Marshal(settings)
@@ -31,24 +31,33 @@ func (settings *GoogleSourceSettings) GetBytes() []byte {
 	return bytes
 }
 
-func (source *GoogleSource) getColorById(id string, isCalendar bool, q types.DatabaseQueries) (*types.Color, *types.Color, *errors.ErrorTrace) {
-	if source.settings.colors == nil {
+func (source *GoogleSource) fetchColors(q types.DatabaseQueries) *errors.ErrorTrace {
+	if source.colors == nil {
 		var res google.Colors
 
 		tr := net.FetchJson(google.ApiUrl().Subpage("colors"), "GET", source.auth, nil, "", q.GetContext(), &res)
 		if tr != nil {
-			return nil, nil, tr
+			return tr
 		}
 
-		source.settings.colors = &res
+		source.colors = &res
+	}
+
+	return nil
+}
+
+func (source *GoogleSource) getColorById(id string, isCalendar bool, q types.DatabaseQueries) (*types.Color, *types.Color, *errors.ErrorTrace) {
+	tr := source.fetchColors(q)
+	if tr != nil {
+		return nil, nil, nil
 	}
 
 	var col google.ColorDefinition
 	var exists bool
 	if isCalendar {
-		col, exists = source.settings.colors.Calendar[id]
+		col, exists = source.colors.Calendar[id]
 	} else {
-		col, exists = source.settings.colors.Event[id]
+		col, exists = source.colors.Event[id]
 	}
 
 	if !exists {
@@ -69,6 +78,41 @@ func (source *GoogleSource) getColorById(id string, isCalendar bool, q types.Dat
 	}
 
 	return bgCol, fgCol, nil
+}
+
+func (source *GoogleSource) getClosestColorId(col *types.Color, isCalendar bool, q types.DatabaseQueries) (string, *errors.ErrorTrace) {
+	tr := source.fetchColors(q)
+	if tr != nil {
+		return "", tr.Append(errors.LvlDebug, "Could not map color %v to Google Calendar color id", col.String())
+	}
+
+	closestDist := ^uint(0)
+	var closestCol string
+
+	var colorMap map[string]google.ColorDefinition
+	if isCalendar {
+		colorMap = source.colors.Calendar
+	} else {
+		colorMap = source.colors.Event
+	}
+
+	// TODO: there are smarter ways to do this algorithmically, but given the low amount of colors (~6) it is fine for the time being
+	for id, c := range colorMap {
+		parsedGoogleColor, err := types.ParseColor(c.Background)
+		if err != nil {
+			return "", errors.New().Status(http.StatusInternalServerError).
+				Append(errors.LvlDebug, "Could not parse background color %v for color id %v", c.Background, id).
+				Append(errors.LvlDebug, "Could not map color %v to Google Calendar color id", col.String())
+		}
+
+		currentDist := col.Distance(parsedGoogleColor)
+		if currentDist < closestDist {
+			closestDist = currentDist
+			closestCol = id
+		}
+	}
+
+	return closestCol, nil
 }
 
 func (source *GoogleSource) GetType() string {

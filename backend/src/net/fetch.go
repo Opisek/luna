@@ -52,24 +52,37 @@ func FetchFile(url *types.Url, auth types.AuthMethod, accept string, ctx context
 }
 
 func FetchBytes(
-	url *types.Url,
+	resUrl *types.Url,
 	httpMethod string,
 	auth types.AuthMethod,
-	body *url.Values,
+	body any,
 	bodyType string,
 	ctx context.Context,
 ) ([]byte, *errors.ErrorTrace) {
 	var payload io.Reader = nil
 	if body != nil {
-		payload = bytes.NewBufferString(body.Encode())
+		switch bodyType {
+		case "application/x-www-form-urlencoded":
+			payload = bytes.NewBufferString(body.(*url.Values).Encode())
+		case "application/json":
+			marshalled, err := json.Marshal(body)
+			if err != nil {
+				return nil, errors.New().Status(http.StatusInternalServerError).
+					AddErr(errors.LvlDebug, err).
+					Append(errors.LvlDebug, "Could not marshal body").
+					Append(errors.LvlWordy, "Could not fetch response from %v", resUrl).
+					AltStr(errors.LvlPlain, "Could not fetch response")
+			}
+			payload = bytes.NewBuffer(marshalled)
+		}
 	}
 
-	req, err := http.NewRequest(httpMethod, url.String(), payload)
+	req, err := http.NewRequest(httpMethod, resUrl.String(), payload)
 	if err != nil {
 		return nil, errors.New().Status(http.StatusInternalServerError).
 			AddErr(errors.LvlDebug, err).
 			Append(errors.LvlDebug, "Could not create request").
-			Append(errors.LvlWordy, "Could not fetch response from %v", url).
+			Append(errors.LvlWordy, "Could not fetch response from %v", resUrl).
 			AltStr(errors.LvlPlain, "Could not fetch response")
 	}
 
@@ -84,7 +97,7 @@ func FetchBytes(
 	if tr != nil {
 		return nil, errors.InterpretRemoteError(tr, "object", "object").
 			Append(errors.LvlDebug, "Could not fulfill request").
-			Append(errors.LvlWordy, "Could not fetch response from %v", url).
+			Append(errors.LvlWordy, "Could not fetch response from %v", resUrl).
 			AltStr(errors.LvlPlain, "Could not fetch response")
 	}
 
@@ -100,7 +113,7 @@ func FetchBytes(
 			Append(errors.LvlPlain, "%v", res.Status).
 			Append(errors.LvlWordy, "Error %v", res.StatusCode).
 			Append(errors.LvlDebug, "Server returned an error code").
-			Append(errors.LvlWordy, "Could not fetch response from %v", url).
+			Append(errors.LvlWordy, "Could not fetch response from %v", resUrl).
 			AltStr(errors.LvlPlain, "Could not fetch response")
 	}
 
@@ -109,7 +122,7 @@ func FetchBytes(
 	if err != nil {
 		return nil, errors.New().Status(http.StatusInternalServerError).
 			Append(errors.LvlDebug, "Could not read body").
-			Append(errors.LvlWordy, "Could not fetch response from %v", url).
+			Append(errors.LvlWordy, "Could not fetch response from %v", resUrl).
 			AltStr(errors.LvlPlain, "Could not fetch response")
 	}
 
@@ -120,7 +133,7 @@ func FetchJson(
 	url *types.Url,
 	httpMethod string,
 	auth types.AuthMethod,
-	body *url.Values,
+	body any,
 	bodyType string,
 	ctx context.Context,
 	target any,

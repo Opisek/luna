@@ -193,11 +193,151 @@ func (calendar *GoogleCalendar) GetEvent(settings types.EventSettings, q types.D
 }
 
 func (calendar *GoogleCalendar) AddEvent(name string, desc string, color *types.Color, date *types.EventDate, q types.DatabaseQueries) (types.Event, *errors.ErrorTrace) {
-	return nil, errors.New().Status(http.StatusNotImplemented)
+	var tr *errors.ErrorTrace
+
+	var colId string
+
+	if color.IsEmpty() {
+		colId = ""
+	} else {
+		colId, tr = calendar.source.getClosestColorId(color, false, q)
+		if tr != nil {
+			return nil, tr.
+				Append(errors.LvlDebug, "Could not add event to calendar %v", calendar.GetId()).
+				AltStr(errors.LvlBroad, "Could not add event")
+		}
+	}
+
+	var start google.TimeDefinition
+	var end google.TimeDefinition
+	// TODO: timezones
+	if date.AllDay() {
+		start = google.TimeDefinition{
+			Date: date.Start().Format("2006-01-02"),
+		}
+		end = google.TimeDefinition{
+			Date: date.End().Format("2006-01-02"),
+		}
+	} else {
+		start = google.TimeDefinition{
+			DateTime: date.Start().Local().Format(time.RFC3339),
+		}
+		end = google.TimeDefinition{
+			DateTime: date.End().Local().Format(time.RFC3339),
+		}
+	}
+
+	var recurrence []string
+	if date.Recurrence().Repeats() {
+		recurrence = []string{date.Recurrence().Rule().String()}
+	} else {
+		recurrence = []string{}
+	}
+
+	event := google.Event{
+		Name:        name,
+		Description: desc,
+		ColorId:     colId,
+		Start:       start,
+		End:         end,
+		Recurrence:  recurrence,
+	}
+
+	url := google.ApiUrl().Subpage("calendars", calendar.settings.GoogleId, "events")
+
+	var res google.Event
+
+	tr = net.FetchJson(url, "POST", calendar.source.auth, &event, "application/json", q.GetContext(), &res)
+	if tr != nil {
+		return nil, tr.
+			Append(errors.LvlDebug, "Could not add event to calendar %v", calendar.GetId()).
+			AltStr(errors.LvlBroad, "Could not add event")
+	}
+
+	converted, err := calendar.eventFromGoogle(&res, q)
+	if err != nil {
+		return nil, err.
+			Append(errors.LvlDebug, "Could not add event to calendar %v", calendar.GetId()).
+			AltStr(errors.LvlBroad, "Could not add event")
+	}
+
+	casted := (types.Event)(converted)
+
+	return casted, nil
 }
 
 func (calendar *GoogleCalendar) EditEvent(originalEvent types.Event, name string, desc string, color *types.Color, date *types.EventDate, _ bool, q types.DatabaseQueries) (types.Event, *errors.ErrorTrace) {
-	return nil, errors.New().Status(http.StatusNotImplemented)
+	var tr *errors.ErrorTrace
+
+	var colId string
+
+	if color.IsEmpty() {
+		colId = ""
+	} else {
+		colId, tr = calendar.source.getClosestColorId(color, false, q)
+		if tr != nil {
+			return nil, tr.
+				Append(errors.LvlDebug, "Could not edit event %v in calendar %v", originalEvent.GetId(), calendar.GetId()).
+				AltStr(errors.LvlBroad, "Could not edit event")
+		}
+	}
+
+	var start google.TimeDefinition
+	var end google.TimeDefinition
+	// TODO: timezones
+	if date.AllDay() {
+		start = google.TimeDefinition{
+			Date: date.Start().Format("2006-01-02"),
+		}
+		end = google.TimeDefinition{
+			Date: date.End().Format("2006-01-02"),
+		}
+	} else {
+		start = google.TimeDefinition{
+			DateTime: date.Start().Local().Format(time.RFC3339),
+		}
+		end = google.TimeDefinition{
+			DateTime: date.End().Local().Format(time.RFC3339),
+		}
+	}
+
+	var recurrence []string
+	if date.Recurrence().Repeats() {
+		recurrence = []string{date.Recurrence().Rule().String()}
+	} else {
+		recurrence = []string{}
+	}
+
+	event := google.Event{
+		Name:        name,
+		Description: desc,
+		ColorId:     colId,
+		Start:       start,
+		End:         end,
+		Recurrence:  recurrence,
+	}
+
+	url := google.ApiUrl().Subpage("calendars", calendar.settings.GoogleId, "events", originalEvent.GetSettings().(*GoogleEventSettings).GoogleId)
+
+	var res google.Event
+
+	tr = net.FetchJson(url, "PATCH", calendar.source.auth, &event, "application/json", q.GetContext(), &res)
+	if tr != nil {
+		return nil, tr.
+			Append(errors.LvlDebug, "Could not edit event %v in calendar %v", originalEvent.GetId(), calendar.GetId()).
+			AltStr(errors.LvlBroad, "Could not edit event")
+	}
+
+	converted, err := calendar.eventFromGoogle(&res, q)
+	if err != nil {
+		return nil, err.
+			Append(errors.LvlDebug, "Could not edit event %v in calendar %v", originalEvent.GetId(), calendar.GetId()).
+			AltStr(errors.LvlBroad, "Could not edit event")
+	}
+
+	casted := (types.Event)(converted)
+
+	return casted, nil
 }
 
 func (calendar *GoogleCalendar) DeleteEvent(event types.Event, q types.DatabaseQueries) *errors.ErrorTrace {

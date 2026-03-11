@@ -23,19 +23,19 @@ type Colors struct {
 }
 
 type TimeDefinition struct {
-	Date     string `json:"date"`
-	DateTime string `json:"dateTime"`
-	TimeZone string `json:"timeZone"`
+	Date     string `json:"date,omitempty"`
+	DateTime string `json:"dateTime,omitempty"`
+	TimeZone string `json:"timeZone,omitempty"`
 }
 
 type Event struct {
-	Id               string         `json:"id"`
+	Id               string         `json:"id,omitempty"`
 	Name             string         `json:"summary"`
-	Description      string         `json:"description"`
-	ColorId          string         `json:"colorId"`
+	Description      string         `json:"description,omitempty"`
+	ColorId          string         `json:"colorId,omitempty"`
 	Start            TimeDefinition `json:"start"`
 	End              TimeDefinition `json:"end"`
-	Recurrence       []string       `json:"recurrence"`
-	IcalUid          string         `json:"icalUid"`
-	RecurringEventId string         `json:"recurringEventId"`
+	Recurrence       []string       `json:"recurrence,omitempty"`
+	IcalUid          string         `json:"icalUid,omitempty"`
+	RecurringEventId string         `json:"recurringEventId,omitempty"`
 }

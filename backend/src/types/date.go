@@ -114,6 +114,9 @@ func (ed *EventDate) SpecifyDuration() bool {
 }
 
 func (ed *EventDate) Recurrence() *EventRecurrence {
+	if ed.recurrence == nil {
+		return EmptyEventRecurrence()
+	}
 	return ed.recurrence
 }
 

@@ -178,7 +178,7 @@ func (c *Color) IsEmpty() bool {
 	return c == nil || c.empty
 }
 
-func (c *Color) distance(other *Color) uint {
+func (c *Color) Distance(other *Color) uint {
 	if c == nil || other == nil {
 		return ^uint(0)
 	}
