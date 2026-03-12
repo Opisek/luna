@@ -468,7 +468,7 @@ Depending on the `auth_type` field, additional information may need to be passed
 - **Path**: ``/api/oauth/tokens``
 - **Method**: ``GET``
 - **Body**: Empty
-- **Purpose**: Returns the internal IDs of those OAuth 2.0 clients, which the calling user already authorized
+- **Purpose**: Returns accounts that the user authorized Luna to use. This consists of the external account id, account name, and internal OAuth 2.0 client id and the ID of the OAuth 2.0 tokens associated with that account.
 
 ## Additional Frontend Endpoints
 Aside from using the backend API, the frontend also provides a limited amount of endpoints for its own purposes.
