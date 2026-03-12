@@ -10,19 +10,18 @@ import (
 	"strings"
 )
 
-// fullurl := source.settings.Url.Subpage("..").Subpage(rawCalendar.Path)
 type prop struct {
 	XMLName xml.Name
 }
 
 type propfind struct {
 	C string `xml:"xmlns:C,attr"`
-	D string `xml:"xmlns:D,attr"`
+	D string `xml:"xmlns,attr"`
 	I string `xml:"xmlns:I,attr"`
 
-	XMLName xml.Name `xml:"D:propfind"`
+	XMLName xml.Name `xml:"propfind"`
 
-	Props []prop `xml:"D:prop>*"`
+	Props []prop `xml:"prop>*"`
 }
 
 type propresult struct {
@@ -99,4 +98,67 @@ func PropFind(baseUrl *types.Url, resourceUrl *types.Url, props []string, auth t
 	}
 
 	return result, nil
+}
+
+type comp struct {
+	XMLName xml.Name `xml:"C:comp"`
+	Name    string   `xml:"name,attr"`
+}
+
+type mkcol struct {
+	C string `xml:"xmlns:C,attr"`
+	D string `xml:"xmlns,attr"`
+	I string `xml:"xmlns:I,attr"`
+
+	XMLName xml.Name `xml:"create"`
+
+	Collection struct{} `xml:"set>prop>resourcetype>collection"`
+	Calendar   struct{} `xml:"set>prop>resourcetype>C:calendar"`
+
+	Supported []comp `xml:"set>prop>C:supported-calendar-component-set>*"`
+
+	Name  string `xml:"set>prop>displayname"`
+	Desc  string `xml:"set>prop>C:calendar-description,omitempty"`
+	Color string `xml:"set>prop>I:calendar-color,omitempty"`
+}
+
+func MkCol(baseUrl *types.Url, name string, desc string, color *types.Color, auth types.AuthMethod, ctx context.Context) (*types.Url, *errors.ErrorTrace) {
+	var colstr string
+	if color.IsEmpty() {
+		colstr = ""
+	} else {
+		colstr = color.String()
+	}
+
+	body := mkcol{
+		C: "urn:ietf:params:xml:ns:caldav",
+		D: "DAV:",
+		I: "http://apple.com/ns/ical/",
+
+		Supported: []comp{
+			{
+				Name: "VEVENT",
+			},
+			{
+				Name: "VJOURNAL",
+			},
+			{
+				Name: "VTODO",
+			},
+		},
+
+		Name:  name,
+		Desc:  desc,
+		Color: colstr,
+	}
+
+	id := types.RandomId()
+	calUrl := baseUrl.Subpage(id.String())
+
+	_, tr := net.FetchBytes(calUrl, "MKCOL", auth, body, "application/xml", "", ctx)
+	if tr != nil {
+		return nil, tr
+	}
+
+	return calUrl, nil
 }

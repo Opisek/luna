@@ -6,6 +6,7 @@ import (
 	"luna-backend/auth"
 	"luna-backend/constants"
 	"luna-backend/errors"
+	supplementary_caldav "luna-backend/protocols/caldav/internal"
 	"luna-backend/types"
 	"net/http"
 
@@ -54,7 +55,7 @@ func (source *CaldavSource) GetSettings() types.SourceSettings {
 }
 
 func (source *CaldavSource) CanAddCalendars() bool {
-	return false
+	return true
 }
 
 func NewCaldavSource(name string, url *types.Url, auth types.AuthMethod) *CaldavSource {
@@ -159,17 +160,20 @@ func (source *CaldavSource) GetCalendar(settings types.CalendarSettings, q types
 	return castedCal, nil
 }
 
-// TODO: Add, Edit, and Delete are not supported by upstream yet
+func (source *CaldavSource) AddCalendar(name string, desc string, color *types.Color, q types.DatabaseQueries) (types.Calendar, *errors.ErrorTrace) {
+	url, tr := supplementary_caldav.MkCol(source.settings.Url, name, desc, color, source.auth, source.ctx)
+	if tr != nil {
+		return nil, tr.
+			Append(errors.LvlBroad, "Could not create calendar")
+	}
 
-func (source *CaldavSource) AddCalendar(name string, desc string, color *types.Color, _ types.DatabaseQueries) (types.Calendar, *errors.ErrorTrace) {
-	//caldavCal := calendar.(*CaldavCalendar)
+	cal, tr := source.GetCalendar(&CaldavCalendarSettings{Url: url}, q)
+	if tr != nil {
+		return nil, tr.
+			Append(errors.LvlBroad, "Could not fetch newly created calendar")
+	}
 
-	//client, err := source.getClient()
-	//if err != nil {
-	//	return err
-	//}
-
-	return nil, errors.New().Status(http.StatusNotImplemented)
+	return cal, nil
 }
 
 func (source *CaldavSource) EditCalendar(calendar types.Calendar, name string, desc string, color *types.Color, override bool, q types.DatabaseQueries) (types.Calendar, *errors.ErrorTrace) {

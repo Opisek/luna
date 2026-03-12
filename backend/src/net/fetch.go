@@ -54,7 +54,7 @@ func FetchFile(url *types.Url, auth types.AuthMethod, accept string, ctx context
 }
 
 func FetchBytes(
-	resUrl *types.Url,
+	reqUrl *types.Url,
 	httpMethod string,
 	auth types.AuthMethod,
 	body any,
@@ -74,7 +74,7 @@ func FetchBytes(
 				return nil, errors.New().Status(http.StatusInternalServerError).
 					AddErr(errors.LvlDebug, err).
 					Append(errors.LvlDebug, "Could not marshal JSON body").
-					Append(errors.LvlWordy, "Could not fetch response from %v", resUrl).
+					Append(errors.LvlWordy, "Could not fetch response from %v", reqUrl).
 					AltStr(errors.LvlPlain, "Could not fetch response")
 			}
 			payload = bytes.NewBuffer(marshalled)
@@ -84,7 +84,7 @@ func FetchBytes(
 				return nil, errors.New().Status(http.StatusInternalServerError).
 					AddErr(errors.LvlDebug, err).
 					Append(errors.LvlDebug, "Could not marshal XML body").
-					Append(errors.LvlWordy, "Could not fetch response from %v", resUrl).
+					Append(errors.LvlWordy, "Could not fetch response from %v", reqUrl).
 					AltStr(errors.LvlPlain, "Could not fetch response")
 			}
 			payload = bytes.NewBufferString(fmt.Sprintf("%v%v", xml.Header, string(marshalled)))
@@ -92,12 +92,12 @@ func FetchBytes(
 	}
 
 	// Create request
-	req, err := http.NewRequest(httpMethod, resUrl.String(), payload)
+	req, err := http.NewRequest(httpMethod, reqUrl.String(), payload)
 	if err != nil {
 		return nil, errors.New().Status(http.StatusInternalServerError).
 			AddErr(errors.LvlDebug, err).
 			Append(errors.LvlDebug, "Could not create request").
-			Append(errors.LvlWordy, "Could not fetch response from %v", resUrl).
+			Append(errors.LvlWordy, "Could not fetch response from %v", reqUrl).
 			AltStr(errors.LvlPlain, "Could not fetch response")
 	}
 
@@ -117,7 +117,7 @@ func FetchBytes(
 	if tr != nil {
 		return nil, errors.InterpretRemoteError(tr, "object", "object").
 			Append(errors.LvlDebug, "Could not fulfill request").
-			Append(errors.LvlWordy, "Could not fetch response from %v", resUrl).
+			Append(errors.LvlWordy, "Could not fetch response from %v", reqUrl).
 			AltStr(errors.LvlPlain, "Could not fetch response")
 	}
 
@@ -134,7 +134,7 @@ func FetchBytes(
 			Append(errors.LvlPlain, "%v", res.Status).
 			Append(errors.LvlWordy, "Error %v", res.StatusCode).
 			Append(errors.LvlDebug, "Server returned an error code").
-			Append(errors.LvlWordy, "Could not fetch response from %v", resUrl).
+			Append(errors.LvlWordy, "Could not fetch response from %v", reqUrl).
 			AltStr(errors.LvlPlain, "Could not fetch response")
 	}
 
@@ -143,7 +143,7 @@ func FetchBytes(
 	if err != nil {
 		return nil, errors.New().Status(http.StatusInternalServerError).
 			Append(errors.LvlDebug, "Could not read body").
-			Append(errors.LvlWordy, "Could not fetch response from %v", resUrl).
+			Append(errors.LvlWordy, "Could not fetch response from %v", reqUrl).
 			AltStr(errors.LvlPlain, "Could not fetch response")
 	}
 
