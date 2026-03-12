@@ -137,7 +137,7 @@ func (calendar *CaldavCalendar) SetOverridden(overridden bool) {
 }
 
 func (calendar *CaldavCalendar) CanEdit() bool {
-	return false
+	return true
 }
 
 func (calendar *CaldavCalendar) CanDelete() bool {

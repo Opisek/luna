@@ -95,7 +95,7 @@
         desc: calendar.desc != originalCalendar.desc,
         color: calendar.color != originalCalendar.color
       }
-      await getRepository().editCalendar(calendar, changes, true).catch(err => {
+      await getRepository().editCalendar(calendar, changes, !calendar.can_edit).catch(err => {
         promiseReject();
         throw new Error(`Could not edit calendar ${calendar.name}: ${err.message}`);
       });
@@ -137,7 +137,6 @@
   onDelete={onDelete}
   onEdit={onEdit}
   onCancel={promiseReject}
-  editable={calendar?.can_edit}
   deletable={calendar?.can_delete}
   submittable={canSubmit}
 >

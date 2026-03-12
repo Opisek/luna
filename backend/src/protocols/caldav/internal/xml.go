@@ -162,3 +162,44 @@ func MkCol(baseUrl *types.Url, name string, desc string, color *types.Color, aut
 
 	return calUrl, nil
 }
+
+type propupdate struct {
+	C string `xml:"xmlns:C,attr"`
+	D string `xml:"xmlns,attr"`
+	I string `xml:"xmlns:I,attr"`
+
+	XMLName xml.Name `xml:"propertyupdate"`
+
+	Name  string `xml:"set>prop>displayname,omitempty"`
+	Desc  string `xml:"set>prop>C:calendar-description"`
+	Color string `xml:"set>prop>I:calendar-color"`
+}
+
+func PropPatch(baseUrl *types.Url, resourceUrl *types.Url, name string, desc string, color *types.Color, auth types.AuthMethod, ctx context.Context) *errors.ErrorTrace {
+	var colstr string
+	if color.IsEmpty() {
+		colstr = ""
+	} else {
+		colstr = color.String()
+	}
+
+	fullUrl := *baseUrl
+	fullUrl.Path = resourceUrl.Path
+
+	body := propupdate{
+		C: "urn:ietf:params:xml:ns:caldav",
+		D: "DAV:",
+		I: "http://apple.com/ns/ical/",
+
+		Name:  name,
+		Desc:  desc,
+		Color: colstr,
+	}
+
+	_, tr := net.FetchBytes(&fullUrl, "PROPPATCH", auth, body, "application/xml", "", ctx)
+	if tr != nil {
+		return tr
+	}
+
+	return nil
+}

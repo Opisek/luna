@@ -207,7 +207,7 @@ func PatchCalendar(c *gin.Context) {
 		newCalName = calendar.GetName()
 	}
 
-	if colErr != nil && !isOverridden {
+	if (colErr != nil || newCalColor.IsEmpty()) && !isOverridden {
 		newCalColor = calendar.GetColor()
 	}
 
