@@ -17,11 +17,11 @@ type CaldavSource struct {
 	name     string
 	settings *CaldavSourceSettings
 	auth     types.AuthMethod
+	client   *caldav.Client `json:"-"`
 }
 
 type CaldavSourceSettings struct {
-	Url    *types.Url     `json:"url"`
-	client *caldav.Client `json:"-"`
+	Url *types.Url `json:"url"`
 }
 
 func (settings *CaldavSourceSettings) GetBytes() []byte {
@@ -77,9 +77,9 @@ func PackCaldavSource(id types.ID, name string, settings *CaldavSourceSettings, 
 }
 
 func (source *CaldavSource) getClient() (*caldav.Client, *errors.ErrorTrace) {
-	if source.settings.client == nil {
+	if source.client == nil {
 		var err error
-		source.settings.client, err = caldav.NewClient(
+		source.client, err = caldav.NewClient(
 			source.auth.HttpClient(),
 			source.settings.Url.URL().String(),
 		)
@@ -90,7 +90,7 @@ func (source *CaldavSource) getClient() (*caldav.Client, *errors.ErrorTrace) {
 				Append(errors.LvlWordy, "Could not create CalDAV client")
 		}
 	}
-	return source.settings.client, nil
+	return source.client, nil
 }
 
 func (source *CaldavSource) GetCalendars(q types.DatabaseQueries) ([]types.Calendar, *errors.ErrorTrace) {
@@ -209,15 +209,16 @@ func (source *CaldavSource) EditCalendar(calendar types.Calendar, name string, d
 	}
 }
 
-func (source *CaldavSource) DeleteCalendar(calendar types.Calendar, _ types.DatabaseQueries) *errors.ErrorTrace {
-	//caldavCal := calendar.(*CaldavCalendar)
+func (source *CaldavSource) DeleteCalendar(calendar types.Calendar, q types.DatabaseQueries) *errors.ErrorTrace {
+	settings := calendar.GetSettings().(*CaldavCalendarSettings)
 
-	//client, err := source.getClient()
-	//if err != nil {
-	//	return err
-	//}
+	err := source.client.RemoveAll(q.GetContext(), settings.Url.Path)
+	if err != nil {
+		return errors.InterpretRemoteError(errors.New().AddErr(errors.LvlDebug, err), "calendar", "CalDAV calendar").
+			Append(errors.LvlBroad, "Could not delete event")
+	}
 
-	return errors.New().Status(http.StatusNotImplemented)
+	return nil
 }
 
 func (source *CaldavSource) Cleanup(_ types.DatabaseQueries) *errors.ErrorTrace { return nil }

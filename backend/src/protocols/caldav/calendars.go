@@ -51,7 +51,7 @@ func (source *CaldavSource) calendarFromCaldav(rawCalendar caldav.Calendar) (*Ca
 		overridden: false,
 		settings:   settings,
 		source:     source,
-		client:     source.settings.client,
+		client:     source.client,
 	}
 
 	return calendar, nil
@@ -122,7 +122,7 @@ func (calendar *CaldavCalendar) CanEdit() bool {
 }
 
 func (calendar *CaldavCalendar) CanDelete() bool {
-	return false
+	return true
 }
 
 func (calendar *CaldavCalendar) CanAddEvents() bool {
@@ -366,7 +366,7 @@ func (calendar *CaldavCalendar) DeleteEvent(event types.Event, q types.DatabaseQ
 
 	err := calendar.client.RemoveAll(q.GetContext(), settings.Url.Path)
 	if err != nil {
-		return errors.InterpretRemoteError(errors.New().AddErr(errors.LvlDebug, err), "calendar", "CalDAV calendar").
+		return errors.InterpretRemoteError(errors.New().AddErr(errors.LvlDebug, err), "event", "CalDAV event").
 			Append(errors.LvlBroad, "Could not delete event")
 	}
 
