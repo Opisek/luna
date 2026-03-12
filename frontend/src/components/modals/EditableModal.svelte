@@ -4,9 +4,12 @@
   import Loader from "../decoration/Loader.svelte";
   import Button from "../interactive/Button.svelte";
   import ConfirmationModal from "./ConfirmationModal.svelte";
+  import Modal from "./Modal.svelte";
 
   import { NoOp } from "../../lib/client/placeholders";
   import { queueNotification } from "$lib/client/notifications";
+
+  import { ColorKeys } from "../../types/colors";
  
   interface Props {
     title: string;
@@ -19,6 +22,7 @@
     onDelete: () => Promise<void>;
     onCancel?: () => any;
     showCreateModal?: () => any;
+    showEditModal?: () => any;
     showModal?: () => any;
     hideModal?: () => any;
     children?: Snippet;
@@ -38,15 +42,14 @@
     onDelete,
     onCancel,
     showCreateModal = $bindable(),
+    showEditModal = $bindable(),
     showModal = $bindable(),
     hideModal = $bindable(NoOp),
     children,
     extraButtonsTop,
     extraButtonsLeft,
     extraButtonsRight,
-  }: Props = $props(); import Modal from "./Modal.svelte";
-  import { ColorKeys } from "../../types/colors";
-  import { D } from "svelte-simples";
+  }: Props = $props();
 
   let creating = false;
 
@@ -60,7 +63,11 @@
     editMode = true;
     showModalInternal();
   };
-  
+  showEditModal = () => {
+    creating = false;
+    editMode = true;
+    showModalInternal();
+  };
   showModal = () => {
     creating = false;
     editMode = false;
@@ -116,8 +123,8 @@
   bind:resetFocus
   topButtons={extraButtonsTop}
 >
-  {@render children?.()}
-  {#snippet buttons()}
+{@render children?.()}
+{#snippet buttons()}
     {@render extraButtonsLeft?.()}
     {#if editMode}
       <Button onClick={saveEdit} color={ColorKeys.Success} enabled={submittable} type="submit">

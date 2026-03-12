@@ -6,7 +6,6 @@ import (
 	"luna-backend/auth"
 	"luna-backend/crypto"
 	"luna-backend/errors"
-	"luna-backend/perms"
 	"luna-backend/types"
 	"net/http"
 
@@ -48,11 +47,11 @@ func GetSessionPermissions(c *gin.Context) {
 		return
 	}
 
-	var permissions *perms.TokenPermissions
+	var permissions *types.TokenPermissions
 
 	if c.Param("sessionId") == "current" {
 		permissions = util.GetPermissions(c)
-	} else if util.HasPermission(c, perms.ManageSessions) {
+	} else if util.HasPermission(c, types.PermManageSessions) {
 		sessionId, tr := util.GetId(c, "session")
 		if tr != nil {
 			u.Error(tr)
@@ -69,7 +68,7 @@ func GetSessionPermissions(c *gin.Context) {
 		u.Error(errors.New().Status(http.StatusForbidden).
 			Append(errors.LvlPlain, "You are not authorized to perform this action").
 			AltStr(errors.LvlWordy, "You are missing one or more permissions").
-			Append(errors.LvlDebug, "Missing permission: %v", perms.ManageSessions),
+			Append(errors.LvlDebug, "Missing permission: %v", types.PermManageSessions),
 		)
 		return
 	}
@@ -149,7 +148,7 @@ func PutSession(c *gin.Context) {
 		IsShortLived:     false,
 		IsApi:            true,
 		SecretHash:       []byte{},
-		Permissions:      perms.FromStringList(parsedPerms),
+		Permissions:      types.TokenPermsFromStringList(parsedPerms),
 	}
 	tr = u.Tx.Queries().InsertSession(session)
 	if tr != nil {
@@ -284,7 +283,7 @@ func PatchSession(c *gin.Context) {
 		)
 		return
 	}
-	session.Permissions = perms.FromStringList(parsedPerms)
+	session.Permissions = types.TokenPermsFromStringList(parsedPerms)
 
 	currentPermissions, tr := u.Tx.Queries().GetTokenPermissions(session.SessionId)
 	if tr != nil {

@@ -5,7 +5,7 @@
 <style lang="scss">
     @use "../../styles/animations.scss";
 
-    .wrapper {
+    .spinner {
         display: flex;
         justify-content: center;
         align-items: center;
@@ -14,7 +14,7 @@
     }
 </style>
 
-<span class="wrapper">
+<span class="spinner">
     <LoaderCircle size={16}/>
     <!--<Loader/>-->
     <!--<RefreshCw/>-->

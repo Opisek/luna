@@ -102,12 +102,12 @@ func (file *RemoteFile) GetContent(q types.DatabaseQueries) (io.Reader, *errors.
 	if reader != nil {
 		deltaTime := curTime.Sub(*file.date)
 
-		if deltaTime >= constants.LifetimeCacheSoft {
+		if deltaTime >= constants.LifetimeFileCacheSoft {
 			reader, tr = file.fetchContentFromRemote(q)
 
 			if tr == nil {
 				file.date = &curTime
-			} else if deltaTime >= constants.LifetimeCacheHard {
+			} else if deltaTime >= constants.LifetimeFileCacheHard {
 				return nil, tr
 			}
 		}

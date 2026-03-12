@@ -1,6 +1,7 @@
 package ical
 
 import (
+	"context"
 	"encoding/json"
 	"luna-backend/crypto"
 	"luna-backend/errors"
@@ -130,6 +131,18 @@ func (calendar *IcalCalendar) SetOverridden(overridden bool) {
 	calendar.overridden = overridden
 }
 
+func (calendar *IcalCalendar) CanEdit() bool {
+	return false
+}
+
+func (calendar *IcalCalendar) CanDelete() bool {
+	return false
+}
+
+func (calendar *IcalCalendar) CanAddEvents() bool {
+	return false
+}
+
 func (calendar *IcalCalendar) GetEvents(start time.Time, end time.Time, q types.DatabaseQueries) ([]types.Event, *errors.ErrorTrace) {
 	res := make([]types.Event, len(calendar.icalCalendar.Children))
 
@@ -222,4 +235,8 @@ func (calendar *IcalCalendar) EditEvent(event types.Event, name string, desc str
 
 func (calendar *IcalCalendar) DeleteEvent(event types.Event, q types.DatabaseQueries) *errors.ErrorTrace {
 	return errors.New().Status(http.StatusMethodNotAllowed)
+}
+
+func (calendar *IcalCalendar) SupplyContext(ctx context.Context) {
+	calendar.source.SupplyContext(ctx)
 }

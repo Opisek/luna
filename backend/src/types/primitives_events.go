@@ -21,6 +21,9 @@ type Event interface {
 	GetOverridden() bool
 	SetOverridden(overridden bool)
 
+	CanEdit() bool
+	CanDelete() bool
+
 	GetSettings() EventSettings
 	GetDate() *EventDate
 

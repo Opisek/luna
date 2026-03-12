@@ -54,7 +54,14 @@
     
     position: relative;
     overflow: hidden; 
+  }
 
+  // Nasty hack to get <Spinner/> to have the same height as text inside of buttons.
+  button > :global(span.spinner) {
+    &::before, &::after {
+      content: "a";
+      visibility: hidden;
+    }
   }
 
   button:not(.neutral) {

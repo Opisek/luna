@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"luna-backend/api/internal/util"
+	"luna-backend/cache"
 	"luna-backend/errors"
 	"luna-backend/types"
 	"net/http"
@@ -18,6 +19,8 @@ type exposedEvent struct {
 	Color      *types.Color     `json:"color"`
 	Date       *types.EventDate `json:"date"`
 	Overridden bool             `json:"overridden"`
+	CanEdit    bool             `json:"can_edit"` // TODO: might exclude from here and add to "detailed" view instead
+	CanDelete  bool             `json:"can_delete"`
 }
 
 func GetEvents(c *gin.Context) {
@@ -32,7 +35,9 @@ func GetEvents(c *gin.Context) {
 	}
 
 	// Get the requested calendar
-	calendar, tr := u.Tx.Queries().GetCalendar(userId, calendarId)
+	calendar, tr := cache.GetCached(u.Config.Cache, userId, calendarId, u.Context, func() (types.Calendar, *errors.ErrorTrace) {
+		return u.Tx.Queries().GetCalendar(userId, calendarId, u.Context, u.Config)
+	})
 	if tr != nil {
 		u.Error(tr)
 		return
@@ -113,6 +118,8 @@ func GetEvents(c *gin.Context) {
 			Color:      event.GetColor(),
 			Date:       event.GetDate(),
 			Overridden: event.GetOverridden(),
+			CanEdit:    event.CanEdit(),
+			CanDelete:  event.CanDelete(),
 		}
 	}
 
@@ -131,7 +138,7 @@ func GetEvent(c *gin.Context) {
 	}
 
 	// Get event
-	eventFromCal, err := u.Tx.Queries().GetEvent(userId, eventId)
+	eventFromCal, err := u.Tx.Queries().GetEvent(userId, eventId, u.Context, u.Config)
 	if err != nil {
 		u.Error(err)
 		return
@@ -153,6 +160,8 @@ func GetEvent(c *gin.Context) {
 		Date:       event.GetDate(),
 		Overridden: event.GetOverridden(),
 		//Settings: event.GetSettings(),
+		CanEdit:   event.CanEdit(),
+		CanDelete: event.CanDelete(),
 	}
 
 	u.Success(&gin.H{"event": convertedCal})
@@ -169,7 +178,9 @@ func PutEvent(c *gin.Context) {
 		return
 	}
 
-	calendar, tr := u.Tx.Queries().GetCalendar(userId, calendarId)
+	calendar, tr := cache.GetCached(u.Config.Cache, userId, calendarId, u.Context, func() (types.Calendar, *errors.ErrorTrace) {
+		return u.Tx.Queries().GetCalendar(userId, calendarId, u.Context, u.Config)
+	})
 	if tr != nil {
 		u.Error(tr)
 		return
@@ -251,7 +262,7 @@ func PatchEvent(c *gin.Context) {
 		return
 	}
 
-	event, err := u.Tx.Queries().GetEvent(userId, eventId)
+	event, err := u.Tx.Queries().GetEvent(userId, eventId, u.Context, u.Config)
 	if err != nil {
 		u.Error(err)
 		return
@@ -343,7 +354,7 @@ func DeleteEvent(c *gin.Context) {
 	}
 
 	// Get event first
-	event, err := u.Tx.Queries().GetEvent(userId, eventId)
+	event, err := u.Tx.Queries().GetEvent(userId, eventId, u.Context, u.Config)
 	if err != nil {
 		u.Error(err)
 		return

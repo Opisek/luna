@@ -14,6 +14,11 @@
   import { queueNotification } from "../../lib/client/notifications";
   import { getRepository } from "../../lib/client/data/repository.svelte";
   import { ColorKeys } from "../../types/colors";
+  import Paragraph from "../forms/Paragraph.svelte";
+  import { getOauthClients } from "../../lib/client/data/oauth.svelte";
+  import { sleep } from "../../lib/common/misc";
+  import OauthTokensModal from "./OauthTokensModal.svelte";
+  import Spinner from "../decoration/Spinner.svelte";
 
   interface Props {
     showModal?: () => Promise<SourceModel>;
@@ -23,6 +28,8 @@
     showModal = $bindable(),
   }: Props = $props();
 
+  const oauthClients = getOauthClients();
+
   let showNewSourceModal: () => Promise<SourceModel> = getContext("showNewSourceModal");
   let showModalInternal = $state(NoOp)
   let hideModalInternal = $state(NoOp)
@@ -31,9 +38,9 @@
   let fileValid: Validity = $state(valid);
 
   let name: string = $state("");
-  let inputType: "link" | "file" | "holidays" = $state("link");
+  let inputType: "link" | "file" | "google" = $state("link");
   let url: string = $state("");
-  let urlType: "ical" | "caldav" | "unknown" = $state("unknown");
+  let urlType: "ical" | "caldav" | "google" | "unknown" = $state("unknown");
   let files: FileList | null = $state(null);
   let needAuth: boolean = $state(false);
   let authType: "none" | "basic" | "bearer" = $state("none");
@@ -43,10 +50,25 @@
     token: "",
   });
 
+  let googleOauthClient = $derived(oauthClients.clients.find(x => new URL(x.base_url).host === "accounts.google.com"));
+  let googleOauthClientAuthorized: boolean = $derived(
+    googleOauthClient != null &&
+    auth.client_id != null &&
+    auth.client_id == googleOauthClient.id &&
+    auth.tokens_id != null &&
+    auth.tokens_id != "" &&
+    oauthClients.tokenClients.get(auth.tokens_id) == auth.client_id
+  );
+
+  let oauthPending = $state(false);
+  let performOauthAuhorization: (clientId: string) => Promise<string> = $state(async () => "");
+
   let promiseResolve: (value: SourceModel) => void = $state(NoOp);
   let promiseReject: (reason?: any) => void = $state(NoOp);
 
   showModal = async () => {
+    oauthClients.fetch();
+
     awaitingEdit = false;
 
     name = "";
@@ -59,6 +81,8 @@
       username: "",
       password: "",
       token: "",
+      client_id: "",
+      tokens_id: ""
     };
     files = null;
 
@@ -84,8 +108,8 @@
         return urlValid.valid && urlType !== "unknown" && lastUrlValidity.valid && urlValid.valid && !checkingUrl && name !== "";
       case "file":
         return fileValid.valid && files !== null && files.length === 1 && name !== "";
-      case "holidays":
-        return false && name !== "";
+      case "google":
+        return googleOauthClientAuthorized && name !== "";
     }
   });
 
@@ -100,10 +124,11 @@
     const source: SourceModel = {
       id: "",
       name: name,
-      type: urlType,
-      auth_type: needAuth ? authType : "none",
-      auth: needAuth && authType != "none" ? auth : {},
-      settings: {}
+      type: inputType === "google" ? "google" : urlType,
+      auth_type: inputType === "google" ? "oauth" : (needAuth ? authType : "none"),
+      auth: (needAuth && authType != "none") || inputType === "google" ? auth : {},
+      settings: {},
+      can_add_calendars: false
     };
 
     if (inputType === "link") {
@@ -240,6 +265,23 @@
       }, 1000);
     });
   }
+
+  async function startOauthAuthorization() {
+    if (!googleOauthClient) return;
+    if (oauthPending) return;
+    oauthPending = true;
+
+    await sleep(0);
+    
+    await performOauthAuhorization(googleOauthClient.id).then((id) => {
+      auth.client_id = googleOauthClient.id;
+      auth.tokens_id = id;
+    }).catch(() => {
+      queueNotification(ColorKeys.Danger, "Authorization aborted");
+    }).finally(() => {
+      oauthPending = false;
+    });
+  }
 </script>
 
 <Modal
@@ -257,9 +299,13 @@
       value: "file",
       name: "Upload File",
     },
+    //{
+    //  value: "holidays",
+    //  name: "Public Holidays",
+    //},
     {
-      value: "holidays",
-      name: "Public Holidays",
+      value: "google",
+      name: "Google Calendar",
     },
   ]}/>
 
@@ -274,13 +320,12 @@
         {
           value: "bearer",
           name: "Token",
-        },
+        }
       ]}/>
       {#if authType === "basic"}
         <TextInput bind:value={auth.username} onInput={queueUrlCheck} name="auth_username" placeholder="Username"/>
         <TextInput bind:value={auth.password} onInput={queueUrlCheck} name="auth_password" placeholder="Password" password={true} />
-      {/if}
-      {#if authType === "bearer"}
+      {:else if authType === "bearer"}
         <TextInput bind:value={auth.token} onInput={queueUrlCheck} name="auth_token" placeholder="Token" password={true} />
       {/if}
     {/if}
@@ -291,8 +336,33 @@
     {/if}
   {:else if inputType === "file"}
     <FileUpload bind:files={files} name="file" placeholder="File" accept=".ical,.ics,.ifb,.icalendar" validation={isValidIcalFile} bind:validity={fileValid} />
+  <!--
   {:else if inputType === "holidays"}
+    <Paragraph>
       Feature not yet available
+    </Paragraph>
+  -->
+  {:else if inputType === "google"}
+    {#if googleOauthClient}
+      <Button color={googleOauthClientAuthorized ? ColorKeys.Success : ColorKeys.Accent} onClick={startOauthAuthorization} enabled={!oauthPending && !googleOauthClientAuthorized}>
+        {#if oauthPending}
+          <Spinner/>
+        {:else if googleOauthClientAuthorized}
+          Authorized
+        {:else}
+          Sign in with {googleOauthClient.name}
+        {/if}
+      </Button>
+      {#if googleOauthClientAuthorized}
+        <Horizontal position="right">
+          <Link onClick={startOauthAuthorization}>Choose a different account</Link>
+        </Horizontal>
+      {/if}
+    {:else}
+      <Paragraph>
+        The administrator of this Luna instance has not set up Google Calendar integration yet.
+      </Paragraph>
+    {/if}
   {/if}
 
   <Horizontal position="right">
@@ -309,3 +379,7 @@
     <Button onClick={cancel} color={ColorKeys.Danger}>Cancel</Button>
   {/snippet}
 </Modal>
+
+{#if oauthPending}
+  <OauthTokensModal bind:authorize={performOauthAuhorization} />
+{/if}

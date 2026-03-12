@@ -1,6 +1,7 @@
 package types
 
 import (
+	"context"
 	"luna-backend/errors"
 	"time"
 )
@@ -18,6 +19,10 @@ type Calendar interface {
 	GetOverridden() bool
 	SetOverridden(overridden bool)
 
+	CanEdit() bool
+	CanDelete() bool
+	CanAddEvents() bool
+
 	GetSettings() CalendarSettings
 
 	GetEvents(start time.Time, end time.Time, q DatabaseQueries) ([]Event, *errors.ErrorTrace)
@@ -25,6 +30,8 @@ type Calendar interface {
 	AddEvent(name string, desc string, color *Color, date *EventDate, q DatabaseQueries) (Event, *errors.ErrorTrace)
 	EditEvent(event Event, name string, desc string, color *Color, date *EventDate, override bool, q DatabaseQueries) (Event, *errors.ErrorTrace)
 	DeleteEvent(event Event, q DatabaseQueries) *errors.ErrorTrace
+
+	SupplyContext(ctx context.Context)
 }
 
 type CalendarSettings interface {

@@ -26,7 +26,7 @@ export const handle: Handle = async ({ event, resolve }) => {
           path: "/",
           httpOnly: true,
           maxAge: undefined as number | undefined,
-          sameSite: "strict" as boolean | "strict" | "lax" | "none",
+          sameSite: "lax" as boolean | "strict" | "lax" | "none",
           secure: !(process.env.PUBLIC_URL?.startsWith("http://") || false),
         };
 

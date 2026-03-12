@@ -5,6 +5,9 @@ type CalendarModel = {
   desc: string;
   color: string;
   overridden: boolean;
+  can_edit: boolean;
+  can_delete: boolean;
+  can_add_events: boolean;
 }
 
 type CalendarModelChanges = {

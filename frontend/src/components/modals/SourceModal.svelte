@@ -5,14 +5,21 @@
 
   import { EmptySource, NoOp } from "$lib/client/placeholders";
   import { getRepository } from "$lib/client/data/repository.svelte";
-  import { deepCopy, deepEquality } from "$lib/common/misc";
+  import { deepCopy, deepEquality, sleep } from "$lib/common/misc";
   import { isValidIcalFile, isValidPath, isValidUrl, valid } from "$lib/client/validation";
   import { queueNotification } from "$lib/client/notifications";
   import FileUpload from "../forms/FileUpload.svelte";
-  import { fetchFileById, fetchResponse } from "../../lib/client/net";
+  import { fetchFileById } from "../../lib/client/net";
   import { UserSettingKeys } from "../../types/settings";
   import { getSettings } from "$lib/client/data/settings.svelte";
   import { ColorKeys } from "../../types/colors";
+  import { getOauthClients } from "$lib/client/data/oauth.svelte";
+  import SelectInput from "../forms/SelectInput.svelte";
+  import Button from "../interactive/Button.svelte";
+  import Spinner from "../decoration/Spinner.svelte";
+  import OauthTokensModal from "./OauthTokensModal.svelte";
+  import Horizontal from "../layout/Horizontal.svelte";
+  import Link from "../forms/Link.svelte";
 
   interface Props {
     showCreateModal?: () => Promise<SourceModel>;
@@ -25,6 +32,7 @@
   }: Props = $props();
 
   const settings = getSettings();
+  const oauthClients = getOauthClients();
 
   let sourceDetailed: SourceModel = $state(EmptySource);
   let originalSource: SourceModel;
@@ -34,6 +42,9 @@
 
   showCreateModal = () => {
     promiseReject();
+
+    oauthClients.fetch();
+    oauthClients.fetchTokens();
 
     sourceDetailed = {
       id: "",
@@ -46,6 +57,7 @@
       },
       auth_type: "none",
       auth: {},
+      can_add_calendars: true,
     };
 
     showCreateModalInternal();
@@ -56,6 +68,9 @@
   }
   showModal = async (source: SourceModel): Promise<SourceModel> => {
     promiseReject();
+
+    oauthClients.fetch();
+    oauthClients.fetchTokens();
 
     sourceDetailed = await getRepository().getSourceDetails(source.id, true).catch(err => {
       queueNotification(ColorKeys.Danger, `Could not get source details: ${err.message}`);
@@ -132,14 +147,53 @@
   let icalFileValidity: Validity = $state(valid);
   let icalPathValidity: Validity = $state(valid);
 
-  let canSubmit: boolean = $derived(sourceDetailed && sourceDetailed.name !== "" && sourceDetailed.type !== "" && (
-    (sourceDetailed.type === "caldav" && caldavLinkValidity?.valid) ||
-    (sourceDetailed.type === "ical" && (
-      (sourceDetailed.settings.location === "remote"   && icalLinkValidity?.valid) ||
-      (sourceDetailed.settings.location === "database" && icalFileValidity?.valid) ||
-      (sourceDetailed.settings.location === "local"    && icalPathValidity?.valid)
-    ))
-  ));
+  let selectedOauthClient: OauthClientModel | null = $derived(oauthClients.clients.find(client => client.id === sourceDetailed.auth.client_id) ?? null);
+  let selectedOauthClientAuthorized: boolean = $derived(
+    sourceDetailed.auth.tokens_id &&
+    sourceDetailed.auth.tokens_id != "" &&
+    oauthClients.tokenClients.get(sourceDetailed.auth.tokens_id) == sourceDetailed.auth.client_id
+  );
+
+  let oauthPending = $state(false);
+  let performOauthAuhorization: (clientId: string) => Promise<string> = $state(async () => "");
+  async function startOauthAuthorization() {
+    if (!selectedOauthClient) return;
+    if (oauthPending) return;
+    oauthPending = true;
+
+    await sleep(0);
+    
+    await performOauthAuhorization(sourceDetailed.auth.client_id).then((id) => {
+      sourceDetailed.auth.tokens_id = id;
+    }).catch(() => {
+      queueNotification(ColorKeys.Danger, "Authorization aborted");
+    }).finally(() => {
+      oauthPending = false;
+    });
+  }
+
+  // Whether to enable the submit button
+  let canSubmit: boolean = $derived(
+    sourceDetailed &&
+    sourceDetailed.name !== "" &&
+    sourceDetailed.type !== "" &&
+    (
+      (sourceDetailed.type === "caldav" && caldavLinkValidity?.valid) ||
+      (
+        sourceDetailed.type === "ical" &&
+        (
+          (sourceDetailed.settings.location === "remote"   && icalLinkValidity?.valid) ||
+          (sourceDetailed.settings.location === "database" && icalFileValidity?.valid) ||
+          (sourceDetailed.settings.location === "local"    && icalPathValidity?.valid)
+        )
+      ) ||
+      sourceDetailed.type === "google"
+    ) &&
+    (
+      (sourceDetailed.auth_type === "oauth" && !oauthPending && selectedOauthClientAuthorized) ||
+      (sourceDetailed.auth_type !== "oauth")
+    )
+  );
 </script>
 
 <EditableModal
@@ -156,16 +210,25 @@
   {#if sourceDetailed}
     <TextInput bind:value={sourceDetailed.name} name="name" placeholder="Name" editable={editMode} />
 
-    <SelectButtons bind:value={sourceDetailed.type} name="type" placeholder={"Type"} editable={editMode} options={[
-      {
-        value: "caldav",
-        name: "CalDav"
-      },
-      {
-        value: "ical",
-        name: "iCal"
-      }
-    ]}/>
+    <SelectButtons bind:value={sourceDetailed.type} name="type" placeholder={"Type"} editable={editMode}
+      options={[
+        {
+          value: "caldav",
+          name: "CalDav"
+        },
+        {
+          value: "ical",
+          name: "iCal"
+        },
+        {
+          value: "google",
+          name: "Google Calendar"
+        }
+      ]}
+      onClick={(value) => {
+        if (value === "google") sourceDetailed.auth_type = "oauth";
+      }}
+    />
 
 
     {#if sourceDetailed.type === "ical"}
@@ -202,26 +265,51 @@
     {/if}
     
     {#if !(sourceDetailed.type === "ical" && sourceDetailed.settings.location !== "remote")}
-      <SelectButtons bind:value={sourceDetailed.auth_type} name="auth_type" placeholder={"Authentication Type"} editable={editMode} options={[
-        {
-          value: "none",
-          name: "None",
-        },
-        {
-          value: "basic",
-          name: "Password",
-        },
-        {
-          value: "bearer",
-          name: "Token",
-        },
-      ]}/>
+      {#if sourceDetailed.type !== "google"}
+        <SelectButtons bind:value={sourceDetailed.auth_type} name="auth_type" placeholder={"Authentication Type"} editable={editMode} options={[
+          {
+            value: "none",
+            name: "None",
+          },
+          {
+            value: "basic",
+            name: "Password",
+          },
+          {
+            value: "bearer",
+            name: "Token",
+          },
+          {
+            value: "oauth",
+            name: "OAuth 2.0",
+          },
+        ]}/>
+      {/if}
       {#if sourceDetailed.auth_type === "basic"}
         <TextInput bind:value={sourceDetailed.auth.username} name="auth_username" placeholder="Username" editable={editMode} />
         <TextInput bind:value={sourceDetailed.auth.password} name="auth_password" placeholder="Password" editable={editMode} password={true} />
       {/if}
       {#if sourceDetailed.auth_type === "bearer"}
         <TextInput bind:value={sourceDetailed.auth.token} name="auth_token" placeholder="Token" editable={editMode} password={true} />
+      {/if}
+      {#if sourceDetailed.auth_type === "oauth"}
+          <SelectInput bind:value={sourceDetailed.auth.client_id} name="oauth_client" placeholder="Authorization Provider" editable={editMode} options={oauthClients.clients.map(client => ({ value: client.id, name: client.name }))}/>
+        {#if editMode && sourceDetailed.auth.client_id != "" && selectedOauthClient?.name}
+          <Button color={selectedOauthClientAuthorized ? ColorKeys.Success : ColorKeys.Accent} onClick={startOauthAuthorization} enabled={!oauthPending && !selectedOauthClientAuthorized}>
+            {#if oauthPending}
+              <Spinner/>
+            {:else if selectedOauthClientAuthorized}
+              Authorized
+            {:else}
+              Sign in with {selectedOauthClient?.name}
+            {/if}
+          </Button>
+          {#if selectedOauthClientAuthorized}
+            <Horizontal position="right">
+              <Link onClick={startOauthAuthorization}>Choose a different account</Link>
+            </Horizontal>
+          {/if}
+        {/if}
       {/if}
     {/if}
 
@@ -230,3 +318,7 @@
     {/if}
   {/if}
 </EditableModal>
+
+{#if oauthPending}
+  <OauthTokensModal bind:authorize={performOauthAuhorization} />
+{/if}

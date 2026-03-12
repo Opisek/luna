@@ -3,6 +3,7 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/emersion/go-ical"
@@ -113,6 +114,9 @@ func (ed *EventDate) SpecifyDuration() bool {
 }
 
 func (ed *EventDate) Recurrence() *EventRecurrence {
+	if ed.recurrence == nil {
+		return EmptyEventRecurrence()
+	}
 	return ed.recurrence
 }
 
@@ -215,6 +219,26 @@ func EmptyEventRecurrence() *EventRecurrence {
 
 func EventRecurrenceFromIcal(ical *ical.Props) (*EventRecurrence, error) {
 	roption, err := ical.RecurrenceRule()
+	if err != nil {
+		return nil, fmt.Errorf("could not get recurrence rule: %v", err)
+	}
+
+	if roption == nil {
+		return EmptyEventRecurrence(), nil
+	}
+
+	return &EventRecurrence{
+		repeats: true,
+		rule:    roption,
+	}, nil
+}
+
+func EventRecurrenceFromLines(lines []string) (*EventRecurrence, error) {
+	if len(lines) == 0 {
+		return EmptyEventRecurrence(), nil
+	}
+
+	roption, err := rrule.StrToROption(strings.Join(lines, "\n"))
 	if err != nil {
 		return nil, fmt.Errorf("could not get recurrence rule: %v", err)
 	}

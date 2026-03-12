@@ -2,8 +2,10 @@ package constants
 
 import "time"
 
-const LifetimeCacheSoft = 5 * time.Minute
-const LifetimeCacheHard = 24 * time.Hour
+const LifetimeRamCache = 1 * time.Minute
+
+const LifetimeFileCacheSoft = 5 * time.Minute
+const LifetimeFileCacheHard = 24 * time.Hour
 
 const MaxInviteDuration = 7 * 24 * time.Hour // 7 days
 

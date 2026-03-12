@@ -1,6 +1,7 @@
 package types
 
 import (
+	"context"
 	"luna-backend/errors"
 )
 
@@ -9,13 +10,20 @@ type Source interface {
 	GetId() ID
 	GetName() string
 	GetAuth() AuthMethod
+
+	CanAddCalendars() bool
+
 	GetSettings() SourceSettings
+
 	GetCalendars(q DatabaseQueries) ([]Calendar, *errors.ErrorTrace)
 	GetCalendar(settings CalendarSettings, q DatabaseQueries) (Calendar, *errors.ErrorTrace)
-	AddCalendar(name string, color *Color, q DatabaseQueries) (Calendar, *errors.ErrorTrace)
+	AddCalendar(name string, desc string, color *Color, q DatabaseQueries) (Calendar, *errors.ErrorTrace)
 	EditCalendar(calendar Calendar, name string, desc string, color *Color, override bool, q DatabaseQueries) (Calendar, *errors.ErrorTrace)
 	DeleteCalendar(calendar Calendar, q DatabaseQueries) *errors.ErrorTrace
+
 	Cleanup(q DatabaseQueries) *errors.ErrorTrace
+
+	SupplyContext(ctx context.Context)
 }
 
 type SourceSettings interface {

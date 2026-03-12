@@ -32,8 +32,8 @@ type Environmental struct {
 var defaultEnv = Environmental{
 	DATA_PATH:                      "/data",
 	API_PORT:                       3000,
-	REQUEST_TIMEOUT_DEFAULT:        5 * time.Second,
-	REQUEST_TIMEOUT_AUTHENTICATION: 5 * time.Second,
+	REQUEST_TIMEOUT_DEFAULT:        15 * time.Second,
+	REQUEST_TIMEOUT_AUTHENTICATION: 15 * time.Second,
 	DEVELOPMENT:                    false,
 }
 

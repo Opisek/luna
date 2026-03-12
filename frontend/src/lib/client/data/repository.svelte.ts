@@ -127,6 +127,8 @@ export class Repository {
               throw new Error("Unsupported iCal file location");
           }
           break;
+        case "google":
+          break;
         default:
           throw new Error("Unsupported source type");
       }
@@ -142,6 +144,10 @@ export class Repository {
           break;
         case "bearer":
           formData.set("auth_token", source.auth.token);
+          break;
+        case "oauth":
+          formData.set("auth_client", source.auth.client_id);
+          formData.set("auth_tokens", source.auth.tokens_id);
           break;
         default:
           throw new Error("Unsupported auth type");

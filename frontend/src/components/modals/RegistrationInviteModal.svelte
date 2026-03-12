@@ -84,7 +84,7 @@
       setTimeout(() => {
         showModal(newInvite, false);
       }, 50);
-    } else  {
+    } else {
       throw new Error("Not implemented");
     }
   };
