@@ -78,6 +78,7 @@ func (PrimitivesParser) ParseSource(entry *types.SourceDatabaseEntry, ctx contex
 			settings,
 			authMethod,
 		)
+		caldavSource.SupplyContext(ctx)
 		return caldavSource, nil
 	case constants.SourceIcal:
 		settings := &ical.IcalSourceSettings{}
@@ -97,6 +98,7 @@ func (PrimitivesParser) ParseSource(entry *types.SourceDatabaseEntry, ctx contex
 		if tr != nil {
 			return nil, tr
 		}
+		icalSource.SupplyContext(ctx)
 		return icalSource, nil
 	case constants.SourceGoogle:
 		settings := &google.GoogleSourceSettings{}
@@ -113,6 +115,7 @@ func (PrimitivesParser) ParseSource(entry *types.SourceDatabaseEntry, ctx contex
 			settings,
 			authMethod,
 		)
+		googleSource.SupplyContext(ctx)
 		return googleSource, nil
 	default:
 		return nil, errors.New().Status(http.StatusInternalServerError).

@@ -46,7 +46,7 @@ func ParseColor(rawColor string) (*Color, error) {
 		return ColorEmpty, nil
 	}
 
-	if len(rawColor) != 7 || rawColor[0] != '#' {
+	if (len(rawColor) != 7 && len(rawColor) != 9) || rawColor[0] != '#' {
 		return nil, fmt.Errorf("invalid color format")
 	}
 
@@ -61,6 +61,13 @@ func ParseColor(rawColor string) (*Color, error) {
 	b, err := strconv.ParseUint(rawColor[5:7], 16, 8)
 	if err != nil {
 		return nil, fmt.Errorf("invalid color format: could not parse blue value: %v", err)
+	}
+
+	if len(rawColor) == 9 {
+		_, err := strconv.ParseUint(rawColor[5:7], 16, 8)
+		if err != nil {
+			return nil, fmt.Errorf("invalid color format: could not parse alpha value: %v", err)
+		}
 	}
 
 	return ColorFromVals(uint8(r), uint8(g), uint8(b)), nil

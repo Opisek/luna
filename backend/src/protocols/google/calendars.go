@@ -35,6 +35,7 @@ func (source *GoogleSource) calendarFromGoogle(calListEntry *google.CalendarList
 		col, err = types.ParseColor(calListEntry.BackgroundColor)
 		if err != nil {
 			return nil, errors.New().Status(http.StatusInternalServerError).
+				AddErr(errors.LvlDebug, err).
 				Append(errors.LvlDebug, "Could not parse color %v", calListEntry.BackgroundColor).
 				Append(errors.LvlDebug, "Could not parse calendar %v", calListEntry.Id).
 				AltStr(errors.LvlWordy, "Could not parse calendar")
@@ -347,7 +348,7 @@ func (calendar *GoogleCalendar) DeleteEvent(event types.Event, q types.DatabaseQ
 
 	url := google.ApiUrl().Subpage("calendars", calendar.settings.GoogleId, "events", googleSettings.GoogleId)
 
-	_, tr := net.FetchBytes(url, "DELETE", calendar.source.auth, nil, "", q.GetContext())
+	_, tr := net.FetchBytes(url, "DELETE", calendar.source.auth, nil, "", "", q.GetContext())
 	if tr != nil {
 		return tr
 	}

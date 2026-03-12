@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"net/http"
 
@@ -165,7 +166,7 @@ func parseAuthMethod(c *gin.Context) (types.AuthMethod, *errors.ErrorTrace) {
 	return sourceAuth, nil
 }
 
-func parseSource(c *gin.Context, sourceName string, sourceAuth types.AuthMethod, user types.ID, q types.DatabaseQueries) (types.Source, *errors.ErrorTrace) {
+func parseSource(c *gin.Context, sourceName string, sourceAuth types.AuthMethod, user types.ID, q types.DatabaseQueries, ctx context.Context) (types.Source, *errors.ErrorTrace) {
 	var tr *errors.ErrorTrace
 	var source types.Source
 
@@ -189,6 +190,7 @@ func parseSource(c *gin.Context, sourceName string, sourceAuth types.AuthMethod,
 		}
 
 		source = caldav.NewCaldavSource(sourceName, sourceUrl, sourceAuth)
+		source.SupplyContext(ctx)
 
 	case constants.SourceIcal:
 		locationType := c.PostForm("location")
@@ -307,7 +309,7 @@ func PutSource(c *gin.Context) {
 		return
 	}
 
-	source, err := parseSource(c, sourceName, sourceAuth, userId, u.Tx.Queries())
+	source, err := parseSource(c, sourceName, sourceAuth, userId, u.Tx.Queries(), u.Context)
 	if err != nil {
 		u.Error(err)
 		return
@@ -363,7 +365,7 @@ func PatchSource(c *gin.Context) {
 		if newAuth == nil {
 			newAuth = source.GetAuth()
 		}
-		newSource, err := parseSource(c, newName, newAuth, userId, u.Tx.Queries())
+		newSource, err := parseSource(c, newName, newAuth, userId, u.Tx.Queries(), u.Context)
 		if err != nil {
 			u.Error(err)
 			return

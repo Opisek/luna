@@ -68,12 +68,14 @@ func (source *GoogleSource) getColorById(id string, isCalendar bool, q types.Dat
 	bgCol, err := types.ParseColor(col.Background)
 	if err != nil {
 		return nil, nil, errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
 			Append(errors.LvlDebug, "Could not parse background color %v for color id %v", col.Background, id)
 	}
 
 	fgCol, err := types.ParseColor(col.Foreground)
 	if err != nil {
 		return nil, nil, errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
 			Append(errors.LvlDebug, "Could not parse foreground color %v for color id %v", col.Background, id)
 	}
 
@@ -101,6 +103,7 @@ func (source *GoogleSource) getClosestColorId(col *types.Color, isCalendar bool,
 		parsedGoogleColor, err := types.ParseColor(c.Background)
 		if err != nil {
 			return "", errors.New().Status(http.StatusInternalServerError).
+				AddErr(errors.LvlDebug, err).
 				Append(errors.LvlDebug, "Could not parse background color %v for color id %v", c.Background, id).
 				Append(errors.LvlDebug, "Could not map color %v to Google Calendar color id", col.String())
 		}
@@ -314,7 +317,7 @@ func (source *GoogleSource) DeleteCalendar(calendar types.Calendar, q types.Data
 
 	url := google.ApiUrl().Subpage("calendars", googleSettings.GoogleId)
 
-	_, tr := net.FetchBytes(url, "DELETE", source.auth, nil, "", q.GetContext())
+	_, tr := net.FetchBytes(url, "DELETE", source.auth, nil, "", "", q.GetContext())
 	if tr != nil {
 		return tr
 	}

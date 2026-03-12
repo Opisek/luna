@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"luna-backend/crypto"
 	"luna-backend/errors"
+	supplementary_caldav "luna-backend/protocols/caldav/internal"
 	common "luna-backend/protocols/internal"
 	"luna-backend/types"
 	"net/http"
@@ -39,6 +40,24 @@ func (source *CaldavSource) calendarFromCaldav(rawCalendar caldav.Calendar) (*Ca
 			Append(errors.LvlWordy, "Could not parse calendar")
 	}
 
+	props, tr := supplementary_caldav.PropFind(source.settings.Url, url, []string{"I:calendar-color"}, source.auth, source.ctx)
+	if tr != nil {
+		return nil, tr.
+			Append(errors.LvlWordy, "Could not parse calendar")
+	}
+
+	var color *types.Color = nil
+	colProp, exists := props["I:calendar-color"]
+	if exists && colProp.Found {
+		color, err = types.ParseColor(colProp.Value)
+		if err != nil {
+			return nil, errors.New().Status(http.StatusInternalServerError).
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlDebug, "Could not parse calendar color %v", colProp.Value).
+				Append(errors.LvlWordy, "Could not parse calendar")
+		}
+	}
+
 	settings := &CaldavCalendarSettings{
 		Url:         url,
 		rawCalendar: rawCalendar,
@@ -47,7 +66,7 @@ func (source *CaldavSource) calendarFromCaldav(rawCalendar caldav.Calendar) (*Ca
 	calendar := &CaldavCalendar{
 		name:       rawCalendar.Name,
 		desc:       rawCalendar.Description,
-		color:      nil,
+		color:      color,
 		overridden: false,
 		settings:   settings,
 		source:     source,

@@ -18,6 +18,7 @@ type CaldavSource struct {
 	settings *CaldavSourceSettings
 	auth     types.AuthMethod
 	client   *caldav.Client `json:"-"`
+	ctx      context.Context
 }
 
 type CaldavSourceSettings struct {
@@ -227,4 +228,5 @@ func (source *CaldavSource) SupplyContext(ctx context.Context) {
 	if source.auth.GetType() == constants.AuthOauth {
 		source.auth.(*auth.OauthAuth).SupplyContext(ctx)
 	}
+	source.ctx = ctx
 }
