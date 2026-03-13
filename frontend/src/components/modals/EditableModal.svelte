@@ -25,6 +25,7 @@
     showEditModal?: () => any;
     showModal?: () => any;
     hideModal?: () => any;
+    onModalHide?: () => any;
     children?: Snippet;
     extraButtonsTop?: Snippet;
     extraButtonsLeft?: Snippet;
@@ -45,6 +46,7 @@
     showEditModal = $bindable(),
     showModal = $bindable(),
     hideModal = $bindable(NoOp),
+    onModalHide = $bindable(NoOp),
     children,
     extraButtonsTop,
     extraButtonsLeft,
@@ -119,7 +121,7 @@
   title={title}
   bind:showModal={showModalInternal}
   bind:hideModal={hideModalInternal}
-  onModalHide={() => {editMode = false}}
+  onModalHide={() => {editMode = false; onModalHide();}}
   bind:resetFocus
   topButtons={extraButtonsTop}
 >

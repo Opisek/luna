@@ -156,6 +156,7 @@
 
   let oauthPending = $state(false);
   let performOauthAuhorization: (clientId: string) => Promise<string> = $state(async () => "");
+  let abortOauthAuthorization: () => void = $state(NoOp);
   async function startOauthAuthorization() {
     if (!selectedOauthClient) return;
     if (oauthPending) return;
@@ -202,6 +203,7 @@
   bind:editMode={editMode}
   bind:showCreateModal={showCreateModalInternal}
   bind:showModal={showModalInternal}
+  onModalHide={abortOauthAuthorization}
   onDelete={onDelete}
   onEdit={onEdit}
   onCancel={promiseReject}
@@ -320,5 +322,5 @@
 </EditableModal>
 
 {#if oauthPending}
-  <OauthTokensModal bind:authorize={performOauthAuhorization} />
+  <OauthTokensModal bind:authorize={performOauthAuhorization} bind:abort={abortOauthAuthorization} />
 {/if}

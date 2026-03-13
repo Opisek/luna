@@ -62,6 +62,7 @@
 
   let oauthPending = $state(false);
   let performOauthAuhorization: (clientId: string) => Promise<string> = $state(async () => "");
+  let abortOauthAuthorization: () => void = $state(NoOp);
 
   let promiseResolve: (value: SourceModel) => void = $state(NoOp);
   let promiseReject: (reason?: any) => void = $state(NoOp);
@@ -288,6 +289,7 @@
   title="Source wizard"
   bind:showModal={showModalInternal}
   bind:hideModal={hideModalInternal}
+  onModalHide={abortOauthAuthorization}
 >
   <TextInput bind:value={name} name="name" placeholder="Name"/>
   <SelectButtons bind:value={inputType} name="ical_location" placeholder={"What do you want to add?"} options={[
@@ -381,5 +383,5 @@
 </Modal>
 
 {#if oauthPending}
-  <OauthTokensModal bind:authorize={performOauthAuhorization} />
+  <OauthTokensModal bind:authorize={performOauthAuhorization} bind:abort={abortOauthAuthorization} />
 {/if}

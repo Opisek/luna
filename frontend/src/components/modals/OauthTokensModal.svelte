@@ -17,10 +17,12 @@
   
   interface Props {
     authorize?: (clientId: string) => Promise<string>;
+    abort?: () => void;
   }
 
   let {
     authorize = $bindable(),
+    abort = $bindable(),
   }: Props = $props();
 
   const settings = getSettings();
@@ -63,6 +65,10 @@
         reject(err);
       });
     })
+  };
+
+  abort = () => {
+    promiseReject();
   };
 
   async function authorizeWithExternalProvider() {
