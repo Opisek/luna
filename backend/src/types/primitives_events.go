@@ -48,7 +48,13 @@ func ExpandRecurrence(event Event, start *time.Time, end *time.Time) ([]Event, *
 			Append(errors.LvlWordy, "Could not expand event recurrence for %v", event.GetName())
 	}
 
-	timeSlices := r.Between(*start, *end, true)
+	rset := rrule.Set{}
+	rset.RRule(r)
+	for _, exception := range event.GetDate().Recurrence().Except() {
+		rset.ExDate(exception)
+	}
+
+	timeSlices := rset.Between(*start, *end, true)
 
 	events := make([]Event, len(timeSlices))
 	for i, timeSlice := range timeSlices {

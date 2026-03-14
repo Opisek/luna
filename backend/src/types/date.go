@@ -188,8 +188,9 @@ func (ed *EventDate) Clone() *EventDate {
 
 // RFC-5545 3.3.10, 3.8.5.3
 type EventRecurrence struct {
-	repeats bool
-	rule    *rrule.ROption
+	repeats    bool
+	rule       *rrule.ROption
+	exceptions []time.Time
 }
 
 func (er *EventRecurrence) Clone() *EventRecurrence {
@@ -198,8 +199,9 @@ func (er *EventRecurrence) Clone() *EventRecurrence {
 	}
 
 	return &EventRecurrence{
-		repeats: er.repeats,
-		rule:    er.rule,
+		repeats:    er.repeats,
+		rule:       er.rule,
+		exceptions: er.exceptions,
 	}
 }
 
@@ -209,6 +211,14 @@ func (er *EventRecurrence) Repeats() bool {
 
 func (er *EventRecurrence) Rule() *rrule.ROption {
 	return er.rule
+}
+
+func (er *EventRecurrence) Except() []time.Time {
+	return er.exceptions
+}
+
+func (er *EventRecurrence) AddException(date *time.Time) {
+	er.exceptions = append(er.exceptions, *date)
 }
 
 func EmptyEventRecurrence() *EventRecurrence {
@@ -226,6 +236,8 @@ func EventRecurrenceFromIcal(ical *ical.Props) (*EventRecurrence, error) {
 	if roption == nil {
 		return EmptyEventRecurrence(), nil
 	}
+
+	// TODO: parse EXDATE (the library does not seem to do it)
 
 	return &EventRecurrence{
 		repeats: true,

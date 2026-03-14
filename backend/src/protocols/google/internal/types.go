@@ -1,5 +1,11 @@
 package google
 
+import (
+	"luna-backend/errors"
+	"net/http"
+	"time"
+)
+
 // https://developers.google.com/workspace/calendar/api/v3/reference/
 
 type Calendar struct {
@@ -35,13 +41,42 @@ type TimeDefinition struct {
 }
 
 type Event struct {
-	Id               string         `json:"id,omitempty"`
-	Name             string         `json:"summary"`
-	Description      string         `json:"description,omitempty"`
-	ColorId          string         `json:"colorId,omitempty"`
-	Start            TimeDefinition `json:"start"`
-	End              TimeDefinition `json:"end"`
-	Recurrence       []string       `json:"recurrence,omitempty"`
-	IcalUid          string         `json:"icalUid,omitempty"`
-	RecurringEventId string         `json:"recurringEventId,omitempty"`
+	Id                string         `json:"id,omitempty"`
+	Name              string         `json:"summary"`
+	Description       string         `json:"description,omitempty"`
+	ColorId           string         `json:"colorId,omitempty"`
+	Start             TimeDefinition `json:"start"`
+	End               TimeDefinition `json:"end"`
+	Recurrence        []string       `json:"recurrence,omitempty"`
+	IcalUid           string         `json:"icalUid,omitempty"`
+	RecurringEventId  string         `json:"recurringEventId,omitempty"`
+	Status            string         `json:"status"`
+	OriginalStartTime TimeDefinition `json:"originalStartTime"`
+}
+
+func (timeDefinition *TimeDefinition) ParseTimeDefinition() (*time.Time, bool, *errors.ErrorTrace) {
+	allDay := timeDefinition.Date != ""
+
+	var parsedTime time.Time
+	var err error
+
+	if allDay {
+		if parsedTime, err = time.Parse("2006-01-02", timeDefinition.Date); err != nil {
+			return nil, false, errors.New().Status(http.StatusInternalServerError).
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlDebug, "Could not parse date %v", timeDefinition.Date).
+				AltStr(errors.LvlWordy, "Could not parse date")
+		}
+		// TODO: timeDefinition.timeZone
+	} else {
+		if parsedTime, err = time.Parse(time.RFC3339, timeDefinition.DateTime); err != nil {
+			return nil, false, errors.New().Status(http.StatusInternalServerError).
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlDebug, "Could not parse datetime %v", timeDefinition.DateTime).
+				AltStr(errors.LvlWordy, "Could not parse datetime")
+		}
+		// TODO: timeDefinition.timeZone
+	}
+
+	return &parsedTime, allDay, nil
 }

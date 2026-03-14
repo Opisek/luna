@@ -156,8 +156,26 @@ func (calendar *GoogleCalendar) GetEvents(start time.Time, end time.Time, q type
 		return nil, tr
 	}
 
+	cancelledInstances := make(map[string][]*google.Event)
+
 	result := make([]types.Event, len(res.Items))
-	for i, event := range res.Items {
+	eventCount := 0
+	for _, event := range res.Items {
+		// Instead of adding an exception to the RRULE,
+		// Google calendar returns an additional "copy" of the event with status set to "cancelled".
+		// To get actual instances, we would either have to call the instances endpoint for every recurring event,
+		// or we resolve the recurrence ourselves (like we already do) but subtract the cancelled instances.
+		// We can do this by adding the cancelled instances to the RRULE exceptions.
+		if event.Status == "cancelled" {
+			cancelled, exists := cancelledInstances[event.RecurringEventId]
+			if !exists {
+				cancelled = []*google.Event{}
+			}
+			cancelled = append(cancelled, event)
+			cancelledInstances[event.RecurringEventId] = cancelled
+			continue
+		}
+
 		converted, err := calendar.eventFromGoogle(event, q)
 		if err != nil {
 			return nil, err.
@@ -166,10 +184,27 @@ func (calendar *GoogleCalendar) GetEvents(start time.Time, end time.Time, q type
 
 		casted := (types.Event)(converted)
 
-		result[i] = casted
+		result[eventCount] = casted
+		eventCount += 1
 	}
 
-	return result, nil
+	// Add the exception dates
+	for _, event := range result[:eventCount] {
+		if exceptions, exists := cancelledInstances[event.GetSettings().(*GoogleEventSettings).GoogleId]; exists {
+			for _, exception := range exceptions {
+				exceptionTime, _, tr := exception.Start.ParseTimeDefinition()
+				if tr != nil {
+					return nil, tr.
+						Append(errors.LvlWordy, "Could not parse exception time").
+						Append(errors.LvlDebug, "Could not parse event %v", exception.Id).
+						AltStr(errors.LvlWordy, "Could not parse event")
+				}
+				event.GetDate().Recurrence().AddException(exceptionTime)
+			}
+		}
+	}
+
+	return result[:eventCount], nil
 }
 
 func (calendar *GoogleCalendar) GetEvent(settings types.EventSettings, q types.DatabaseQueries) (types.Event, *errors.ErrorTrace) {
