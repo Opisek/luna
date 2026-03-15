@@ -27,9 +27,9 @@ function getSingletons(version: string, preloadedSettings: { userData: any, user
   oauthClients: OauthClients;
 } {
   let rep: Repository | null = null;
-  let recalculateEvents = () => {
+  let recalculateEvents = (calendarThatBecameVisible: (string | null)) => {
     if (rep == null) return;
-    rep.recalculateEvents();
+    rep.recalculateEvents(calendarThatBecameVisible);
   }
 
   let connectivity = new Connectivity(version);

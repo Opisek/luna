@@ -6,7 +6,7 @@ import { ColorKeys } from "../../../types/colors";
 import { fetchJson, fetchResponse } from "../net";
 import { queueNotification } from "../notifications";
 
-import { parallel, deepCopy } from "$lib/common/misc";
+import { parallel } from "$lib/common/misc";
 import type { Metadata } from "./metadata.svelte";
 
 
@@ -45,33 +45,11 @@ export class Repository {
   }
 
   //
-  // Misc
-  //
-
-  private async mapBaseEventToRecurrenceInstance(idAndDate: [string, number]): Promise<EventModel | null> {
-    const baseEvent = this.eventsMap.get(idAndDate[0]);
-    if (baseEvent == undefined) return null;
-
-    const baseDuration = baseEvent.date.end.getTime() - baseEvent.date.start.getTime();
-
-    const copiedEvent = await deepCopy(baseEvent);
-    copiedEvent.date.start = new Date(idAndDate[1]);
-    copiedEvent.date.end = new Date(idAndDate[1]);
-    copiedEvent.date.end.setTime(copiedEvent.date.end.getTime() + baseDuration);
-
-    return copiedEvent;
-  }
-
-  private async mapAllRecurrenceInstances(idAndDates: [string, number][]): Promise<EventModel[]> {
-    return (await Promise.all(idAndDates.map(async (idAndDate) => this.mapBaseEventToRecurrenceInstance(idAndDate)))).filter(x => x != null);
-  }
-
-  //
   // Caching
   //
 
-  private eventsRangeStart: Date = new Date();
-  private eventsRangeEnd: Date = new Date();
+  private eventsRangeStart: number = this.getMonthFromDate(new Date());
+  private eventsRangeEnd: number = this.eventsRangeStart;
 
   private readonly emptyCache = { date: 0, value: null };
 
@@ -80,7 +58,7 @@ export class Repository {
   private sourcesCache: CacheEntry<SourceModel[]> = this.emptyCache; // sources
   private sourceDetailsCache: Map<string, CacheEntry<SourceModel>> = new Map(); // source -> details
   private calendarsCache: Map<string, CacheEntry<string[]>> = new Map(); // source -> calendars
-  private eventsCache: Map<string, Map<number, CacheEntry<[string, number][]>>> = new Map(); // calendar -> month -> event id, start date (because of recurring events having the same id)
+  private eventsCache: Map<string, Map<number, CacheEntry<string[]>>> = new Map(); // calendar -> month -> event ids
   private eventsMap: Map<string, EventModel> = new Map(); // event id -> event
   private calendarsMap: Map<string, CalendarModel> = new Map(); // calendar id -> calendar
 
@@ -94,6 +72,40 @@ export class Repository {
     this.calendarsCache.forEach((cache) => cache.date = 0);
     this.eventsCache.forEach((cache) => cache.forEach((entry) => entry.date = 0));
     this.saveCache();
+  }
+
+  private pendingMonths: Map<string, Set<number>> = new Map();
+
+  private getMonthFromDate(time: Date): number {
+    return time.getFullYear() * 100 + time.getMonth() + 1;
+  }
+  private getDateFromMonth(month: number): Date {
+    const onlyMonth = month % 100;
+    const year = (month - onlyMonth) / 100;
+    return new Date(year, onlyMonth - 1, 1);
+  }
+  private nextMonth(month: number): number {
+    return month + ((month % 100 == 12) ? 88 : 1);
+  }
+  private previousMonth(month: number): number {
+    return month - ((month % 100 == 0) ? 88 : 1);
+  }
+  private isMonthPending(calendar: string, month: number): boolean {
+    let monthsPendingForCalendar = this.pendingMonths.get(calendar);
+    if (!monthsPendingForCalendar) return false;
+    return monthsPendingForCalendar.has(month);
+  }
+  private setMonthPending(calendar: string, month: number) {
+    let monthsPendingForCalendar = this.pendingMonths.get(calendar);
+    if (!monthsPendingForCalendar) monthsPendingForCalendar = new Set();
+    monthsPendingForCalendar.add(month);
+    this.pendingMonths.set(calendar, monthsPendingForCalendar);
+  }
+  private setMonthNotPending(calendar: string, month: number) {
+    let monthsPendingForCalendar = this.pendingMonths.get(calendar);
+    if (!monthsPendingForCalendar) return;
+    monthsPendingForCalendar.delete(month);
+    this.pendingMonths.set(calendar, monthsPendingForCalendar);
   }
 
   //
@@ -208,28 +220,28 @@ export class Repository {
   }
 
   private compileEventsTimeout: (ReturnType<typeof setTimeout> | undefined) = undefined;
-  private compileEvents(start: Date, end: Date) {
+  private compileEvents(startMonth: number, endMonth: number) {
     clearTimeout(this.compileEventsTimeout);
-
     this.compileEventsTimeout = setTimeout(async () => {
-      const allEvents = 
+      this.events = [ ...new Map(
         Array.from(this.eventsCache.entries())
         .filter(x => !this.metadata.hiddenCalendars.has(x[0]) && x[1] != null) // Event must be visible
         .map(x => Array.from(x[1].entries()))
         .flat()
-        .filter(x => x[1] != null && x[0] >= start.getTime() && x[0] <= end.getTime()) // Event must be in the time frame
+        .filter(x => x[1] != null && x[0] >= startMonth && x[0] <= endMonth) // Event must be in the time frame
         .map(x => x[1].value)
         .filter(x => x != null) // Event must exist
-        .flat();
-      
-      const uniqueEvents = [ ...new Map(allEvents.map(x => [`${x[0]}${x[1]}`, x])).values() ];
-
-      const eventsWithData = await this.mapAllRecurrenceInstances(uniqueEvents);
-
-      this.events = eventsWithData;
+        .flat()
+        .map(x => this.eventsMap.get(x))
+        .filter(x => x != null) // Event must exist
+        .map(x => [x.id, x])
+      ).values()];
     }, this.spoolerDelay)
   }
-  public recalculateEvents() {
+  public async recalculateEvents(calendarThatBecameVisible: (string | null) = null) {
+    if (calendarThatBecameVisible != null) {
+      await this.getEventsFromPreviouslyHiddenCalendar(calendarThatBecameVisible);
+    }
     this.compileEvents(this.eventsRangeStart, this.eventsRangeEnd);
   }
 
@@ -600,66 +612,54 @@ export class Repository {
   // Events
   //
 
-  private determineEventMonths(event: EventModel): Date[] {
-    const start = new Date(event.date.start);
-    start.setUTCDate(1);
-    start.setUTCHours(0, 0, 0, 0);
-    const end = new Date(event.date.end);
+  private determineEventMonths(event: EventModel): number[] {
+    let start = this.getMonthFromDate(event.date.start);
+    let end = this.getMonthFromDate(event.date.end);
 
     const months = [];
-    while (start < end) {
-      months.push(new Date(start));
-      start.setUTCMonth(start.getUTCMonth() + 1);
+    while (start <= end) {
+      months.push(start);
+      start = this.nextMonth(start);
     }
 
     return months;
   }
 
-  private addEventToCache(event: EventModel, date: Date) {
+  private addEventToCache(event: EventModel, month: number) {
     let calendarEventsCache = this.eventsCache.get(event.calendar);
     if (!calendarEventsCache) {
       calendarEventsCache = new Map();
       this.eventsCache.set(event.calendar, calendarEventsCache);
     }
 
-    let cacheEntry = calendarEventsCache.get(date.getTime());
+    let cacheEntry = calendarEventsCache.get(month);
     if (!cacheEntry) {
       cacheEntry = { date: Date.now(), value: [] };
-      calendarEventsCache.set(date.getTime(), cacheEntry);
+      calendarEventsCache.set(month, cacheEntry);
     }
 
-    calendarEventsCache.set(date.getTime(), {
+    calendarEventsCache.set(month, {
       date: cacheEntry.date,
-      value: [ ...cacheEntry.value || [], [event.id, event.date.start.getTime()] ]
+      value: [ ...cacheEntry.value || [], event.id ]
     });
   }
 
-  private removeEventFromCache(event: EventModel, date: Date) {
+  private removeEventFromCache(event: EventModel, month: number) {
     if (!this.eventsCache.has(event.calendar)) return;
-    const cacheEntry = this.eventsCache.get(event.calendar)?.get(date.getTime());
+    const cacheEntry = this.eventsCache.get(event.calendar)?.get(month);
     if (!cacheEntry || !cacheEntry.value) return;
     cacheEntry.value = cacheEntry.value.filter((idAndDate) => idAndDate[0] !== event.id);
   }
 
   async getAllEvents(start: Date, end: Date, forceRefresh = false): Promise<EventModel[]> {
     if (!browser) return [];
-    this.eventsRangeStart = start;
-    this.eventsRangeEnd = end;
 
-    start.setUTCHours(0, 0, 0, 0);
-    end.setUTCHours(23, 59, 59, 999);
+    this.eventsRangeStart = this.getMonthFromDate(start);
+    this.eventsRangeEnd = this.getMonthFromDate(end);
 
-    // Add one month of padding in both directions
-    start.setMonth(start.getMonth() - 1);
-    end.setMonth(end.getMonth() + 1);
-
-    // Set start and end to the start and end of each month
-    start.setDate(1);
-    end.setDate(0);
-
-    this.compileEvents(start, end);
+    this.compileEvents(this.eventsRangeStart, this.eventsRangeEnd);
     const allSources = await this.getSources(forceRefresh).catch((err) => { throw err; });
-    const [events, errors] = await parallel(allSources.map((source) => this.getEventsFromSource(source.id, start, end, forceRefresh))).catch((err) => {
+    const [events, errors] = await parallel(allSources.map((source) => this.getEventsFromSource(source.id, this.previousMonth(this.eventsRangeStart), this.nextMonth(this.eventsRangeEnd), forceRefresh))).catch((err) => {
       throw new Error(`Failed to fetch events: ${(err.cause || err).message}`, { cause: err.cause || err });
     });
     errors.forEach((err) => {
@@ -685,10 +685,10 @@ export class Repository {
     return fetched;
   }
 
-  private async getEventsFromSource(source: string, start: Date, end: Date, forceRefresh = false): Promise<EventModel[]> {
+  private async getEventsFromSource(source: string, startMonth: number, endMonth: number, forceRefresh = false): Promise<EventModel[]> {
     let cals = await this.getCalendars(source, forceRefresh).catch((err) => { throw err; });
     cals = cals.filter(x => !this.metadata.hiddenCalendars.has(x.id)); // only fetch events from visible calendars
-    const [events, errors] = await parallel(cals.map((calendar) => this.getEventsFromCalendar(calendar.id, start, end, forceRefresh))).catch((err) => {
+    const [events, errors] = await parallel(cals.map((calendar) => this.getEventsFromCalendar(calendar.id, startMonth, endMonth, forceRefresh))).catch((err) => {
       throw new Error(`Failed to fetch events: ${(err.cause || err).message}`, { cause: err.cause || err });
     })
     errors.forEach((err) => {
@@ -700,86 +700,67 @@ export class Repository {
     return events.flat();
   }
 
-  private async getEventsFromCalendar(calendar: string, start: Date, end: Date, forceRefresh = false): Promise<EventModel[]> {
+  private async getEventsFromCalendar(calendar: string, startMonth: number, endMonth: number, forceRefresh = false): Promise<EventModel[]> {
     let result: EventModel[] = [];
 
-    const cache = (forceRefresh ? null : this.eventsCache.get(calendar)) || new Map<number, CacheEntry<[string, number][]>>();
+    const cache = (forceRefresh ? null : this.eventsCache.get(calendar)) || new Map<number, CacheEntry<string[]>>();
 
-    // Limit the range we need to ask for but only use one request per calendar
-    const fetchStart = new Date(start);
-    const fetchEnd = new Date(end);
-
-    fetchStart.setDate(1);
-    fetchStart.setHours(0, 0, 0, 0);
-    fetchEnd.setDate(1);
-    fetchEnd.setHours(0, 0, 0, 0);
-
-    while (fetchStart.getTime() <= fetchEnd.getTime()) {
-      const cacheKey = new Date(fetchStart);
-      cacheKey.setUTCHours(0, 0, 0, 0);
-      cacheKey.setUTCDate(1);
-      const cached = this.cacheOk(cache.get(cacheKey.getTime()));
-      if (!cached) break;
-      result = result.concat(await this.mapAllRecurrenceInstances(cached));
-      fetchStart.setMonth(fetchStart.getMonth() + 1);
+    // Determine which months must be fetched and which can be taken from cache
+    while (startMonth <= endMonth) {
+      if (!this.isMonthPending(calendar, startMonth)) {
+        const cached = this.cacheOk(cache.get(startMonth));
+        if (!cached) break;
+        result = result.concat(cached.map(x => this.eventsMap.get(x)).filter(x => x != null));
+        console.log("already in cache", startMonth)
+      } else {
+        console.log("already pending", startMonth)
+      }
+      startMonth = this.nextMonth(startMonth);
+    }
+    while (endMonth >= startMonth) {
+      if (!this.isMonthPending(calendar, endMonth)) {
+        const cached = this.cacheOk(cache.get(endMonth));
+        if (!cached) break;
+        result = result.concat(cached.map(x => this.eventsMap.get(x)).filter(x => x != null));
+        console.log("already in cache", endMonth)
+      } else {
+        console.log("already pending", startMonth)
+      }
+      endMonth = this.previousMonth(endMonth);
     }
 
-    while (fetchEnd.getTime() >= fetchStart.getTime()) {
-      const cacheKey = new Date(fetchEnd);
-      cacheKey.setUTCHours(0, 0, 0, 0);
-      cacheKey.setUTCDate(1);
-      const cached = this.cacheOk(cache.get(cacheKey.getTime()));
-      if (!cached) break;
-      result = result.concat(await this.mapAllRecurrenceInstances(cached));
-      fetchEnd.setMonth(fetchEnd.getMonth() - 1);
-    }
-
-    fetchEnd.setMonth(fetchEnd.getMonth() + 1);
-    fetchEnd.setDate(0);
-    fetchEnd.setHours(23, 59, 59, 999);
-
-    if (fetchStart.getTime() > fetchEnd.getTime()) {
+    if (startMonth > endMonth) {
       return result;
     }
 
     const stopLoading = this.metadata.startLoadingCalendar(calendar);
 
-    const fetchedEvents = await this.fetchEvents(calendar, fetchStart, fetchEnd).catch((err) => {
+    // Fetch events
+    for (let month = startMonth; month <= endMonth; month = this.nextMonth(month)) this.setMonthPending(calendar, month);
+    const fetchedEvents = await this.fetchEvents(calendar, startMonth, endMonth).catch((err) => {
       this.metadata.addFaultyCalendar(calendar, err.message);
+      for (let month = startMonth; month <= endMonth; month = this.nextMonth(month)) this.setMonthNotPending(calendar, month);
       throw err;
     }).finally(() => {
       stopLoading();
     });
 
-    this.metadata.removeFaultyCalendar(calendar);
-
-    this.compileEvents(start, end);
-    this.saveCache();
-    return result.concat(fetchedEvents);
-  }
-
-  async fetchEvents(calendar: string, start: Date, end: Date): Promise<EventModel[]> {
-    const localStart = new Date(start);
-    localStart.setHours(0, 0, 0, 0);
-    const localEnd = new Date(end);
-    localEnd.setHours(23, 59, 59, 999);
-
-    const fetched: EventModel[] = (await fetchJson(`/api/calendars/${calendar}/events?start=${encodeURIComponent(localStart.toISOString())}&end=${encodeURIComponent(localEnd.toISOString())}`).catch((err) => { throw err; })).events;
-
+    // Clear event cache for the requested months
     let calendarEventsCache = this.eventsCache.get(calendar);
     if (!calendarEventsCache) {
       calendarEventsCache = new Map();
       this.eventsCache.set(calendar, calendarEventsCache);
     }
-    end.setDate(end.getDate() - 1);
-    for (let i = new Date(start); i.getTime() < end.getTime(); i.setMonth(i.getMonth() + 1)) {
-      calendarEventsCache.set(i.getTime(), {
+    for (let month = startMonth; month <= endMonth; month = this.nextMonth(month)) {
+      calendarEventsCache.set(month, {
         date: Date.now(),
         value: []
       });
     }
+    this.eventsCache.set(calendar, calendarEventsCache);
 
-    for (const event of fetched) {
+    // Fill the cache with the fetched events
+    for (const event of fetchedEvents) {
       event.date.start = new Date(event.date.start);
       event.date.end = new Date(event.date.end);
 
@@ -794,13 +775,33 @@ export class Repository {
       }
     }
 
-    return fetched;
+    console.log("calendar cache after adding events", this.eventsCache.get(calendar))
+
+    // Done
+    for (let month = startMonth; month <= endMonth; month = this.nextMonth(month)) this.setMonthNotPending(calendar, month);
+    this.metadata.removeFaultyCalendar(calendar);
+    this.compileEvents(this.eventsRangeStart, this.eventsRangeEnd);
+    this.saveCache();
+    return result.concat(fetchedEvents);
+  }
+
+  async fetchEvents(calendar: string, startMonth: number, endMonth: number): Promise<EventModel[]> {
+    const localStart = this.getDateFromMonth(startMonth);
+    const localEnd = this.getDateFromMonth(endMonth);
+    localEnd.setMonth(localEnd.getMonth() + 1);
+    localEnd.setDate(0);
+    localEnd.setHours(23, 59, 59, 999);
+
+    return (
+      await fetchJson(`/api/calendars/${calendar}/events?start=${encodeURIComponent(localStart.toISOString())}&end=${encodeURIComponent(localEnd.toISOString())}`)
+        .catch((err) => { throw err; })
+    ).events;
   }
 
   async getEventsFromPreviouslyHiddenCalendar(calendar: string) {
     if (!browser) return;
 
-    this.getEventsFromCalendar(calendar, this.eventsRangeStart, this.eventsRangeEnd).catch((err) => {
+    this.getEventsFromCalendar(calendar, this.previousMonth(this.eventsRangeStart), this.nextMonth(this.eventsRangeEnd)).catch((err) => {
       const calendarName = this.calendarsMap.get(this.calendarsCache.get(calendar)?.value?.find((cal) => cal === calendar) || "")?.name;
       queueNotification(
         ColorKeys.Danger,
@@ -830,7 +831,7 @@ export class Repository {
 
     // add to display
     const isHidden = this.metadata.hiddenCalendars.has(newEvent.calendar)
-    if (!isHidden && newEvent.date.start <= this.eventsRangeEnd && newEvent.date.end >= this.eventsRangeStart) this.events.push(newEvent);
+    if (!isHidden && this.getMonthFromDate(newEvent.date.start) <= this.eventsRangeEnd && this.getMonthFromDate(newEvent.date.end) >= this.eventsRangeStart) this.events.push(newEvent);
 
     // info if the event is hidden
     if (isHidden) {
@@ -877,7 +878,7 @@ export class Repository {
     }
 
     // update on display
-    if (modifiedEvent.date.start <= this.eventsRangeEnd && modifiedEvent.date.end >= this.eventsRangeStart) {
+    if (this.getMonthFromDate(modifiedEvent.date.start) <= this.eventsRangeEnd && this.getMonthFromDate(modifiedEvent.date.end) >= this.eventsRangeStart) {
       //this.events.update((events) => events.map((event) => event.id === modifiedEvent.id ? modifiedEvent : event));
     } else {
       this.events.splice(this.events.findIndex((event) => event.id === modifiedEvent.id), 1);

@@ -29,11 +29,13 @@
   }
 
   $effect(() => {
-    calendarVisible = !metadata.hiddenCalendars.has(calendar.id);
+    const shouldBeVisible = !metadata.hiddenCalendars.has(calendar.id);
+    if (shouldBeVisible == calendarVisible) return;
+    calendarVisible = shouldBeVisible;
   });
-  $effect(() => {
-    if (calendar && calendar.id) getMetadata().setCalendarVisibility(calendar.id, calendarVisible);
-  });
+  function setVisible(visible: boolean) {
+    getMetadata().setCalendarVisibility(calendar.id, visible);
+  }
 </script>
 
 <style lang="scss">
@@ -90,7 +92,7 @@
     {#if isLoading}
       <Spinner/>
     {/if}
-    <VisibilityToggle bind:visible={calendarVisible}/>
+    <VisibilityToggle bind:visible={calendarVisible} onClick={setVisible}/>
     {#if hasErrored}
       <Tooltip error={true}>An error occurred trying to retrieve events from this calendar.</Tooltip>
     {/if}
