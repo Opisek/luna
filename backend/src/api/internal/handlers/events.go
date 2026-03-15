@@ -75,16 +75,10 @@ func GetEvents(c *gin.Context) {
 		return
 	}
 
-	events, tr := u.Tx.Queries().OverrideEvents(eventsFromCal)
-	if tr != nil {
-		u.Error(tr)
-		return
-	}
-
 	// Expand recurring events
-	expandedEvents := make([]types.Event, len(events))
+	expandedEvents := make([]types.Event, len(eventsFromCal))
 	count := 0
-	for _, event := range events {
+	for _, event := range eventsFromCal {
 		expanded, tr := types.ExpandRecurrence(event, &startTime, &endTime)
 		if tr != nil {
 			u.Error(tr)
@@ -103,9 +97,16 @@ func GetEvents(c *gin.Context) {
 		}
 	}
 
+	// Save in the database and apply overrides
+	events, tr := u.Tx.Queries().OverrideEvents(expandedEvents[:count])
+	if tr != nil {
+		u.Error(tr)
+		return
+	}
+
 	// Convert to exposed format
 	convertedEvents := make([]exposedEvent, count)
-	for i, event := range expandedEvents[:count] {
+	for i, event := range events {
 		if event.GetName() == "" { // TODO: error handling
 			continue
 		}

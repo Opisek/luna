@@ -40,6 +40,14 @@ type TimeDefinition struct {
 	TimeZone string `json:"timeZone,omitempty"`
 }
 
+func (timeDef *TimeDefinition) String() string {
+	if timeDef.Date != "" {
+		return timeDef.Date
+	} else {
+		return timeDef.DateTime
+	}
+}
+
 type Event struct {
 	Id                string         `json:"id,omitempty"`
 	Name              string         `json:"summary"`
@@ -50,8 +58,8 @@ type Event struct {
 	Recurrence        []string       `json:"recurrence,omitempty"`
 	IcalUid           string         `json:"icalUid,omitempty"`
 	RecurringEventId  string         `json:"recurringEventId,omitempty"`
-	Status            string         `json:"status"`
-	OriginalStartTime TimeDefinition `json:"originalStartTime"`
+	Status            string         `json:"status,omitempty"`
+	OriginalStartTime TimeDefinition `json:"originalStartTime,omitempty"`
 }
 
 func (timeDefinition *TimeDefinition) ParseTimeDefinition() (*time.Time, bool, *errors.ErrorTrace) {

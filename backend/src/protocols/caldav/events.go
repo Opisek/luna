@@ -7,6 +7,7 @@ import (
 	common "luna-backend/protocols/internal"
 	"luna-backend/types"
 	"net/http"
+	"time"
 
 	"github.com/emersion/go-webdav/caldav"
 )
@@ -22,9 +23,23 @@ type CaldavEvent struct {
 }
 
 type CaldavEventSettings struct {
-	Url      *types.Url             `json:"url"`
-	Uid      string                 `json:"uid"`
-	rawEvent *caldav.CalendarObject `json:"-"`
+	Url               *types.Url             `json:"url"`
+	Uid               string                 `json:"uid"`
+	RecurrenceId      string                 `json:"recurrence_id"`
+	IsFirstRecurrence bool                   `json:"is_first_recurrence"`
+	rawEvent          *caldav.CalendarObject `json:"-"`
+}
+
+func (settings *CaldavEventSettings) Clone() *CaldavEventSettings {
+	newUrl := *settings.Url
+
+	return &CaldavEventSettings{
+		Url:               &newUrl,
+		Uid:               settings.Uid,
+		RecurrenceId:      settings.RecurrenceId,
+		IsFirstRecurrence: settings.IsFirstRecurrence,
+		rawEvent:          settings.rawEvent,
+	}
 }
 
 func (calendar *CaldavCalendar) eventFromCaldav(obj *caldav.CalendarObject, q types.DatabaseQueries) (*CaldavEvent, *errors.ErrorTrace) {
@@ -60,9 +75,11 @@ func (calendar *CaldavCalendar) eventFromCaldav(obj *caldav.CalendarObject, q ty
 		color:      parsedProps.Color,
 		overridden: false,
 		settings: &CaldavEventSettings{
-			Url:      url,
-			Uid:      parsedProps.Uid,
-			rawEvent: obj,
+			Url:               url,
+			Uid:               parsedProps.Uid,
+			RecurrenceId:      parsedProps.RecurrenceId,
+			IsFirstRecurrence: parsedProps.RecurrenceId == "",
+			rawEvent:          obj,
 		},
 		calendar:  calendar,
 		eventDate: parsedProps.EventDate,
@@ -84,12 +101,14 @@ func (settings *CaldavEventSettings) Bytes() []byte {
 	return bytes
 }
 
-func genEventId(calendarId types.ID, uid string) types.ID {
-	return crypto.DeriveID(calendarId, uid)
-}
-
 func (event *CaldavEvent) GetId() types.ID {
-	return genEventId(event.calendar.GetId(), event.settings.Uid)
+	masterEventId := crypto.DeriveID(event.calendar.GetId(), event.settings.Uid)
+
+	if event.settings.RecurrenceId == "" || event.settings.IsFirstRecurrence {
+		return masterEventId
+	}
+
+	return crypto.DeriveID(masterEventId, event.settings.RecurrenceId)
 }
 
 func (event *CaldavEvent) GetName() string {
@@ -146,10 +165,15 @@ func (event *CaldavEvent) Clone() types.Event {
 		desc:       event.desc,
 		color:      event.color.Clone(),
 		overridden: event.overridden,
-		settings:   event.settings,
+		settings:   event.settings.Clone(),
 		calendar:   event.calendar,
 		eventDate:  event.eventDate.Clone(),
 	}
+}
+
+func (event *CaldavEvent) UpdateRecurrenceInstance(masterStartTime *time.Time) {
+	event.settings.RecurrenceId = common.CalculateRecurrenceId(event.eventDate.Start(), event.eventDate.AllDay())
+	event.settings.IsFirstRecurrence = masterStartTime.Equal(*event.eventDate.Start())
 }
 
 func (event *CaldavEvent) CanEdit() bool {

@@ -174,12 +174,33 @@ func (calendar *CaldavCalendar) getEvents(query *caldav.CalendarQuery, q types.D
 			Append(errors.LvlBroad, "Could not get events")
 	}
 
+	masterEvents := make(map[string]int)
+	masterEventIndices := make(map[int]bool)
+
 	convertedEvents := make([]types.Event, len(events))
 	for i, event := range events {
 		convertedEvents[i], tr = calendar.convertEvent(&event, q)
 		if tr != nil {
 			return nil, tr.
 				Append(errors.LvlBroad, "Could not get events")
+		}
+
+		eventSettings := convertedEvents[i].GetSettings().(*CaldavEventSettings)
+
+		if eventSettings.RecurrenceId == "" {
+			masterEvents[eventSettings.Uid] = i
+			masterEventIndices[i] = true
+		}
+	}
+
+	// Internally note all the modified recurrence instances for each master event so that we don't expand these later
+	for i, event := range convertedEvents {
+		if masterEventIndices[i] {
+			continue
+		}
+		eventSettings := event.GetSettings().(*CaldavEventSettings)
+		if masterEvent, exists := masterEvents[eventSettings.Uid]; exists {
+			convertedEvents[masterEvent].GetDate().Recurrence().AddModifiedInstance(common.ExtractDateFromRecurrenceId(eventSettings.RecurrenceId))
 		}
 	}
 

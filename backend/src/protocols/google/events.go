@@ -5,8 +5,11 @@ import (
 	"luna-backend/crypto"
 	"luna-backend/errors"
 	google "luna-backend/protocols/google/internal"
+	common "luna-backend/protocols/internal"
 	"luna-backend/types"
+
 	"net/http"
+	"time"
 )
 
 type GoogleEvent struct {
@@ -20,9 +23,21 @@ type GoogleEvent struct {
 }
 
 type GoogleEventSettings struct {
-	GoogleId     string `json:"google_id"`
-	Uid          string `json:"ical_id"`
-	RecurrenceId string `json:"recurrence_id"`
+	GoogleId           string `json:"google_id"`
+	Uid                string `json:"ical_id"`
+	RecurrenceId       string `json:"recurrence_id"`
+	RecurrenceMasterId string `json:"recurrence_master_id"`
+	IsFirstRecurrence  bool   `json:"is_first_recurrence"`
+}
+
+func (settings *GoogleEventSettings) Clone() *GoogleEventSettings {
+	return &GoogleEventSettings{
+		GoogleId:           settings.GoogleId,
+		Uid:                settings.Uid,
+		RecurrenceId:       settings.RecurrenceId,
+		RecurrenceMasterId: settings.RecurrenceMasterId,
+		IsFirstRecurrence:  settings.IsFirstRecurrence,
+	}
 }
 
 func (calendar *GoogleCalendar) eventFromGoogle(googleEvent *google.Event, q types.DatabaseQueries) (*GoogleEvent, *errors.ErrorTrace) {
@@ -41,10 +56,19 @@ func (calendar *GoogleCalendar) eventFromGoogle(googleEvent *google.Event, q typ
 		}
 	}
 
+	var recurrenceId string
+	if googleEvent.RecurringEventId == "" {
+		recurrenceId = ""
+	} else {
+		recurrenceId = googleEvent.OriginalStartTime.String()
+	}
+
 	settings := &GoogleEventSettings{
-		GoogleId:     googleEvent.Id,
-		Uid:          googleEvent.IcalUid,
-		RecurrenceId: googleEvent.RecurringEventId,
+		GoogleId:           googleEvent.Id,
+		Uid:                googleEvent.IcalUid,
+		RecurrenceId:       recurrenceId,
+		RecurrenceMasterId: googleEvent.RecurringEventId,
+		IsFirstRecurrence:  recurrenceId == "",
 	}
 
 	recurrence, err := types.EventRecurrenceFromLines(googleEvent.Recurrence)
@@ -79,7 +103,7 @@ func (calendar *GoogleCalendar) eventFromGoogle(googleEvent *google.Event, q typ
 		desc:       googleEvent.Description,
 		color:      col,
 		overridden: false,
-		settings:   settings,
+		settings:   settings.Clone(),
 		calendar:   calendar,
 		eventDate:  eventDate,
 	}
@@ -100,7 +124,13 @@ func genEventId(calendarId types.ID, googleId string) types.ID {
 }
 
 func (event *GoogleEvent) GetId() types.ID {
-	return genEventId(event.calendar.GetId(), event.settings.GoogleId)
+	masterEventId := crypto.DeriveID(event.calendar.GetId(), event.settings.Uid)
+
+	if event.settings.RecurrenceId == "" || event.settings.IsFirstRecurrence {
+		return masterEventId
+	}
+
+	return crypto.DeriveID(masterEventId, event.settings.RecurrenceId)
 }
 
 func (event *GoogleEvent) GetName() string {
@@ -157,10 +187,17 @@ func (event *GoogleEvent) Clone() types.Event {
 		desc:       event.desc,
 		color:      event.color.Clone(),
 		overridden: event.overridden,
-		settings:   event.settings,
+		settings:   event.settings.Clone(),
 		calendar:   event.calendar,
 		eventDate:  event.eventDate.Clone(),
 	}
+}
+
+func (event *GoogleEvent) UpdateRecurrenceInstance(masterStartTime *time.Time) {
+	event.settings.RecurrenceId = common.CalculateRecurrenceId(event.eventDate.Start(), event.eventDate.AllDay())
+	event.settings.IsFirstRecurrence = masterStartTime.Equal(*event.eventDate.Start())
+	event.settings.RecurrenceMasterId = event.settings.GoogleId
+	event.settings.GoogleId = ""
 }
 
 func (event *GoogleEvent) CanEdit() bool {

@@ -7,6 +7,7 @@ import (
 	common "luna-backend/protocols/internal"
 	"luna-backend/types"
 	"net/http"
+	"time"
 
 	"github.com/emersion/go-ical"
 )
@@ -22,8 +23,18 @@ type IcalEvent struct {
 }
 
 type IcalEventSettings struct {
-	Uid string `json:"uid"`
+	Uid               string `json:"uid"`
+	RecurrenceId      string `json:"recurrence_id"`
+	IsFirstRecurrence bool   `json:"is_first_recurrence"`
 	//rawEvent *ical.Event `json:"-"`
+}
+
+func (settings *IcalEventSettings) Clone() *IcalEventSettings {
+	return &IcalEventSettings{
+		Uid:               settings.Uid,
+		RecurrenceId:      settings.RecurrenceId,
+		IsFirstRecurrence: settings.IsFirstRecurrence,
+	}
 }
 
 func (calendar *IcalCalendar) eventFromIcal(props *ical.Props) (*IcalEvent, *errors.ErrorTrace) {
@@ -40,7 +51,9 @@ func (calendar *IcalCalendar) eventFromIcal(props *ical.Props) (*IcalEvent, *err
 		color:      parsedProps.Color,
 		overridden: false,
 		settings: &IcalEventSettings{
-			Uid: parsedProps.Uid,
+			Uid:               parsedProps.Uid,
+			RecurrenceId:      parsedProps.RecurrenceId,
+			IsFirstRecurrence: parsedProps.RecurrenceId == "",
 			//rawEvent: icalEvent,
 		},
 		calendar:  calendar,
@@ -58,12 +71,14 @@ func (settings *IcalEventSettings) Bytes() []byte {
 	return bytes
 }
 
-func genEventId(calendarId types.ID, uid string) types.ID {
-	return crypto.DeriveID(calendarId, uid)
-}
-
 func (event *IcalEvent) GetId() types.ID {
-	return genEventId(event.calendar.GetId(), event.settings.Uid)
+	masterEventId := crypto.DeriveID(event.calendar.GetId(), event.settings.Uid)
+
+	if event.settings.RecurrenceId == "" || event.settings.IsFirstRecurrence {
+		return masterEventId
+	}
+
+	return crypto.DeriveID(masterEventId, event.settings.RecurrenceId)
 }
 
 func (event *IcalEvent) GetName() string {
@@ -120,10 +135,15 @@ func (event *IcalEvent) Clone() types.Event {
 		desc:       event.desc,
 		color:      event.color.Clone(),
 		overridden: event.overridden,
-		settings:   event.settings,
+		settings:   event.settings.Clone(),
 		calendar:   event.calendar,
 		eventDate:  event.eventDate.Clone(),
 	}
+}
+
+func (event *IcalEvent) UpdateRecurrenceInstance(masterStartTime *time.Time) {
+	event.settings.RecurrenceId = common.CalculateRecurrenceId(event.eventDate.Start(), event.eventDate.AllDay())
+	event.settings.IsFirstRecurrence = masterStartTime.Equal(*event.eventDate.Start())
 }
 
 func (event *IcalEvent) CanEdit() bool {

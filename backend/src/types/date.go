@@ -188,9 +188,10 @@ func (ed *EventDate) Clone() *EventDate {
 
 // RFC-5545 3.3.10, 3.8.5.3
 type EventRecurrence struct {
-	repeats    bool
-	rule       *rrule.ROption
-	exceptions []time.Time
+	repeats           bool
+	rule              *rrule.ROption
+	exceptions        []time.Time
+	modifiedInstances []time.Time
 }
 
 func (er *EventRecurrence) Clone() *EventRecurrence {
@@ -217,8 +218,16 @@ func (er *EventRecurrence) Except() []time.Time {
 	return er.exceptions
 }
 
+func (er *EventRecurrence) Modified() []time.Time {
+	return er.modifiedInstances
+}
+
 func (er *EventRecurrence) AddException(date *time.Time) {
 	er.exceptions = append(er.exceptions, *date)
+}
+
+func (er *EventRecurrence) AddModifiedInstance(date *time.Time) {
+	er.modifiedInstances = append(er.modifiedInstances, *date)
 }
 
 func EmptyEventRecurrence() *EventRecurrence {

@@ -69,11 +69,12 @@ func ParseIcalTime(icalTime *ical.Prop) (*time.Time, error) {
 }
 
 type IcalEventProps struct {
-	Name      string
-	Desc      string
-	Color     *types.Color
-	Uid       string
-	EventDate *types.EventDate
+	Name         string
+	Desc         string
+	Color        *types.Color
+	Uid          string
+	RecurrenceId string
+	EventDate    *types.EventDate
 }
 
 func ParseIcalEvent(props *ical.Props) (*IcalEventProps, bool, error) {
@@ -145,6 +146,18 @@ func ParseIcalEvent(props *ical.Props) (*IcalEventProps, bool, error) {
 		return nil, false, fmt.Errorf("could not parse recurrence rule: %v", err)
 	}
 
+	var recurrenceIdStr string
+	if recurrenceId := props.Get(ical.PropRecurrenceID); recurrenceId == nil {
+		recurrenceIdStr = ""
+	} else {
+		recurrenceIdStr = recurrenceId.Value
+	}
+
+	for _, prop := range props.Values("EXDATE") {
+		exceptionTime := ExtractDateFromRecurrenceId(prop.Value)
+		eventRecurrence.AddException(exceptionTime)
+	}
+
 	var eventDate *types.EventDate
 	if dtend != nil {
 		endTime, err := ParseIcalTime(dtend)
@@ -169,12 +182,36 @@ func ParseIcalEvent(props *ical.Props) (*IcalEventProps, bool, error) {
 	}
 
 	parsedProps := &IcalEventProps{
-		Name:      summaryStr,
-		Desc:      descStr,
-		Color:     color,
-		Uid:       uid.Value,
-		EventDate: eventDate,
+		Name:         summaryStr,
+		Desc:         descStr,
+		Color:        color,
+		Uid:          uid.Value,
+		RecurrenceId: recurrenceIdStr,
+		EventDate:    eventDate,
 	}
 
 	return parsedProps, mustUpdate, nil
+}
+
+// TODO: timezones?
+func CalculateRecurrenceId(startTime *time.Time, allDay bool) string {
+	if allDay {
+		return startTime.Format("20060102")
+	} else {
+		return startTime.Format(time.RFC3339)
+	}
+}
+
+func ExtractDateFromRecurrenceId(recurrenceId string) *time.Time {
+	parsed, err := time.Parse(time.RFC3339, recurrenceId)
+	if err == nil {
+		return &parsed
+	}
+
+	parsed, err = time.Parse("20060102", recurrenceId)
+	if err == nil {
+		return &parsed
+	}
+
+	return nil
 }

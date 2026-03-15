@@ -157,6 +157,7 @@ func (calendar *GoogleCalendar) GetEvents(start time.Time, end time.Time, q type
 	}
 
 	cancelledInstances := make(map[string][]*google.Event)
+	modifiedInstances := make(map[string][]*google.Event)
 
 	result := make([]types.Event, len(res.Items))
 	eventCount := 0
@@ -176,6 +177,16 @@ func (calendar *GoogleCalendar) GetEvents(start time.Time, end time.Time, q type
 			continue
 		}
 
+		// We have to do the same thing for modified events, but that seems to be standard.
+		if event.RecurringEventId != "" {
+			modified, exists := modifiedInstances[event.RecurringEventId]
+			if !exists {
+				modified = []*google.Event{}
+			}
+			modified = append(modified, event)
+			modifiedInstances[event.RecurringEventId] = modified
+		}
+
 		converted, err := calendar.eventFromGoogle(event, q)
 		if err != nil {
 			return nil, err.
@@ -192,7 +203,7 @@ func (calendar *GoogleCalendar) GetEvents(start time.Time, end time.Time, q type
 	for _, event := range result[:eventCount] {
 		if exceptions, exists := cancelledInstances[event.GetSettings().(*GoogleEventSettings).GoogleId]; exists {
 			for _, exception := range exceptions {
-				exceptionTime, _, tr := exception.Start.ParseTimeDefinition()
+				exceptionTime, _, tr := exception.OriginalStartTime.ParseTimeDefinition()
 				if tr != nil {
 					return nil, tr.
 						Append(errors.LvlWordy, "Could not parse exception time").
@@ -200,6 +211,18 @@ func (calendar *GoogleCalendar) GetEvents(start time.Time, end time.Time, q type
 						AltStr(errors.LvlWordy, "Could not parse event")
 				}
 				event.GetDate().Recurrence().AddException(exceptionTime)
+			}
+		}
+		if modifications, exists := modifiedInstances[event.GetSettings().(*GoogleEventSettings).GoogleId]; exists {
+			for _, modification := range modifications {
+				modifiedTime, _, tr := modification.OriginalStartTime.ParseTimeDefinition()
+				if tr != nil {
+					return nil, tr.
+						Append(errors.LvlWordy, "Could not parse modification time").
+						Append(errors.LvlDebug, "Could not parse event %v", modification.Id).
+						AltStr(errors.LvlWordy, "Could not parse event")
+				}
+				event.GetDate().Recurrence().AddModifiedInstance(modifiedTime)
 			}
 		}
 	}

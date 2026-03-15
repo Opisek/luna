@@ -28,6 +28,7 @@ type Event interface {
 	GetDate() *EventDate
 
 	Clone() Event
+	UpdateRecurrenceInstance(masterStartTime *time.Time)
 }
 
 type EventSettings interface {
@@ -53,6 +54,10 @@ func ExpandRecurrence(event Event, start *time.Time, end *time.Time) ([]Event, *
 	for _, exception := range event.GetDate().Recurrence().Except() {
 		rset.ExDate(exception)
 	}
+	for _, exception := range event.GetDate().Recurrence().Modified() {
+		rset.ExDate(exception)
+	}
+	setStart := rset.GetDTStart()
 
 	timeSlices := rset.Between(*start, *end, true)
 
@@ -64,6 +69,8 @@ func ExpandRecurrence(event Event, start *time.Time, end *time.Time) ([]Event, *
 		newEvent := event.Clone()
 		newEvent.GetDate().SetStart(&newStart)
 		newEvent.GetDate().SetEnd(&newEnd)
+		newEvent.UpdateRecurrenceInstance(&setStart)
+
 		events[i] = newEvent
 	}
 
