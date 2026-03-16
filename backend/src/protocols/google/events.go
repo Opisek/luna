@@ -9,7 +9,6 @@ import (
 	"luna-backend/types"
 
 	"net/http"
-	"time"
 )
 
 type GoogleEvent struct {
@@ -81,14 +80,14 @@ func (calendar *GoogleCalendar) eventFromGoogle(googleEvent *google.Event, q typ
 			AltStr(errors.LvlWordy, "Could not parse event")
 	}
 
-	startTime, allDay, tr := googleEvent.Start.ParseTimeDefinition()
+	startTime, timezone, allDay, tr := googleEvent.Start.ParseTimeDefinition()
 	if tr != nil {
 		return nil, tr.
 			Append(errors.LvlWordy, "Could not parse start time").
 			Append(errors.LvlDebug, "Could not parse event %v", googleEvent.Id).
 			AltStr(errors.LvlWordy, "Could not parse event")
 	}
-	endTime, _, tr := googleEvent.End.ParseTimeDefinition()
+	endTime, _, _, tr := googleEvent.End.ParseTimeDefinition()
 	if tr != nil {
 		return nil, tr.
 			Append(errors.LvlWordy, "Could not parse end time").
@@ -97,6 +96,7 @@ func (calendar *GoogleCalendar) eventFromGoogle(googleEvent *google.Event, q typ
 	}
 
 	eventDate := types.NewEventDateFromEndTime(startTime, endTime, allDay, recurrence)
+	eventDate.SetTimezone(timezone)
 
 	event := &GoogleEvent{
 		name:       googleEvent.Name,
@@ -193,11 +193,15 @@ func (event *GoogleEvent) Clone() types.Event {
 	}
 }
 
-func (event *GoogleEvent) UpdateRecurrenceInstance(masterStartTime *time.Time) {
+func (event *GoogleEvent) SupplyMasterEvent(masterEvent types.Event) {
 	event.settings.RecurrenceId = common.CalculateRecurrenceId(event.eventDate.Start(), event.eventDate.AllDay())
-	event.settings.IsFirstRecurrence = masterStartTime.Equal(*event.eventDate.Start())
+	event.settings.IsFirstRecurrence = masterEvent.GetDate().Start().Equal(*event.eventDate.Start())
 	event.settings.RecurrenceMasterId = event.settings.GoogleId
 	event.settings.GoogleId = ""
+}
+
+func (event *GoogleEvent) GetRecurrenceId() string {
+	return event.settings.RecurrenceId
 }
 
 func (event *GoogleEvent) CanEdit() bool {

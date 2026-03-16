@@ -7,7 +7,6 @@ import (
 	common "luna-backend/protocols/internal"
 	"luna-backend/types"
 	"net/http"
-	"time"
 
 	"github.com/emersion/go-webdav/caldav"
 )
@@ -171,9 +170,13 @@ func (event *CaldavEvent) Clone() types.Event {
 	}
 }
 
-func (event *CaldavEvent) UpdateRecurrenceInstance(masterStartTime *time.Time) {
+func (event *CaldavEvent) SupplyMasterEvent(masterEvent types.Event) {
 	event.settings.RecurrenceId = common.CalculateRecurrenceId(event.eventDate.Start(), event.eventDate.AllDay())
-	event.settings.IsFirstRecurrence = masterStartTime.Equal(*event.eventDate.Start())
+	event.settings.IsFirstRecurrence = masterEvent.GetDate().Start().Equal(*event.eventDate.Start())
+}
+
+func (event *CaldavEvent) GetRecurrenceId() string {
+	return event.settings.RecurrenceId
 }
 
 func (event *CaldavEvent) CanEdit() bool {

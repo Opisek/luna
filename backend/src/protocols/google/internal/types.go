@@ -62,23 +62,30 @@ type Event struct {
 	OriginalStartTime TimeDefinition `json:"originalStartTime,omitempty"`
 }
 
-func (timeDefinition *TimeDefinition) ParseTimeDefinition() (*time.Time, bool, *errors.ErrorTrace) {
+func (timeDefinition *TimeDefinition) ParseTimeDefinition() (*time.Time, *time.Location, bool, *errors.ErrorTrace) {
 	allDay := timeDefinition.Date != ""
 
 	var parsedTime time.Time
 	var err error
 
+	timezone, err := time.LoadLocation(timeDefinition.TimeZone)
+	if err != nil {
+		return nil, nil, false, errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not parse timezone")
+	}
+
 	if allDay {
-		if parsedTime, err = time.Parse("2006-01-02", timeDefinition.Date); err != nil {
-			return nil, false, errors.New().Status(http.StatusInternalServerError).
+		if parsedTime, err = time.ParseInLocation("2006-01-02", timeDefinition.Date, timezone); err != nil {
+			return nil, nil, false, errors.New().Status(http.StatusInternalServerError).
 				AddErr(errors.LvlDebug, err).
 				Append(errors.LvlDebug, "Could not parse date %v", timeDefinition.Date).
 				AltStr(errors.LvlWordy, "Could not parse date")
 		}
 		// TODO: timeDefinition.timeZone
 	} else {
-		if parsedTime, err = time.Parse(time.RFC3339, timeDefinition.DateTime); err != nil {
-			return nil, false, errors.New().Status(http.StatusInternalServerError).
+		if parsedTime, err = time.ParseInLocation(time.RFC3339, timeDefinition.DateTime, timezone); err != nil {
+			return nil, nil, false, errors.New().Status(http.StatusInternalServerError).
 				AddErr(errors.LvlDebug, err).
 				Append(errors.LvlDebug, "Could not parse datetime %v", timeDefinition.DateTime).
 				AltStr(errors.LvlWordy, "Could not parse datetime")
@@ -86,5 +93,5 @@ func (timeDefinition *TimeDefinition) ParseTimeDefinition() (*time.Time, bool, *
 		// TODO: timeDefinition.timeZone
 	}
 
-	return &parsedTime, allDay, nil
+	return &parsedTime, timezone, allDay, nil
 }

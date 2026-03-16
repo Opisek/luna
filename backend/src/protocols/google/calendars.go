@@ -203,7 +203,7 @@ func (calendar *GoogleCalendar) GetEvents(start time.Time, end time.Time, q type
 	for _, event := range result[:eventCount] {
 		if exceptions, exists := cancelledInstances[event.GetSettings().(*GoogleEventSettings).GoogleId]; exists {
 			for _, exception := range exceptions {
-				exceptionTime, _, tr := exception.OriginalStartTime.ParseTimeDefinition()
+				exceptionTime, _, _, tr := exception.OriginalStartTime.ParseTimeDefinition()
 				if tr != nil {
 					return nil, tr.
 						Append(errors.LvlWordy, "Could not parse exception time").
@@ -215,7 +215,7 @@ func (calendar *GoogleCalendar) GetEvents(start time.Time, end time.Time, q type
 		}
 		if modifications, exists := modifiedInstances[event.GetSettings().(*GoogleEventSettings).GoogleId]; exists {
 			for _, modification := range modifications {
-				modifiedTime, _, tr := modification.OriginalStartTime.ParseTimeDefinition()
+				modifiedTime, _, _, tr := modification.OriginalStartTime.ParseTimeDefinition()
 				if tr != nil {
 					return nil, tr.
 						Append(errors.LvlWordy, "Could not parse modification time").

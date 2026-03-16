@@ -184,7 +184,7 @@ func (calendar *IcalCalendar) GetEvents(start time.Time, end time.Time, q types.
 		}
 		eventSettings := event.GetSettings().(*IcalEventSettings)
 		if masterEvent, exists := masterEvents[eventSettings.Uid]; exists {
-			res[masterEvent].GetDate().Recurrence().AddModifiedInstance(common.ExtractDateFromRecurrenceId(eventSettings.RecurrenceId))
+			res[masterEvent].GetDate().Recurrence().AddModifiedInstance(common.ExtractDateFromRecurrenceId(event))
 		}
 	}
 

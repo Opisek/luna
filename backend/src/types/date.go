@@ -16,12 +16,14 @@ type EventDate struct {
 	duration        *time.Duration
 	specifyDuration bool
 	allDay          bool
+	timezone        string
+	timezoneOffset  int
 	recurrence      *EventRecurrence
 }
 
 func NewEventDateFromEndTime(start *time.Time, end *time.Time, allDay bool, recurrence *EventRecurrence) *EventDate {
+	timezone, offset := start.Zone()
 	if allDay {
-		_, offset := start.Zone()
 		newStart := start.Add(time.Duration(offset) * time.Second).UTC()
 
 		var newEnd time.Time
@@ -41,13 +43,15 @@ func NewEventDateFromEndTime(start *time.Time, end *time.Time, allDay bool, recu
 		end:             end,
 		allDay:          allDay,
 		recurrence:      recurrence,
+		timezone:        timezone,
+		timezoneOffset:  offset,
 		specifyDuration: false,
 	}
 }
 
 func NewEventDateFromDuration(start *time.Time, duration *time.Duration, allDay bool, recurrence *EventRecurrence) *EventDate {
+	timezone, offset := start.Zone()
 	if allDay {
-		_, offset := start.Zone()
 		newStart := start.Add(time.Duration(offset) * time.Second).UTC()
 		start = &newStart
 	}
@@ -56,13 +60,15 @@ func NewEventDateFromDuration(start *time.Time, duration *time.Duration, allDay 
 		start:           start,
 		duration:        duration,
 		allDay:          allDay,
+		timezone:        timezone,
+		timezoneOffset:  offset,
 		recurrence:      recurrence,
 		specifyDuration: true,
 	}
 }
 
 func NewEventDateFromSingleDay(start *time.Time, recurrence *EventRecurrence) *EventDate {
-	_, offset := start.Zone()
+	timezone, offset := start.Zone()
 	newStart := start.Add(time.Duration(offset) * time.Second).UTC()
 	newEnd := newStart
 
@@ -73,6 +79,8 @@ func NewEventDateFromSingleDay(start *time.Time, recurrence *EventRecurrence) *E
 		start:           start,
 		end:             end,
 		allDay:          true,
+		timezone:        timezone,
+		timezoneOffset:  offset,
 		recurrence:      recurrence,
 		specifyDuration: false,
 	}
@@ -111,6 +119,19 @@ func (ed *EventDate) Duration() *time.Duration {
 
 func (ed *EventDate) SpecifyDuration() bool {
 	return ed.specifyDuration
+}
+
+func (ed *EventDate) Timezone() string {
+	return ed.timezone
+}
+
+func (ed *EventDate) TimezoneOffset() int {
+	return ed.timezoneOffset
+}
+
+func (ed *EventDate) SetTimezone(timezone *time.Location) {
+	ed.timezone = timezone.String()
+	//ed.timezoneOffset = timezone.?
 }
 
 func (ed *EventDate) Recurrence() *EventRecurrence {
@@ -192,6 +213,7 @@ type EventRecurrence struct {
 	rule              *rrule.ROption
 	exceptions        []time.Time
 	modifiedInstances []time.Time
+	additional        []time.Time
 }
 
 func (er *EventRecurrence) Clone() *EventRecurrence {
@@ -222,12 +244,21 @@ func (er *EventRecurrence) Modified() []time.Time {
 	return er.modifiedInstances
 }
 
+func (er *EventRecurrence) Additional() []time.Time {
+	return er.additional
+}
+
 func (er *EventRecurrence) AddException(date *time.Time) {
 	er.exceptions = append(er.exceptions, *date)
 }
 
 func (er *EventRecurrence) AddModifiedInstance(date *time.Time) {
 	er.modifiedInstances = append(er.modifiedInstances, *date)
+}
+
+func (er *EventRecurrence) AddAdditional(date *time.Time) {
+	er.repeats = true
+	er.additional = append(er.additional, *date)
 }
 
 func EmptyEventRecurrence() *EventRecurrence {
@@ -242,16 +273,31 @@ func EventRecurrenceFromIcal(ical *ical.Props) (*EventRecurrence, error) {
 		return nil, fmt.Errorf("could not get recurrence rule: %v", err)
 	}
 
+	var eventRecurrence *EventRecurrence
 	if roption == nil {
-		return EmptyEventRecurrence(), nil
+		eventRecurrence = EmptyEventRecurrence()
+	} else {
+		eventRecurrence = &EventRecurrence{
+			repeats: true,
+			rule:    roption,
+		}
 	}
 
-	// TODO: parse EXDATE (the library does not seem to do it)
+	for _, prop := range ical.Values("EXDATE") {
+		exceptionTime, _, err := ParseIcalTime(&prop)
+		if err == nil {
+			eventRecurrence.AddException(exceptionTime)
+		}
+	}
 
-	return &EventRecurrence{
-		repeats: true,
-		rule:    roption,
-	}, nil
+	for _, prop := range ical.Values("RDATE") {
+		additionalTime, _, err := ParseIcalTime(&prop)
+		if err == nil {
+			eventRecurrence.AddAdditional(additionalTime)
+		}
+	}
+
+	return eventRecurrence, nil
 }
 
 func EventRecurrenceFromLines(lines []string) (*EventRecurrence, error) {
@@ -272,6 +318,42 @@ func EventRecurrenceFromLines(lines []string) (*EventRecurrence, error) {
 		repeats: true,
 		rule:    roption,
 	}, nil
+}
+
+func ParseIcalTime(icalTime *ical.Prop) (*time.Time, *time.Location, error) {
+	if icalTime == nil || icalTime.Value == "" {
+		return nil, nil, fmt.Errorf("time property is nil or empty")
+	}
+	timestr := icalTime.Value
+
+	var tzid string
+	if timestr[len(timestr)-1] == 'Z' {
+		tzid = "UTC"
+		timestr = timestr[:len(timestr)-1]
+	} else {
+		tzidParam := icalTime.Params.Get("TZID")
+		if tzidParam == "" {
+			tzid = "Local"
+		} else {
+			tzid = tzidParam
+		}
+	}
+
+	location, err := time.LoadLocation(tzid)
+	if err != nil {
+		return nil, nil, fmt.Errorf("could not parse timezone location %v: %v", tzid, err)
+	}
+
+	if !strings.Contains(timestr, "T") {
+		timestr = timestr + "T000000"
+	}
+
+	parsedTime, err := time.ParseInLocation("20060102T150405", timestr, location)
+	if err != nil {
+		return nil, nil, fmt.Errorf("could not parse timestamp %v: %v", timestr, err)
+	}
+
+	return &parsedTime, location, nil
 }
 
 func (er EventRecurrence) MarshalJSON() ([]byte, error) {

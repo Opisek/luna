@@ -32,42 +32,6 @@ func EscapeIcalString(s string) string {
 
 var IcalProductId string = "-//opisek.net//Luna//EN"
 
-func ParseIcalTime(icalTime *ical.Prop) (*time.Time, error) {
-	if icalTime == nil || icalTime.Value == "" {
-		return nil, fmt.Errorf("time property is nil or empty")
-	}
-	timestr := icalTime.Value
-
-	var tzid string
-	if timestr[len(timestr)-1] == 'Z' {
-		tzid = "UTC"
-		timestr = timestr[:len(timestr)-1]
-	} else {
-		tzidParam := icalTime.Params.Get("TZID")
-		if tzidParam == "" {
-			tzid = "Local"
-		} else {
-			tzid = tzidParam
-		}
-	}
-
-	location, err := time.LoadLocation(tzid)
-	if err != nil {
-		return nil, fmt.Errorf("could not parse timezone location %v: %v", tzid, err)
-	}
-
-	if !strings.Contains(timestr, "T") {
-		timestr = timestr + "T000000"
-	}
-
-	parsedTime, err := time.ParseInLocation("20060102T150405", timestr, location)
-	if err != nil {
-		return nil, fmt.Errorf("could not parse timestamp %v: %v", timestr, err)
-	}
-
-	return &parsedTime, nil
-}
-
 type IcalEventProps struct {
 	Name         string
 	Desc         string
@@ -126,7 +90,7 @@ func ParseIcalEvent(props *ical.Props) (*IcalEventProps, bool, error) {
 
 	// Date
 	dtstart := props.Get(ical.PropDateTimeStart)
-	startTime, err := ParseIcalTime(dtstart)
+	startTime, timezone, err := types.ParseIcalTime(dtstart)
 	if err != nil {
 		return nil, false, fmt.Errorf("could not parse start time %v: %v", dtstart.Value, err)
 	}
@@ -153,14 +117,9 @@ func ParseIcalEvent(props *ical.Props) (*IcalEventProps, bool, error) {
 		recurrenceIdStr = recurrenceId.Value
 	}
 
-	for _, prop := range props.Values("EXDATE") {
-		exceptionTime := ExtractDateFromRecurrenceId(prop.Value)
-		eventRecurrence.AddException(exceptionTime)
-	}
-
 	var eventDate *types.EventDate
 	if dtend != nil {
-		endTime, err := ParseIcalTime(dtend)
+		endTime, _, err := types.ParseIcalTime(dtend)
 		if err != nil {
 			return nil, false, fmt.Errorf("could not parse end time %v: %v", dtend.Value, err)
 		}
@@ -180,6 +139,8 @@ func ParseIcalEvent(props *ical.Props) (*IcalEventProps, bool, error) {
 	} else {
 		eventDate = types.NewEventDateFromSingleDay(startTime, eventRecurrence)
 	}
+
+	eventDate.SetTimezone(timezone)
 
 	parsedProps := &IcalEventProps{
 		Name:         summaryStr,
@@ -202,16 +163,10 @@ func CalculateRecurrenceId(startTime *time.Time, allDay bool) string {
 	}
 }
 
-func ExtractDateFromRecurrenceId(recurrenceId string) *time.Time {
-	parsed, err := time.Parse(time.RFC3339, recurrenceId)
-	if err == nil {
-		return &parsed
-	}
-
-	parsed, err = time.Parse("20060102", recurrenceId)
-	if err == nil {
-		return &parsed
-	}
-
-	return nil
+func ExtractDateFromRecurrenceId(event types.Event) *time.Time {
+	parsedTime, _, _ := types.ParseIcalTime(&ical.Prop{
+		Value:  event.GetRecurrenceId(),
+		Params: ical.Params{"TZID": {event.GetDate().Timezone()}},
+	})
+	return parsedTime
 }
