@@ -88,7 +88,7 @@ func (calendar *GoogleCalendar) eventFromGoogle(googleEvent *google.Event, q typ
 			Append(errors.LvlDebug, "Could not parse event %v", googleEvent.Id).
 			AltStr(errors.LvlWordy, "Could not parse event")
 	}
-	endTime, _, tr := googleEvent.Start.ParseTimeDefinition()
+	endTime, _, tr := googleEvent.End.ParseTimeDefinition()
 	if tr != nil {
 		return nil, tr.
 			Append(errors.LvlWordy, "Could not parse end time").
