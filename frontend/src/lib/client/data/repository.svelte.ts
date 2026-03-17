@@ -711,9 +711,7 @@ export class Repository {
         const cached = this.cacheOk(cache.get(startMonth));
         if (!cached) break;
         result = result.concat(cached.map(x => this.eventsMap.get(x)).filter(x => x != null));
-        console.log("already in cache", startMonth)
       } else {
-        console.log("already pending", startMonth)
       }
       startMonth = this.nextMonth(startMonth);
     }
@@ -722,9 +720,7 @@ export class Repository {
         const cached = this.cacheOk(cache.get(endMonth));
         if (!cached) break;
         result = result.concat(cached.map(x => this.eventsMap.get(x)).filter(x => x != null));
-        console.log("already in cache", endMonth)
       } else {
-        console.log("already pending", startMonth)
       }
       endMonth = this.previousMonth(endMonth);
     }
@@ -774,8 +770,6 @@ export class Repository {
         this.addEventToCache(event, month);
       }
     }
-
-    console.log("calendar cache after adding events", this.eventsCache.get(calendar))
 
     // Done
     for (let month = startMonth; month <= endMonth; month = this.nextMonth(month)) this.setMonthNotPending(calendar, month);
