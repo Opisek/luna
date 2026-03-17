@@ -8,6 +8,7 @@
   import { NoOp } from "$lib/client/placeholders";
   import { focusIndicator } from "$lib/client/decoration";
   import { getMetadata } from "$lib/client/data/metadata.svelte";
+  import { draggable } from "$lib/client/reordering";
 
   import { getContext } from "svelte";
 
@@ -48,6 +49,8 @@
     width: 100%;
     align-items: center;
     justify-content: space-between;
+    user-select: none;
+    cursor: grab;
   }
 
   span {
@@ -78,7 +81,7 @@
   }
 </style>
 
-<div class="entry">
+<div class="entry" use:draggable>
   <span class="name">
     <ColorCircle
       color={GetCalendarColor(calendar)}
