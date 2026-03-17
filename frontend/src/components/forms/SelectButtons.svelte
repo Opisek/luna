@@ -2,7 +2,7 @@
   import Label from "./Label.svelte";
 
   import { addRipple, focusIndicator } from "$lib/client/decoration";
-  import { EmptyOption } from "../../lib/client/placeholders";
+  import { EmptyOption, NoOp } from "../../lib/client/placeholders";
   import type { Option } from "../../types/options";
 
   interface Props {
@@ -14,6 +14,7 @@
     editable?: boolean;
     compact?: boolean;
     options: Option<T>[];
+    onClick?: (selected: T) => any;
   }
 
   let {
@@ -24,7 +25,8 @@
     label = true,
     editable = true,
     compact = false,
-    options
+    options,
+    onClick = NoOp,
   }: Props = $props();
 
   let selected: Option<T> = $derived(options.filter(option => option.value === value)[0] || options[0] || EmptyOption);
@@ -100,7 +102,10 @@
         class:selected={option.value === value}
         class:first={i === 0}
         class:last={i === options.length - 1}
-        onclick={() => {value = option.value}}
+        onclick={() => {
+          value = option.value;
+          onClick(option.value);
+        }}
         onmousedown={addRipple}
         use:focusIndicator
       >

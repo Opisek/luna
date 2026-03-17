@@ -56,7 +56,7 @@ func (q *Queries) SetFilecache(file types.File, content io.Reader, user types.ID
 		q.Context,
 		`
 		INSERT INTO filecache (id, file, name, date, owner)
-		VALUES ($1, $2, $3, CURRENT_TIMESTAMP, $4)
+		VALUES ($1, $2, $3, NOW(), $4)
 		ON CONFLICT (id) DO UPDATE
 		SET file = $2, name = $3
 		WHERE filecache.owner = $4;
@@ -84,7 +84,7 @@ func (q *Queries) SetFilecacheWithoutId(file types.File, content io.Reader, user
 
 	query := `
 		INSERT INTO filecache (file, name, date, owner)
-		VALUES ($1, $2, CURRENT_TIMESTAMP, $3)
+		VALUES ($1, $2, NOW(), $3)
 		ON CONFLICT (id) DO UPDATE
 		SET file = $1, name = $2
 		WHERE filecache.owner = $3

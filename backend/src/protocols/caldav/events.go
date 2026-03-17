@@ -151,3 +151,11 @@ func (event *CaldavEvent) Clone() types.Event {
 		eventDate:  event.eventDate.Clone(),
 	}
 }
+
+func (event *CaldavEvent) CanEdit() bool {
+	return !event.eventDate.Recurrence().Repeats()
+}
+
+func (event *CaldavEvent) CanDelete() bool {
+	return !event.eventDate.Recurrence().Repeats()
+}

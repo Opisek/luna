@@ -1,3 +1,12 @@
+# DISCLAIMER DUE TO RECENT SPIKE IN ATTENTION 
+There are no screenshots in the README yet.
+
+I wasn't expecting to attract a lot of attention yet, so I was putting off writing a good-looking readme until I was ready to release a 1.0.0 version.
+
+Given the sudden increase in traffic and, frankly, dozens of requests to add screenshots, I am ON IT. Please give me a few days to get something presentable on here.
+
+In any case, thank you all for your interest and support! ❤️
+
 # Project Scope
 There is an abundance of self-hosted CalDav servers out there, yet basically nothing to actually display the data with!
 
@@ -410,6 +419,65 @@ Depending on the `auth_type` field, additional information may need to be passed
 - **Method**: ``DELETE``
 - **Body**: Empty
 - **Purpose**: Retracts all registration invites
+
+### OAuth 2.0 Clients
+#### Get Clients
+- **Path**: ``/api/oauth/clients``
+- **Method**: ``GET``
+- **Body**: Empty
+- **Purpose**: Returns all registered OAuth 2.0 clients with client secrets redacted
+
+#### Get Client
+- **Path**: ``/api/oauth/clients/<ID>``
+- **Method**: ``GET``
+- **Body**: Empty
+- **Purpose**: Returns the specified OAuth 2.0 client including the client secret
+
+#### Put Client
+- **Path**: ``/api/oauth/clients``
+- **Method**: ``PUT``
+- **Body**: `name`, `client_id`, `client_secret`, `authorization_url`
+- **Purpose**: Registers a new OAuth 2.0 client
+
+#### Patch Client
+- **Path**: ``/api/oauth/clients/<ID>``
+- **Method**: ``PATCH``
+- **Body**: `name`, `client_id`, `client_secret`, `authorization_url`
+- **Purpose**: Edits an already registered OAuth 2.0 client
+- **Note**: If `client_secret` is left empty, it is not modified.
+
+#### Delete Client
+- **Path**: ``/api/oauth/clients/<ID>``
+- **Method**: ``DELETE``
+- **Body**: Empty
+- **Purpose**: Deletes a registered OAuth 2.0 client
+
+### OAuth 2.0 Authorization
+#### Put Request
+- **Path**: ``/api/oauth/authorization/<ID>``
+- **Method**: ``PUT``
+- **Body**: Empty
+- **Purpose**: Begins a new OAuth 2.0 authorization flow with the client whose internal ID is passed and returns the authorization "state" (request ID)
+- **Note**: The way that the client ID is passed might change to the form body later
+
+#### Post Request
+- **Path**: ``/api/oauth/authorization/<ID>``
+- **Method**: ``POST``
+- **Body**: ``authorization_code``
+- **Purpose**: Successfully finishes the authorization flow whose ID is given and internally fetches OAuth 2.0 tokens using the supplied authorization code
+
+#### Delete Request
+- **Path**: ``/api/oauth/authorization/<ID>``
+- **Method**: ``DELETE``
+- **Body**: Empty
+- **Purpose**: Fails the authorization flow whose ID is given
+
+### OAuth 2.0 Tokens
+#### Get Clients with Tokens
+- **Path**: ``/api/oauth/tokens``
+- **Method**: ``GET``
+- **Body**: Empty
+- **Purpose**: Returns accounts that the user authorized Luna to use. This consists of the external account id, account name, and internal OAuth 2.0 client id and the ID of the OAuth 2.0 tokens associated with that account.
 
 ## Additional Frontend Endpoints
 Aside from using the backend API, the frontend also provides a limited amount of endpoints for its own purposes.

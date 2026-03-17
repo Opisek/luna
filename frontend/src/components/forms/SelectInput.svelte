@@ -8,13 +8,12 @@
   import { calculateOptimalPopupPosition } from "$lib/common/calculations";
   import { focusIndicator } from "$lib/client/decoration";
   import type { Option } from "../../types/options";
-  import Event from "../calendar/Event.svelte";
 
   let active = $state(false);
   let optionsAbove = $state(false);
 
   interface Props {
-    value: T | null;
+    value: T | null | undefined;
     placeholder: string;
     name: string;
     editable?: boolean;
@@ -22,7 +21,7 @@
   }
 
   let {
-    value = $bindable(null),
+    value = $bindable(),
     placeholder,
     name,
     editable = true,

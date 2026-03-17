@@ -16,8 +16,8 @@ func (q *Tables) InitializeSessionsTable() error {
 		CREATE TABLE sessions (
 			sessionid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 			userid UUID REFERENCES users(id) ON DELETE CASCADE,
-			created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-			last_seen TIMESTAMP NOT NULL DEFAULT NOW(),
+			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			last_seen TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 			user_agent TEXT,
 			initial_ip_address INET,
 			last_ip_address INET,

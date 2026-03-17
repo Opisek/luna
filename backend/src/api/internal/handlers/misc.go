@@ -155,9 +155,9 @@ func isUrlIcal(u *util.HandlerUtility, url *types.Url, auth types.AuthMethod) (b
 	req.Header.Set("Accept", "text/calendar")
 	req = req.WithContext(u.Context)
 
-	res, err := auth.Do(req)
-	if err != nil {
-		return false, errors.New().Status(http.StatusInternalServerError).
+	res, tr := auth.Do(req)
+	if tr != nil {
+		return false, tr.Status(http.StatusInternalServerError).
 			AddErr(errors.LvlDebug, err).
 			Append(errors.LvlWordy, "Could not check url %v", url), 0
 	}
@@ -166,13 +166,13 @@ func isUrlIcal(u *util.HandlerUtility, url *types.Url, auth types.AuthMethod) (b
 		return false, nil, res.StatusCode
 	}
 
-	tr := files.IsValidIcalFile(res.Body)
+	tr = files.IsValidIcalFile(res.Body)
 	return tr == nil, nil, http.StatusOK
 }
 
 func isUrlCaldav(u *util.HandlerUtility, url *types.Url, auth types.AuthMethod) (bool, *errors.ErrorTrace, string) {
 	client, err := caldav.NewClient(
-		auth,
+		auth.HttpClient(),
 		url.String(),
 	)
 	if err != nil {

@@ -138,7 +138,7 @@
 {#if fontFile !== null}
   <Button color={ColorKeys.Success} onClick={uploadFontFile}>
     {#if uploadingFontFile}
-      <Spinner/> <!-- TODO: Spinner does not have the same height as text -->
+      <Spinner/>
     {:else}
       Upload Theme
     {/if}

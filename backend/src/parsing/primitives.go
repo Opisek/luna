@@ -1,11 +1,13 @@
 package parsing
 
 import (
+	"context"
 	"encoding/json"
 	"luna-backend/auth"
 	"luna-backend/constants"
 	"luna-backend/errors"
 	"luna-backend/protocols/caldav"
+	"luna-backend/protocols/google"
 	"luna-backend/protocols/ical"
 	"luna-backend/types"
 	"net/http"
@@ -17,7 +19,7 @@ func GetPrimitivesParser() PrimitivesParser {
 	return PrimitivesParser{}
 }
 
-func (PrimitivesParser) ParseSource(entry *types.SourceDatabaseEntry) (types.Source, *errors.ErrorTrace) {
+func (PrimitivesParser) ParseSource(entry *types.SourceDatabaseEntry, ctx context.Context) (types.Source, *errors.ErrorTrace) {
 	var err error
 
 	var authMethod types.AuthMethod
@@ -44,6 +46,17 @@ func (PrimitivesParser) ParseSource(entry *types.SourceDatabaseEntry) (types.Sou
 				Append(errors.LvlWordy, "Could not unmarshal authentication")
 		}
 		authMethod = bearerAuth
+	case constants.AuthOauth:
+		oauthAuth := &auth.OauthAuth{}
+		err = json.Unmarshal([]byte(entry.Auth), oauthAuth)
+		if err != nil {
+			return nil, errors.New().Status(http.StatusInternalServerError).
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlDebug, "Could not unmarshal OAuth 2.0 authentication").
+				Append(errors.LvlWordy, "Could not unmarshal authentication")
+		}
+		oauthAuth.SupplyContext(ctx)
+		authMethod = oauthAuth
 	default:
 		return nil, errors.New().Status(http.StatusInternalServerError).
 			Append(errors.LvlPlain, "Unknown authentication type: %v", entry.Auth)
@@ -65,6 +78,7 @@ func (PrimitivesParser) ParseSource(entry *types.SourceDatabaseEntry) (types.Sou
 			settings,
 			authMethod,
 		)
+		caldavSource.SupplyContext(ctx)
 		return caldavSource, nil
 	case constants.SourceIcal:
 		settings := &ical.IcalSourceSettings{}
@@ -84,7 +98,25 @@ func (PrimitivesParser) ParseSource(entry *types.SourceDatabaseEntry) (types.Sou
 		if tr != nil {
 			return nil, tr
 		}
+		icalSource.SupplyContext(ctx)
 		return icalSource, nil
+	case constants.SourceGoogle:
+		settings := &google.GoogleSourceSettings{}
+		err = json.Unmarshal(entry.Settings, settings)
+		if err != nil {
+			return nil, errors.New().Status(http.StatusInternalServerError).
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlDebug, "Could not unmarshal Google Calendar settings").
+				Append(errors.LvlWordy, "Could not unmarshal settings")
+		}
+		googleSource := google.PackeGoogleSource(
+			entry.Id,
+			entry.Name,
+			settings,
+			authMethod,
+		)
+		googleSource.SupplyContext(ctx)
+		return googleSource, nil
 	default:
 		return nil, errors.New().Status(http.StatusInternalServerError).
 			Append(errors.LvlWordy, "Unknown source type: %v", entry.Type)
@@ -113,6 +145,16 @@ func (PrimitivesParser) ParseCalendarSettings(sourceType string, settings []byte
 				Append(errors.LvlWordy, "Could not unmarshal settings")
 		}
 		return parsedSettings, nil
+	case constants.SourceGoogle:
+		parsedSettings := &google.GoogleCalendarSettings{}
+		err := json.Unmarshal(settings, parsedSettings)
+		if err != nil {
+			return nil, errors.New().Status(http.StatusInternalServerError).
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlDebug, "Could not unmarshal Google Calendar settings").
+				Append(errors.LvlWordy, "Could not unmarshal settings")
+		}
+		return parsedSettings, nil
 	default:
 		return nil, errors.New().Status(http.StatusInternalServerError).
 			Append(errors.LvlWordy, "Unknown source type: %v", sourceType)
@@ -138,6 +180,16 @@ func (PrimitivesParser) ParseEventSettings(sourceType string, settings []byte) (
 			return nil, errors.New().Status(http.StatusInternalServerError).
 				AddErr(errors.LvlDebug, err).
 				Append(errors.LvlDebug, "Could not unmarshal iCal settings").
+				Append(errors.LvlWordy, "Could not unmarshal settings")
+		}
+		return parsedSettings, nil
+	case constants.SourceGoogle:
+		parsedSettings := &google.GoogleEventSettings{}
+		err := json.Unmarshal(settings, parsedSettings)
+		if err != nil {
+			return nil, errors.New().Status(http.StatusInternalServerError).
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlDebug, "Could not unmarshal Google Calendar settings").
 				Append(errors.LvlWordy, "Could not unmarshal settings")
 		}
 		return parsedSettings, nil

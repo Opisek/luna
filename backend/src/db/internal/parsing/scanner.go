@@ -1,6 +1,7 @@
 package parsing
 
 import (
+	"context"
 	"fmt"
 	"luna-backend/errors"
 	"luna-backend/types"
@@ -109,12 +110,12 @@ func (s *PgxScanner) GetEventEntry() *types.EventDatabaseEntry {
 	return s.event
 }
 
-func (s *PgxScanner) GetSource() (types.Source, *errors.ErrorTrace) {
-	return s.primitivesParser.ParseSource(s.source)
+func (s *PgxScanner) GetSource(ctx context.Context) (types.Source, *errors.ErrorTrace) {
+	return s.primitivesParser.ParseSource(s.source, ctx)
 }
 
-func (s *PgxScanner) GetCalendar() (types.Calendar, *errors.ErrorTrace) {
-	source, err := s.GetSource()
+func (s *PgxScanner) GetCalendar(ctx context.Context) (types.Calendar, *errors.ErrorTrace) {
+	source, err := s.GetSource(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -132,8 +133,8 @@ func (s *PgxScanner) GetCalendar() (types.Calendar, *errors.ErrorTrace) {
 	return calendar, nil
 }
 
-func (s *PgxScanner) GetEvent() (types.Event, *errors.ErrorTrace) {
-	calendar, err := s.GetCalendar()
+func (s *PgxScanner) GetEvent(ctx context.Context) (types.Event, *errors.ErrorTrace) {
+	calendar, err := s.GetCalendar(ctx)
 	if err != nil {
 		return nil, err
 	}

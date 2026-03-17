@@ -2,13 +2,12 @@ package queries
 
 import (
 	"luna-backend/errors"
-	"luna-backend/perms"
 	"luna-backend/types"
 )
 
 // TODO: check if the session belongs to the user making the request?
 
-func (q *Queries) GetTokenPermissions(sessionid types.ID) (*perms.TokenPermissions, *errors.ErrorTrace) {
+func (q *Queries) GetTokenPermissions(sessionid types.ID) (*types.TokenPermissions, *errors.ErrorTrace) {
 	rows, err := q.Tx.Query(
 		q.Context,
 		`
@@ -26,7 +25,7 @@ func (q *Queries) GetTokenPermissions(sessionid types.ID) (*perms.TokenPermissio
 	}
 	defer rows.Close()
 
-	permissions := []perms.Permission{}
+	permissions := []types.Permission{}
 	for rows.Next() {
 		var permission string
 		if err := rows.Scan(&permission); err != nil {
@@ -35,13 +34,13 @@ func (q *Queries) GetTokenPermissions(sessionid types.ID) (*perms.TokenPermissio
 				Append(errors.LvlWordy, "Could not read token permission").
 				AltStr(errors.LvlPlain, "Database error")
 		}
-		permissions = append(permissions, perms.Permission(permission))
+		permissions = append(permissions, types.Permission(permission))
 	}
 
-	return perms.FromList(permissions), nil
+	return types.TokenPermsFromPermsList(permissions), nil
 }
 
-func (q *Queries) UpdateTokenPermissions(sessionid types.ID, permissions *perms.TokenPermissions) *errors.ErrorTrace {
+func (q *Queries) UpdateTokenPermissions(sessionid types.ID, permissions *types.TokenPermissions) *errors.ErrorTrace {
 	_, err := q.Tx.Exec(
 		q.Context,
 		`

@@ -42,6 +42,9 @@
       desc: "",
       color: "",
       overridden: false,
+      can_edit: true,
+      can_delete: true,
+      can_add_events: true,
     };
 
     showCreateModalInternal();
@@ -69,8 +72,8 @@
 
   let selectableSources = $derived(
     repository.sources
-      .filter(x => editMode ? x.type !== "ical" || x.id === calendar.source : x.id === calendar.source)
-      .map(x => ({ value: x.id, name: x.name }))
+      .filter(source => source.id === calendar.source || (editMode && source.can_add_calendars))
+      .map(source => ({ value: source.id, name: source.name }))
   );
 
   const onDelete = async () => {
@@ -92,7 +95,7 @@
         desc: calendar.desc != originalCalendar.desc,
         color: calendar.color != originalCalendar.color
       }
-      await getRepository().editCalendar(calendar, changes, true).catch(err => {
+      await getRepository().editCalendar(calendar, changes, !calendar.can_edit).catch(err => {
         promiseReject();
         throw new Error(`Could not edit calendar ${calendar.name}: ${err.message}`);
       });
@@ -134,7 +137,7 @@
   onDelete={onDelete}
   onEdit={onEdit}
   onCancel={promiseReject}
-  deletable={false}
+  deletable={calendar?.can_delete}
   submittable={canSubmit}
 >
   {#if calendar != EmptyCalendar}

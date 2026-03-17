@@ -16,7 +16,7 @@ func (q *Tables) InitializeVersionTable() error {
 			minor INT NOT NULL,
 			patch INT NOT NULL,
 			extension VARCHAR(255),
-			installed TIMESTAMP NOT NULL
+			installed TIMESTAMPTZ NOT NULL
 		);
 		`,
 	)

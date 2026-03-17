@@ -11,6 +11,8 @@ type EventModel = {
     recurrence: any;
   };
   overridden: boolean;
+  can_edit: boolean;
+  can_delete: boolean;
 };
 
 type EventModelChanges = {

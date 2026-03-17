@@ -89,12 +89,12 @@ func (file *LocalFile) GetContent(q types.DatabaseQueries) (io.Reader, *errors.E
 
 	deltaTime := curTime.Sub(*file.date)
 
-	if deltaTime >= constants.LifetimeCacheSoft {
+	if deltaTime >= constants.LifetimeFileCacheSoft {
 		reader, tr = file.fetchContentFromFilesystem()
 
 		if tr == nil {
 			file.date = &curTime
-		} else if deltaTime >= constants.LifetimeCacheHard {
+		} else if deltaTime >= constants.LifetimeFileCacheHard {
 			return nil, tr
 		}
 	}
