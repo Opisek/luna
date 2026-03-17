@@ -85,10 +85,10 @@ export class Repository {
     return new Date(year, onlyMonth - 1, 1);
   }
   private nextMonth(month: number): number {
-    return month + ((month % 100 == 12) ? 88 : 1);
+    return month + ((month % 100 == 12) ? 89 : 1);
   }
   private previousMonth(month: number): number {
-    return month - ((month % 100 == 0) ? 88 : 1);
+    return month - ((month % 100 == 1) ? 89 : 1);
   }
   private isMonthPending(calendar: string, month: number): boolean {
     let monthsPendingForCalendar = this.pendingMonths.get(calendar);
