@@ -1,3 +1,12 @@
+# DISCLAIMER DUE TO RECENT SPIKE IN ATTENTION 
+There are no screenshots in the README yet.
+
+I wasn't expecting to attract a lot of attention yet, so I was putting off writing a good-looking readme until I was ready to release a 1.0.0 version.
+
+Given the sudden increase in traffic and, frankly, dozens of requests to add screenshots, I am ON IT. Please give me a few days to get something presentable on here.
+
+In any case, thank you all for your interest and support! ❤️
+
 # Project Scope
 There is an abundance of self-hosted CalDav servers out there, yet basically nothing to actually display the data with!
 
