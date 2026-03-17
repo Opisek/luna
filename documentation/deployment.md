@@ -14,8 +14,12 @@ For baremetal deployment, you must ensure your system has:
 - **make**
 - **bun** (v1.2.5 or higher)
 - **go** (go1.23 or higher)
-- a running **postgres** (version 16) database
+- a running **postgres** (version 16 or higher) database
 
-For the backend, create an `.env` file in the `backend` directory inside the repository and fill it out accordingly to `.env.example`. To start the backend, run `make` inside the `backend` directory.
+For the backend, create an `.env` file in the `backend/src` directory inside the repository and fill it out accordingly to `.env.example`. To start the backend in development mode, run `make` inside the `backend` directory.
 
-Proceed in the same way for the frontend inside the `frontend` directory.
+If you want to build the backend instead, run `make build` inside the `backend` directory. The resulting binary is created in called `luna-backend` and is generated inside the `backend/src` directory.
+
+For the frontend, create an `.env` file in the `frontend` directory inside the repository and fill it out accordingly to `.env.example`. To start the frontend in development mode, run `make` inside the `frontend` directory.
+
+If you want to build the frontend instead, run `make build` inside the `frontend` directory. To start the compiled frontend, run `bun run ./build/index.js`
