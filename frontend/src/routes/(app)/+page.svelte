@@ -313,7 +313,7 @@
   </Horizontal>
 
   <span class="copyright">
-    Copyright © 2025 Kacper Darowski "Opisek" 
+    Copyright © 2026 Kacper Darowski (Opisek)<br>
     Licensed under TBD 
   </span>
 </aside>

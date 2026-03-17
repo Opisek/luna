@@ -1,6 +1,6 @@
-.PHONY: dev, down, restart, build, up, purge
+.PHONY: run, down, restart, build, up, purge
 
-dev:
+run:
 	docker compose up -d --build
 
 down:
