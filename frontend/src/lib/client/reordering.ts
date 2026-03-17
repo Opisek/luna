@@ -16,16 +16,12 @@ export const draggable = (node: HTMLElement) => {
   const mouseDown = () => {
     window.addEventListener("mouseup", mouseUp);
     window.addEventListener("mousemove", mouseMove);
-
     moved = false;
-    console.log("down")
-    console.log(moved);
   }
 
   const mouseUp = (event: Event) => {
     window.removeEventListener("mouseup", mouseUp);
     window.removeEventListener("mousemove", mouseMove);
-    console.log(moved);
 
     if (moved) {
       // Prevent "click" events
