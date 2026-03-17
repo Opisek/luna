@@ -78,7 +78,7 @@ If you want to build the frontend instead, run `make build` inside the `frontend
 ## Reverse Proxy
 Make sure to put Luna behind a reverse proxy with configured TLS.
 
-Here is a samply configuration file for nginx:
+Here is a sample configuration file for nginx:
 ```nginx
 server {
   listen 443 ssl;
