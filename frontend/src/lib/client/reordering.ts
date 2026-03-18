@@ -1,6 +1,7 @@
 import { effectiveBackgroundColor as getEffectiveBackground } from "../common/misc";
 
 export const draggable = (node: HTMLElement, data: { ownClass: string, childClasses: string[], callback: (newIndex: number) => any }) => {
+  let down = false;
   let moved = false;
 
   let similarElements: HTMLElement[][] = [];
@@ -15,21 +16,36 @@ export const draggable = (node: HTMLElement, data: { ownClass: string, childClas
   let lowestY: number;
   let highestY: number;
 
-  const mouseDown = () => {
+  const addDragEventListeners = () => {
     window.addEventListener("mouseup", mouseUp);
+    window.addEventListener("blur", mouseUp);
+    window.addEventListener("focus", mouseUp);
+    window.addEventListener("click", mouseUp);
     window.addEventListener("mousemove", mouseMove);
-    moved = false;
   }
 
-  const mouseUp = (event: Event) => {
+  const removeDragEventListeners = () => {
     window.removeEventListener("mouseup", mouseUp);
+    window.removeEventListener("blur", mouseUp);
+    window.removeEventListener("focus", mouseUp);
+    window.removeEventListener("click", mouseUp);
     window.removeEventListener("mousemove", mouseMove);
 
-    if (moved) {
-      // Prevent "click" events
-      event.stopPropagation();
-      event.stopImmediatePropagation();
+    if (down) mouseUp();
+  }
 
+  const mouseDown = () => {
+    if (down) return;
+    addDragEventListeners();
+    moved = false;
+    down = true;
+  }
+
+  const mouseUp = () => {
+    down = false;
+    removeDragEventListeners();
+
+    if (moved) {
       // Remove helper items
       phantom.remove();
       wrapper.remove();
@@ -64,6 +80,12 @@ export const draggable = (node: HTMLElement, data: { ownClass: string, childClas
 
   const mouseMove = (event: Event) => {
     if (!node.parentElement) return;
+    const mouseEvent = event as MouseEvent;
+    if (mouseEvent.buttons == 0) {
+      mouseUp();
+      return;
+    }
+
     if (moved) {
       const myElementGroup = similarElements[ownIndexInArray];
       const myTop = myElementGroup[0].getBoundingClientRect().top;
@@ -71,7 +93,7 @@ export const draggable = (node: HTMLElement, data: { ownClass: string, childClas
       const myHeight = myBottom - myTop;
 
       // Move the original element following the mouse
-      wrapper.style.top = `${Math.max(Math.min((event as MouseEvent).clientY - mouseOffsetY, highestY - myHeight), lowestY)}px`;
+      wrapper.style.top = `${Math.max(Math.min(mouseEvent.clientY - mouseOffsetY, highestY - myHeight), lowestY)}px`;
 
       let anySwapped = false;
       let lowestSwapIndex = similarElements.length-1;
@@ -166,8 +188,7 @@ export const draggable = (node: HTMLElement, data: { ownClass: string, childClas
 
       if (similarElements.length == 1) {
         // Stop dragging if there is only one element to drag
-        window.removeEventListener("mouseup", mouseUp);
-        window.removeEventListener("mousemove", mouseMove);
+        removeDragEventListeners();
         return;
       }
 
@@ -224,8 +245,7 @@ export const draggable = (node: HTMLElement, data: { ownClass: string, childClas
   return {
     destroy() {
       node.removeEventListener("mousedown", mouseDown);
-      window.removeEventListener("mouseup", mouseUp);
-      window.removeEventListener("mousemove", mouseMove);
+      removeDragEventListeners();
     }
   }
 }
