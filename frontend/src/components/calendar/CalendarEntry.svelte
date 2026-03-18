@@ -11,6 +11,8 @@
   import { draggable } from "$lib/client/reordering";
 
   import { getContext } from "svelte";
+  import { queueNotification } from "../../lib/client/notifications";
+  import { ColorKeys } from "../../types/colors";
 
   interface Props {
     calendar: CalendarModel;
@@ -37,12 +39,16 @@
   function setVisible(visible: boolean) {
     getMetadata().setCalendarVisibility(calendar.id, visible);
   }
+
+  function reorderCalendar(newIndex: number) {
+    queueNotification(ColorKeys.Neutral, `New calendar index: ${newIndex}`);
+  }
 </script>
 
 <style lang="scss">
   @use "../../styles/dimensions.scss";
 
-  div.entry {
+  div.calendarEntry {
     display: flex;
     flex-direction: row;
     gap: dimensions.$gapTiny;
@@ -81,7 +87,7 @@
   }
 </style>
 
-<div class="entry" use:draggable>
+<div class="calendarEntry" use:draggable={{ ownClass: "calendarEntry", childClasses: [], callback: reorderCalendar}}>
   <span class="name">
     <ColorCircle
       color={GetCalendarColor(calendar)}
