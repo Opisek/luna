@@ -70,7 +70,7 @@ export const draggable = (node: HTMLElement, data: { ownClass: string, childClas
       const myBottom = myElementGroup[myElementGroup.length - 1].getBoundingClientRect().bottom;
       const myHeight = myBottom - myTop;
 
-      // Move the original element follow the mouse
+      // Move the original element following the mouse
       wrapper.style.top = `${Math.max(Math.min((event as MouseEvent).clientY - mouseOffsetY, highestY - myHeight), lowestY)}px`;
 
       let anySwapped = false;
@@ -181,7 +181,7 @@ export const draggable = (node: HTMLElement, data: { ownClass: string, childClas
       const lastElementGroup = similarElements[similarElements.length - 1]
       highestY = lastElementGroup[lastElementGroup.length - 1].getBoundingClientRect().bottom;
 
-      // Make the original element follow the mouse
+      // Make the original element following the mouse
       wrapper = document.createElement("div");
       wrapper.style.position = "fixed";
       wrapper.style.height = `${lastChildBoundingRect.bottom - boundingRect.top}px`;
