@@ -89,7 +89,7 @@ export const draggable = (node: HTMLElement, data: { ownClass: string, childClas
 
           const overlapRequired = previousElementGroupHeight / 3 * 2;
 
-          if (myTop < previousElementGroupBottom - overlapRequired - 5) {
+          if (myTop < previousElementGroupBottom - overlapRequired) {
             anySwapped = true;
             lowestSwapIndex = Math.min(lowestSwapIndex, ownIndexInArray - 1);
             highestSwapIndex = Math.max(highestSwapIndex, ownIndexInArray);
@@ -109,7 +109,7 @@ export const draggable = (node: HTMLElement, data: { ownClass: string, childClas
 
           const overlapRequired = nextElementGroupHeight / 3 * 2;
 
-          if (myBottom > nextElementGroupTop + overlapRequired + 5) {
+          if (myBottom > nextElementGroupTop + overlapRequired) {
             anySwapped = true;
             lowestSwapIndex = Math.min(lowestSwapIndex, ownIndexInArray);
             highestSwapIndex = Math.max(highestSwapIndex, ownIndexInArray + 1);
