@@ -122,6 +122,13 @@ export const draggable = (node: HTMLElement) => {
 
       if (!ownElementFound) return;
 
+      if (similarElements.length == 1) {
+        // Stop dragging if there is only one element to drag
+        window.removeEventListener("mouseup", mouseUp);
+        window.removeEventListener("mousemove", mouseMove);
+        return;
+      }
+
       const boundingRect = node.getBoundingClientRect();
 
       // Calculate where the element was pressed
