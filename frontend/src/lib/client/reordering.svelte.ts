@@ -1,6 +1,7 @@
+import { tick } from "svelte";
 import { effectiveBackgroundColor as getEffectiveBackground } from "../common/misc";
 
-export const draggable = (node: HTMLElement, data: { ownClass: string, childClasses: string[], callback: (newIndex: number) => any }) => {
+export const draggable = (node: HTMLElement, data: { ownClass: string, childClasses: string[], callback: (newIndex: number) => Promise<any> }) => {
   let down = false;
   let moved = false;
 
@@ -41,40 +42,48 @@ export const draggable = (node: HTMLElement, data: { ownClass: string, childClas
     down = true;
   }
 
-  const mouseUp = () => {
+  const mouseUp = async () => {
     down = false;
     removeDragEventListeners();
 
     if (moved) {
+      // Move the elements back into the DOM
+      similarElements[ownIndexInArray].forEach(x => {
+        parent.insertBefore(x, phantom);
+      })
+
       // Remove helper items
       phantom.remove();
       wrapper.remove();
       node.style.cursor = "";
 
-      // Move the elements in the DOM
-      if (ownIndexInArray == similarElements.length - 1) {
-        const myGroup = similarElements[ownIndexInArray];
-        if (Number.parseInt(node.style.order) == parent.children.length - 1) {
-          myGroup.forEach(x => {
-            parent.appendChild(x);
-          })
-        } else {
-          const nextElement = parent.children.item(Number.parseInt(node.style.order));
-          similarElements[ownIndexInArray].forEach(x => {
-            parent.insertBefore(x, nextElement);
-          })
-        }
-      } else {
-        const nextElement = similarElements[ownIndexInArray + 1][0];
-        similarElements[ownIndexInArray].forEach(x => {
-          parent.insertBefore(x, nextElement);
-        })
-      }
+      //if (ownIndexInArray == similarElements.length - 1) {
+      //  const myGroup = similarElements[ownIndexInArray];
+      //  if (Number.parseInt(node.style.order) == parent.children.length - 1) {
+      //    myGroup.forEach(x => {
+      //      parent.appendChild(x);
+      //    })
+      //  } else {
+      //    const nextElement = parent.children.item(Number.parseInt(node.style.order));
+      //    similarElements[ownIndexInArray].forEach(x => {
+      //      parent.insertBefore(x, nextElement);
+      //    })
+      //  }
+      //} else {
+      //  const nextElement = similarElements[ownIndexInArray + 1][0];
+      //  similarElements[ownIndexInArray].forEach(x => {
+      //    parent.insertBefore(x, nextElement);
+      //  })
+      //}
 
-      // Remove order attribute
-      ([...parent.children] as HTMLElement[]).forEach(x => x.style.order = "");
+      // Update the order in the database and let Svelte rehydrate
+      if (ownIndexInArray != originalIndexInArray) await data.callback(ownIndexInArray);
 
-      if (ownIndexInArray != originalIndexInArray) data.callback(ownIndexInArray);
+      // Remove order attribute after Svelte rearranges the items for us
+      setTimeout(() => {
+        if (down && moved) return; // Don't remove the attributes if the user started to rearrange items again
+        ([...parent.children] as HTMLElement[]).forEach(x => x.style.order = "");
+      }, 250)
     }
   }
 

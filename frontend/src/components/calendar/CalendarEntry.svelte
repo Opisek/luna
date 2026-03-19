@@ -8,7 +8,7 @@
   import { NoOp } from "$lib/client/placeholders";
   import { focusIndicator } from "$lib/client/decoration";
   import { getMetadata } from "$lib/client/data/metadata.svelte";
-  import { draggable } from "$lib/client/reordering";
+  import { draggable } from "$lib/client/reordering.svelte";
 
   import { getContext } from "svelte";
   import { queueNotification } from "../../lib/client/notifications";
@@ -42,8 +42,8 @@
     getMetadata().setCalendarVisibility(calendar.id, visible);
   }
 
-  function reorderCalendar(newIndex: number) {
-    repository.changeCalendarDisplayOrder(calendar, newIndex).catch((err) => {
+  async function reorderCalendar(newIndex: number) {
+    await repository.changeCalendarDisplayOrder(calendar, newIndex).catch((err) => {
       queueNotification(ColorKeys.Danger, err);
     });
   }

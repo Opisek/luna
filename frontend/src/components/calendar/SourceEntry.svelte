@@ -7,7 +7,7 @@
   import { focusIndicator } from "$lib/client/decoration";
   import { getMetadata } from "$lib/client/data/metadata.svelte";
   import { getRepository } from "$lib/client/data/repository.svelte";
-  import { draggable } from "$lib/client/reordering";
+  import { draggable } from "$lib/client/reordering.svelte";
 
   import { getContext } from "svelte";
   import { queueNotification } from "../../lib/client/notifications";
@@ -42,8 +42,8 @@
     if (source && source.id) metadata.setSourceCollapse(source.id, sourceCollapsed);
   });
 
-  function reorderSource(newIndex: number) {
-    repository.changeSourceDisplayOrder(source, newIndex).catch((err) => {
+  async function reorderSource(newIndex: number) {
+    await repository.changeSourceDisplayOrder(source, newIndex).catch((err) => {
       queueNotification(ColorKeys.Danger, err);
     });
   }

@@ -609,7 +609,7 @@ export class Repository {
     calendars[newIndex] = movedCalendar.id;
 
     // @ts-ignore
-    this.calendarsCache.get(movedCalendar.source).value =  calendars;
+    this.calendarsCache.get(movedCalendar.source).value = calendars;
     this.compileCalendars();
     this.saveCache();
   }
