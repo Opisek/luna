@@ -86,7 +86,8 @@ func (q *Queries) GetSourcesByUser(userId types.ID, ctx context.Context, config 
 		`
 		SELECT %s
 		FROM sources
-		WHERE userid = $1;
+		WHERE userid = $1
+		ORDER BY display_order;
 		`,
 		cols,
 	)
@@ -186,8 +187,10 @@ func (q *Queries) InsertSource(userId types.ID, source types.Source) (types.ID, 
 	}
 
 	query := `
-		INSERT INTO sources (userid, name, type, settings, auth_type, auth)
-		VALUES ($1, $2, $3, $4, PGP_SYM_ENCRYPT($5, $7), PGP_SYM_ENCRYPT($6, $7))
+		INSERT INTO sources (userid, name, type, settings, auth_type, auth, display_order)
+		SELECT $1, $2, $3, $4, PGP_SYM_ENCRYPT($5, $7), PGP_SYM_ENCRYPT($6, $7), COALESCE(MAX(display_order) + 1, 0)
+		FROM sources
+		WHERE userid = $1
 		RETURNING id;
 	`
 	marshalledAuth, err := source.GetAuth().String()
@@ -289,20 +292,63 @@ func (q *Queries) UpdateSource(userId types.ID, sourceId types.ID, newName strin
 	}
 }
 
-func (q *Queries) DeleteSource(userId types.ID, sourceId types.ID) (bool, *errors.ErrorTrace) {
-	tag, err := q.Tx.Exec(
+func (q *Queries) UpdateSourceDisplayOrder(userId types.ID, sourceId types.ID, newIndex uint16) *errors.ErrorTrace {
+	_, err := q.Tx.Exec(
 		q.Context,
 		`
-		DELETE FROM sources
-		WHERE userid = $1 AND id = $2;
+		WITH moved AS (
+			SELECT display_order as old_index, SIGN(display_order - $3) as direction
+			FROM sources
+			WHERE userid = $1 AND id = $2	
+		)
+		UPDATE sources
+		SET display_order = CASE
+			WHEN id = $2 THEN $3
+			ELSE display_order + direction
+		END 
+		FROM moved
+		WHERE userid = $1
+		AND display_order BETWEEN SYMMETRIC $3 AND (SELECT old_index FROM moved);
 		`,
 		userId.UUID(),
-		sourceId,
+		sourceId.UUID(),
+		newIndex,
 	)
 
 	switch err {
 	case nil:
-		return tag.RowsAffected() != 0, nil
+		return nil
+	case pgx.ErrNoRows:
+		return errors.New().Status(http.StatusNotFound).
+			Append(errors.LvlDebug, "Source %v not found", sourceId).
+			AltStr(errors.LvlPlain, "Source not found").
+			Append(errors.LvlDebug, "Could not reorder source %v", sourceId).
+			AltStr(errors.LvlBroad, "Could not reorder source")
+	default:
+		return errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not reorder source %v", sourceId).
+			AltStr(errors.LvlBroad, "Could not reorder source")
+	}
+}
+
+func (q *Queries) DeleteSource(userId types.ID, sourceId types.ID) (bool, *errors.ErrorTrace) {
+	// Delete the specified source
+	var deletedSourceDisplayOrder int
+	err := q.Tx.Conn().QueryRow(
+		q.Context,
+		`
+		DELETE FROM sources
+		WHERE userid = $1 AND id = $2
+		RETURNING display_order;
+		`,
+		userId.UUID(),
+		sourceId,
+	).Scan(&deletedSourceDisplayOrder)
+
+	switch err {
+	case nil:
+		break
 	case pgx.ErrNoRows:
 		return false, errors.New().Status(http.StatusNotFound).
 			Append(errors.LvlDebug, "Source %v not found", sourceId).
@@ -315,6 +361,28 @@ func (q *Queries) DeleteSource(userId types.ID, sourceId types.ID) (bool, *error
 			Append(errors.LvlDebug, "Could not delete source %v", sourceId).
 			AltStr(errors.LvlBroad, "Could not delete source")
 	}
+
+	// Decrease the display order of the user's other sources to fill in the gap
+	_, err = q.Tx.Exec(
+		q.Context,
+		`
+		UPDATE sources
+		SET display_order = display_order - 1
+		WHERE userid = $1 AND display_order > $2;
+		`,
+		userId.UUID(),
+		deletedSourceDisplayOrder,
+	)
+
+	if err != nil {
+		return false, errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not update display order of other sources of user %v", userId).
+			Append(errors.LvlDebug, "Could not delete source %v", sourceId).
+			AltStr(errors.LvlBroad, "Could not delete source")
+	}
+
+	return true, nil
 }
 
 func (q *Queries) GetSourceOwner(sourceId types.ID) (types.ID, *errors.ErrorTrace) {

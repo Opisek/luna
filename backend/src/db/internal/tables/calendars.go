@@ -14,11 +14,21 @@ func (q *Tables) InitializeCalendarsTable() error {
 		CREATE TABLE calendars (
 			id UUID PRIMARY KEY,
 			source UUID REFERENCES sources(id) ON DELETE CASCADE,
-			settings JSONB NOT NULL
+			settings JSONB NOT NULL,
+			display_order SMALLINT NOT NULL
 		);
 	`)
 	if err != nil {
 		return fmt.Errorf("could not create calendars table: %v", err)
+	}
+
+	_, err = q.Tx.Exec(
+		q.Context,
+		`
+		CREATE INDEX index_calendars_source ON calendars (source);
+	`)
+	if err != nil {
+		return fmt.Errorf("could not create secondary index on calendars table: %v", err)
 	}
 
 	return nil

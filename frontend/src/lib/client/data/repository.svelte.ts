@@ -423,6 +423,32 @@ export class Repository {
     this.saveCache();
   }
 
+  async changeSourceDisplayOrder(movedSource: SourceModel, newIndex: number): Promise<void> {
+    if (!browser) return;
+
+    const sources = this.sourcesCache.value || [];
+    const previousIndex = sources.findIndex(x => x.id == movedSource.id);
+    if (previousIndex == -1) throw new Error("Could not move cached source");
+    if (previousIndex == newIndex) return;
+
+    let formData = new FormData();
+    formData.append("index", newIndex.toString())
+
+    await fetchResponse(`/api/sources/${movedSource.id}/order`, { method: "POST", body: formData }).catch((err) => { throw err; });
+
+    const original = sources[previousIndex];
+
+    const direction = previousIndex < newIndex ? 1 : -1;
+    for (let i = previousIndex; i != newIndex; i += direction) {
+      sources[i] = sources[i + direction];
+    }
+    sources[newIndex] = original;
+
+    this.sourcesCache.value = sources;
+    this.compileSources();
+    this.saveCache();
+  }
+
   async deleteSource(id: string): Promise<void> {
     if (!browser) return;
 
@@ -560,6 +586,31 @@ export class Repository {
     //this.calendars.update((calendars) => calendars.map((cal) => cal.id === modifiedCalendar.id ? modifiedCalendar : cal));
     if (changes.color) this.compileEvents(this.eventsRangeStart, this.eventsRangeEnd);
 
+    this.saveCache();
+  }
+
+  async changeCalendarDisplayOrder(movedCalendar: CalendarModel, newIndex: number): Promise<void> {
+    if (!browser) return;
+
+    const calendars = this.calendarsCache.get(movedCalendar.source)?.value || [];
+    const previousIndex = calendars.findIndex(x => x == movedCalendar.id);
+    if (previousIndex == -1) throw new Error("Could not move cached calendar");
+    if (previousIndex == newIndex) return;
+
+    let formData = new FormData();
+    formData.append("index", newIndex.toString())
+
+    await fetchResponse(`/api/calendars/${movedCalendar.id}/order`, { method: "POST", body: formData }).catch((err) => { throw err; });
+
+    const direction = previousIndex < newIndex ? 1 : -1;
+    for (let i = previousIndex; i != newIndex; i += direction) {
+      calendars[i] = calendars[i + direction];
+    }
+    calendars[newIndex] = movedCalendar.id;
+
+    // @ts-ignore
+    this.calendarsCache.get(movedCalendar.source).value =  calendars;
+    this.compileCalendars();
     this.saveCache();
   }
 
@@ -711,9 +762,7 @@ export class Repository {
         const cached = this.cacheOk(cache.get(startMonth));
         if (!cached) break;
         result = result.concat(cached.map(x => this.eventsMap.get(x)).filter(x => x != null));
-        console.log("already in cache", startMonth)
       } else {
-        console.log("already pending", startMonth)
       }
       startMonth = this.nextMonth(startMonth);
     }
@@ -722,9 +771,7 @@ export class Repository {
         const cached = this.cacheOk(cache.get(endMonth));
         if (!cached) break;
         result = result.concat(cached.map(x => this.eventsMap.get(x)).filter(x => x != null));
-        console.log("already in cache", endMonth)
       } else {
-        console.log("already pending", startMonth)
       }
       endMonth = this.previousMonth(endMonth);
     }
@@ -774,8 +821,6 @@ export class Repository {
         this.addEventToCache(event, month);
       }
     }
-
-    console.log("calendar cache after adding events", this.eventsCache.get(calendar))
 
     // Done
     for (let month = startMonth; month <= endMonth; month = this.nextMonth(month)) this.setMonthNotPending(calendar, month);

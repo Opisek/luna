@@ -19,12 +19,23 @@ func (q *Tables) InitializeSourcesTable() error {
 			settings JSONB NOT NULL,
 			auth_type BYTEA NOT NULL,
 			auth BYTEA NOT NULL,
-			UNIQUE (userid, name)
+			display_order SMALLINT NOT NULL,
+			UNIQUE (userid, name),
+			UNIQUE (userid, display_order) DEFERRABLE INITIALLY IMMEDIATE
 		);
 		`,
 	)
 	if err != nil {
 		return fmt.Errorf("could not create sources table: %v", err)
+	}
+
+	_, err = q.Tx.Exec(
+		q.Context,
+		`
+		CREATE INDEX index_sources_userid ON sources (userid);
+	`)
+	if err != nil {
+		return fmt.Errorf("could not create secondary index on sources table: %v", err)
 	}
 
 	return nil

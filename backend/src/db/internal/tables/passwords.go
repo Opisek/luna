@@ -1,5 +1,7 @@
 package tables
 
+import "fmt"
+
 func (q *Tables) InitializePasswordsTable() error {
 	// Auth table:
 	// id hash salt algorithm parameters
@@ -15,6 +17,9 @@ func (q *Tables) InitializePasswordsTable() error {
 		);
 		`,
 	)
+	if err != nil {
+		return fmt.Errorf("could not create passwords table: %v", err)
+	}
 
-	return err
+	return nil
 }

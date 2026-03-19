@@ -1,5 +1,7 @@
 package tables
 
+import "fmt"
+
 func (q *Tables) InitializeSessionsTable() error {
 	// Sessions table:
 	// sessionid userid created_at last_seen user_agent ip_address is_short_lived is_api hash
@@ -27,6 +29,18 @@ func (q *Tables) InitializeSessionsTable() error {
 		);
 		`,
 	)
+	if err != nil {
+		return fmt.Errorf("could not create sessions table: %v", err)
+	}
+
+	_, err = q.Tx.Exec(
+		q.Context,
+		`
+		CREATE INDEX index_sessions_userid ON sessions (userid);
+	`)
+	if err != nil {
+		return fmt.Errorf("could not create secondary index on sessions table: %v", err)
+	}
 
 	return err
 }

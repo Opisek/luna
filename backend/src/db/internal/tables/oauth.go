@@ -1,5 +1,7 @@
 package tables
 
+import "fmt"
+
 func (q *Tables) InitializeOauthClientsTable() error {
 	// Oauth tokens table:
 	// id name client_id client_secret base_url scope
@@ -17,8 +19,11 @@ func (q *Tables) InitializeOauthClientsTable() error {
 		);
 		`,
 	)
+	if err != nil {
+		return fmt.Errorf("could not create oauth clients table: %v", err)
+	}
 
-	return err
+	return nil
 }
 
 // Warning: The client_id in the following tables is NOT to be confused with the client_id in the clients table.
@@ -37,8 +42,11 @@ func (q *Tables) InitializeOauthAuthorizationRequestsTable() error {
 		)
 		`,
 	)
+	if err != nil {
+		return fmt.Errorf("could not create oauth authorization requests table: %v", err)
+	}
 
-	return err
+	return nil
 }
 
 func (q *Tables) InitializeOauthTokensTable() error {
@@ -64,6 +72,9 @@ func (q *Tables) InitializeOauthTokensTable() error {
 		);
 		`,
 	)
+	if err != nil {
+		return fmt.Errorf("could not create oauth tokens table: %v", err)
+	}
 
-	return err
+	return nil
 }

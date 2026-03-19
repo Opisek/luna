@@ -7,8 +7,11 @@
   import { focusIndicator } from "$lib/client/decoration";
   import { getMetadata } from "$lib/client/data/metadata.svelte";
   import { getRepository } from "$lib/client/data/repository.svelte";
+  import { draggable } from "$lib/client/reordering";
 
   import { getContext } from "svelte";
+  import { queueNotification } from "../../lib/client/notifications";
+  import { ColorKeys } from "../../types/colors";
 
   interface Props {
     source: SourceModel;
@@ -38,6 +41,12 @@
   $effect(() => {
     if (source && source.id) metadata.setSourceCollapse(source.id, sourceCollapsed);
   });
+
+  function reorderSource(newIndex: number) {
+    repository.changeSourceDisplayOrder(source, newIndex).catch((err) => {
+      queueNotification(ColorKeys.Danger, err);
+    });
+  }
 </script>
 
 <style lang="scss">
@@ -52,6 +61,7 @@
     justify-content: space-between;
     align-items: center;
     align-content: center;
+    user-select: none;
   }
 
   span {
@@ -80,7 +90,7 @@
   //}
 </style>
 
-<div>
+<div class="sourceEntry" use:draggable={{ ownClass: "sourceEntry", childClasses: ["calendarEntry"], callback: reorderSource}}>
   <button onclick={showModalInternal} use:focusIndicator={{ type: "underline" }}>
     {source.name}
   </button>

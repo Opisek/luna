@@ -86,6 +86,7 @@ func run(api *util.Api) {
 	sourcesEndpoints.DELETE("/:sourceId", middleware.RequirePermissions(types.PermDeleteSources), handlers.DeleteSource)
 	sourcesEndpoints.GET("/:sourceId/calendars", middleware.RequirePermissions(types.PermReadCalendars), handlers.GetCalendars)
 	sourcesEndpoints.PUT("/:sourceId/calendars", middleware.RequirePermissions(types.PermAddCalendars), handlers.PutCalendar)
+	sourcesEndpoints.POST("/:sourceId/order", middleware.RequirePermissions(types.PermEditSources), handlers.ChangeSourceDisplayOrder)
 
 	// /api/calendars/*
 	calendarsEndpoints := authenticatedEndpoints.Group("/calendars")
@@ -94,6 +95,7 @@ func run(api *util.Api) {
 	calendarsEndpoints.DELETE("/:calendarId", middleware.RequirePermissions(types.PermDeleteCalendars), handlers.DeleteCalendar)
 	calendarsEndpoints.GET("/:calendarId/events", middleware.RequirePermissions(types.PermReadEvents), handlers.GetEvents)
 	calendarsEndpoints.PUT("/:calendarId/events", middleware.RequirePermissions(types.PermAddEvents), handlers.PutEvent)
+	calendarsEndpoints.POST("/:calendarId/order", middleware.RequirePermissions(types.PermEditCalendars), handlers.ChangeCalendarDisplayOrder)
 
 	// /api/events/*
 	eventEndpoints := authenticatedEndpoints.Group("/events")

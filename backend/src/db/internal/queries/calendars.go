@@ -16,6 +16,10 @@ import (
 )
 
 func (q *Queries) insertCalendars(cals []types.Calendar) *errors.ErrorTrace {
+	if len(cals) == 0 {
+		return nil
+	}
+
 	rows := [][]any{}
 
 	for _, cal := range cals {
@@ -32,9 +36,16 @@ func (q *Queries) insertCalendars(cals []types.Calendar) *errors.ErrorTrace {
 		q.Tx,
 		q.Context,
 		"calendars",
+		"id",
 		[]string{"id", "source", "settings"},
 		[]string{"settings"},
 		rows,
+		true,
+		"original.source = $1",
+		cals[0].GetSource().GetId(),
+		true,
+		"source",
+		"id",
 	)
 
 	if err != nil {
@@ -90,6 +101,62 @@ func (q *Queries) getCalendarEntries(cals []types.Calendar) ([]*types.CalendarEx
 	return entries, nil
 }
 
+func (q *Queries) orderCalendars(cals []types.Calendar) ([]types.Calendar, *errors.ErrorTrace) {
+	query := fmt.Sprintf(
+		`
+		SELECT id
+		FROM calendars
+		WHERE id IN (
+			%s
+		)
+		ORDER BY source, display_order;
+		`,
+		util.GenerateArgList(1, len(cals)),
+	)
+
+	rows, err := q.Tx.Query(
+		q.Context,
+		query,
+		util.JoinIds(cals, func(c types.Calendar) types.ID { return c.GetId() })...,
+	)
+	if err != nil {
+		return nil, errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlWordy, "Could not get calendars from the database")
+	}
+	defer rows.Close()
+
+	orderedIds := make([]types.ID, len(cals))
+	i := 0
+	for rows.Next() {
+		err := rows.Scan(&orderedIds[i])
+		if err != nil {
+			return nil, errors.New().Status(http.StatusInternalServerError).
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlWordy, "Could not scan ordered calendar ID")
+		}
+		i += 1
+	}
+
+	calMap := map[types.ID]types.Calendar{}
+	for _, cal := range cals {
+		calMap[cal.GetId()] = cal
+	}
+
+	orderedCalendars := make([]types.Calendar, len(cals))
+	for i, id := range orderedIds {
+		cal, exists := calMap[id]
+		if !exists {
+			return nil, errors.New().Status(http.StatusInternalServerError).
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlWordy, "Could not retrieve mapped calendar")
+		}
+		orderedCalendars[i] = cal
+	}
+
+	return orderedCalendars, nil
+}
+
 func (q *Queries) OverrideCalendars(cals []types.Calendar) ([]types.Calendar, *errors.ErrorTrace) {
 	if len(cals) == 0 {
 		return cals, nil
@@ -129,6 +196,13 @@ func (q *Queries) OverrideCalendars(cals []types.Calendar) ([]types.Calendar, *e
 	if err != nil {
 		return nil, err.
 			Append(errors.LvlWordy, "Could not cache events").
+			Append(errors.LvlPlain, "Database error")
+	}
+
+	cals, err = q.orderCalendars(cals)
+	if err != nil {
+		return nil, err.
+			Append(errors.LvlWordy, "Could not order calendars").
 			Append(errors.LvlPlain, "Database error")
 	}
 
@@ -205,7 +279,9 @@ func (q *Queries) InsertCalendar(calendar types.Calendar) *errors.ErrorTrace {
 		q.Context,
 		`
 		INSERT INTO calendars (id, source, settings)
-		VALUES ($1, $2, $3);
+		SELECT $1, $2, $3, COALESCE(MAX(display_order) + 1, 0)
+		FROM calendars
+		WHERE source = $2;
 		`,
 		calendar.GetId().UUID(),
 		calendar.GetSource().GetId().UUID(),
@@ -251,8 +327,55 @@ func (q *Queries) UpdateCalendar(cal types.Calendar) *errors.ErrorTrace {
 	}
 }
 
-func (q *Queries) DeleteCalendar(userId types.ID, calendarId types.ID) *errors.ErrorTrace {
+func (q *Queries) UpdateCalendarDisplayOrder(userId types.ID, calendarId types.ID, newIndex uint16) *errors.ErrorTrace {
 	_, err := q.Tx.Exec(
+		q.Context,
+		`
+		WITH moved AS (
+			SELECT source AS moved_source, display_order AS old_index, SIGN(display_order - $3) AS direction
+			FROM calendars
+			WHERE id = $2	
+			AND source IN (
+				SELECT id
+				FROM sources
+				WHERE userid = $1
+			)
+		)
+		UPDATE calendars
+		SET display_order = CASE
+			WHEN id = $2 THEN $3
+			ELSE display_order + direction
+		END 
+		FROM moved
+		WHERE source = (SELECT moved_source from moved)
+		AND display_order BETWEEN SYMMETRIC $3 AND (SELECT old_index FROM moved);
+		`,
+		userId.UUID(),
+		calendarId.UUID(),
+		newIndex,
+	)
+
+	switch err {
+	case nil:
+		return nil
+	case pgx.ErrNoRows:
+		return errors.New().Status(http.StatusNotFound).
+			Append(errors.LvlDebug, "Calendar %v not found", calendarId).
+			AltStr(errors.LvlPlain, "Calendar not found").
+			Append(errors.LvlDebug, "Could not reorder calendar %v", calendarId).
+			AltStr(errors.LvlBroad, "Could not reorder calendar")
+	default:
+		return errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not reorder calendar %v", calendarId).
+			AltStr(errors.LvlBroad, "Could not reorder calendar")
+	}
+}
+
+func (q *Queries) DeleteCalendar(userId types.ID, calendarId types.ID) *errors.ErrorTrace {
+	var deletedCalendarSourceId types.ID
+	var deletedCalendarDisplayOrder int
+	err := q.Tx.Conn().QueryRow(
 		q.Context,
 		`
 		DELETE FROM calendars
@@ -261,15 +384,16 @@ func (q *Queries) DeleteCalendar(userId types.ID, calendarId types.ID) *errors.E
 			SELECT id
 			FROM sources
 			WHERE userid = $2
-		);
+		)
+		RETURNING source, display_order;
 		`,
 		calendarId.UUID(),
 		userId.UUID(),
-	)
+	).Scan(&deletedCalendarSourceId, &deletedCalendarDisplayOrder)
 
 	switch err {
 	case nil:
-		return nil
+		break
 	case pgx.ErrNoRows:
 		return errors.New().Status(http.StatusNotFound).
 			Append(errors.LvlDebug, "Calendar %v for user %v not found", calendarId, userId).
@@ -282,6 +406,29 @@ func (q *Queries) DeleteCalendar(userId types.ID, calendarId types.ID) *errors.E
 			Append(errors.LvlDebug, "Could not delete calendar %v", calendarId).
 			AltStr(errors.LvlBroad, "Could not delete calendar")
 	}
+
+	// Decrease the display order of the sources's other calendars to fill in the gap
+	_, err = q.Tx.Exec(
+		q.Context,
+		`
+		UPDATE calendars
+		SET display_order = display_order - 1
+		WHERE source = $1 AND display_order > $2;
+		`,
+		userId.UUID(),
+		deletedCalendarSourceId,
+		deletedCalendarDisplayOrder,
+	)
+
+	if err != nil {
+		return errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not update display order of other calendars of source %v", deletedCalendarSourceId).
+			Append(errors.LvlDebug, "Could not delete calendar %v", calendarId).
+			AltStr(errors.LvlBroad, "Could not delete calendar")
+	}
+
+	return nil
 }
 
 func (q *Queries) SetCalendarOverrides(calendarId types.ID, name string, desc string, color *types.Color) *errors.ErrorTrace {
