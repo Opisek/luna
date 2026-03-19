@@ -589,6 +589,31 @@ export class Repository {
     this.saveCache();
   }
 
+  async changeCalendarDisplayOrder(movedCalendar: CalendarModel, newIndex: number): Promise<void> {
+    if (!browser) return;
+
+    const calendars = this.calendarsCache.get(movedCalendar.source)?.value || [];
+    const previousIndex = calendars.findIndex(x => x == movedCalendar.id);
+    if (previousIndex == -1) throw new Error("Could not move cached calendar");
+    if (previousIndex == newIndex) return;
+
+    let formData = new FormData();
+    formData.append("index", newIndex.toString())
+
+    await fetchResponse(`/api/calendars/${movedCalendar.id}/order`, { method: "POST", body: formData }).catch((err) => { throw err; });
+
+    const direction = previousIndex < newIndex ? 1 : -1;
+    for (let i = previousIndex; i != newIndex; i += direction) {
+      calendars[i] = calendars[i + direction];
+    }
+    calendars[newIndex] = movedCalendar.id;
+
+    // @ts-ignore
+    this.calendarsCache.get(movedCalendar.source).value =  calendars;
+    this.compileCalendars();
+    this.saveCache();
+  }
+
   async deleteCalendar(id: string): Promise<void> {
     if (!browser) return;
 

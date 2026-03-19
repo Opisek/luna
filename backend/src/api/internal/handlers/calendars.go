@@ -6,6 +6,7 @@ import (
 	"luna-backend/errors"
 	"luna-backend/types"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -246,6 +247,41 @@ func DeleteCalendar(c *gin.Context) {
 	err = u.Tx.Queries().DeleteCalendar(userId, calendarId)
 	if err != nil {
 		u.Error(err)
+		return
+	}
+
+	u.Success(nil)
+}
+
+func ChangeCalendarDisplayOrder(c *gin.Context) {
+	u := util.GetUtil(c)
+
+	userId := util.GetUserId(c)
+
+	calendarId, tr := util.GetId(c, "calendar")
+	if tr != nil {
+		u.Error(tr)
+		return
+	}
+
+	newIndexStr := c.PostForm("index")
+	if newIndexStr == "" {
+		u.Error(errors.New().Status(http.StatusBadRequest).
+			Append(errors.LvlPlain, "No index supplied"))
+		return
+	}
+
+	newIndex, err := strconv.ParseUint(newIndexStr, 10, 16)
+	if err != nil {
+		u.Error(errors.New().Status(http.StatusBadRequest).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlPlain, "Malformed index"))
+		return
+	}
+
+	tr = u.Tx.Queries().UpdateCalendarDisplayOrder(userId, calendarId, uint16(newIndex))
+	if tr != nil {
+		u.Error(tr)
 		return
 	}
 

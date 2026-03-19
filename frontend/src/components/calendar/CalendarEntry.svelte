@@ -13,6 +13,7 @@
   import { getContext } from "svelte";
   import { queueNotification } from "../../lib/client/notifications";
   import { ColorKeys } from "../../types/colors";
+  import { getRepository } from "../../lib/client/data/repository.svelte";
 
   interface Props {
     calendar: CalendarModel;
@@ -21,6 +22,7 @@
   let { calendar = $bindable() }: Props = $props();
 
   const metadata = getMetadata();
+  const repository = getRepository();
 
   let hasErrored = $derived(calendar && metadata.faultyCalendars.has(calendar.id));
   let isLoading = $derived(calendar && metadata.loadingCalendars.get(calendar.id));
@@ -41,7 +43,9 @@
   }
 
   function reorderCalendar(newIndex: number) {
-    queueNotification(ColorKeys.Neutral, `New calendar index: ${newIndex}`);
+    repository.changeCalendarDisplayOrder(calendar, newIndex).catch((err) => {
+      queueNotification(ColorKeys.Danger, err);
+    });
   }
 </script>
 

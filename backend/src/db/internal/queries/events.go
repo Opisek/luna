@@ -31,9 +31,16 @@ func (q *Queries) insertEvents(events []types.Event) *errors.ErrorTrace {
 		q.Tx,
 		q.Context,
 		"events",
+		"id",
 		[]string{"id", "calendar", "settings"},
 		[]string{"settings"},
 		rows,
+		false,
+		"",
+		"",
+		false,
+		"",
+		"",
 	)
 
 	if err != nil {

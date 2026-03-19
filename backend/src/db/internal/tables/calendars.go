@@ -14,7 +14,8 @@ func (q *Tables) InitializeCalendarsTable() error {
 		CREATE TABLE calendars (
 			id UUID PRIMARY KEY,
 			source UUID REFERENCES sources(id) ON DELETE CASCADE,
-			settings JSONB NOT NULL
+			settings JSONB NOT NULL,
+			display_order SMALLINT NOT NULL
 		);
 	`)
 	if err != nil {

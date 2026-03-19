@@ -95,6 +95,7 @@ func run(api *util.Api) {
 	calendarsEndpoints.DELETE("/:calendarId", middleware.RequirePermissions(types.PermDeleteCalendars), handlers.DeleteCalendar)
 	calendarsEndpoints.GET("/:calendarId/events", middleware.RequirePermissions(types.PermReadEvents), handlers.GetEvents)
 	calendarsEndpoints.PUT("/:calendarId/events", middleware.RequirePermissions(types.PermAddEvents), handlers.PutEvent)
+	calendarsEndpoints.POST("/:calendarId/order", middleware.RequirePermissions(types.PermEditCalendars), handlers.ChangeCalendarDisplayOrder)
 
 	// /api/events/*
 	eventEndpoints := authenticatedEndpoints.Group("/events")
