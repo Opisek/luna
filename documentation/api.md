@@ -143,7 +143,7 @@ Depending on the `auth_type` field, additional information may need to be passed
 - **Path**: ``/api/sources/<ID>/order``
 - **Method**: ``POST``
 - **Body**: `index`
-- **Purpose**: Change the display order of the gives source to the given index and rearrange the other sources accordingly
+- **Purpose**: Change the display order of the given source to the given index and rearrange the other sources accordingly
 
 ### Calendars
 #### Get Calendars
@@ -176,6 +176,12 @@ Depending on the `auth_type` field, additional information may need to be passed
 - **Method**: ``DELETE``
 - **Body**: Empty
 - **Purpose**: Deletes the source from the local database and the upstream source.
+
+#### Change Calendar Display Order
+- **Path**: ``/api/calendar/<ID>/order``
+- **Method**: ``POST``
+- **Body**: `index`
+- **Purpose**: Change the display order of the given calendar to the given index and rearrange the other calendars accordingly
 
 ### Events
 #### Get Events
