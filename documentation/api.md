@@ -139,6 +139,12 @@ Depending on the `auth_type` field, additional information may need to be passed
 - **Body**: Empty
 - **Purpose**: Deletes a source from the database.
 
+#### Change Source Display Order
+- **Path**: ``/api/sources/<ID>/order``
+- **Method**: ``POST``
+- **Body**: `index`
+- **Purpose**: Change the display order of the gives source to the given index and rearrange the other sources accordingly
+
 ### Calendars
 #### Get Calendars
 - **Path**: ``/api/sources/<ID>/calendars``

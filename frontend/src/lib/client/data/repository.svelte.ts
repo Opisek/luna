@@ -423,6 +423,32 @@ export class Repository {
     this.saveCache();
   }
 
+  async changeSourceDisplayOrder(movedSource: SourceModel, newIndex: number): Promise<void> {
+    if (!browser) return;
+
+    const sources = this.sourcesCache.value || [];
+    const previousIndex = sources.findIndex(x => x.id == movedSource.id);
+    if (previousIndex == -1) throw new Error("Could not move cached source");
+    if (previousIndex == newIndex) return;
+
+    let formData = new FormData();
+    formData.append("index", newIndex.toString())
+
+    await fetchResponse(`/api/sources/${movedSource.id}/order`, { method: "POST", body: formData }).catch((err) => { throw err; });
+
+    const original = sources[previousIndex];
+
+    const direction = previousIndex < newIndex ? 1 : -1;
+    for (let i = previousIndex; i != newIndex; i += direction) {
+      sources[i] = sources[i + direction];
+    }
+    sources[newIndex] = original;
+
+    this.sourcesCache.value = sources;
+    this.compileSources();
+    this.saveCache();
+  }
+
   async deleteSource(id: string): Promise<void> {
     if (!browser) return;
 

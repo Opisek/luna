@@ -43,7 +43,9 @@
   });
 
   function reorderSource(newIndex: number) {
-    queueNotification(ColorKeys.Neutral, `New source index: ${newIndex}`);
+    repository.changeSourceDisplayOrder(source, newIndex).catch((err) => {
+      queueNotification(ColorKeys.Danger, err);
+    });
   }
 </script>
 

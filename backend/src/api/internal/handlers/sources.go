@@ -5,6 +5,7 @@ import (
 	"context"
 	"io"
 	"net/http"
+	"strconv"
 
 	"luna-backend/api/internal/util"
 	"luna-backend/auth"
@@ -426,4 +427,39 @@ func DeleteSource(c *gin.Context) {
 		u.Error(errors.New().Status(http.StatusNotFound).
 			Append(errors.LvlPlain, "Source not found"))
 	}
+}
+
+func ChangeSourceDisplayOrder(c *gin.Context) {
+	u := util.GetUtil(c)
+
+	userId := util.GetUserId(c)
+
+	sourceId, tr := util.GetId(c, "source")
+	if tr != nil {
+		u.Error(tr)
+		return
+	}
+
+	newIndexStr := c.PostForm("index")
+	if newIndexStr == "" {
+		u.Error(errors.New().Status(http.StatusBadRequest).
+			Append(errors.LvlPlain, "No index supplied"))
+		return
+	}
+
+	newIndex, err := strconv.ParseUint(newIndexStr, 10, 16)
+	if err != nil {
+		u.Error(errors.New().Status(http.StatusBadRequest).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlPlain, "Malformed index"))
+		return
+	}
+
+	tr = u.Tx.Queries().UpdateSourceDisplayOrder(userId, sourceId, uint16(newIndex))
+	if tr != nil {
+		u.Error(tr)
+		return
+	}
+
+	u.Success(nil)
 }

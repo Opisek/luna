@@ -19,7 +19,9 @@ func (q *Tables) InitializeSourcesTable() error {
 			settings JSONB NOT NULL,
 			auth_type BYTEA NOT NULL,
 			auth BYTEA NOT NULL,
-			UNIQUE (userid, name)
+			display_order SMALLINT NOT NULL,
+			UNIQUE (userid, name),
+			UNIQUE (userid, display_order) DEFERRABLE INITIALLY IMMEDIATE,
 		);
 		`,
 	)
