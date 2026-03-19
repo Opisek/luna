@@ -95,7 +95,12 @@ func CopyAndUpdate(
 			pgx.CopyFromRows(rows),
 		)
 	} else {
-
+		_, err = tx.CopyFrom(
+			context,
+			pgx.Identifier{tmpTableName},
+			columnNames,
+			pgx.CopyFromRows(rows),
+		)
 	}
 	if err != nil {
 		return errors.New().Status(http.StatusInternalServerError).
