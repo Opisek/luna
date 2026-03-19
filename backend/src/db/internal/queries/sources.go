@@ -297,30 +297,23 @@ func (q *Queries) UpdateSourceDisplayOrder(userId types.ID, sourceId types.ID, n
 		q.Context,
 		`
 		WITH moved AS (
-			SELECT id, display_order
+			SELECT display_order as old_index, SIGN(display_order - $3) as direction
 			FROM sources
 			WHERE userid = $1 AND id = $2	
 		)
 		UPDATE sources
 		SET display_order = CASE
 			WHEN id = $2 THEN $3
-			WHEN display_order >= $3 AND display_order < (SELECT display_order FROM moved) THEN (display_order + 1)
-			WHEN display_order <= $3 AND display_order > (SELECT display_order FROM moved) THEN (display_order - 1)
-			ELSE display_order
-		END
+			ELSE display_order + direction
+		END 
+		FROM moved
 		WHERE userid = $1
-    AND (
-      id = $2 OR 
-      (display_order >= $3 AND display_order < (SELECT display_order FROM moved)) OR
-      (display_order <= $3 AND display_order > (SELECT display_order FROM moved))
-    );
+		AND display_order BETWEEN SYMMETRIC $3 AND (SELECT old_index FROM moved);
 		`,
 		userId.UUID(),
 		sourceId.UUID(),
 		newIndex,
 	)
-
-	fmt.Println(sourceId.String(), newIndex)
 
 	switch err {
 	case nil:
