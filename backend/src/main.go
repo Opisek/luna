@@ -50,12 +50,7 @@ func setupConfig() (*logrus.Logger, *logrus.Entry, *config.CommonConfig, *errors
 			AddErr(errors.LvlDebug, err).
 			Append(errors.LvlDebug, "Could not parse binary version %v", version)
 	}
-	commonConfig.PublicUrl, err = types.NewUrl(env.PUBLIC_URL)
-	if err != nil {
-		return logger, mainLogger, nil, errors.New().
-			AddErr(errors.LvlDebug, err).
-			Append(errors.LvlDebug, "Could not parse public URL %v", env.PUBLIC_URL)
-	}
+	commonConfig.PublicUrl = (*types.Url)(&env.PUBLIC_URL)
 
 	return logger, mainLogger, commonConfig, nil
 }

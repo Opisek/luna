@@ -1,100 +1,46 @@
 package config
 
 import (
-	"fmt"
-	"os"
-	"reflect"
-	"strconv"
+	"net/url"
+	"path"
 	"time"
 
+	"github.com/caarlos0/env/v11"
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
 )
 
 type Environmental struct {
-	PUBLIC_URL string
+	PUBLIC_URL url.URL `env:"PUBLIC_URL,required"`
 
-	DB_HOST     string
-	DB_PORT     uint16
-	DB_USERNAME string
-	DB_PASSWORD string
-	DB_DATABASE string
+	DB_HOST     string `env:"DB_HOST"`
+	DB_PORT     uint16 `env:"DB_PORT"`
+	DB_USERNAME string `env:"DB_USERNAME"`
+	DB_PASSWORD string `env:"DB_PASSWORD"`
+	DB_DATABASE string `env:"DB_DATABASE"`
 
-	DATA_PATH string
-	API_PORT  uint16
+	DATA_PATH string `env:"DATA_PATH" envDefault:"/data"`
+	API_PORT  uint16 `env:"API_PORT" envDefault:"3000"`
 
-	REQUEST_TIMEOUT_DEFAULT        time.Duration
-	REQUEST_TIMEOUT_AUTHENTICATION time.Duration
+	REQUEST_TIMEOUT_DEFAULT        time.Duration `env:"REQUEST_TIMEOUT_DEFAULT" envDefault:"15s"`
+	REQUEST_TIMEOUT_AUTHENTICATION time.Duration `env:"REQUEST_TIMEOUT_AUTHENTICATION" envDefault:"15s"`
 
-	DEVELOPMENT bool
-}
-
-var defaultEnv = Environmental{
-	DATA_PATH:                      "/data",
-	API_PORT:                       3000,
-	REQUEST_TIMEOUT_DEFAULT:        15 * time.Second,
-	REQUEST_TIMEOUT_AUTHENTICATION: 15 * time.Second,
-	DEVELOPMENT:                    false,
+	DEVELOPMENT bool `env:"DEVELOPMENT" envDefault:"false"`
 }
 
 func ParseEnvironmental(logger *logrus.Entry) (Environmental, error) {
-	env := defaultEnv
 
-	err := godotenv.Load()
-	if err != nil {
+	if err := godotenv.Load(); err != nil {
 		logger.Infof("could not load .env file: %v", err)
 	}
 
-	reflected := reflect.Indirect(reflect.ValueOf(&env))
-	for i := 0; i < reflected.NumField(); i += 1 {
-		field := reflected.Type().Field(i)
-		fieldName := field.Name
-		fieldType := field.Type.Name()
+	var environmental Environmental
 
-		fieldValueRaw := os.Getenv(fieldName)
-
-		if fieldValueRaw == "" {
-			if reflected.Field(i).IsZero() && fieldType != "bool" {
-				err := fmt.Errorf("environmental variable %v is missing", fieldName)
-				return env, err
-			} else {
-				logger.Warnf("environmental variable %v is missing, using default value %v", fieldName, reflected.Field(i).Interface())
-				continue
-			}
-		}
-
-		switch fieldType {
-		case "string":
-			reflected.Field(i).SetString(fieldValueRaw)
-		case "uint16":
-			fieldValue, err := strconv.ParseUint(fieldValueRaw, 10, 16)
-			if err != nil {
-				err := fmt.Errorf("environmental variable %v is malformed", fieldName)
-				return env, err
-			}
-			reflected.Field(i).SetUint(fieldValue)
-		case "Duration":
-			fieldValue, err := strconv.ParseUint(fieldValueRaw, 10, 32)
-			if err != nil {
-				err := fmt.Errorf("environmental variable %v is malformed", fieldName)
-				return env, err
-			}
-			duration := time.Duration(fieldValue * uint64(time.Second))
-			reflected.Field(i).SetInt(duration.Nanoseconds())
-		case "bool":
-			fieldValue, err := strconv.ParseBool(fieldValueRaw)
-			if err != nil {
-				err := fmt.Errorf("environmental variable %v is malformed", fieldName)
-				return env, err
-			}
-			reflected.Field(i).SetBool(fieldValue)
-		default:
-			err := fmt.Errorf("unsupported type %v for environmental variable %v", fieldType, fieldName)
-			return env, err
-		}
+	if err := env.Parse(&environmental); err != nil {
+		return environmental, err
 	}
 
-	return env, nil
+	return environmental, nil
 }
 
 func (env *Environmental) getBasePath() string {
@@ -102,5 +48,5 @@ func (env *Environmental) getBasePath() string {
 }
 
 func (env *Environmental) GetKeysPath() string {
-	return env.getBasePath() + "/keys"
+	return path.Join(env.getBasePath(), "keys")
 }
