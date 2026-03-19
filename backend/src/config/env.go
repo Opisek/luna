@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"net/url"
 	"path"
 	"time"
@@ -13,8 +14,9 @@ import (
 type Environmental struct {
 	PUBLIC_URL url.URL `env:"PUBLIC_URL,required"`
 
+	DB_URL      string `env:"DB_URL"`
 	DB_HOST     string `env:"DB_HOST"`
-	DB_PORT     uint16 `env:"DB_PORT"`
+	DB_PORT     uint16 `env:"DB_PORT" envDefault:"5432"`
 	DB_USERNAME string `env:"DB_USERNAME"`
 	DB_PASSWORD string `env:"DB_PASSWORD"`
 	DB_DATABASE string `env:"DB_DATABASE"`
@@ -40,7 +42,30 @@ func ParseEnvironmental(logger *logrus.Entry) (Environmental, error) {
 		return environmental, err
 	}
 
+	if err := environmental.Validate(); err != nil {
+		return environmental, err
+	}
+
 	return environmental, nil
+}
+
+func (env *Environmental) Validate() error {
+	if env.DB_URL == "" {
+		if env.DB_HOST == "" {
+			return fmt.Errorf("DB_HOST is required if DB_URL is not set")
+		}
+		if env.DB_USERNAME == "" {
+			return fmt.Errorf("DB_USERNAME is required if DB_URL is not set")
+		}
+		if env.DB_PASSWORD == "" {
+			return fmt.Errorf("DB_PASSWORD is required if DB_URL is not set")
+		}
+		if env.DB_DATABASE == "" {
+			return fmt.Errorf("DB_DATABASE is required if DB_URL is not set")
+		}
+	}
+
+	return nil
 }
 
 func (env *Environmental) getBasePath() string {

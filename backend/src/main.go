@@ -57,7 +57,7 @@ func setupConfig() (*logrus.Logger, *logrus.Entry, *config.CommonConfig, *errors
 
 func setupDb(commonConfig *config.CommonConfig, mainLogger *logrus.Entry, dbLogger *logrus.Entry) (*db.Database, *errors.ErrorTrace) {
 	env := commonConfig.Env
-	db := db.NewDatabase(env.DB_HOST, env.DB_PORT, env.DB_USERNAME, env.DB_PASSWORD, env.DB_DATABASE, commonConfig, parsing.GetPrimitivesParser(), dbLogger)
+	db := db.NewDatabase(env.DB_URL, env.DB_HOST, env.DB_PORT, env.DB_USERNAME, env.DB_PASSWORD, env.DB_DATABASE, commonConfig, parsing.GetPrimitivesParser(), dbLogger)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
