@@ -21,6 +21,15 @@ func (q *Tables) InitializeEventsTable() error {
 		return fmt.Errorf("could not create events table: %v", err)
 	}
 
+	_, err = q.Tx.Exec(
+		q.Context,
+		`
+		CREATE INDEX index_events_calendar ON events (calendar);
+	`)
+	if err != nil {
+		return fmt.Errorf("could not create secondary index on events table: %v", err)
+	}
+
 	return nil
 }
 

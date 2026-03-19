@@ -23,6 +23,18 @@ func (q *Tables) InitializeUserSettingsTable() error {
 		);
 		`,
 	)
+	if err != nil {
+		return fmt.Errorf("could not create user settings table: %v", err)
+	}
+
+	_, err = q.Tx.Exec(
+		q.Context,
+		`
+		CREATE INDEX index_user_settings_userid ON user_settings (userid);
+	`)
+	if err != nil {
+		return fmt.Errorf("could not create secondary index on user settings table: %v", err)
+	}
 
 	return err
 }

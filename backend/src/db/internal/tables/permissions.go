@@ -1,5 +1,7 @@
 package tables
 
+import "fmt"
+
 func (q *Tables) InitializeTokenPermissionsTable() error {
 	// Token permissions table:
 	// sessionid permission
@@ -12,6 +14,18 @@ func (q *Tables) InitializeTokenPermissionsTable() error {
 		);
 		`,
 	)
+	if err != nil {
+		return fmt.Errorf("could not create tokens permissions table: %v", err)
+	}
 
-	return err
+	_, err = q.Tx.Exec(
+		q.Context,
+		`
+		CREATE INDEX index_token_permissions_sessionid ON token_permissions (sessionid);
+	`)
+	if err != nil {
+		return fmt.Errorf("could not create secondary index on token permissions table: %v", err)
+	}
+
+	return nil
 }

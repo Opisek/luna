@@ -1,5 +1,7 @@
 package tables
 
+import "fmt"
+
 func (q *Tables) InitializeInvitesTable() error {
 	// Invites table:
 	// inviteid author created_at expires_at code
@@ -19,6 +21,9 @@ func (q *Tables) InitializeInvitesTable() error {
 		);
 		`,
 	)
+	if err != nil {
+		return fmt.Errorf("could not create invites table: %v", err)
+	}
 
-	return err
+	return nil
 }

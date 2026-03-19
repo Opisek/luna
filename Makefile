@@ -18,3 +18,4 @@ up:
 purge:
 	docker compose down
 	sudo rm -rf /srv/luna/postgres
+	sudo mkdir /srv/luna/postgres
