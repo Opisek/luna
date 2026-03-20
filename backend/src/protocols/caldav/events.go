@@ -175,6 +175,10 @@ func (event *CaldavEvent) SupplyMasterEvent(masterEvent types.Event) {
 	event.settings.IsFirstRecurrence = masterEvent.GetDate().Start().Equal(*event.eventDate.Start())
 }
 
+func (event *CaldavEvent) IsRecurrenceInstance() bool {
+	return event.settings.RecurrenceId != ""
+}
+
 func (event *CaldavEvent) GetRecurrenceId() string {
 	return event.settings.RecurrenceId
 }

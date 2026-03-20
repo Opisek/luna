@@ -159,7 +159,7 @@ func CalculateRecurrenceId(startTime *time.Time, allDay bool) string {
 	if allDay {
 		return startTime.Format("20060102")
 	} else {
-		return startTime.Format(time.RFC3339)
+		return startTime.Format("20060102T150405")
 	}
 }
 

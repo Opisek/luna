@@ -145,6 +145,10 @@ func (event *IcalEvent) SupplyMasterEvent(masterEvent types.Event) {
 	event.settings.IsFirstRecurrence = masterEvent.GetDate().Start().Equal(*event.eventDate.Start())
 }
 
+func (event *IcalEvent) IsRecurrenceInstance() bool {
+	return event.settings.RecurrenceId != ""
+}
+
 func (event *IcalEvent) GetRecurrenceId() string {
 	return event.settings.RecurrenceId
 }

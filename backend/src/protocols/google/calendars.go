@@ -157,7 +157,7 @@ func (calendar *GoogleCalendar) GetEvents(start time.Time, end time.Time, q type
 	}
 
 	cancelledInstances := make(map[string][]*google.Event)
-	modifiedInstances := make(map[string][]*google.Event)
+	modifiedInstances := make(map[string][]*GoogleEvent)
 
 	result := make([]types.Event, len(res.Items))
 	eventCount := 0
@@ -177,20 +177,20 @@ func (calendar *GoogleCalendar) GetEvents(start time.Time, end time.Time, q type
 			continue
 		}
 
-		// We have to do the same thing for modified events, but that seems to be standard.
-		if event.RecurringEventId != "" {
-			modified, exists := modifiedInstances[event.RecurringEventId]
-			if !exists {
-				modified = []*google.Event{}
-			}
-			modified = append(modified, event)
-			modifiedInstances[event.RecurringEventId] = modified
-		}
-
 		converted, err := calendar.eventFromGoogle(event, q)
 		if err != nil {
 			return nil, err.
 				Append(errors.LvlBroad, "Could not get events")
+		}
+
+		// We have to do the same thing for modified events, but that seems to be standard.
+		if event.RecurringEventId != "" {
+			modified, exists := modifiedInstances[event.RecurringEventId]
+			if !exists {
+				modified = []*GoogleEvent{}
+			}
+			modified = append(modified, converted)
+			modifiedInstances[event.RecurringEventId] = modified
 		}
 
 		casted := (types.Event)(converted)
@@ -215,14 +215,15 @@ func (calendar *GoogleCalendar) GetEvents(start time.Time, end time.Time, q type
 		}
 		if modifications, exists := modifiedInstances[event.GetSettings().(*GoogleEventSettings).GoogleId]; exists {
 			for _, modification := range modifications {
-				modifiedTime, _, _, tr := modification.OriginalStartTime.ParseTimeDefinition()
+				modifiedTime, _, _, tr := modification.settings.rawEvent.OriginalStartTime.ParseTimeDefinition()
 				if tr != nil {
 					return nil, tr.
 						Append(errors.LvlWordy, "Could not parse modification time").
-						Append(errors.LvlDebug, "Could not parse event %v", modification.Id).
+						Append(errors.LvlDebug, "Could not parse event %v", modification.settings.rawEvent.Id).
 						AltStr(errors.LvlWordy, "Could not parse event")
 				}
 				event.GetDate().Recurrence().AddModifiedInstance(modifiedTime)
+				modification.SupplyMasterEvent(event)
 			}
 		}
 	}
@@ -247,6 +248,8 @@ func (calendar *GoogleCalendar) GetEvent(settings types.EventSettings, q types.D
 		return nil, err.
 			Append(errors.LvlBroad, "Could not get event")
 	}
+
+	converted.settings.IsFirstRecurrence = googleSettings.IsFirstRecurrence
 
 	casted := (types.Event)(converted)
 

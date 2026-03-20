@@ -21,6 +21,7 @@ type exposedEvent struct {
 	Overridden bool             `json:"overridden"`
 	CanEdit    bool             `json:"can_edit"` // TODO: might exclude from here and add to "detailed" view instead
 	CanDelete  bool             `json:"can_delete"`
+	Settings   any              `json:"settings"` // TODO: delete, this is temporary for debugging recurrences
 }
 
 func GetEvents(c *gin.Context) {
@@ -121,6 +122,7 @@ func GetEvents(c *gin.Context) {
 			Overridden: event.GetOverridden(),
 			CanEdit:    event.CanEdit(),
 			CanDelete:  event.CanDelete(),
+			Settings:   event.GetSettings(),
 		}
 	}
 
@@ -163,6 +165,7 @@ func GetEvent(c *gin.Context) {
 		//Settings: event.GetSettings(),
 		CanEdit:   event.CanEdit(),
 		CanDelete: event.CanDelete(),
+		Settings:  event.GetSettings(),
 	}
 
 	u.Success(&gin.H{"event": convertedCal})
@@ -277,11 +280,7 @@ func PatchEvent(c *gin.Context) {
 
 	var newEventColor *types.Color
 	var colErr error
-	if c.PostForm("color") == "" {
-		newEventColor = event.GetColor()
-	} else {
-		newEventColor, colErr = types.ParseColor(c.PostForm("color"))
-	}
+	newEventColor, colErr = types.ParseColor(c.PostForm("color"))
 
 	eventDateAllDay := c.PostForm("date_all_day") == "true"
 
@@ -304,9 +303,9 @@ func PatchEvent(c *gin.Context) {
 		newEventName = event.GetName()
 	}
 
-	if colErr != nil && !isOverridden {
-		newEventColor = event.GetColor()
-	}
+	//if colErr != nil && !isOverridden {
+	//	newEventColor = event.GetColor()
+	//}
 
 	var newEventDate *types.EventDate
 	if startErr != nil && endErr != nil && durationErr != nil {

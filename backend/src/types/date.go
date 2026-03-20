@@ -141,6 +141,10 @@ func (ed *EventDate) Recurrence() *EventRecurrence {
 	return ed.recurrence
 }
 
+func (ed *EventDate) SetRecurrence(recurrence *EventRecurrence) {
+	ed.recurrence = recurrence
+}
+
 func (ed *EventDate) AllDay() bool {
 	return ed.allDay
 }

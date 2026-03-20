@@ -1,7 +1,6 @@
 package types
 
 import (
-	"fmt"
 	"luna-backend/errors"
 	"net/http"
 	"time"
@@ -31,6 +30,7 @@ type Event interface {
 	Clone() Event
 
 	SupplyMasterEvent(masterEvent Event)
+	IsRecurrenceInstance() bool
 	GetRecurrenceId() string
 }
 
@@ -39,7 +39,7 @@ type EventSettings interface {
 }
 
 func ExpandRecurrence(event Event, start *time.Time, end *time.Time) ([]Event, *errors.ErrorTrace) {
-	if !event.GetDate().Recurrence().Repeats() {
+	if !event.GetDate().Recurrence().Repeats() || event.IsRecurrenceInstance() {
 		return []Event{event}, nil
 	}
 
@@ -96,7 +96,6 @@ func ExpandRecurrence(event Event, start *time.Time, end *time.Time) ([]Event, *
 		newEvent.GetDate().SetEnd(&newEnd)
 		newEvent.SupplyMasterEvent(event)
 
-		fmt.Println(newEvent.GetDate().Start(), newEvent.GetName())
 		events[actualEventCount] = newEvent
 		actualEventCount += 1
 	}
