@@ -1,5 +1,5 @@
 # Base
-FROM oven/bun:alpine AS base
+FROM oven/bun:1.3.11-alpine AS base
 WORKDIR /app
 
 # Install bun production dependencies
