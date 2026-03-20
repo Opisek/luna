@@ -1,5 +1,5 @@
 # Base
-FROM oven/bun:alpine AS base
+FROM oven/bun:1.3.11-alpine AS base
 WORKDIR /app
 
 # Install bun production dependencies
@@ -15,7 +15,7 @@ RUN bun install
 FROM base AS build
 WORKDIR /app
 RUN apk add make
-COPY Makefile .env .npmrc svelte.config.js tsconfig.json VERSION vite.config.ts package.json bun.lock ./
+COPY Makefile .npmrc svelte.config.js tsconfig.json VERSION vite.config.ts package.json bun.lock ./
 COPY script script
 COPY static static
 COPY src src
@@ -29,5 +29,6 @@ COPY package.json .
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY --from=build /app/build ./build
 USER bun:bun
+EXPOSE 8080
 HEALTHCHECK --interval=15s --timeout=3s --retries=2 CMD wget -O- http://127.0.0.1:${PORT:-8080}/api/health
 ENTRYPOINT [ "bun", "./build/index.js" ]

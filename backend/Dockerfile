@@ -18,7 +18,9 @@ RUN make build
 # Run the binary
 FROM alpine:latest
 WORKDIR /app
-RUN apk add tzdata
+RUN apk add --no-cache tzdata
 COPY --from=build /app/src/luna-backend .
+EXPOSE 3000
+VOLUME [ "/data" ]
 HEALTHCHECK --interval=15s --timeout=3s --retries=2 CMD wget -O /dev/null http://localhost:${PORT:-3000}/api/health
 ENTRYPOINT [ "/app/luna-backend" ]
