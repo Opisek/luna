@@ -50,19 +50,14 @@ func setupConfig() (*logrus.Logger, *logrus.Entry, *config.CommonConfig, *errors
 			AddErr(errors.LvlDebug, err).
 			Append(errors.LvlDebug, "Could not parse binary version %v", version)
 	}
-	commonConfig.PublicUrl, err = types.NewUrl(env.PUBLIC_URL)
-	if err != nil {
-		return logger, mainLogger, nil, errors.New().
-			AddErr(errors.LvlDebug, err).
-			Append(errors.LvlDebug, "Could not parse public URL %v", env.PUBLIC_URL)
-	}
+	commonConfig.PublicUrl = (*types.Url)(&env.PUBLIC_URL)
 
 	return logger, mainLogger, commonConfig, nil
 }
 
 func setupDb(commonConfig *config.CommonConfig, mainLogger *logrus.Entry, dbLogger *logrus.Entry) (*db.Database, *errors.ErrorTrace) {
 	env := commonConfig.Env
-	db := db.NewDatabase(env.DB_HOST, env.DB_PORT, env.DB_USERNAME, env.DB_PASSWORD, env.DB_DATABASE, commonConfig, parsing.GetPrimitivesParser(), dbLogger)
+	db := db.NewDatabase(env.DB_URL, env.DB_HOST, env.DB_PORT, env.DB_USERNAME, env.DB_PASSWORD, env.DB_DATABASE, commonConfig, parsing.GetPrimitivesParser(), dbLogger)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()

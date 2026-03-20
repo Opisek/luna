@@ -33,7 +33,7 @@ func RequestSetup(timeout time.Duration, database *db.Database, withTransaction 
 
 		// Final response sent at the end of the execution.
 		defer func() {
-			c.Header("Access-Control-Allow-Origin", config.Env.PUBLIC_URL)
+			c.Header("Access-Control-Allow-Origin", config.Env.PUBLIC_URL.String())
 
 			if responseFileBody != nil {
 				c.Header("Content-Disposition", "attachment; filename="+responseFileName)

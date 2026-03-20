@@ -3,6 +3,8 @@ package db
 import (
 	"context"
 	"fmt"
+	"net"
+	"net/url"
 	"time"
 
 	"luna-backend/config"
@@ -21,13 +23,21 @@ type Database struct {
 	logger *logrus.Entry
 }
 
-func NewDatabase(host string, port uint16, username, password, database string, commonConfig *config.CommonConfig, primitivesParser parsing.PrimitivesParser, logger *logrus.Entry) *Database {
-	url := fmt.Sprintf("postgres://%s:%s@%s:%d/%s", username, password, host, port, database)
+func NewDatabase(connStr string, host string, port uint16, username, password, database string, commonConfig *config.CommonConfig, primitivesParser parsing.PrimitivesParser, logger *logrus.Entry) *Database {
+
+	if connStr == "" {
+		connStr = (&url.URL{
+			Scheme: "postgres",
+			User:   url.UserPassword(username, password),
+			Host:   net.JoinHostPort(host, fmt.Sprintf("%d", port)),
+			Path:   database,
+		}).String()
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	pool, err := pgxpool.New(ctx, url)
+	pool, err := pgxpool.New(ctx, connStr)
 	if err != nil {
 		logger.Fatalf("could not create database pool: %v", err)
 	}
