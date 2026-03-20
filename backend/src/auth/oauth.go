@@ -18,6 +18,7 @@ type oidcDiscoveryResponse struct {
 	AuthorizationEndpoint string `json:"authorization_endpoint"`
 	TokenEndpoint         string `json:"token_endpoint"`
 	UserinfoEndpoint      string `json:"userinfo_endpoint"`
+	RevocationEndpoint    string `json:"revocation_endpoint"`
 }
 
 func FetchOauthUrls(oauthClient *types.OauthClient, ctx context.Context) *errors.ErrorTrace {
@@ -49,6 +50,15 @@ func FetchOauthUrls(oauthClient *types.OauthClient, ctx context.Context) *errors
 		return errors.New().Status(http.StatusInternalServerError).
 			AddErr(errors.LvlDebug, err).
 			Append(errors.LvlDebug, "Could not parse token URL %v", res.TokenEndpoint).
+			Append(errors.LvlDebug, "Could not fetch URLs for OAuth 2.0 client %v", oauthClient.Name).
+			AltStr(errors.LvlWordy, "Could not fetch URLs for OAuth 2.0 client")
+	}
+
+	oauthClient.RevocationUrl, err = types.NewUrl(res.RevocationEndpoint)
+	if err != nil {
+		return errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not parse revocation URL %v", res.TokenEndpoint).
 			Append(errors.LvlDebug, "Could not fetch URLs for OAuth 2.0 client %v", oauthClient.Name).
 			AltStr(errors.LvlWordy, "Could not fetch URLs for OAuth 2.0 client")
 	}
@@ -94,25 +104,6 @@ func fetchOauthTokens(oauthClient *types.OauthClient, expectRefresh bool, form *
 			AltStr(errors.LvlWordy, "Could not fetch tokens for OAuth 2.0 client")
 	}
 
-	// Google OAuth 2.0 returns the scopes in a potentially different order
-	resScopeSlice := strings.Split(res.Scope, " ")
-	clientScopeSlice := strings.Split(oauthClient.Scope, " ")
-	slices.Sort(resScopeSlice)
-	slices.Sort(clientScopeSlice)
-	if res.Scope != "" && strings.Join(resScopeSlice, " ") != strings.Join(clientScopeSlice, " ") {
-		return nil, errors.New().Status(http.StatusInternalServerError).
-			Append(errors.LvlDebug, "Returned scope %v does not match the requested scope %v", res.Scope, oauthClient.Scope).
-			Append(errors.LvlDebug, "Could not fetch tokens for OAuth 2.0 client %v", oauthClient.Name).
-			AltStr(errors.LvlWordy, "Could not fetch tokens for OAuth 2.0 client")
-	}
-
-	if res.Expires == 0 {
-		return nil, errors.New().Status(http.StatusInternalServerError).
-			Append(errors.LvlDebug, "Omitting explicit token expiry duration is not currently supported").
-			Append(errors.LvlDebug, "Could not fetch tokens for OAuth 2.0 client %v", oauthClient.Name).
-			AltStr(errors.LvlWordy, "Could not fetch tokens for OAuth 2.0 client")
-	}
-
 	if res.TokenType != "Bearer" {
 		return nil, errors.New().Status(http.StatusInternalServerError).
 			Append(errors.LvlDebug, "Only bearer tokens are currently supported").
@@ -127,8 +118,39 @@ func fetchOauthTokens(oauthClient *types.OauthClient, expectRefresh bool, form *
 			AltStr(errors.LvlWordy, "Could not fetch tokens for OAuth 2.0 client")
 	}
 
-	if res.RefreshToken == "" && expectRefresh {
+	// Revoke the token if Luna doesn't accept it
+	accepted := false
+	defer func() {
+		if accepted {
+			return
+		}
+
+		revocationForm := make(url.Values)
+		revocationForm.Add("token", res.AccessToken)
+		net.FetchJson(oauthClient.RevocationUrl, "POST", NewBearerAuth(res.AccessToken), &revocationForm, "application/x-www-form-urlencoded", ctx, res)
+	}()
+
+	// Google OAuth 2.0 returns the scopes in a potentially different order
+	resScopeSlice := strings.Split(res.Scope, " ")
+	clientScopeSlice := strings.Split(oauthClient.Scope, " ")
+	slices.Sort(resScopeSlice)
+	slices.Sort(clientScopeSlice)
+	if res.Scope != "" && strings.Join(resScopeSlice, " ") != strings.Join(clientScopeSlice, " ") {
+		return nil, errors.New().Status(http.StatusServiceUnavailable).
+			Append(errors.LvlDebug, "Returned scope %v does not match the requested scope %v", res.Scope, oauthClient.Scope).
+			Append(errors.LvlDebug, "Could not fetch tokens for OAuth 2.0 client %v", oauthClient.Name).
+			AltStr(errors.LvlWordy, "Could not fetch tokens for OAuth 2.0 client")
+	}
+
+	if res.Expires == 0 {
 		return nil, errors.New().Status(http.StatusInternalServerError).
+			Append(errors.LvlDebug, "Omitting explicit token expiry duration is not currently supported").
+			Append(errors.LvlDebug, "Could not fetch tokens for OAuth 2.0 client %v", oauthClient.Name).
+			AltStr(errors.LvlWordy, "Could not fetch tokens for OAuth 2.0 client")
+	}
+
+	if res.RefreshToken == "" && expectRefresh {
+		return nil, errors.New().Status(http.StatusServiceUnavailable).
 			Append(errors.LvlDebug, "Received an empty refresh token").
 			Append(errors.LvlDebug, "Could not fetch tokens for OAuth 2.0 client %v", oauthClient.Name).
 			AltStr(errors.LvlWordy, "Could not fetch tokens for OAuth 2.0 client")
@@ -136,6 +158,7 @@ func fetchOauthTokens(oauthClient *types.OauthClient, expectRefresh bool, form *
 
 	timestamp = timestamp.Add(time.Duration(res.Expires) * time.Second)
 
+	accepted = true
 	return &types.OauthTokens{
 		ClientId:     oauthClient.Id,
 		AccessToken:  res.AccessToken,

@@ -37,6 +37,7 @@
   let selectedClient: OauthClientModel | null = $derived(oauthClients.clients.find(client => client.id === selectedClientId) ?? null);
   let oauthRequestId = $state("");
   let extAuthPending = $state(false);
+  let extAuthRetried = $state(false);
   let rejectOnFail = $state(false);
 
   authorize = async (clientId: string): Promise<string> => {
@@ -75,8 +76,9 @@
     if (extAuthPending) return;
     extAuthPending = true;
 
-    const json = await fetchJson(`/api/oauth/authorization/${selectedClientId}`, { method: "PUT" }).catch((err) => {
+    const json = await fetchJson(`/api/oauth/authorization/${selectedClientId}`, { method: "PUT" }).catch((err: Error) => {
       extAuthPending = false;
+      if (err.message.includes("Service unavailable")) err.message = "Please try again";
       queueNotification(ColorKeys.Danger, err.message)
     });
     if (!json || !json.url || !json.request?.request_id) return;
@@ -114,6 +116,9 @@
       else queueNotification(ColorKeys.Success, `Logged into ${selectedClient?.name} successfully`);
       await oauthClients.fetchTokens();
       promiseResolve(response.token);
+    } else if (!extAuthRetried && (response?.error as string || "").toLowerCase().includes("service unavailable")) {
+      extAuthRetried = true;
+      authorizeWithExternalProvider();
     } else {
       queueNotification(ColorKeys.Danger, response?.error || "Unknown error");
       if (rejectOnFail) {
