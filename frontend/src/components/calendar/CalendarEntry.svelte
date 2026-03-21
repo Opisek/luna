@@ -8,8 +8,12 @@
   import { NoOp } from "$lib/client/placeholders";
   import { focusIndicator } from "$lib/client/decoration";
   import { getMetadata } from "$lib/client/data/metadata.svelte";
+  import { draggable } from "$lib/client/reordering.svelte";
 
   import { getContext } from "svelte";
+  import { queueNotification } from "../../lib/client/notifications";
+  import { ColorKeys } from "../../types/colors";
+  import { getRepository } from "../../lib/client/data/repository.svelte";
 
   interface Props {
     calendar: CalendarModel;
@@ -18,6 +22,7 @@
   let { calendar = $bindable() }: Props = $props();
 
   const metadata = getMetadata();
+  const repository = getRepository();
 
   let hasErrored = $derived(calendar && metadata.faultyCalendars.has(calendar.id));
   let isLoading = $derived(calendar && metadata.loadingCalendars.get(calendar.id));
@@ -29,23 +34,33 @@
   }
 
   $effect(() => {
-    calendarVisible = !metadata.hiddenCalendars.has(calendar.id);
+    const shouldBeVisible = !metadata.hiddenCalendars.has(calendar.id);
+    if (shouldBeVisible == calendarVisible) return;
+    calendarVisible = shouldBeVisible;
   });
-  $effect(() => {
-    if (calendar && calendar.id) getMetadata().setCalendarVisibility(calendar.id, calendarVisible);
-  });
+  function setVisible(visible: boolean) {
+    getMetadata().setCalendarVisibility(calendar.id, visible);
+  }
+
+  async function reorderCalendar(newIndex: number) {
+    await repository.changeCalendarDisplayOrder(calendar, newIndex).catch((err) => {
+      queueNotification(ColorKeys.Danger, err);
+    });
+  }
 </script>
 
 <style lang="scss">
   @use "../../styles/dimensions.scss";
 
-  div.entry {
+  div.calendarEntry {
     display: flex;
     flex-direction: row;
     gap: dimensions.$gapTiny;
     width: 100%;
     align-items: center;
     justify-content: space-between;
+    user-select: none;
+    cursor: grab;
   }
 
   span {
@@ -76,7 +91,7 @@
   }
 </style>
 
-<div class="entry">
+<div class="calendarEntry" use:draggable={{ ownClass: "calendarEntry", childClasses: [], callback: reorderCalendar}}>
   <span class="name">
     <ColorCircle
       color={GetCalendarColor(calendar)}
@@ -90,7 +105,7 @@
     {#if isLoading}
       <Spinner/>
     {/if}
-    <VisibilityToggle bind:visible={calendarVisible}/>
+    <VisibilityToggle bind:visible={calendarVisible} onClick={setVisible}/>
     {#if hasErrored}
       <Tooltip error={true}>An error occurred trying to retrieve events from this calendar.</Tooltip>
     {/if}

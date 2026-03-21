@@ -6,7 +6,6 @@ import (
 	"luna-backend/config"
 	"luna-backend/db"
 	"luna-backend/errors"
-	"luna-backend/perms"
 	"luna-backend/types"
 	"net/http"
 	"strings"
@@ -155,20 +154,20 @@ func GetBearerToken(c *gin.Context) (string, *errors.ErrorTrace) {
 	return parts[1], nil
 }
 
-func GetPermissions(c *gin.Context) *perms.TokenPermissions {
+func GetPermissions(c *gin.Context) *types.TokenPermissions {
 	permissions, exists := c.Get("permissions")
 	if !exists {
-		return perms.FromList([]perms.Permission{})
+		return types.TokenPermsFromPermsList([]types.Permission{})
 	}
-	return permissions.(*perms.TokenPermissions)
+	return permissions.(*types.TokenPermissions)
 }
 
-func HasPermission(c *gin.Context, permission perms.Permission) bool {
+func HasPermission(c *gin.Context, permission types.Permission) bool {
 	permissions, exists := c.Get("permissions")
 	if !exists {
 		return false
 	}
-	return permissions.(*perms.TokenPermissions).Has(permission)
+	return permissions.(*types.TokenPermissions).Has(permission)
 }
 
 func HasAdminPrivilegesAndReportError(c *gin.Context) bool {
@@ -188,12 +187,12 @@ func HasAdminPrivilegesAndReportError(c *gin.Context) bool {
 		return false
 	}
 
-	adminPerms := GetPermissions(c).Has(perms.Administrative)
+	adminPerms := GetPermissions(c).Has(types.PermAdministrative)
 	if !adminPerms {
 		u.Error(errors.New().Status(http.StatusForbidden).
 			Append(errors.LvlPlain, "You are not authorized to perform this action").
 			AltStr(errors.LvlWordy, "You are missing one or more permissions").
-			Append(errors.LvlDebug, "Missing permission: %v", perms.Administrative),
+			Append(errors.LvlDebug, "Missing permission: %v", types.PermAdministrative),
 		)
 		return false
 	}

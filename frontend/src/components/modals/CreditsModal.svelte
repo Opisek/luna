@@ -172,7 +172,8 @@
           items={[
             { name: "Cron", desc: "Cron job scheduler", license: "MIT", url: "https://github.com/robfig/cron", author: "Rob Figueiredo"},
             { name: "Gin", desc: "Web server framework", license: "MIT", url: "https://gin-gonic.com/", author: "Gin contributors"},
-            { name: "GoDotEnv", desc: "Parsing .env files", license: "MIT", url: "https://github.com/joho/godotenv", author: "Brandon Keepers / John Barton"},
+            { name: "GoDotEnv", desc: "Loads environment variables from .env files", license: "MIT", url: "https://github.com/joho/godotenv", author: "Brandon Keepers / John Barton"},
+            { name: "env", desc: "Parsing environment variables", license: "MIT", url: "https://github.com/caarlos0/env", author: "Carlos Alexandro Becker"},
             { name: "Logrus", desc: "Structured logger", license: "MIT", url: "https://github.com/sirupsen/logrus", author: "Simon Eskildsen"},
             { name: "UUID (Google)", desc: "UUID generator (used for UUIDv4)", license: "BSD-3-Clause", url: "https://github.com/google/uuid", author: "Google"},
             { name: "UUID (The Go Commune)", desc: "UUID generator (used for UUIDv5)", license: "MIT", url: "https://github.com/gofrs/uuid", author: "The Go Commune"},

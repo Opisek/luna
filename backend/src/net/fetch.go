@@ -1,11 +1,16 @@
 package net
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"encoding/xml"
+	"fmt"
 	"io"
 	"luna-backend/errors"
 	"luna-backend/types"
 	"net/http"
+	"net/url"
 )
 
 func FetchFile(url *types.Url, auth types.AuthMethod, accept string, ctx context.Context) (io.Reader, *errors.ErrorTrace) {
@@ -21,17 +26,24 @@ func FetchFile(url *types.Url, auth types.AuthMethod, accept string, ctx context
 	req.Header.Set("Accept", accept)
 	req = req.WithContext(ctx)
 
-	res, err := auth.Do(req)
-	if err != nil {
-		return nil, errors.InterpretRemoteError(err, "file", "remote file").
+	res, tr := auth.Do(req)
+	if tr != nil {
+		return nil, errors.InterpretRemoteError(tr, "file", "remote file").
 			Append(errors.LvlDebug, "Could not fulfill request").
 			Append(errors.LvlWordy, "Could not fetch resource from %v", url).
 			AltStr(errors.LvlPlain, "Could not fetch resource")
 	}
 
 	if res.StatusCode != http.StatusOK {
-		return nil, errors.New().Status(res.StatusCode).
-			Append(errors.LvlPlain, res.Status).
+		tr := errors.New().Status(res.StatusCode)
+
+		body, err := io.ReadAll(res.Body)
+		if err == nil {
+			tr.Append(errors.LvlDebug, string(body))
+		}
+
+		return nil, tr.
+			Append(errors.LvlPlain, "%v", res.Status).
 			Append(errors.LvlWordy, "Error %v", res.StatusCode).
 			Append(errors.LvlDebug, "Server returned an error code").
 			Append(errors.LvlWordy, "Could not fetch resource from %v", url).
@@ -39,4 +51,153 @@ func FetchFile(url *types.Url, auth types.AuthMethod, accept string, ctx context
 	}
 
 	return res.Body, nil
+}
+
+func FetchBytes(
+	reqUrl *types.Url,
+	httpMethod string,
+	auth types.AuthMethod,
+	body any,
+	bodyType string,
+	accept string,
+	ctx context.Context,
+) ([]byte, *errors.ErrorTrace) {
+	// Serialize body
+	var payload io.Reader = nil
+	if body != nil {
+		switch bodyType {
+		case "application/x-www-form-urlencoded":
+			payload = bytes.NewBufferString(body.(*url.Values).Encode())
+		case "application/json":
+			marshalled, err := json.Marshal(body)
+			if err != nil {
+				return nil, errors.New().Status(http.StatusInternalServerError).
+					AddErr(errors.LvlDebug, err).
+					Append(errors.LvlDebug, "Could not marshal JSON body").
+					Append(errors.LvlWordy, "Could not fetch response from %v", reqUrl).
+					AltStr(errors.LvlPlain, "Could not fetch response")
+			}
+			payload = bytes.NewBuffer(marshalled)
+		case "application/xml":
+			marshalled, err := xml.Marshal(body)
+			if err != nil {
+				return nil, errors.New().Status(http.StatusInternalServerError).
+					AddErr(errors.LvlDebug, err).
+					Append(errors.LvlDebug, "Could not marshal XML body").
+					Append(errors.LvlWordy, "Could not fetch response from %v", reqUrl).
+					AltStr(errors.LvlPlain, "Could not fetch response")
+			}
+			payload = bytes.NewBufferString(fmt.Sprintf("%v%v", xml.Header, string(marshalled)))
+		}
+	}
+
+	// Create request
+	req, err := http.NewRequest(httpMethod, reqUrl.String(), payload)
+	if err != nil {
+		return nil, errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not create request").
+			Append(errors.LvlWordy, "Could not fetch response from %v", reqUrl).
+			AltStr(errors.LvlPlain, "Could not fetch response")
+	}
+
+	// Set headers
+	if payload != nil && bodyType != "" {
+		req.Header.Set("Content-Type", bodyType)
+	}
+	if accept != "" {
+		req.Header.Set("Accept", accept)
+	}
+
+	// Add context
+	req = req.WithContext(ctx)
+
+	// Get response
+	res, tr := auth.Do(req)
+	if tr != nil {
+		return nil, errors.InterpretRemoteError(tr, "object", "object").
+			Append(errors.LvlDebug, "Could not fulfill request").
+			Append(errors.LvlWordy, "Could not fetch response from %v", reqUrl).
+			AltStr(errors.LvlPlain, "Could not fetch response")
+	}
+
+	// Interpret status code
+	if res.StatusCode >= 300 {
+		tr := errors.New().Status(res.StatusCode)
+
+		body, err := io.ReadAll(res.Body)
+		if err == nil {
+			tr.Append(errors.LvlDebug, string(body))
+		}
+
+		return nil, tr.
+			Append(errors.LvlPlain, "%v", res.Status).
+			Append(errors.LvlWordy, "Error %v", res.StatusCode).
+			Append(errors.LvlDebug, "Server returned an error code").
+			Append(errors.LvlWordy, "Could not fetch response from %v", reqUrl).
+			AltStr(errors.LvlPlain, "Could not fetch response")
+	}
+
+	// Read body
+	data, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, errors.New().Status(http.StatusInternalServerError).
+			Append(errors.LvlDebug, "Could not read body").
+			Append(errors.LvlWordy, "Could not fetch response from %v", reqUrl).
+			AltStr(errors.LvlPlain, "Could not fetch response")
+	}
+
+	return data, nil
+}
+
+func FetchJson(
+	url *types.Url,
+	httpMethod string,
+	auth types.AuthMethod,
+	body any,
+	bodyType string,
+	ctx context.Context,
+	target any,
+) *errors.ErrorTrace {
+	data, tr := FetchBytes(url, httpMethod, auth, body, bodyType, "application/json", ctx)
+	if tr != nil {
+		return tr
+	}
+
+	err := json.Unmarshal(data, target)
+	if err != nil {
+		return errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not unmarshal the JSON object").
+			Append(errors.LvlWordy, "Could not fetch response from %v", url).
+			AltStr(errors.LvlPlain, "Could not fetch response")
+	}
+
+	return nil
+}
+
+func FetchXml(
+	url *types.Url,
+	httpMethod string,
+	auth types.AuthMethod,
+	body any,
+	bodyType string,
+	ctx context.Context,
+	target any,
+) *errors.ErrorTrace {
+	data, tr := FetchBytes(url, httpMethod, auth, body, bodyType, "application/xml", ctx)
+	if tr != nil {
+		return tr
+	}
+
+	err := xml.Unmarshal(data, target)
+	if err != nil {
+		return errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not unmarshal the XML object").
+			Append(errors.LvlWordy, "Could not fetch response from %v", url).
+			AltStr(errors.LvlPlain, "Could not fetch response")
+	}
+
+	return nil
 }

@@ -7,7 +7,7 @@ import (
 	"luna-backend/api/internal/util"
 	"luna-backend/config"
 	"luna-backend/db"
-	"luna-backend/perms"
+	"luna-backend/types"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -57,7 +57,7 @@ func run(api *util.Api) {
 	administratorEndpoints := authenticatedEndpoints.Group("", middleware.RequireAdmin())
 
 	// /api/users/*
-	userEndpoints := authenticatedEndpoints.Group("/users", middleware.RequirePermissions(perms.ManageUsers))
+	userEndpoints := authenticatedEndpoints.Group("/users", middleware.RequirePermissions(types.PermManageUsers))
 	longRunningUserEndpoints := longRunningAuthenticatedEndpoints.Group("/users") // user endpoints that require password verification
 	administrativeUserEndpoints := administratorEndpoints.Group("/users")
 
@@ -69,7 +69,7 @@ func run(api *util.Api) {
 	longRunningUserEndpoints.DELETE("/:userId", handlers.DeleteUser)
 
 	// /api/users/settings/*
-	userSettingsEndpoints := userEndpoints.Group("/:userId/settings", middleware.RequirePermissions(perms.ManageUserSettings))
+	userSettingsEndpoints := userEndpoints.Group("/:userId/settings", middleware.RequirePermissions(types.PermManageUserSettings))
 	userSettingsEndpoints.GET("", handlers.GetUserSettings)
 	userSettingsEndpoints.GET("/:settingKey", handlers.GetUserSetting)
 	userSettingsEndpoints.PATCH("", handlers.PatchUserSettings)
@@ -79,27 +79,29 @@ func run(api *util.Api) {
 	// /api/sources/*
 	sourcesEndpoints := authenticatedEndpoints.Group("/sources")
 
-	sourcesEndpoints.GET("", middleware.RequirePermissions(perms.ReadSources), handlers.GetSources)
-	sourcesEndpoints.GET("/:sourceId", middleware.RequirePermissions(perms.ReadSources), handlers.GetSource)
-	sourcesEndpoints.PUT("", middleware.RequirePermissions(perms.AddSources), handlers.PutSource)
-	sourcesEndpoints.PATCH("/:sourceId", middleware.RequirePermissions(perms.EditSources), handlers.PatchSource)
-	sourcesEndpoints.DELETE("/:sourceId", middleware.RequirePermissions(perms.DeleteSources), handlers.DeleteSource)
-	sourcesEndpoints.GET("/:sourceId/calendars", middleware.RequirePermissions(perms.ReadCalendars), handlers.GetCalendars)
-	sourcesEndpoints.PUT("/:sourceId/calendars", middleware.RequirePermissions(perms.AddCalendars), handlers.PutCalendar)
+	sourcesEndpoints.GET("", middleware.RequirePermissions(types.PermReadSources), handlers.GetSources)
+	sourcesEndpoints.GET("/:sourceId", middleware.RequirePermissions(types.PermReadSources), handlers.GetSource)
+	sourcesEndpoints.PUT("", middleware.RequirePermissions(types.PermAddSources), handlers.PutSource)
+	sourcesEndpoints.PATCH("/:sourceId", middleware.RequirePermissions(types.PermEditSources), handlers.PatchSource)
+	sourcesEndpoints.DELETE("/:sourceId", middleware.RequirePermissions(types.PermDeleteSources), handlers.DeleteSource)
+	sourcesEndpoints.GET("/:sourceId/calendars", middleware.RequirePermissions(types.PermReadCalendars), handlers.GetCalendars)
+	sourcesEndpoints.PUT("/:sourceId/calendars", middleware.RequirePermissions(types.PermAddCalendars), handlers.PutCalendar)
+	sourcesEndpoints.POST("/:sourceId/order", middleware.RequirePermissions(types.PermEditSources), handlers.ChangeSourceDisplayOrder)
 
 	// /api/calendars/*
 	calendarsEndpoints := authenticatedEndpoints.Group("/calendars")
-	calendarsEndpoints.GET("/:calendarId", middleware.RequirePermissions(perms.ReadCalendars), handlers.GetCalendar)
-	calendarsEndpoints.PATCH("/:calendarId", middleware.RequirePermissions(perms.EditCalendars), handlers.PatchCalendar)
-	calendarsEndpoints.DELETE("/:calendarId", middleware.RequirePermissions(perms.DeleteCalendars), handlers.DeleteCalendar)
-	calendarsEndpoints.GET("/:calendarId/events", middleware.RequirePermissions(perms.ReadEvents), handlers.GetEvents)
-	calendarsEndpoints.PUT("/:calendarId/events", middleware.RequirePermissions(perms.AddEvents), handlers.PutEvent)
+	calendarsEndpoints.GET("/:calendarId", middleware.RequirePermissions(types.PermReadCalendars), handlers.GetCalendar)
+	calendarsEndpoints.PATCH("/:calendarId", middleware.RequirePermissions(types.PermEditCalendars), handlers.PatchCalendar)
+	calendarsEndpoints.DELETE("/:calendarId", middleware.RequirePermissions(types.PermDeleteCalendars), handlers.DeleteCalendar)
+	calendarsEndpoints.GET("/:calendarId/events", middleware.RequirePermissions(types.PermReadEvents), handlers.GetEvents)
+	calendarsEndpoints.PUT("/:calendarId/events", middleware.RequirePermissions(types.PermAddEvents), handlers.PutEvent)
+	calendarsEndpoints.POST("/:calendarId/order", middleware.RequirePermissions(types.PermEditCalendars), handlers.ChangeCalendarDisplayOrder)
 
 	// /api/events/*
 	eventEndpoints := authenticatedEndpoints.Group("/events")
-	eventEndpoints.GET("/:eventId", middleware.RequirePermissions(perms.ReadEvents), handlers.GetEvent)
-	eventEndpoints.PATCH("/:eventId", middleware.RequirePermissions(perms.EditEvents), handlers.PatchEvent)
-	eventEndpoints.DELETE("/:eventId", middleware.RequirePermissions(perms.DeleteEvents), handlers.DeleteEvent)
+	eventEndpoints.GET("/:eventId", middleware.RequirePermissions(types.PermReadEvents), handlers.GetEvent)
+	eventEndpoints.PATCH("/:eventId", middleware.RequirePermissions(types.PermEditEvents), handlers.PatchEvent)
+	eventEndpoints.DELETE("/:eventId", middleware.RequirePermissions(types.PermDeleteEvents), handlers.DeleteEvent)
 
 	// /api/files/*
 	fileEndpoints := authenticatedEndpoints.Group("/files")
@@ -107,7 +109,7 @@ func run(api *util.Api) {
 	fileEndpoints.HEAD("/:fileId", handlers.GetFile)
 
 	// /api/settings/*
-	globalSettingsEndpoints := administratorEndpoints.Group("/settings", middleware.RequirePermissions(perms.ManageGlobalSettings))
+	globalSettingsEndpoints := administratorEndpoints.Group("/settings", middleware.RequirePermissions(types.PermManageGlobalSettings))
 	globalSettingsEndpointsPublic := authenticatedEndpoints.Group("/settings")
 	globalSettingsEndpointsPublic.GET("", handlers.GetGlobalSettings)
 	globalSettingsEndpointsPublic.GET("/:settingKey", handlers.GetGlobalSetting)
@@ -120,7 +122,7 @@ func run(api *util.Api) {
 	sessionEndpoints.GET("/valid", handlers.IsSessionValid)
 	sessionEndpoints.GET("/:sessionId/permissions", handlers.GetSessionPermissions)
 
-	sessionManagementEndpoints := sessionEndpoints.Group("", middleware.RequirePermissions(perms.ManageSessions))
+	sessionManagementEndpoints := sessionEndpoints.Group("", middleware.RequirePermissions(types.PermManageSessions))
 	sessionManagementEndpoints.GET("", handlers.GetSessions)
 	sessionManagementEndpoints.PUT("", handlers.PutSession)
 	sessionManagementEndpoints.PATCH("/:sessionId", handlers.PatchSession)
@@ -128,12 +130,38 @@ func run(api *util.Api) {
 	sessionManagementEndpoints.DELETE("", handlers.DeleteSessions)
 
 	// /api/invites/*
-	inviteEndpoints := administratorEndpoints.Group("/invites", middleware.RequirePermissions(perms.ManageInvites))
+	inviteEndpoints := administratorEndpoints.Group("/invites", middleware.RequirePermissions(types.PermManageInvites))
 	inviteEndpoints.GET("", handlers.GetInvites)
 	inviteEndpoints.GET("/:inviteId/qr", handlers.GetInviteQrCode)
 	inviteEndpoints.PUT("", handlers.PutInvite)
 	inviteEndpoints.DELETE("/:inviteId", handlers.DeleteInvite)
 	inviteEndpoints.DELETE("", handlers.DeleteInvites)
+
+	// /api/oauth/*
+	oauthEndpoints := authenticatedEndpoints.Group("/oauth", middleware.RequirePermissions(types.PermManageUsers))
+	oauthAdminEndpoints := administratorEndpoints.Group("/oauth", middleware.RequirePermissions(types.PermManageOauthClients))
+
+	// /api/oauth/clients/*
+	oauthClientEndpoints := oauthEndpoints.Group("/clients")
+	oauthClientAdminEndpoints := oauthAdminEndpoints.Group("/clients")
+
+	oauthClientEndpoints.GET("", handlers.GetOauthClients) // users must be able to see what auth providers they may use, but we must not return client secrets here
+	oauthClientAdminEndpoints.GET("/:clientId", handlers.GetOauthClient)
+	oauthClientAdminEndpoints.PUT("", handlers.PutOauthClient)
+	oauthClientAdminEndpoints.PATCH("/:clientId", handlers.PatchOauthClient)
+	oauthClientAdminEndpoints.DELETE("/:clientId", handlers.DeleteOauthClient)
+
+	// /api/oauth/authorization/*
+	oauthAuthRequestsEndpoints := oauthEndpoints.Group("/authorization")
+
+	oauthAuthRequestsEndpoints.PUT("/:clientId", handlers.CreateOauthAuthorizationRequest)
+	oauthAuthRequestsEndpoints.POST("/:requestId", handlers.FinalizeOauthAuthorizationRequest)
+	oauthAuthRequestsEndpoints.DELETE("/:requestId", handlers.CancelOauthAuthorizationRequest)
+
+	// /api/oauth/tokens/*
+	oauthTokensEndpoints := oauthEndpoints.Group("/tokens")
+
+	oauthTokensEndpoints.GET("", handlers.GetOauthClientsWithTokens)
 
 	// /api/* the rest
 	authenticatedEndpoints.POST("/url", handlers.CheckUrl)

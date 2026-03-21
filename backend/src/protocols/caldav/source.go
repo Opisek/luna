@@ -1,9 +1,12 @@
 package caldav
 
 import (
+	"context"
 	"encoding/json"
+	"luna-backend/auth"
 	"luna-backend/constants"
 	"luna-backend/errors"
+	supplementary_caldav "luna-backend/protocols/caldav/internal"
 	"luna-backend/types"
 	"net/http"
 
@@ -15,11 +18,12 @@ type CaldavSource struct {
 	name     string
 	settings *CaldavSourceSettings
 	auth     types.AuthMethod
+	client   *caldav.Client `json:"-"`
+	ctx      context.Context
 }
 
 type CaldavSourceSettings struct {
-	Url    *types.Url     `json:"url"`
-	client *caldav.Client `json:"-"`
+	Url *types.Url `json:"url"`
 }
 
 func (settings *CaldavSourceSettings) GetBytes() []byte {
@@ -50,6 +54,10 @@ func (source *CaldavSource) GetSettings() types.SourceSettings {
 	return source.settings
 }
 
+func (source *CaldavSource) CanAddCalendars() bool {
+	return true
+}
+
 func NewCaldavSource(name string, url *types.Url, auth types.AuthMethod) *CaldavSource {
 	return &CaldavSource{
 		id:   types.EmptyId(), // Placeholder until the database assigns an ID
@@ -71,10 +79,10 @@ func PackCaldavSource(id types.ID, name string, settings *CaldavSourceSettings, 
 }
 
 func (source *CaldavSource) getClient() (*caldav.Client, *errors.ErrorTrace) {
-	if source.settings.client == nil {
+	if source.client == nil {
 		var err error
-		source.settings.client, err = caldav.NewClient(
-			source.auth,
+		source.client, err = caldav.NewClient(
+			source.auth.HttpClient(),
 			source.settings.Url.URL().String(),
 		)
 
@@ -84,7 +92,7 @@ func (source *CaldavSource) getClient() (*caldav.Client, *errors.ErrorTrace) {
 				Append(errors.LvlWordy, "Could not create CalDAV client")
 		}
 	}
-	return source.settings.client, nil
+	return source.client, nil
 }
 
 func (source *CaldavSource) GetCalendars(q types.DatabaseQueries) ([]types.Calendar, *errors.ErrorTrace) {
@@ -95,7 +103,7 @@ func (source *CaldavSource) GetCalendars(q types.DatabaseQueries) ([]types.Calen
 
 	cals, err := client.FindCalendars(q.GetContext(), "")
 	if err != nil {
-		return nil, errors.InterpretRemoteError(err, "source", "CalDAV source").
+		return nil, errors.InterpretRemoteError(errors.New().AddErr(errors.LvlDebug, err), "source", "CalDAV source").
 			Append(errors.LvlBroad, "Could not get calendars")
 	}
 
@@ -125,7 +133,7 @@ func (source *CaldavSource) GetCalendar(settings types.CalendarSettings, q types
 
 	cals, err := client.FindCalendars(q.GetContext(), caldavSettings.Url.Path)
 	if err != nil {
-		return nil, errors.InterpretRemoteError(err, "source", "CalDAV source").
+		return nil, errors.InterpretRemoteError(errors.New().AddErr(errors.LvlDebug, err), "source", "CalDAV source").
 			Append(errors.LvlBroad, "Could not get calendar")
 	}
 
@@ -152,17 +160,21 @@ func (source *CaldavSource) GetCalendar(settings types.CalendarSettings, q types
 	return castedCal, nil
 }
 
-// TODO: Add, Edit, and Delete are not supported by upstream yet
+func (source *CaldavSource) AddCalendar(name string, desc string, color *types.Color, q types.DatabaseQueries) (types.Calendar, *errors.ErrorTrace) {
+	url, tr := supplementary_caldav.MkCol(source.settings.Url, name, desc, color, source.auth, source.ctx)
+	if tr != nil {
+		return nil, tr.
+			Append(errors.LvlBroad, "Could not create calendar")
+	}
 
-func (source *CaldavSource) AddCalendar(name string, color *types.Color, _ types.DatabaseQueries) (types.Calendar, *errors.ErrorTrace) {
-	//caldavCal := calendar.(*CaldavCalendar)
+	cal, tr := source.GetCalendar(&CaldavCalendarSettings{Url: url}, q)
+	if tr != nil {
+		return nil, tr.
+			Append(errors.LvlDebug, "Could not fetch newly created calendar from %v", url.String()).
+			AltStr(errors.LvlBroad, "Could not fetch newly created calendar")
+	}
 
-	//client, err := source.getClient()
-	//if err != nil {
-	//	return err
-	//}
-
-	return nil, errors.New().Status(http.StatusNotImplemented)
+	return cal, nil
 }
 
 func (source *CaldavSource) EditCalendar(calendar types.Calendar, name string, desc string, color *types.Color, override bool, q types.DatabaseQueries) (types.Calendar, *errors.ErrorTrace) {
@@ -189,29 +201,43 @@ func (source *CaldavSource) EditCalendar(calendar types.Calendar, name string, d
 			return source.GetCalendar(calendar.GetSettings(), q)
 		}
 	} else {
-		//caldavCal := calendar.(*CaldavCalendar)
+		caldavCalendarSettings := calendar.GetSettings().(*CaldavCalendarSettings)
 
-		//client, err := source.getClient()
-		//if err != nil {
-		//	return err
-		//}
+		tr := supplementary_caldav.PropPatch(source.settings.Url, caldavCalendarSettings.Url, name, desc, color, source.auth, source.ctx)
+		if tr != nil {
+			return nil, tr.
+				Append(errors.LvlBroad, "Could not update calendar %v", calendar.GetId()).
+				Append(errors.LvlBroad, "Could not update calendar")
+		}
 
-		return nil, errors.New().Status(http.StatusNotImplemented).
-			Append(errors.LvlWordy, "Only override is supported").
-			Append(errors.LvlWordy, "CalDAV sources do not support editing calendars").
-			AltStr(errors.LvlPlain, "This source does not support editing calendars")
+		cal, tr := source.GetCalendar(caldavCalendarSettings, q)
+		if tr != nil {
+			return nil, tr.
+				Append(errors.LvlBroad, "Could not fetch updated calendar %v", calendar.GetId()).
+				AltStr(errors.LvlDebug, "Could not fetch updated calendar")
+		}
+
+		return cal, nil
 	}
 }
 
-func (source *CaldavSource) DeleteCalendar(calendar types.Calendar, _ types.DatabaseQueries) *errors.ErrorTrace {
-	//caldavCal := calendar.(*CaldavCalendar)
+func (source *CaldavSource) DeleteCalendar(calendar types.Calendar, q types.DatabaseQueries) *errors.ErrorTrace {
+	settings := calendar.GetSettings().(*CaldavCalendarSettings)
 
-	//client, err := source.getClient()
-	//if err != nil {
-	//	return err
-	//}
+	err := source.client.RemoveAll(q.GetContext(), settings.Url.Path)
+	if err != nil {
+		return errors.InterpretRemoteError(errors.New().AddErr(errors.LvlDebug, err), "calendar", "CalDAV calendar").
+			Append(errors.LvlBroad, "Could not delete event")
+	}
 
-	return errors.New().Status(http.StatusNotImplemented)
+	return nil
 }
 
 func (source *CaldavSource) Cleanup(_ types.DatabaseQueries) *errors.ErrorTrace { return nil }
+
+func (source *CaldavSource) SupplyContext(ctx context.Context) {
+	if source.auth.GetType() == constants.AuthOauth {
+		source.auth.(*auth.OauthAuth).SupplyContext(ctx)
+	}
+	source.ctx = ctx
+}

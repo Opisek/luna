@@ -2,8 +2,10 @@ package handlers
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"net/http"
+	"strconv"
 
 	"luna-backend/api/internal/util"
 	"luna-backend/auth"
@@ -11,6 +13,7 @@ import (
 	"luna-backend/errors"
 	"luna-backend/files"
 	"luna-backend/protocols/caldav"
+	"luna-backend/protocols/google"
 	"luna-backend/protocols/ical"
 	"luna-backend/types"
 
@@ -24,16 +27,17 @@ type exposedSource struct {
 }
 
 type exposedDetailedSource struct {
-	Id       types.ID    `json:"id"`
-	Name     string      `json:"name"`
-	Type     string      `json:"type"`
-	Settings interface{} `json:"settings"`
-	AuthType string      `json:"auth_type"`
-	Auth     interface{} `json:"auth"`
+	Id              types.ID `json:"id"`
+	Name            string   `json:"name"`
+	Type            string   `json:"type"`
+	Settings        any      `json:"settings"`
+	AuthType        string   `json:"auth_type"`
+	Auth            any      `json:"auth"`
+	CanAddCalendars bool     `json:"can_add_calendars"`
 }
 
 func getSources(u *util.HandlerUtility, userId types.ID) ([]types.Source, *errors.ErrorTrace) {
-	srcs, err := u.Tx.Queries().GetSourcesByUser(userId)
+	srcs, err := u.Tx.Queries().GetSourcesByUser(userId, u.Context, u.Config)
 	if err != nil {
 		return nil, err
 	}
@@ -53,6 +57,8 @@ func GetSources(c *gin.Context) {
 
 	exposedSources := make([]exposedSource, len(sources))
 	for i, source := range sources {
+		u.Config.Cache.Cache(userId, source)
+
 		exposedSources[i] = exposedSource{
 			Id:   source.GetId(),
 			Name: source.GetName(),
@@ -74,19 +80,22 @@ func GetSource(c *gin.Context) {
 
 	userId := util.GetUserId(c)
 
-	source, err := u.Tx.Queries().GetSource(userId, sourceId)
+	source, err := u.Tx.Queries().GetSource(userId, sourceId, u.Context, u.Config)
 	if err != nil {
 		u.Error(err)
 		return
 	}
 
+	u.Config.Cache.Cache(userId, source)
+
 	exposedSource := exposedDetailedSource{
-		Id:       source.GetId(),
-		Name:     source.GetName(),
-		Settings: source.GetSettings(),
-		Type:     source.GetType(),
-		AuthType: source.GetAuth().GetType(),
-		Auth:     source.GetAuth(),
+		Id:              source.GetId(),
+		Name:            source.GetName(),
+		Settings:        source.GetSettings(),
+		Type:            source.GetType(),
+		AuthType:        source.GetAuth().GetType(),
+		Auth:            source.GetAuth(),
+		CanAddCalendars: source.CanAddCalendars(),
 	}
 
 	u.Success(&gin.H{"source": exposedSource})
@@ -116,6 +125,37 @@ func parseAuthMethod(c *gin.Context) (types.AuthMethod, *errors.ErrorTrace) {
 		}
 
 		sourceAuth = auth.NewBearerAuth(token)
+	case constants.AuthOauth:
+		rawClientId := c.PostForm("auth_client")
+		if rawClientId == "" {
+			return nil, errors.New().Status(http.StatusBadRequest).
+				Append(errors.LvlPlain, "Missing OAuth 2.0 client ID")
+		}
+
+		clientId, err := types.IdFromString(rawClientId)
+		if err != nil {
+			return nil, errors.New().Status(http.StatusBadRequest).
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlPlain, "Improperly formatted OAuth 2.0 client ID")
+		}
+
+		rawTokensId := c.PostForm("auth_tokens")
+		if rawTokensId == "" {
+			return nil, errors.New().Status(http.StatusBadRequest).
+				Append(errors.LvlPlain, "Missing OAuth 2.0 tokens ID")
+		}
+
+		tokensId, err := types.IdFromString(rawTokensId)
+		if err != nil {
+			return nil, errors.New().Status(http.StatusBadRequest).
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlPlain, "Improperly formatted OAuth 2.0 tokens ID")
+		}
+
+		sourceAuth = auth.NewOauthAuth(tokensId, clientId, util.GetUserId(c))
+
+		u := util.GetUtil(c)
+		sourceAuth.(*auth.OauthAuth).SupplyContext(u.Context)
 	case "":
 		return nil, errors.New().Status(http.StatusBadRequest).
 			Append(errors.LvlPlain, "Missing authentication type")
@@ -127,7 +167,7 @@ func parseAuthMethod(c *gin.Context) (types.AuthMethod, *errors.ErrorTrace) {
 	return sourceAuth, nil
 }
 
-func parseSource(c *gin.Context, sourceName string, sourceAuth types.AuthMethod, user types.ID, q types.DatabaseQueries) (types.Source, *errors.ErrorTrace) {
+func parseSource(c *gin.Context, sourceName string, sourceAuth types.AuthMethod, user types.ID, q types.DatabaseQueries, ctx context.Context) (types.Source, *errors.ErrorTrace) {
 	var tr *errors.ErrorTrace
 	var source types.Source
 
@@ -151,6 +191,8 @@ func parseSource(c *gin.Context, sourceName string, sourceAuth types.AuthMethod,
 		}
 
 		source = caldav.NewCaldavSource(sourceName, sourceUrl, sourceAuth)
+		source.SupplyContext(ctx)
+
 	case constants.SourceIcal:
 		locationType := c.PostForm("location")
 		if locationType == "" {
@@ -235,6 +277,10 @@ func parseSource(c *gin.Context, sourceName string, sourceAuth types.AuthMethod,
 			}
 		}
 
+	case constants.SourceGoogle:
+		// TODO: do we need anything more or is that it?
+		source = google.NewGoogleSource(sourceName, sourceAuth)
+
 	case "":
 		return nil, errors.New().Status(http.StatusBadRequest).
 			Append(errors.LvlPlain, "Missing source type")
@@ -264,7 +310,7 @@ func PutSource(c *gin.Context) {
 		return
 	}
 
-	source, err := parseSource(c, sourceName, sourceAuth, userId, u.Tx.Queries())
+	source, err := parseSource(c, sourceName, sourceAuth, userId, u.Tx.Queries(), u.Context)
 	if err != nil {
 		u.Error(err)
 		return
@@ -300,7 +346,7 @@ func PatchSource(c *gin.Context) {
 		return
 	}
 
-	source, err := u.Tx.Queries().GetSource(userId, sourceId)
+	source, err := u.Tx.Queries().GetSource(userId, sourceId, u.Context, u.Config)
 	if err != nil {
 		u.Error(err)
 		return
@@ -320,7 +366,7 @@ func PatchSource(c *gin.Context) {
 		if newAuth == nil {
 			newAuth = source.GetAuth()
 		}
-		newSource, err := parseSource(c, newName, newAuth, userId, u.Tx.Queries())
+		newSource, err := parseSource(c, newName, newAuth, userId, u.Tx.Queries(), u.Context)
 		if err != nil {
 			u.Error(err)
 			return
@@ -358,7 +404,7 @@ func DeleteSource(c *gin.Context) {
 		return
 	}
 
-	source, err := u.Tx.Queries().GetSource(userId, sourceId)
+	source, err := u.Tx.Queries().GetSource(userId, sourceId, u.Context, u.Config)
 	if err != nil {
 		u.Warn(err)
 	} else {
@@ -381,4 +427,39 @@ func DeleteSource(c *gin.Context) {
 		u.Error(errors.New().Status(http.StatusNotFound).
 			Append(errors.LvlPlain, "Source not found"))
 	}
+}
+
+func ChangeSourceDisplayOrder(c *gin.Context) {
+	u := util.GetUtil(c)
+
+	userId := util.GetUserId(c)
+
+	sourceId, tr := util.GetId(c, "source")
+	if tr != nil {
+		u.Error(tr)
+		return
+	}
+
+	newIndexStr := c.PostForm("index")
+	if newIndexStr == "" {
+		u.Error(errors.New().Status(http.StatusBadRequest).
+			Append(errors.LvlPlain, "No index supplied"))
+		return
+	}
+
+	newIndex, err := strconv.ParseUint(newIndexStr, 10, 16)
+	if err != nil {
+		u.Error(errors.New().Status(http.StatusBadRequest).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlPlain, "Malformed index"))
+		return
+	}
+
+	tr = u.Tx.Queries().UpdateSourceDisplayOrder(userId, sourceId, uint16(newIndex))
+	if tr != nil {
+		u.Error(tr)
+		return
+	}
+
+	u.Success(nil)
 }

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { CaseSensitive, Code, LogOut, Moon, Palette, RefreshCw, Shield, Sun, TriangleAlert, User, Users } from "lucide-svelte";
+  import { CaseSensitive, Code, Lock, LogOut, Moon, Palette, RefreshCw, Shield, Sun, TriangleAlert, User, Users } from "lucide-svelte";
   import { AsyncNoOp, NoOp } from "../../lib/client/placeholders";
   import ButtonList from "../forms/ButtonList.svelte";
   import Modal from "./Modal.svelte";
@@ -31,6 +31,8 @@
   import FontsSettingsTab from "./settingModalTabs/FontsSettingsTab.svelte";
   import SessionModal from "./SessionModal.svelte";
   import { getDatabaseFileIdFromUrl } from "../../lib/common/parsing";
+  import OauthSettingsTab from "./settingModalTabs/OauthSettingsTab.svelte";
+  import { getOauthClients } from "../../lib/client/data/oauth.svelte";
 
   interface Props {
     showModal?: () => any;
@@ -47,6 +49,7 @@
   const sessions = getActiveSessions();
   const invites = getRegistrationInvites();
   const users = getUsers();
+  const oauthClients = getOauthClients();
 
   const today = new Date();
 
@@ -73,6 +76,7 @@
       if (settings.userData.admin) {
         invites.fetch();
         users.fetchAll();
+        oauthClients.fetch();
       }
     });
   }
@@ -103,6 +107,7 @@
       { name: "Users", value: "users", icon: Users },
       { name: "Themes", value: "themes", icon: Palette },
       { name: "Fonts", value: "fonts", icon: CaseSensitive },
+      { name: "OAuth 2.0", value: "oauth", icon: Lock },
       { name: "Administrative", value: "admin", icon: Shield },
     ],
     [
@@ -504,6 +509,11 @@
           users={users}
           showConfirmation={showConfirmation}
           deleteAccount={deleteAccount} 
+        />
+      {:else if selectedCategory === "oauth"}
+        <OauthSettingsTab
+          settings={settings}
+          clients={oauthClients}
         />
       {:else if selectedCategory === "admin"}
         <AdminSettingsTab

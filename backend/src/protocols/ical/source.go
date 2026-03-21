@@ -1,6 +1,7 @@
 package ical
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"luna-backend/auth"
@@ -78,6 +79,10 @@ func (source *IcalSource) GetAuth() types.AuthMethod {
 
 func (source *IcalSource) GetSettings() types.SourceSettings {
 	return source.settings
+}
+
+func (source *IcalSource) CanAddCalendars() bool {
+	return false
 }
 
 func NewRemoteIcalSource(name string, url *types.Url, auth types.AuthMethod, user types.ID, q types.DatabaseQueries) (*IcalSource, *errors.ErrorTrace) {
@@ -174,7 +179,7 @@ func (source *IcalSource) GetCalendar(settings types.CalendarSettings, q types.D
 
 /* Ical source is read-only */
 
-func (source *IcalSource) AddCalendar(name string, color *types.Color, q types.DatabaseQueries) (types.Calendar, *errors.ErrorTrace) {
+func (source *IcalSource) AddCalendar(name string, desc string, color *types.Color, q types.DatabaseQueries) (types.Calendar, *errors.ErrorTrace) {
 	return nil, errors.New().Status(http.StatusMethodNotAllowed)
 }
 
@@ -216,4 +221,10 @@ func (source *IcalSource) Cleanup(q types.DatabaseQueries) *errors.ErrorTrace {
 		return tr.Append(errors.LvlWordy, "Could not get file owner")
 	}
 	return q.DeleteFilecache(source.settings.file, sourceOwner)
+}
+
+func (source *IcalSource) SupplyContext(ctx context.Context) {
+	if source.auth.GetType() == constants.AuthOauth {
+		source.auth.(*auth.OauthAuth).SupplyContext(ctx)
+	}
 }

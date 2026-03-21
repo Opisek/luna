@@ -9,6 +9,26 @@ import (
 	"net/http"
 )
 
+func GetGlobalEncryptionKey(commonConfig *config.CommonConfig) (string, *errors.ErrorTrace) {
+	masterKey, tr := crypto.GetSymmetricKey(commonConfig, "database")
+	if tr != nil {
+		return "", tr.
+			Append(errors.LvlWordy, "Could not get master key")
+	}
+	userKey, err := crypto.DeriveKey(masterKey, []byte("global"))
+	if err != nil {
+		return "", errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			AltStr(errors.LvlWordy, "Could not derive global key")
+	}
+	encodedKey := base64.StdEncoding.EncodeToString(userKey)
+	return encodedKey, nil
+}
+
+func GetGlobalDecryptionKey(commonConfig *config.CommonConfig) (string, *errors.ErrorTrace) {
+	return GetGlobalEncryptionKey(commonConfig)
+}
+
 func GetUserEncryptionKey(commonConfig *config.CommonConfig, userId types.ID) (string, *errors.ErrorTrace) {
 	masterKey, tr := crypto.GetSymmetricKey(commonConfig, "database")
 	if tr != nil {

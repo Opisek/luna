@@ -1,7 +1,9 @@
 package queries
 
 import (
+	"context"
 	"fmt"
+	"luna-backend/config"
 	"luna-backend/db/internal/parsing"
 	"luna-backend/db/internal/util"
 	"luna-backend/errors"
@@ -29,9 +31,16 @@ func (q *Queries) insertEvents(events []types.Event) *errors.ErrorTrace {
 		q.Tx,
 		q.Context,
 		"events",
+		"id",
 		[]string{"id", "calendar", "settings"},
 		[]string{"settings"},
 		rows,
+		false,
+		"",
+		"",
+		false,
+		"",
+		"",
 	)
 
 	if err != nil {
@@ -140,7 +149,7 @@ func (q *Queries) OverrideEvent(event types.Event) (types.Event, *errors.ErrorTr
 	return events[0], nil
 }
 
-func (q *Queries) GetEvent(userId types.ID, eventId types.ID) (types.Event, *errors.ErrorTrace) {
+func (q *Queries) GetEvent(userId types.ID, eventId types.ID, ctx context.Context, config *config.CommonConfig) (types.Event, *errors.ErrorTrace) {
 	decryptionKey, tr := util.GetUserDecryptionKey(q.CommonConfig, userId)
 	if tr != nil {
 		return nil, tr.
@@ -187,7 +196,7 @@ func (q *Queries) GetEvent(userId types.ID, eventId types.ID) (types.Event, *err
 			AltStr(errors.LvlBroad, "Could not get event")
 	}
 
-	event, tr := scanner.GetEvent()
+	event, tr := scanner.GetEvent(ctx)
 	if tr != nil {
 		return nil, tr.
 			Append(errors.LvlDebug, "Could not parse event %v for user %v", eventId, userId).

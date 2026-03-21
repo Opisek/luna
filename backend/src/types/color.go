@@ -46,7 +46,7 @@ func ParseColor(rawColor string) (*Color, error) {
 		return ColorEmpty, nil
 	}
 
-	if len(rawColor) != 7 || rawColor[0] != '#' {
+	if (len(rawColor) != 7 && len(rawColor) != 9) || rawColor[0] != '#' {
 		return nil, fmt.Errorf("invalid color format")
 	}
 
@@ -61,6 +61,13 @@ func ParseColor(rawColor string) (*Color, error) {
 	b, err := strconv.ParseUint(rawColor[5:7], 16, 8)
 	if err != nil {
 		return nil, fmt.Errorf("invalid color format: could not parse blue value: %v", err)
+	}
+
+	if len(rawColor) == 9 {
+		_, err := strconv.ParseUint(rawColor[5:7], 16, 8)
+		if err != nil {
+			return nil, fmt.Errorf("invalid color format: could not parse alpha value: %v", err)
+		}
 	}
 
 	return ColorFromVals(uint8(r), uint8(g), uint8(b)), nil
@@ -178,7 +185,7 @@ func (c *Color) IsEmpty() bool {
 	return c == nil || c.empty
 }
 
-func (c *Color) distance(other *Color) uint {
+func (c *Color) Distance(other *Color) uint {
 	if c == nil || other == nil {
 		return ^uint(0)
 	}
@@ -216,4 +223,9 @@ func (c *Color) Clone() *Color {
 	}
 
 	return ColorFromRGBA(c.RGBA())
+}
+
+func (c *Color) IsDark() bool {
+	brightness := int(math.Round((float64(c.col.R)*299 + float64(c.col.G)*587 + float64(c.col.B)*114) / 1000))
+	return brightness <= 141
 }

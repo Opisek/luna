@@ -1,6 +1,6 @@
-.PHONY: dev, down, restart, build, up, purge
+.PHONY: run, down, restart, build, up, purge
 
-dev:
+run:
 	docker compose up -d --build
 
 down:
@@ -18,3 +18,4 @@ up:
 purge:
 	docker compose down
 	sudo rm -rf /srv/luna/postgres
+	sudo mkdir /srv/luna/postgres

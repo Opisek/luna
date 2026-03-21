@@ -73,7 +73,9 @@
         allDay: false,
         recurrence: false,
       },
-      overridden: false
+      overridden: false,
+      can_edit: true,
+      can_delete: true,
     };
 
     eventRecurrenceBoolean = false;
@@ -104,7 +106,9 @@
         allDay: original.date.allDay,
         recurrence: await deepCopy(original.date.recurrence),
       },
-      overridden: original.overridden
+      overridden: original.overridden,
+      can_edit: original.can_edit,
+      can_delete: original.can_delete,
     }
     if (event.date.allDay && event.date.end.getTime() !== event.date.start.getTime() && event.date.end.getHours() === 0 && event.date.end.getMinutes() === 0 && event.date.end.getSeconds() === 0 && event.date.end.getMilliseconds() === 0) {
       event.date.end.setDate(event.date.end.getDate() - 1);
@@ -130,22 +134,11 @@
   let title: string = $derived((event && event.id) ? (editMode ? "Edit event" : "Event") : "Create event");
   let showEndDate: boolean = $derived(editMode || (event && (!event.date.allDay || !isSameDay(event.date.start, event.date.end))));
 
-  let selectableCalendars = $derived.by(() => {
-    let selectable;
-
-    if (editMode) {
-      selectable = repository.calendars.filter(x => {
-        if (x.id === event.calendar) return true;
-        const source = repository.sources.find(y => y.id === x.source);
-        return source && source.type !== "ical";
-      });
-    } else {
-      selectable = repository.calendars.filter(x => x.id === event.calendar);
-    }
-
-    return selectable.map(x => ({ value: x.id, name: x.name }))
-  });
-
+  let selectableCalendars = $derived(
+    repository.calendars
+      .filter(calendar => calendar.id === event.calendar || (editMode && calendar.can_add_events))
+      .map(calendar => ({ value: calendar.id, name: calendar.name }))
+  );
 
   const onDelete = async () => {
     await getRepository().deleteEvent(event.id).catch(err => {
@@ -233,8 +226,8 @@
   onDelete={onDelete}
   onEdit={onEdit}
   onCancel={promiseReject}
-  deletable={event && eventSourceType !== "ical"}
-  editable={event != null}
+  deletable={event?.can_edit}
+  editable={event?.can_delete}
   submittable={event.calendar !== "" && event.name !== "" && (event.date.start.getTime() < event.date.end.getTime() || (event.date.start.getTime() <= event.date.end.getTime() && event.date.allDay))}
 >
   {#if event != EmptyEvent}

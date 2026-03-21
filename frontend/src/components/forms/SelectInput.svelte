@@ -13,7 +13,7 @@
   let optionsAbove = $state(false);
 
   interface Props {
-    value: T | null;
+    value: T | null | undefined;
     placeholder: string;
     name: string;
     editable?: boolean;
@@ -22,7 +22,7 @@
   }
 
   let {
-    value = $bindable(null),
+    value = $bindable(),
     placeholder,
     name,
     editable = true,

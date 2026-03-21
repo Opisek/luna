@@ -72,7 +72,6 @@
     window.removeEventListener("mousedown", mouseDown);
     window.removeEventListener("click", clickOutside);
     dialog.close();
-    onModalHide();
   }
 
   function submitInternal(event: Event) {
@@ -125,7 +124,7 @@
 
 <dialog
   bind:this={dialog}
-  onclose={() => (visible = false)}
+  onclose={() => {visible = false; onModalHide();}}
   class:closed={visible}
 >
   {#if visible}

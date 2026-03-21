@@ -4,12 +4,14 @@ const (
 	SourceUnknown = "unknown"
 	SourceCaldav  = "caldav"
 	SourceIcal    = "ical"
+	SourceGoogle  = "google"
 )
 
 const (
 	AuthNone   = "none"
 	AuthBasic  = "basic"
 	AuthBearer = "bearer"
+	AuthOauth  = "oauth"
 )
 
 const (

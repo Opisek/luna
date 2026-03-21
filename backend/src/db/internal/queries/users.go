@@ -112,13 +112,12 @@ func (q *Queries) IsAdmin(userId types.ID) (bool, *errors.ErrorTrace) {
 }
 
 func (q *Queries) AnyUsersExist() (bool, *errors.ErrorTrace) {
-	// TODO: rewrite with EXISTS
+	// TODO: rewrite with EXISTS?
 	rows, err := q.Tx.Query(
 		q.Context,
 		`
-		SELECT *
-		FROM users
-		LIMIT 1;
+		SELECT 1
+		FROM users;
 		`,
 	)
 

@@ -1,6 +1,7 @@
 package ical
 
 import (
+	"context"
 	"encoding/json"
 	"luna-backend/crypto"
 	"luna-backend/errors"
@@ -130,8 +131,23 @@ func (calendar *IcalCalendar) SetOverridden(overridden bool) {
 	calendar.overridden = overridden
 }
 
+func (calendar *IcalCalendar) CanEdit() bool {
+	return false
+}
+
+func (calendar *IcalCalendar) CanDelete() bool {
+	return false
+}
+
+func (calendar *IcalCalendar) CanAddEvents() bool {
+	return false
+}
+
 func (calendar *IcalCalendar) GetEvents(start time.Time, end time.Time, q types.DatabaseQueries) ([]types.Event, *errors.ErrorTrace) {
 	res := make([]types.Event, len(calendar.icalCalendar.Children))
+
+	masterEvents := make(map[string]int)
+	masterEventIndices := make(map[int]bool)
 
 	count := 0
 	for _, comp := range calendar.icalCalendar.Children {
@@ -151,8 +167,25 @@ func (calendar *IcalCalendar) GetEvents(start time.Time, end time.Time, q types.
 		if !event.GetDate().Recurrence().Repeats() && (event.GetDate().Start().Before(start) || event.GetDate().End().After(end)) {
 			continue
 		}
+
+		if event.settings.RecurrenceId == "" {
+			masterEvents[event.settings.Uid] = count
+			masterEventIndices[count] = true
+		}
+
 		res[count] = event
 		count++
+	}
+
+	// Internally note all the modified recurrence instances for each master event so that we don't expand these later
+	for i, event := range res[:count] {
+		if masterEventIndices[i] {
+			continue
+		}
+		eventSettings := event.GetSettings().(*IcalEventSettings)
+		if masterEvent, exists := masterEvents[eventSettings.Uid]; exists {
+			res[masterEvent].GetDate().Recurrence().AddModifiedInstance(common.ExtractDateFromRecurrenceId(event))
+		}
 	}
 
 	return res[:count], nil
@@ -222,4 +255,8 @@ func (calendar *IcalCalendar) EditEvent(event types.Event, name string, desc str
 
 func (calendar *IcalCalendar) DeleteEvent(event types.Event, q types.DatabaseQueries) *errors.ErrorTrace {
 	return errors.New().Status(http.StatusMethodNotAllowed)
+}
+
+func (calendar *IcalCalendar) SupplyContext(ctx context.Context) {
+	calendar.source.SupplyContext(ctx)
 }

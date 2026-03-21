@@ -42,7 +42,8 @@ func init() {
 			`
 			CREATE TYPE SOURCE_TYPE_ENUM AS ENUM (
 				'caldav',
-				'ical'
+				'ical',
+				'google'
 			);
 			`,
 		)
@@ -53,13 +54,15 @@ func init() {
 		}
 
 		// Auth enum
+		// Not (currently) used because we encrypt auth type in the database
 		_, err = q.Tx.Exec(
 			q.Context,
 			`
 			CREATE TYPE AUTH_TYPE_ENUM AS ENUM (
 				'none',
 				'basic',
-				'bearer'
+				'bearer',
+				'oauth'
 			);
 			`,
 		)
@@ -189,6 +192,27 @@ func init() {
 			return errors.New().
 				AddErr(errors.LvlDebug, err).
 				Append(errors.LvlDebug, "Could not initialize token permissions table")
+		}
+
+		err = q.Tables.InitializeOauthClientsTable()
+		if err != nil {
+			return errors.New().
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlDebug, "Could not initialize oauth clients table")
+		}
+
+		err = q.Tables.InitializeOauthAuthorizationRequestsTable()
+		if err != nil {
+			return errors.New().
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlDebug, "Could not initialize oauth authorization requests table")
+		}
+
+		err = q.Tables.InitializeOauthTokensTable()
+		if err != nil {
+			return errors.New().
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlDebug, "Could not initialize oauth tokens table")
 		}
 
 		return nil

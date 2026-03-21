@@ -22,7 +22,7 @@ func (q *Tables) InitializeUsersTable() error {
 			profile_picture_file UUID,
 			profile_picture_url VARCHAR(1024),
 
-			created_at TIMESTAMP DEFAULT NOW()
+			created_at TIMESTAMPTZ DEFAULT NOW()
 		);
 		`,
 	)

@@ -8,7 +8,9 @@ export const notifications = writable([] as NotificationModel[]);
 
 let queue = [] as { color: ColorKeys, message: string, details: string }[];
 
-export const queueNotification = (color: ColorKeys, message: string, details = "") => {
+export const queueNotification = (color: ColorKeys, message: string | Error, details: string | Error = "") => {
+  if (message instanceof Error) message = message.message;
+  if (details instanceof Error) details = details.message;
   queue.push({ color, message, details });
   if (queue.length === 1) {
     setTimeout(showNotification, 10);

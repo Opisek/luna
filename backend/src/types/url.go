@@ -35,10 +35,32 @@ func (u *Url) String() string {
 	return u.URL().String()
 }
 
+func (u *Url) Subpage(subpages ...string) *Url {
+	return (*Url)(u.URL().JoinPath(subpages...))
+}
+
+func (u *Url) Query() *url.Values {
+	vals := u.URL().Query()
+	return &vals
+}
+
+func (u *Url) SetQuery(query *url.Values) *Url {
+	u.URL().RawQuery = query.Encode()
+	return u
+}
+
 func NewUrl(rawUrl string) (*Url, error) {
 	URL, err := url.Parse(rawUrl)
 	if err != nil {
 		return nil, err
 	}
 	return (*Url)(URL), nil
+}
+
+func NewUrlSafe(rawUrl string) *Url {
+	url, err := NewUrl(rawUrl)
+	if err != nil {
+		panic(err)
+	}
+	return url
 }

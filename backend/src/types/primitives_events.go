@@ -21,10 +21,17 @@ type Event interface {
 	GetOverridden() bool
 	SetOverridden(overridden bool)
 
+	CanEdit() bool
+	CanDelete() bool
+
 	GetSettings() EventSettings
 	GetDate() *EventDate
 
 	Clone() Event
+
+	SupplyMasterEvent(masterEvent Event)
+	IsRecurrenceInstance() bool
+	GetRecurrenceId() string
 }
 
 type EventSettings interface {
@@ -32,7 +39,7 @@ type EventSettings interface {
 }
 
 func ExpandRecurrence(event Event, start *time.Time, end *time.Time) ([]Event, *errors.ErrorTrace) {
-	if !event.GetDate().Recurrence().Repeats() {
+	if !event.GetDate().Recurrence().Repeats() || event.IsRecurrenceInstance() {
 		return []Event{event}, nil
 	}
 
@@ -45,18 +52,53 @@ func ExpandRecurrence(event Event, start *time.Time, end *time.Time) ([]Event, *
 			Append(errors.LvlWordy, "Could not expand event recurrence for %v", event.GetName())
 	}
 
-	timeSlices := r.Between(*start, *end, true)
+	timezone, err := time.LoadLocation(event.GetDate().timezone)
+	if err != nil {
+		return nil, errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not parse timezone")
+	}
+
+	rset := rrule.Set{}
+	rset.RRule(r)
+	exceptionSet := make(map[int64]bool)
+	for _, exception := range event.GetDate().Recurrence().Except() {
+		rset.ExDate(exception.In(timezone))
+		exceptionSet[exception.In(timezone).Unix()] = true
+	}
+	for _, modified := range event.GetDate().Recurrence().Modified() {
+		rset.ExDate(modified.In(timezone))
+		exceptionSet[modified.In(timezone).Unix()] = true
+	}
+	for _, additional := range event.GetDate().Recurrence().Additional() {
+		rset.RDate(additional.In(timezone))
+	}
+
+	timeSlices := rset.Between(start.In(timezone), end.In(timezone), true)
 
 	events := make([]Event, len(timeSlices))
-	for i, timeSlice := range timeSlices {
+	actualEventCount := 0
+	for _, timeSlice := range timeSlices {
+		_, originalOffset := timeSlice.Zone()
+		timeSlice = timeSlice.In(timezone)
+		_, timezoneOffset := timeSlice.Zone()
+		timeSlice = timeSlice.Add(time.Duration(originalOffset-timezoneOffset) * time.Second)
+
+		if _, exists := exceptionSet[timeSlice.Unix()]; exists {
+			continue
+		}
+
 		newStart := timeSlice
 		newEnd := newStart.Add(*event.GetDate().Duration())
 
 		newEvent := event.Clone()
 		newEvent.GetDate().SetStart(&newStart)
 		newEvent.GetDate().SetEnd(&newEnd)
-		events[i] = newEvent
+		newEvent.SupplyMasterEvent(event)
+
+		events[actualEventCount] = newEvent
+		actualEventCount += 1
 	}
 
-	return events, nil
+	return events[:actualEventCount], nil
 }

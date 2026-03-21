@@ -1,5 +1,7 @@
 package tables
 
+import "fmt"
+
 func (q *Tables) InitializeInvitesTable() error {
 	// Invites table:
 	// inviteid author created_at expires_at code
@@ -13,12 +15,15 @@ func (q *Tables) InitializeInvitesTable() error {
 			inviteid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 			author UUID REFERENCES users(id) ON DELETE CASCADE,
 			email VARCHAR(255) UNIQUE,
-			created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-			expires_at TIMESTAMP NOT NULL,
+			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			expires_at TIMESTAMPTZ NOT NULL,
 			code TEXT UNIQUE NOT NULL
 		);
 		`,
 	)
+	if err != nil {
+		return fmt.Errorf("could not create invites table: %v", err)
+	}
 
-	return err
+	return nil
 }

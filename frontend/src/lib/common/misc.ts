@@ -1,109 +1,122 @@
 export async function parallel<T>(promises: Promise<T>[]): Promise<[T[], [number, Error][]]> {
-    const results = await Promise.allSettled(promises);
+  const results = await Promise.allSettled(promises);
 
-    let fulfilled: T[] = [];
-    let rejected: [number, Error][] = [];
+  let fulfilled: T[] = [];
+  let rejected: [number, Error][] = [];
 
-    for (const [index, result] of results.entries()) {
-        if (result.status === 'fulfilled') fulfilled.push(result.value);
-        else rejected.push([index, result.reason]);
-    };
+  for (const [index, result] of results.entries()) {
+    if (result.status === 'fulfilled') fulfilled.push(result.value);
+    else rejected.push([index, result.reason]);
+  };
 
-    if (
-        fulfilled.length === 0 &&
-        results.length > 1 &&
-        rejected.every(r =>
-            r[1].message === rejected[0][1].message || (
-                r[1].cause instanceof Error && rejected[0][1].cause instanceof Error &&
-                r[1].cause.message === rejected[0][1].message
-            )
-        )
-    ) {
-        throw rejected[0][1];
-    }
+  if (
+    fulfilled.length === 0 &&
+    results.length > 1 &&
+    rejected.every(r =>
+      r[1].message === rejected[0][1].message || (
+        r[1].cause instanceof Error && rejected[0][1].cause instanceof Error &&
+        r[1].cause.message === rejected[0][1].message
+      )
+    )
+  ) {
+    throw rejected[0][1];
+  }
 
-    return [fulfilled, rejected];
+  return [fulfilled, rejected];
 }
 
 export async function deepCopy<T>(obj: T): Promise<T> {
-    if (obj === null || obj === undefined) return obj;
+  if (obj === null || obj === undefined) return obj;
 
-    if (isPrimitive(obj)) return obj;
+  if (isPrimitive(obj)) return obj;
 
-    if (obj instanceof Date) return new Date(obj.getTime()) as T;
+  if (obj instanceof Date) return new Date(obj.getTime()) as T;
 
-    if (obj instanceof Array) {
-        const arr = obj as Array<any>;
-        const copy = new Array(arr.length);
-        for (let i = 0; i < arr.length; i++) {
-            copy[i] = await deepCopy(arr[i]);
-        }
-        return copy as T;
+  if (obj instanceof Array) {
+    const arr = obj as Array<any>;
+    const copy = new Array(arr.length);
+    for (let i = 0; i < arr.length; i++) {
+      copy[i] = await deepCopy(arr[i]);
     }
+    return copy as T;
+  }
 
-    if (obj instanceof Object) {
-        const copy = {} as {[key: string]: any };
-        for (let key in obj) {
-            copy[key] = await deepCopy((obj as any)[key]);
-        }
-        return copy as T;
+  if (obj instanceof Object) {
+    const copy = {} as { [key: string]: any };
+    for (let key in obj) {
+      copy[key] = await deepCopy((obj as any)[key]);
     }
+    return copy as T;
+  }
 
-    return JSON.parse(JSON.stringify(obj)) as T;
+  return JSON.parse(JSON.stringify(obj)) as T;
 }
 
 // https://stackoverflow.com/questions/25456013/javascript-deepequal-comparison
 export function deepEquality<T>(a: T, b: T): boolean {
-    if ( a === null || b === null ) return a === b;
-    if ( a === undefined || b === undefined ) return a === b;
+  if (a === null || b === null) return a === b;
+  if (a === undefined || b === undefined) return a === b;
 
-    if (a === b)
-        return true;
-
-    if (isPrimitive(a) && isPrimitive(b))
-        return a === b;
-
-    if (a instanceof Date || b instanceof Date) {
-        return JSON.stringify(a) === JSON.stringify(b);
-    }
-
-    if (Object.keys(a as Object).length !== Object.keys(b as Object).length)
-        return false;
-
-    for (let key in a) {
-        if(!(key in (b as Object))) return false;
-        if(!deepEquality(a[key], b[key])) return false;
-    }
-
+  if (a === b)
     return true;
+
+  if (isPrimitive(a) && isPrimitive(b))
+    return a === b;
+
+  if (a instanceof Date || b instanceof Date) {
+    return JSON.stringify(a) === JSON.stringify(b);
+  }
+
+  if (Object.keys(a as Object).length !== Object.keys(b as Object).length)
+    return false;
+
+  for (let key in a) {
+    if (!(key in (b as Object))) return false;
+    if (!deepEquality(a[key], b[key])) return false;
+  }
+
+  return true;
 }
 
 function isPrimitive(obj: any) {
-    return (obj !== Object(obj));
+  return (obj !== Object(obj));
 }
 
 export function isDescendentOf(descendent: HTMLElement, element: HTMLElement): boolean {
-    for (let node: (HTMLElement | null) = descendent; node; node = node.parentElement) {
-        if (node === element) return true;
-    }
-    return false;
+  for (let node: (HTMLElement | null) = descendent; node; node = node.parentElement) {
+    if (node === element) return true;
+  }
+  return false;
 }
 
 export function parentModal(element: HTMLElement): HTMLElement | null {
-    for (let node: (HTMLElement | null) = element; node; node = node.parentElement) {
-        if (node instanceof HTMLDialogElement) return node;
-    }
-    return null;
+  for (let node: (HTMLElement | null) = element; node; node = node.parentElement) {
+    if (node instanceof HTMLDialogElement) return node;
+  }
+  return null;
 }
 
-
 export function isChildOfModal(element: HTMLElement): boolean {
-    return parentModal(element) !== null;
+  return parentModal(element) !== null;
 }
 
 export function isChildOfForm(element: HTMLElement): boolean {
-    for (let node: (HTMLElement | null) = element; node; node = node.parentElement) {
-        if (node instanceof HTMLFormElement) return true;
-    }
-    return false;
+  for (let node: (HTMLElement | null) = element; node; node = node.parentElement) {
+    if (node instanceof HTMLFormElement) return true;
+  }
+  return false;
+}
+
+export async function sleep(ms: number) {
+  await new Promise(resolve => setTimeout(resolve, ms));
+}
+
+export function effectiveBackgroundColor(element: HTMLElement): string {
+  while (true) {
+    const bg = window.getComputedStyle(element).background;
+    if (bg != "none" && bg != "transparent") return bg;
+    if (element.parentElement == null) break;
+    element = element.parentElement;
+  }
+  return "transparent";
 }

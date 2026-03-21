@@ -11,7 +11,7 @@ import (
 	"luna-backend/crypto"
 	"luna-backend/db"
 	"luna-backend/errors"
-	"luna-backend/perms"
+	"luna-backend/types"
 	"net/http"
 	"time"
 
@@ -33,7 +33,7 @@ func RequestSetup(timeout time.Duration, database *db.Database, withTransaction 
 
 		// Final response sent at the end of the execution.
 		defer func() {
-			c.Header("Access-Control-Allow-Origin", config.Env.PUBLIC_URL)
+			c.Header("Access-Control-Allow-Origin", config.Env.PUBLIC_URL.String())
 
 			if responseFileBody != nil {
 				c.Header("Content-Disposition", "attachment; filename="+responseFileName)
@@ -97,6 +97,12 @@ func RequestSetup(timeout time.Duration, database *db.Database, withTransaction 
 				return
 			}
 		}
+
+		// Note that we technically should not be using a string for the key here.
+		// I choose to ignore this, because this whole thing is a hack anyway.
+		// See auth/methods.go for more context.
+		ctx = context.WithValue(ctx, "transaction", tx)
+		ctx = context.WithValue(ctx, "config", config)
 
 		// The handler will report back with a response body or an error trace
 		responseChan := make(chan *util.Response)
@@ -303,9 +309,9 @@ func RequireAuth() gin.HandlerFunc {
 		}
 
 		// Get the permissions associated with the token
-		var permissions *perms.TokenPermissions
+		var permissions *types.TokenPermissions
 		if !session.IsApi {
-			permissions = perms.AllPermissions()
+			permissions = types.AllPermissions()
 		} else {
 			permissions, tr = u.Tx.Queries().GetTokenPermissions(parsedToken.SessionId)
 			if tr != nil {
@@ -346,7 +352,7 @@ func RequireAdmin() gin.HandlerFunc {
 	}
 }
 
-func RequirePermissions(requiredPerms ...perms.Permission) gin.HandlerFunc {
+func RequirePermissions(requiredPerms ...types.Permission) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		u := util.GetUtil(c)
 		permissions, exists := c.Get("permissions")
@@ -360,7 +366,7 @@ func RequirePermissions(requiredPerms ...perms.Permission) gin.HandlerFunc {
 			return
 		}
 
-		tokenPerms := permissions.(*perms.TokenPermissions)
+		tokenPerms := permissions.(*types.TokenPermissions)
 
 		for _, perm := range requiredPerms {
 			if !tokenPerms.Has(perm) {

@@ -2,27 +2,33 @@
   import { Eye, EyeOff } from "lucide-svelte";
 
   import IconButton from "./IconButton.svelte";
+  import { NoOp } from "../../lib/client/placeholders";
 
   interface Props {
     visible: boolean;
     momentary?: boolean;
+    onClick?: (visible: boolean) => any;
   }
 
   let {
     visible = $bindable(),
-    momentary = false
+    momentary = false,
+    onClick = NoOp,
   }: Props = $props();
 
   function toggleVisibility() {
     visible = !visible;
+    onClick(visible);
   }
 
   function hide() {
     visible = false;
+    onClick(visible);
   }
 
   function show() {
     visible = true;
+    onClick(visible);
   }
 </script>
 

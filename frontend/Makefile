@@ -2,11 +2,14 @@ VERSION := $(shell cat ./VERSION)
 
 .PHONY: run build ver
 
-run: ver
+run: install ver
 	bun run dev
 
-build: ver
+build: install ver
 	bun run build
 
-ver:
-	cd script && node inject-version.js $(VERSION)
+ver: install
+	cd script && bun run ./inject-version.js $(VERSION)
+
+install: node_modules package.json bun.lock
+	bun install
