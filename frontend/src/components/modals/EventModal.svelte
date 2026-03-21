@@ -16,6 +16,7 @@
   import { UserSettingKeys } from "../../types/settings";
   import { ColorKeys } from "../../types/colors";
   import Horizontal from "../layout/Horizontal.svelte";
+  import EventCopyModal from "./EventCopyModal.svelte";
 
   //import { RRule } from "rrule";
 
@@ -129,6 +130,7 @@
 
   let showCreateModalInternal: () => boolean = $state(() => false);
   let showModalInternal: () => boolean = $state(() => false);
+  let showCopyModal: (event: EventModel) => Promise<boolean> = $state(async () => false);
 
   let editMode: boolean = $state(false);
   let title: string = $derived((event && event.id) ? (editMode ? "Edit event" : "Event") : "Create event");
@@ -215,6 +217,13 @@
     }
   }
   
+  const copyEvent = async () => {
+    showCopyModal(originalEvent).then(() => {
+
+    }).catch(() => {
+
+    });
+  }
 </script>
 
 <EditableModal
@@ -268,8 +277,18 @@
     {/if}
   {/if}
   {#snippet extraButtonsLeft()}
-    {#if event != EmptyEvent && !editMode && event.overridden}
-      <Button color={ColorKeys.Accent} onClick={resetOverrides}>Reset</Button>
+    {#if !editMode}
+      {#if event != EmptyEvent && event.overridden}
+        <Button color={ColorKeys.Accent} onClick={resetOverrides}>Reset</Button>
+      {/if}
+      <Button color={ColorKeys.Accent} onClick={copyEvent}>Copy</Button>
+      <!--
+      <IconButton>
+        <Copy/>
+      </IconButton>
+        -->
     {/if}
   {/snippet}
 </EditableModal>
+
+<EventCopyModal bind:copy={showCopyModal}/>

@@ -11,17 +11,17 @@
     date: Date;
     onDayClick?: (date: Date) => any;
     smaller?: boolean;
+    marked?: Set<string>;
   }
 
   let {
     date = $bindable(new Date()),
     onDayClick = NoOp,
     smaller = false,
+    marked = $bindable(new Set([(new Date()).toISOString().substring(0, 10)])),
   }: Props = $props();
 
   const settings = getSettings();
-
-  let today = new Date();
 
   /* Date calculation */
   let [days, amountOfRows] = $derived.by(() => {
@@ -118,7 +118,7 @@
     color: colors.$foregroundSunday;
   }
 
-  button.day.today {
+  button.day.accent {
     background-color: colors.$backgroundAccent;
     color: colors.$foregroundAccent !important;
     --barFocusIndicatorColor: #{colors.$barFocusIndicatorColorAlt};
@@ -152,7 +152,7 @@
       <button
         class="day"
         class:sunday={day.getDay() == 0}
-        class:today={isSameDay(day, today)}
+        class:accent={marked.has(day.toISOString().substring(0, 10))}
         class:otherMonth={day.getMonth() != currentDate.getMonth()}
         type="button"
         onclick={() => (onDayClick(day))}

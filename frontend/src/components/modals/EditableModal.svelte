@@ -10,6 +10,8 @@
   import { queueNotification } from "$lib/client/notifications";
 
   import { ColorKeys } from "../../types/colors";
+  import IconButton from "../interactive/IconButton.svelte";
+  import { Pencil, Trash } from "lucide-svelte";
  
   interface Props {
     title: string;
@@ -140,9 +142,15 @@
     {:else}
       {#if editable}
         <Button onClick={startEditMode} color={ColorKeys.Accent}>Edit</Button>
+        <!--<IconButton click={startEditMode}>
+          <Pencil/>
+        </IconButton>-->
       {/if}
       {#if deletable}
         <Button onClick={showDeleteModal} color={ColorKeys.Danger}>Delete</Button>
+        <!--<IconButton click={showDeleteModal}>
+          <Trash/>
+        </IconButton>-->
       {/if}
       {#if !editable && !deletable}
         <Button onClick={hideModal}>Close</Button>
