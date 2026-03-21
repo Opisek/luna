@@ -13,6 +13,8 @@
     inline?: boolean;
     inheritColor?: boolean;
     pointerCursor?: boolean;
+    delayed?: boolean;
+    role?: string;
   }
 
   let {
@@ -22,6 +24,8 @@
     inline = false,
     inheritColor = false,
     pointerCursor = false,
+    delayed = false,
+    role = "tooltip",
     children,
     icon,
   }: Props = $props();
@@ -31,44 +35,51 @@
   let popoverTop = $state(0);
   let popoverLeft = $state(0);
   let popoverOpen = $state(false);
+  let popoverOpenTimeout = $state<ReturnType<typeof setTimeout>>();
 
   function show() {
     if (!popover || !iconElement) return;
-    popover.showPopover();
-    popoverOpen = true;
+    clearTimeout(popoverOpenTimeout);
+    popoverOpen = false;
+    popoverOpenTimeout = setTimeout(() => {
+      if (!popover || !iconElement) return;
+      popoverOpen = true;
+      popover.showPopover();
 
-    const popoverRect = popover.getBoundingClientRect();
-    const iconRect = iconElement.getBoundingClientRect();
+      const popoverRect = popover.getBoundingClientRect();
+      const iconRect = iconElement.getBoundingClientRect();
 
-    const marginSize = popoverRect.y - popoverTop;
+      const marginSize = popoverRect.y - popoverTop;
 
-    const optimalPosition = calculateOptimalPopupPosition(iconElement, 3);
+      const optimalPosition = calculateOptimalPopupPosition(iconElement, 3);
 
-    if (!optimalPosition.center) {
-      // The popover is not centered vertically with respect to the icon
-      popoverTop = iconRect.top + (iconRect.height - popoverRect.height) / 2 - marginSize;
-    } else if (optimalPosition.bottom) {
-      // The bottom edge of the popover is above the top edge of the icon
-      popoverTop = iconRect.top - popoverRect.height - 2 * marginSize;
-    } else {
-      // The top edge of the popover is below the bottom edge of the icon
-      popoverTop = iconRect.bottom;
-    }
+      if (!optimalPosition.center) {
+        // The popover is not centered vertically with respect to the icon
+        popoverTop = iconRect.top + (iconRect.height - popoverRect.height) / 2 - marginSize;
+      } else if (optimalPosition.bottom) {
+        // The bottom edge of the popover is above the top edge of the icon
+        popoverTop = iconRect.top - popoverRect.height - 2 * marginSize;
+      } else {
+        // The top edge of the popover is below the bottom edge of the icon
+        popoverTop = iconRect.bottom;
+      }
 
-    if (optimalPosition.center) {
-      // The popover is centered horizontally with respect to the icon
-      popoverLeft = iconRect.left + (iconRect.width - popoverRect.width) / 2 - marginSize;
-    } else if (optimalPosition.right) {
-      // The right edge of the popover is to the left of the left edge of the icon
-      popoverLeft = iconRect.left - popoverRect.width - 2 * marginSize;
-    } else {
-      // The left edge of the popover is to the right of the right edge of the icon
-      popoverLeft = iconRect.right;
-    }
+      if (optimalPosition.center) {
+        // The popover is centered horizontally with respect to the icon
+        popoverLeft = iconRect.left + (iconRect.width - popoverRect.width) / 2 - marginSize;
+      } else if (optimalPosition.right) {
+        // The right edge of the popover is to the left of the left edge of the icon
+        popoverLeft = iconRect.left - popoverRect.width - 2 * marginSize;
+      } else {
+        // The left edge of the popover is to the right of the right edge of the icon
+        popoverLeft = iconRect.right;
+      }
+    }, delayed ? 3000 : 0);
   }
 
   function hide() {
     if (!popover) return;
+    clearTimeout(popoverOpenTimeout);
     popoverOpen = false;
   }
 
@@ -164,7 +175,7 @@
   class:inline={inline}
   class:inheritColor={inheritColor}
   class:pointerCursor={pointerCursor}
-  role="tooltip"
+  role={role}
   tabindex="0"
   onmouseenter={show}
   onmouseleave={hide}

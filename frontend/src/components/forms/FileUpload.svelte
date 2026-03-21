@@ -189,24 +189,24 @@
   {#if editable}
     {#if empty}
       <div class="buttons">
-        <IconButton click={select}>
+        <IconButton click={select} alt="Upload">
             <!-- Upload, FileUp, MonitorUp, CloudUpload, HardDriveUpload -->
             <Upload size={16}/>
         </IconButton>
       </div>
     {:else}
       <div class="buttons">
-        <IconButton click={download}>
+        <IconButton click={download} alt="Download">
           <Download size={16}/>
         </IconButton>
-        <IconButton click={clear}>
+        <IconButton click={clear} alt="Clear">
             <X size={16}/>
         </IconButton>
       </div>
     {/if}
   {:else}
     <div class="buttons">
-      <IconButton click={download}>
+      <IconButton click={download} alt="Download">
         <Download size={16}/>
       </IconButton>
     </div>

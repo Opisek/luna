@@ -213,7 +213,7 @@
     </span>
 
     <div class="buttons">
-      <IconButton click={() => promiseResolve(tokens.id)}>
+      <IconButton click={() => promiseResolve(tokens.id)} alt="Use account">
         <Check size={20}/>
       </IconButton>
     </div>

@@ -17,6 +17,8 @@
   import { ColorKeys } from "../../types/colors";
   import Horizontal from "../layout/Horizontal.svelte";
   import EventCopyModal from "./EventCopyModal.svelte";
+  import IconButton from "../interactive/IconButton.svelte";
+  import { Copy } from "lucide-svelte";
 
   //import { RRule } from "rrule";
 
@@ -282,11 +284,9 @@
         <Button color={ColorKeys.Accent} onClick={resetOverrides}>Reset</Button>
       {/if}
       <Button color={ColorKeys.Accent} onClick={copyEvent}>Copy</Button>
-      <!--
-      <IconButton>
+      <IconButton alt="Copy">
         <Copy/>
       </IconButton>
-        -->
     {/if}
   {/snippet}
 </EditableModal>

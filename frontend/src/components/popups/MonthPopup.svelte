@@ -159,7 +159,7 @@
 
 <Popup bind:showPopup={internalShow} bind:hidePopup={internalClose} bind:visible={popupVisible}>
   <div class="topRow">
-    <IconButton click={prev}>
+    <IconButton click={prev} alt="Previous month">
       <ChevronLeft/>
     </IconButton>
     <button
@@ -174,7 +174,7 @@
         {decadeStart} - {decadeStart + 9}
       {/if}
     </button>
-    <IconButton click={next}>
+    <IconButton click={next} alt="Next month">
       <ChevronRight/>
     </IconButton>
   </div>

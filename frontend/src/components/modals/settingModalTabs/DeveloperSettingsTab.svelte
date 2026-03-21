@@ -162,14 +162,10 @@
     </span>
 
     <div class="buttons">
-      <IconButton click={() => editApiToken(s, s.is_api)}>
-        {#if s.is_api}
-          <Pencil size={20}/>
-        {:else}
-          <Info size={20}/>
-        {/if}
+      <IconButton click={() => editApiToken(s, s.is_api)} alt="Edit">
+        <Pencil size={20}/>
       </IconButton>
-      <IconButton click={() => deauthorizeSession(s.session_id)}>
+      <IconButton click={() => deauthorizeSession(s.session_id)} alt="Deauthorize">
         <LogOut size={20}/>
       </IconButton>
     </div>

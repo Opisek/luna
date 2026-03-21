@@ -34,7 +34,7 @@
   class:editable={editable}
 >
   {#if editable}
-    <IconButton click={showModal}>
+    <IconButton click={showModal} alt="">
       {@render circle()}
     </IconButton>
     <ColorModal

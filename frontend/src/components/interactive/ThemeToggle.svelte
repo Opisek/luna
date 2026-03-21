@@ -42,7 +42,7 @@
   }
 </style>
 
-<IconButton click={() => theme.toggle()}>
+<IconButton click={() => theme.toggle()} alt={theme.isLightMode() ? "Toggle dark mode" : "Toggle light mode"}>
   <span class:dark={theme.isLightMode()} class:light={!theme.isLightMode()}>
     <MoonIcon/>
     <SunIcon/>

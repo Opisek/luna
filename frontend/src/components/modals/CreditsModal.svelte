@@ -125,7 +125,7 @@
         bind:value={selectedCategory}
         options={categories} 
       />
-      <IconButton href="https://github.com/Opisek/luna">
+      <IconButton href="https://github.com/Opisek/luna" alt="Luna Repository">
         <Github/>
       </IconButton>
     </Vertical>
@@ -230,7 +230,7 @@
     </span>
 
     <div class="buttons">
-      <IconButton href={c.url}>
+      <IconButton href={c.url} alt="Source">
         {#if c.url.startsWith("https://github.com/")}
           <Github size={20}/>
         {:else}

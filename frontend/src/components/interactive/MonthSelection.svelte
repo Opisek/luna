@@ -91,10 +91,10 @@
 </div>
 
 {#snippet buttons(prev: () => void, next: () => void)}
-  <IconButton click={prev}>
+  <IconButton click={prev} alt="Previous month">
     <LeftIcon/>
   </IconButton>
-  <IconButton click={next}>
+  <IconButton click={next} alt="Next month">
     <RightIcon/>
   </IconButton>
 {/snippet}

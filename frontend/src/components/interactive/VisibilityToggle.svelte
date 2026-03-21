@@ -33,11 +33,11 @@
 </script>
 
 {#if momentary}
-  <IconButton down={show} up={hide} tabindex={-1}>
+  <IconButton down={show} up={hide} tabindex={-1} alt="Show">
     {@render icon()}
   </IconButton>
 {:else}
-  <IconButton click={toggleVisibility}>
+  <IconButton click={toggleVisibility} alt={visible ? "Hide" : "Show"}>
     {@render icon()}
   </IconButton>
 {/if}

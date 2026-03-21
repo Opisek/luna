@@ -446,7 +446,7 @@
   onModalHide={restoreSettings}
 >
   {#snippet topButtons()}
-    <IconButton click={forceRefresh}>
+    <IconButton click={forceRefresh} alt="Refresh">
       <span class="refreshButtonWrapper" class:spin={loaderAnimation} onanimationiteration={() => { loaderAnimation = false; }}>
         <RefreshCw/>
       </span>

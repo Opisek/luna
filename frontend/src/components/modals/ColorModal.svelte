@@ -7,7 +7,7 @@
   import Modal from "./Modal.svelte";
   import TextInput from "../forms/TextInput.svelte";
 
-  import { HSLtoRGB, isValidColor, parseRGB, recommendedColors, RGBtoHSL, serializeRGB } from "$lib/common/colors";
+  import { HSLtoRGB, isValidColor, parseRGB, recommendedColorNames, recommendedColors, RGBtoHSL, serializeRGB } from "$lib/common/colors";
   import { NoOp } from "$lib/client/placeholders";
   import { ColorKeys } from "../../types/colors";
 
@@ -279,11 +279,11 @@
     />
   </div>
   <div class="suggestions">
-    <IconButton click={() => setColor(null)}>
+    <IconButton click={() => setColor(null)} alt="Default color">
       <ColorCircle color={null} size="medium"/>
     </IconButton>
-    {#each recommendedColors as color}
-      <IconButton click={() => setColor(color)}>
+    {#each recommendedColors as color, index}
+      <IconButton click={() => setColor(color)} alt={recommendedColorNames[index]}>
         <ColorCircle color={color} size="medium"/>
       </IconButton>
     {/each}

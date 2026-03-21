@@ -217,10 +217,10 @@
     </span>
 
     <div class="buttons">
-      <IconButton click={() => showRegistrationInvite(invite, false)}>
+      <IconButton click={() => showRegistrationInvite(invite, false)} alt="Details">
         <Eye size={20}/>
       </IconButton>
-      <IconButton click={() => deleteInvite(invite.invite_id)}>
+      <IconButton click={() => deleteInvite(invite.invite_id)} alt="Delete">
         <Trash2 size={20}/>
       </IconButton>
     </div>
@@ -281,7 +281,7 @@
 
     <div class="buttons">
       {#if !u.admin}
-        <IconButton click={() => { u.enabled ? disableAccount(u.id) : enableAccount(u.id) }} info={ u.enabled ? "Disable account" : "Enable account"}>
+        <IconButton click={() => { u.enabled ? disableAccount(u.id) : enableAccount(u.id) }} alt={ u.enabled ? "Disable account" : "Enable account"}>
           {#if u.enabled}
             <UserRoundX size={20}/>
           {:else}
@@ -290,7 +290,7 @@
         </IconButton>
       {/if}
       {#if !isActive}
-        <IconButton click={() => deleteAccount(u.id)}>
+        <IconButton click={() => deleteAccount(u.id)} alt="Delete">
           <Trash2 size={20}/>
         </IconButton>
       {/if}

@@ -5,11 +5,11 @@
   import Tooltip from "./Tooltip.svelte";
 
   interface Props {
+    alt: string;
     up?: () => void;
     down?: () => void;
     click?: () => void;
     visible?: boolean;
-    info?: string;
     style?: string;
     tabindex?: number;
     href?: string;
@@ -17,11 +17,11 @@
   }
 
   let {
+    alt,
     up = NoOp,
     down = NoOp,
     click = NoOp,
     visible = true,
-    info = "",
     style = "",
     tabindex = 0,
     href = "",
@@ -101,7 +101,7 @@
   }
 </style>
 
-{#if info == ""}
+{#if alt == ""}
   {@render buttonSnippet()}
 {:else}
   <Tooltip
@@ -109,8 +109,9 @@
     inheritColor={true}
     tight={true}
     pointerCursor={true}
+    delayed={true}
   >
-    {info}
+    {alt}
   </Tooltip>
 {/if}
 

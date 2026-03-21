@@ -170,7 +170,7 @@
         {date.getDate()}
       </span>
       <span class="add">
-        <IconButton click={createEventButtonClick} tabindex={-1}>
+        <IconButton click={createEventButtonClick} tabindex={-1} alt="Create Event">
           <PlusIcon size={13}/>
         </IconButton>
       </span>

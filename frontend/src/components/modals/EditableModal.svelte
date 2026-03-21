@@ -142,13 +142,13 @@
     {:else}
       {#if editable}
         <Button onClick={startEditMode} color={ColorKeys.Accent}>Edit</Button>
-        <!--<IconButton click={startEditMode}>
+        <!--<IconButton click={startEditMode} alt="Edit">
           <Pencil/>
         </IconButton>-->
       {/if}
       {#if deletable}
         <Button onClick={showDeleteModal} color={ColorKeys.Danger}>Delete</Button>
-        <!--<IconButton click={showDeleteModal}>
+        <!--<IconButton click={showDeleteModal} alt="Delete">
           <Trash/>
         </IconButton>-->
       {/if}
