@@ -18,7 +18,7 @@
 # Disclaimer
 Luna is an ambitious and large project. As such, development takes a long time.
 
-At this point in time, Luna is nearing a usable 1.0.0 state, however, a lot of small and less small finishing touches still need to be done (in particular, mobile screen size support).
+At this point in time, Luna is nearing a usable 1.0.0 state, however, a lot of small and less small finishing touches still need to be done (in particular, full support for recurring events and mobile screen size support).
 
 Due to my busy schedule and being the sole developer, I am unable to provide a release date for 1.0.0 for now. Feel free to get in contact through GitHub discussions if you are interested in contributing.
 
