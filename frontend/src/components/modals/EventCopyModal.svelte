@@ -10,7 +10,6 @@
   import { SvelteSet } from "svelte/reactivity";
   import Button from "../interactive/Button.svelte";
   import { ColorKeys } from "../../types/colors";
-  import Loader from "../decoration/Loader.svelte";
   import SelectInput from "../forms/SelectInput.svelte";
   import { deepCopy } from "../../lib/common/misc";
   
@@ -93,11 +92,7 @@
 
   {#snippet buttons()}
     <Button onClick={NoOp} color={ColorKeys.Success} enabled={marked.size != 0} type="submit">
-      {#if false}
-        <Loader/>
-      {:else}
-        Save
-      {/if}
+      Save
     </Button>
     <Button onClick={hideModalInternal} color={ColorKeys.Danger}>Cancel</Button>
   {/snippet}

@@ -12,7 +12,6 @@
   import Paragraph from "../../../components/layout/Paragraph.svelte";
   import Bold from "../../../components/layout/Bold.svelte";
   import Divider from "../../../components/layout/Divider.svelte";
-  import Loader from "../../../components/decoration/Loader.svelte";
   import { getRedirectPage } from "../../../lib/common/parsing";
   import { ColorKeys } from "../../../types/colors";
 
@@ -20,18 +19,11 @@
   let isCompatible = $derived(versions !== undefined && ![VersionCompatibility.BackendOutdatedMajor, VersionCompatibility.FrontendOutdatedMajor].includes(versions.compatibility));
   let redirectPage = $derived(browser ? getRedirectPage(new URL(document.location.href)): "/");
 
-  let promise: Promise<any> | undefined = $state();
-  
-  function loadVersions() {
-    const loading = getConnectivity().getVersions();
-    promise = loading;
-
-    loading.then(result => {
+  async function loadVersions() {
+    return getConnectivity().getVersions().then(result => {
       versions = result;
     }).catch(() => {
       versions = undefined;
-    }).finally(() => {
-      promise = undefined;
     });
   }
 
@@ -79,11 +71,7 @@
 
     <Horizontal position="right">
       <Button onClick={loadVersions} >
-        {#if promise === undefined}
-          Refresh
-        {:else}
-          <Loader/>
-        {/if}
+        Refresh
       </Button>
 
       {#if isCompatible}

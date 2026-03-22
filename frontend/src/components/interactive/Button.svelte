@@ -2,9 +2,10 @@
   import type { Snippet } from "svelte";
   import { ColorKeys } from "../../types/colors";
   import { addRipple, focusIndicator } from "../../lib/client/decoration";
+  import Loader from "../decoration/Loader.svelte";
 
   interface Props {
-    onClick?: () => void;
+    onClick?: () => any;
     color?: ColorKeys;
     type?: "button" | "submit";
     compact?: boolean;
@@ -22,6 +23,16 @@
     href = "",
     children
   }: Props = $props();
+
+  let loading = $state(false);
+  async function clickHandler() {
+    if (loading) return;
+    const result = onClick();
+    if (!(result instanceof Promise)) return;
+    loading = true;
+    await result;
+    loading = false;
+  }
 </script>
 
 <style lang="scss">
@@ -113,7 +124,7 @@
     class:neutral={color == ColorKeys.Neutral}
     class:inherit={color == ColorKeys.Inherit}
     class:compact={compact}
-    onclick={onClick}
+    onclick={clickHandler}
     onmouseleave={(e) => {(e.target as HTMLButtonElement).blur()}}
     type={type}
     disabled={!enabled}
@@ -121,6 +132,10 @@
     onmousedown={addRipple}
     use:focusIndicator
   >
-    {@render children?.()}
+    {#if loading}
+      <Loader/>
+    {:else}
+      {@render children?.()}
+    {/if}
   </button>
 {/if}

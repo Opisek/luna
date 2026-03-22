@@ -166,7 +166,7 @@
       <IconButton onClick={() => { downloadFileToClient(`/fonts/${font.value}.ttf`); }} color={ColorKeys.Accent} alt="Download">
         <Download size={20}/>
       </IconButton>
-      <IconButton onClick={() => { deleteFont(font.value, font.name); }} color={ColorKeys.Danger} alt="Delete">
+      <IconButton onClick={async () => deleteFont(font.value, font.name)} color={ColorKeys.Danger} alt="Delete">
         <Trash2 size={20}/>
       </IconButton>
     </div>

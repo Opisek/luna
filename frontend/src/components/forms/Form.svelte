@@ -1,7 +1,5 @@
 <script lang="ts">
-  import Button from "../interactive/Button.svelte";
   import Horizontal from "../layout/Horizontal.svelte";
-  import Loader from "../decoration/Loader.svelte";
   import Title from "../layout/Title.svelte";
   import type { Snippet } from "svelte";
   import { ColorKeys } from "../../types/colors";
@@ -25,18 +23,30 @@
     children,
   }: Props = $props();
 
-  let loading = $state(false);
+  let form = $state<HTMLFormElement>();
+
+  let promiseResult = $state(NoOp);
+
+  async function submit() {
+    if (!form) return;
+    form.submit();
+    return new Promise<void>(res => {
+      promiseResult = () => {
+        promiseResult = NoOp;
+        res();
+      }
+    });
+  }
 
   function onSubmit(e: SubmitEvent) {
     if (!submittable) {
       e.preventDefault();
       return; // TODO: add some user feedback when a form fails to submit
     }
-    loading = true;
   }
 
   function onResult({ result, update }: { result: ActionResult; update: () => void }) {
-    loading = false;
+    promiseResult();
     callback(result);
     update();
   }
@@ -62,16 +72,12 @@
   }
 </style>
 
-<form method="POST" onsubmit={onSubmit} use:enhance={() => onResult}>
+<form bind:this={form} method="POST" onsubmit={onSubmit} use:enhance={() => onResult}>
   <Title>{title}</Title>
   {@render children?.()}
   <Horizontal position="right">
-    <IconButton type="submit" color={ColorKeys.Success} enabled={submittable} alt="Submit" canRenderAsButton={true}>
-      {#if loading}
-        <Loader/> <!-- TODO: rethink loaders to work with icon buttons -->
-      {:else}
-        <Send/>
-      {/if}
+    <IconButton type="button" onClick={submit} color={ColorKeys.Success} enabled={submittable} alt="Submit" canRenderAsButton={true}>
+      <Send/>
     </IconButton>
   </Horizontal>
 </form>

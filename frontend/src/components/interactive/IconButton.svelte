@@ -7,12 +7,13 @@
   import Button from "./Button.svelte";
   import { getSettings } from "../../lib/client/data/settings.svelte";
   import { UserSettingKeys } from "../../types/settings";
+  import Spinner from "../decoration/Spinner.svelte";
 
   interface Props {
     alt: string;
     up?: () => void;
     down?: () => void;
-    onClick?: () => void;
+    onClick?: () => any;
     visible?: boolean;
     style?: string;
     tabindex?: number;
@@ -45,9 +46,15 @@
   let button = $state<HTMLElement | null>(null);
   const settings = getSettings();
 
-  function clickInternal(e: MouseEvent) {
+  let loading = $state(false);
+  async function clickInternal(e: MouseEvent) {
     e.stopPropagation();
-    onClick();
+    if (loading) return;
+    const result = onClick();
+    if (!(result instanceof Promise)) return;
+    loading = true;
+    await result;
+    loading = false;
   }
 
   function leaveInternal() {
@@ -78,7 +85,7 @@
     transition: all animations.$cubic animations.$animationSpeed;
   }
 
-  button.hidden, a.hidden {
+  button.hidden, a.hidden, .icon.loading {
     visibility: hidden;
   }
 
@@ -93,21 +100,29 @@
     pointer-events: none;
   }
 
-  button:hover div.circle, button:focus div.circle, a:hover div.circle, a:focus div.circle {
+  button:hover div.circle,
+  button:focus div.circle,
+  button.loading div.circle,
+  a:hover div.circle,
+  a:focus div.circle {
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
   }
 
-  button:active div.circle, a:active div.circle {
+  button:active:not(.loading) div.circle, a:active div.circle {
     width: 125%;
     height: 125%;
     left: -12.5%;
     top: -12.5%;
   }
 
-  button:hover, button:focus, a:hover, a:focus {
+  button:hover,
+  button:focus,
+  button.loading,
+  a:hover,
+  a:focus {
     &.neutral {
       color: colors.$foregroundSecondary;
       .circle {
@@ -138,11 +153,32 @@
         background-color: colors.$backgroundFailure;
       }
     } 
+    &.inherit {
+      color: inherit;
+      .circle {
+        background-color: inherit;
+      }
+    } 
   }
 
   .disabled {
     cursor: not-allowed;
     opacity: 0.5;
+  }
+
+  .icon {
+    display: contents;
+  }
+
+  .spinner {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    left: 0;
+    top: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 </style>
 
@@ -185,6 +221,7 @@
       class:warning={color == ColorKeys.Warning}
       class:danger={color == ColorKeys.Danger}
       class:neutral={color == ColorKeys.Neutral}
+      class:inherit={color == ColorKeys.Inherit}
     >
       <div class="circle"></div>
       {@render children?.()}
@@ -206,10 +243,19 @@
       class:warning={color == ColorKeys.Warning}
       class:danger={color == ColorKeys.Danger}
       class:neutral={color == ColorKeys.Neutral}
+      class:inherit={color == ColorKeys.Inherit}
       disabled={!enabled}
+      class:loading
     >
       <div class="circle"></div>
-      {@render children?.()}
+      <div class="icon" class:loading>
+        {@render children?.()}
+      </div>
+      {#if loading}
+        <div class="spinner">
+          <Spinner/>
+        </div>
+      {/if}
     </button>
   {/if}
 {/snippet}

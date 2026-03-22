@@ -1,6 +1,4 @@
 <script lang="ts">
-  import Loader from "../decoration/Loader.svelte";
-  import Button from "../interactive/Button.svelte";
   import Modal from "./Modal.svelte";
 
   import { queueNotification } from "$lib/client/notifications";
@@ -25,13 +23,10 @@
     children
   }: Props = $props();
 
-  let awaitingConfirm = $state(false);
-  function confirm() {
-    awaitingConfirm = true;
-    confirmCallback().catch(err => {
+  async function confirm() {
+    await confirmCallback().catch(err => {
       queueNotification(ColorKeys.Danger, err)
     }).finally(() => {
-      awaitingConfirm = false;
       hideModal()
     });
   }
@@ -46,11 +41,7 @@
   {@render children?.()}
   {#snippet buttons()}
     <IconButton onClick={confirm} color={ColorKeys.Success} type="submit" alt="Confirm" canRenderAsButton={true}>
-      {#if awaitingConfirm}
-        <Loader/>
-      {:else}
-        <Check/>
-      {/if}
+      <Check/>
     </IconButton>
     <IconButton onClick={cancel} color={ColorKeys.Danger} alt="Cancel" canRenderAsButton={true}><X/></IconButton>
   {/snippet}

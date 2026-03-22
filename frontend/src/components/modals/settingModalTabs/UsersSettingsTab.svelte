@@ -220,7 +220,7 @@
       <IconButton onClick={() => showRegistrationInvite(invite, false)} alt="Details">
         <Eye size={20}/>
       </IconButton>
-      <IconButton onClick={() => deleteInvite(invite.invite_id)} color={ColorKeys.Danger} alt="Delete">
+      <IconButton onClick={async () => deleteInvite(invite.invite_id)} color={ColorKeys.Danger} alt="Delete">
         <Trash2 size={20}/>
       </IconButton>
     </div>
@@ -290,7 +290,7 @@
         </IconButton>
       {/if}
       {#if !isActive}
-        <IconButton onClick={() => deleteAccount(u.id)} color={ColorKeys.Danger} alt="Delete">
+        <IconButton onClick={async () => deleteAccount(u.id)} color={ColorKeys.Danger} alt="Delete">
           <Trash2 size={20}/>
         </IconButton>
       {/if}

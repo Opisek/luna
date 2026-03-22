@@ -1,8 +1,6 @@
 <script lang="ts">
   import type { Snippet } from "svelte";
 
-  import Loader from "../decoration/Loader.svelte";
-  import Button from "../interactive/Button.svelte";
   import ConfirmationModal from "./ConfirmationModal.svelte";
   import Modal from "./Modal.svelte";
 
@@ -11,7 +9,7 @@
 
   import { ColorKeys } from "../../types/colors";
   import IconButton from "../interactive/IconButton.svelte";
-  import { Check, Pencil, Trash, X } from "lucide-svelte";
+  import { Check, Pencil, Trash, Trash2, X } from "lucide-svelte";
  
   interface Props {
     title: string;
@@ -95,22 +93,18 @@
     }
   }
 
-  let awaitingEdit = $state(false);
-  function saveEdit() {
-    awaitingEdit = true;
-    onEdit().then(() => {
+  async function saveEdit() {
+    return onEdit().then(() => {
       editMode = false;
       queueNotification(ColorKeys.Success, "Saved successfully")
       hideModal()
     }).catch((err) => {
       queueNotification(ColorKeys.Danger, err)
-    }).finally(() => {
-      awaitingEdit = false;
     });
   }
 
   const confirmDelete = async () => {
-    await onDelete().then(() => {
+    return onDelete().then(() => {
       queueNotification(ColorKeys.Success, "Deleted successfully")
       hideModal();
     }).catch((err) => {
@@ -132,11 +126,7 @@
     {@render extraButtonsLeft?.()}
     {#if editMode}
       <IconButton onClick={saveEdit} color={ColorKeys.Success} enabled={submittable} type="submit" alt="Save" canRenderAsButton={true}>
-        {#if awaitingEdit}
-          <Loader/>
-        {:else}
-          <Check/>
-        {/if}
+        <Check/>
       </IconButton>
       <IconButton onClick={cancelEdit} color={ColorKeys.Danger} alt="Cancel" canRenderAsButton={true}><X/></IconButton>
     {:else}
@@ -147,7 +137,7 @@
       {/if}
       {#if deletable}
         <IconButton onClick={showDeleteModal} color={ColorKeys.Danger} alt="Delete" canRenderAsButton={true}>
-          <Trash/>
+          <Trash2/>
         </IconButton>
       {/if}
       <!--{#if !editable && !deletable}

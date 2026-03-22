@@ -6,8 +6,6 @@
   import { GlobalSettingKeys, UserSettingKeys, type GlobalSettings, type UserData, type UserSettings } from "../../types/settings";
   import { getSettings } from "../../lib/client/data/settings.svelte";
   import { deepCopy, deepEquality } from "$lib/common/misc";
-  import Button from "../interactive/Button.svelte";
-  import Loader from "../decoration/Loader.svelte";
   import { fetchJson, fetchResponse } from "$lib/client/net";
   import { queueNotification } from "$lib/client/notifications";
   import { ColorKeys } from "../../types/colors";
@@ -455,12 +453,8 @@
 
   {#snippet buttons()}
     {#if showSaveButton}
-      <IconButton type="submit" color={ColorKeys.Success} enabled={submittable} onClick={() => { saveSettings().catch(NoOp); }} alt="Save" canRenderAsButton={true}>
-        {#if saving}
-          <Loader/>
-        {:else}
-          <Check/>
-        {/if}
+      <IconButton type="submit" color={ColorKeys.Success} enabled={submittable} onClick={async () => { saveSettings().catch(NoOp); }} alt="Save" canRenderAsButton={true}>
+        <Check/>
       </IconButton>
       <IconButton color={ColorKeys.Danger} onClick={restoreSettings} alt="Cancel" canRenderAsButton={true}>
         <X/>

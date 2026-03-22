@@ -72,8 +72,6 @@
   showModal = async () => {
     oauthClients.fetch();
 
-    awaitingEdit = false;
-
     name = "";
     inputType = "link";
     url = "";
@@ -122,8 +120,7 @@
     }).catch(NoOp);
   }
 
-  let awaitingEdit = $state(false);
-  function save() {
+  async function save() {
     const source: SourceModel = {
       id: "",
       name: name,
@@ -143,13 +140,10 @@
       source.settings.file = files;
     }
 
-    awaitingEdit = true;
-    getRepository().createSource(source).then(() => {
+    return getRepository().createSource(source).then(() => {
       saveInternal(source);
     }).catch(err => {
       queueNotification(ColorKeys.Danger, `Could not create source ${source.name}: ${err.message}`);
-    }).finally(() => {
-      awaitingEdit = false;
     });
   }
   async function saveInternal(source: SourceModel) {
@@ -291,7 +285,10 @@
   title="Source wizard"
   bind:showModal={showModalInternal}
   bind:hideModal={hideModalInternal}
-  onModalHide={abortOauthAuthorization}
+  onModalHide={() => {
+    promiseReject();
+    abortOauthAuthorization();
+  }}
 >
   <TextInput bind:value={name} name="name" placeholder="Name"/>
   <SelectButtons bind:value={inputType} name="ical_location" placeholder={"What do you want to add?"} options={[
@@ -374,11 +371,7 @@
   </Horizontal>
   {#snippet buttons()}
     <IconButton onClick={save} color={ColorKeys.Success} enabled={submittable} type="submit" alt="Save" canRenderAsButton={true}>
-      {#if awaitingEdit}
-        <Loader/>
-      {:else}
-        <Check/>
-      {/if}
+      <Check/>
     </IconButton>
     <IconButton onClick={cancel} color={ColorKeys.Danger} alt="Cancel" canRenderAsButton={true}><X/></IconButton>
   {/snippet}

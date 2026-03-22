@@ -190,14 +190,14 @@
   {#if editable}
     {#if empty}
       <div class="buttons">
-        <IconButton onClick={select} color={ColorKeys.Accent} alt="Upload">
+        <IconButton onClick={select} color={ColorKeys.Inherit} alt="Upload">
             <!-- Upload, FileUp, MonitorUp, CloudUpload, HardDriveUpload -->
             <Upload size={16}/>
         </IconButton>
       </div>
     {:else}
       <div class="buttons">
-        <IconButton onClick={download} color={ColorKeys.Accent} alt="Download">
+        <IconButton onClick={download} color={ColorKeys.Inherit} alt="Download">
           <Download size={16}/>
         </IconButton>
         <IconButton onClick={clear} color={ColorKeys.Danger} alt="Clear">
@@ -207,7 +207,7 @@
     {/if}
   {:else}
     <div class="buttons">
-      <IconButton onClick={download} color={ColorKeys.Accent} alt="Download">
+      <IconButton onClick={download} color={ColorKeys.Inherit} alt="Download">
         <Download size={16}/>
       </IconButton>
     </div>
