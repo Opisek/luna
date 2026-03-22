@@ -74,7 +74,7 @@
         // The left edge of the popover is to the right of the right edge of the icon
         popoverLeft = iconRect.right;
       }
-    }, delayed ? 3000 : 0);
+    }, delayed ? 2000 : 0);
   }
 
   function hide() {

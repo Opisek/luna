@@ -26,6 +26,7 @@ export class Settings {
     [UserSettingKeys.DisplayAllDayEventsFilled]: true,
     [UserSettingKeys.DisplayNonAllDayEventsFilled]: false,
     [UserSettingKeys.DisplayRoundedCorners]: true,
+    [UserSettingKeys.UseTextButtons]: false,
     [UserSettingKeys.DisplaySmallCalendar]: true,
     [UserSettingKeys.DisplayWeekNumbers]: false,
     [UserSettingKeys.DynamicCalendarRows]: true,

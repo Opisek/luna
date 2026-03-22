@@ -8,6 +8,8 @@
   import { enhance } from "$app/forms";
   import type { ActionResult } from "@sveltejs/kit";
   import { NoOp } from "../../lib/client/placeholders";
+  import IconButton from "../interactive/IconButton.svelte";
+  import { Send } from "lucide-svelte";
 
   interface Props {
     title: string;
@@ -64,12 +66,12 @@
   <Title>{title}</Title>
   {@render children?.()}
   <Horizontal position="right">
-    <Button type="submit" color={ColorKeys.Success} enabled={submittable}>
+    <IconButton type="submit" color={ColorKeys.Success} enabled={submittable} alt="Submit" canRenderAsButton={true}>
       {#if loading}
-        <Loader/>
+        <Loader/> <!-- TODO: rethink loaders to work with icon buttons -->
       {:else}
-        Submit
+        <Send/>
       {/if}
-    </Button>
+    </IconButton>
   </Horizontal>
 </form>

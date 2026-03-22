@@ -80,6 +80,11 @@
   description="Rounded Corners"
   bind:value={settings.userSettings[UserSettingKeys.DisplayRoundedCorners]}
 />
+<ToggleInput
+  name={UserSettingKeys.UseTextButtons}
+  description="Use textual buttons"
+  bind:value={settings.userSettings[UserSettingKeys.UseTextButtons]}
+/>
 <SliderInput
   name={UserSettingKeys.UiScaling}
   title="Scaling"

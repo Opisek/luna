@@ -12,6 +12,6 @@
   }: Props = $props();
 </script>
 
-<IconButton click={onClick} alt="Close">
+<IconButton onClick={onClick} alt="Close">
   <X/>
 </IconButton>

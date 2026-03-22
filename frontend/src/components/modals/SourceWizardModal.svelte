@@ -19,6 +19,8 @@
   import { sleep } from "../../lib/common/misc";
   import OauthTokensModal from "./OauthTokensModal.svelte";
   import Spinner from "../decoration/Spinner.svelte";
+  import IconButton from "../interactive/IconButton.svelte";
+  import { Check, Pencil, Trash, X } from "lucide-svelte";
 
   interface Props {
     showModal?: () => Promise<SourceModel>;
@@ -371,14 +373,14 @@
     <Link onClick={advanced}>Click to enter advanced mode</Link>
   </Horizontal>
   {#snippet buttons()}
-    <Button onClick={save} color={ColorKeys.Success} enabled={submittable} type="submit">
+    <IconButton onClick={save} color={ColorKeys.Success} enabled={submittable} type="submit" alt="Save" canRenderAsButton={true}>
       {#if awaitingEdit}
         <Loader/>
       {:else}
-        Save
+        <Check/>
       {/if}
-    </Button>
-    <Button onClick={cancel} color={ColorKeys.Danger}>Cancel</Button>
+    </IconButton>
+    <IconButton onClick={cancel} color={ColorKeys.Danger} alt="Cancel" canRenderAsButton={true}><X/></IconButton>
   {/snippet}
 </Modal>
 

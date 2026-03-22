@@ -301,13 +301,13 @@
   </div>
 
   <Horizontal position="center">
-    <IconButton click={showSettingsModal} alt="Settings">
+    <IconButton onClick={showSettingsModal} alt="Settings">
       <Settings/>
     </IconButton>
-    <IconButton click={showSourceWizardModal} alt="Add source">
+    <IconButton onClick={showSourceWizardModal} alt="Add source">
       <PlusIcon/>
     </IconButton>
-    <IconButton click={showCreditsModal} alt="Credits">
+    <IconButton onClick={showCreditsModal} alt="Credits">
       <Copyleft/>
     </IconButton>
   </Horizontal>
@@ -339,7 +339,7 @@
         </span>
       {/if}
 
-      <IconButton click={forceRefresh} alt="Refresh">
+      <IconButton onClick={forceRefresh} alt="Refresh">
         <span class="refreshButtonWrapper" class:spin={loaderAnimation} onanimationiteration={() => { if (!isLoading) loaderAnimation = false; }}>
           <RefreshCw size={20}/>
         </span>

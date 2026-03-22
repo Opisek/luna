@@ -6,6 +6,8 @@
   import { queueNotification } from "$lib/client/notifications";
   import { NoOp } from "../../lib/client/placeholders";
   import { ColorKeys } from "../../types/colors";
+  import { Check, X } from "lucide-svelte";
+  import IconButton from "../interactive/IconButton.svelte";
 
   interface Props {
     confirmCallback: () => Promise<void>;
@@ -43,13 +45,13 @@
 <Modal title="Confirmation" bind:showModal={showModal} bind:hideModal={hideModal}>
   {@render children?.()}
   {#snippet buttons()}
-      <Button onClick={confirm} color={ColorKeys.Success} type="submit">
-        {#if awaitingConfirm}
-          <Loader/>
-        {:else}
-          Confirm
-        {/if}
-      </Button>
-      <Button onClick={cancel} color={ColorKeys.Danger}>Cancel</Button>
+    <IconButton onClick={confirm} color={ColorKeys.Success} type="submit" alt="Confirm" canRenderAsButton={true}>
+      {#if awaitingConfirm}
+        <Loader/>
+      {:else}
+        <Check/>
+      {/if}
+    </IconButton>
+    <IconButton onClick={cancel} color={ColorKeys.Danger} alt="Cancel" canRenderAsButton={true}><X/></IconButton>
   {/snippet}
 </Modal>

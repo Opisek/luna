@@ -163,10 +163,10 @@
     </span>
 
     <div class="buttons">
-      <IconButton click={() => { downloadFileToClient(`/fonts/${font.value}.ttf`); }} alt="Download">
+      <IconButton onClick={() => { downloadFileToClient(`/fonts/${font.value}.ttf`); }} color={ColorKeys.Accent} alt="Download">
         <Download size={20}/>
       </IconButton>
-      <IconButton click={() => { deleteFont(font.value, font.name); }} alt="Delete">
+      <IconButton onClick={() => { deleteFont(font.value, font.name); }} color={ColorKeys.Danger} alt="Delete">
         <Trash2 size={20}/>
       </IconButton>
     </div>

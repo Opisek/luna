@@ -12,6 +12,8 @@
   import { getSettings } from "$lib/client/data/settings.svelte";
   import { UserSettingKeys } from "../../types/settings";
   import { ColorKeys } from "../../types/colors";
+  import IconButton from "../interactive/IconButton.svelte";
+  import { ArchiveRestore } from "lucide-svelte";
 
   interface Props {
     showCreateModal?: () => any;
@@ -155,7 +157,9 @@
   {/if}
   {#snippet extraButtonsLeft()}
     {#if calendar != EmptyCalendar && !editMode && calendar.overridden}
-      <Button color={ColorKeys.Accent} onClick={resetOverrides}>Reset</Button>
+      <IconButton onClick={resetOverrides} alt="Reset">
+        <ArchiveRestore/>
+      </IconButton>
     {/if}
   {/snippet}
 </EditableModal>

@@ -37,7 +37,7 @@
     {@render icon()}
   </IconButton>
 {:else}
-  <IconButton click={toggleVisibility} alt={visible ? "Hide" : "Show"}>
+  <IconButton onClick={toggleVisibility} alt={visible ? "Hide" : "Show"}>
     {@render icon()}
   </IconButton>
 {/if}

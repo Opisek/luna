@@ -6,6 +6,7 @@
   import IconButton from "../interactive/IconButton.svelte";
   import { Download, Upload, X } from "lucide-svelte";
   import { downloadFileToClient } from "../../lib/client/net";
+  import { ColorKeys } from "../../types/colors";
 
   let wrapper: HTMLDivElement | null = $state(null);
   let fileInput: HTMLInputElement | null = $state(null);
@@ -189,24 +190,24 @@
   {#if editable}
     {#if empty}
       <div class="buttons">
-        <IconButton click={select} alt="Upload">
+        <IconButton onClick={select} color={ColorKeys.Accent} alt="Upload">
             <!-- Upload, FileUp, MonitorUp, CloudUpload, HardDriveUpload -->
             <Upload size={16}/>
         </IconButton>
       </div>
     {:else}
       <div class="buttons">
-        <IconButton click={download} alt="Download">
+        <IconButton onClick={download} color={ColorKeys.Accent} alt="Download">
           <Download size={16}/>
         </IconButton>
-        <IconButton click={clear} alt="Clear">
+        <IconButton onClick={clear} color={ColorKeys.Danger} alt="Clear">
             <X size={16}/>
         </IconButton>
       </div>
     {/if}
   {:else}
     <div class="buttons">
-      <IconButton click={download} alt="Download">
+      <IconButton onClick={download} color={ColorKeys.Accent} alt="Download">
         <Download size={16}/>
       </IconButton>
     </div>

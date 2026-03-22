@@ -166,10 +166,10 @@
     </span>
 
     <div class="buttons">
-      <IconButton click={() => editApiToken(s, s.is_api)} alt="Details">
+      <IconButton onClick={() => editApiToken(s, s.is_api)} alt="Details">
         <Info size={20}/>
       </IconButton>
-      <IconButton click={() => deauthorizeSession(s.session_id)} alt="Log out">
+      <IconButton onClick={() => deauthorizeSession(s.session_id)} color={ColorKeys.Danger} alt="Log out">
         <LogOut size={20}/>
       </IconButton>
     </div>

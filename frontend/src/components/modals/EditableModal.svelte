@@ -11,7 +11,7 @@
 
   import { ColorKeys } from "../../types/colors";
   import IconButton from "../interactive/IconButton.svelte";
-  import { Pencil, Trash } from "lucide-svelte";
+  import { Check, Pencil, Trash, X } from "lucide-svelte";
  
   interface Props {
     title: string;
@@ -131,30 +131,28 @@
 {#snippet buttons()}
     {@render extraButtonsLeft?.()}
     {#if editMode}
-      <Button onClick={saveEdit} color={ColorKeys.Success} enabled={submittable} type="submit">
+      <IconButton onClick={saveEdit} color={ColorKeys.Success} enabled={submittable} type="submit" alt="Save" canRenderAsButton={true}>
         {#if awaitingEdit}
           <Loader/>
         {:else}
-          Save
+          <Check/>
         {/if}
-      </Button>
-      <Button onClick={cancelEdit} color={ColorKeys.Danger}>Cancel</Button>
+      </IconButton>
+      <IconButton onClick={cancelEdit} color={ColorKeys.Danger} alt="Cancel" canRenderAsButton={true}><X/></IconButton>
     {:else}
       {#if editable}
-        <Button onClick={startEditMode} color={ColorKeys.Accent}>Edit</Button>
-        <!--<IconButton click={startEditMode} alt="Edit">
+        <IconButton onClick={startEditMode} alt="Edit" canRenderAsButton={true}>
           <Pencil/>
-        </IconButton>-->
+        </IconButton>
       {/if}
       {#if deletable}
-        <Button onClick={showDeleteModal} color={ColorKeys.Danger}>Delete</Button>
-        <!--<IconButton click={showDeleteModal} alt="Delete">
+        <IconButton onClick={showDeleteModal} color={ColorKeys.Danger} alt="Delete" canRenderAsButton={true}>
           <Trash/>
-        </IconButton>-->
+        </IconButton>
       {/if}
-      {#if !editable && !deletable}
+      <!--{#if !editable && !deletable}
         <Button onClick={hideModal}>Close</Button>
-      {/if}
+      {/if}-->
     {/if}
     {@render extraButtonsRight?.()}
   {/snippet}

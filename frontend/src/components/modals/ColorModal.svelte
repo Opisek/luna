@@ -10,6 +10,7 @@
   import { HSLtoRGB, isValidColor, parseRGB, recommendedColorNames, recommendedColors, RGBtoHSL, serializeRGB } from "$lib/common/colors";
   import { NoOp } from "$lib/client/placeholders";
   import { ColorKeys } from "../../types/colors";
+  import { Check, X } from "lucide-svelte";
 
   interface Props {
     color: string | null;
@@ -279,17 +280,17 @@
     />
   </div>
   <div class="suggestions">
-    <IconButton click={() => setColor(null)} alt="Default color">
+    <IconButton onClick={() => setColor(null)} alt="Default color">
       <ColorCircle color={null} size="medium"/>
     </IconButton>
     {#each recommendedColors as color, index}
-      <IconButton click={() => setColor(color)} alt={recommendedColorNames[index]}>
+      <IconButton onClick={() => setColor(color)} alt={recommendedColorNames[index]}>
         <ColorCircle color={color} size="medium"/>
       </IconButton>
     {/each}
   </div>
   {#snippet buttons()}
-      <Button onClick={confirm} color={ColorKeys.Success}>Confirm</Button>
-      <Button onClick={cancel} color={ColorKeys.Danger}>Cancel</Button>
+      <IconButton onClick={confirm} color={ColorKeys.Success} alt="Confirm"><Check/></IconButton>
+      <IconButton onClick={cancel} color={ColorKeys.Danger} alt="Cancel"><X/></IconButton>
   {/snippet}
 </Modal>

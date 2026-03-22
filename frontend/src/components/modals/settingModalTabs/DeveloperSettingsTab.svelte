@@ -162,10 +162,10 @@
     </span>
 
     <div class="buttons">
-      <IconButton click={() => editApiToken(s, s.is_api)} alt="Edit">
+      <IconButton onClick={() => editApiToken(s, s.is_api)} color={ColorKeys.Accent} alt="Edit">
         <Pencil size={20}/>
       </IconButton>
-      <IconButton click={() => deauthorizeSession(s.session_id)} alt="Deauthorize">
+      <IconButton onClick={() => deauthorizeSession(s.session_id)} color={ColorKeys.Danger} alt="Deauthorize">
         <LogOut size={20}/>
       </IconButton>
     </div>

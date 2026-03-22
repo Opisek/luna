@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { CaseSensitive, Code, Lock, LogOut, Moon, Palette, RefreshCw, Shield, Sun, TriangleAlert, User, Users } from "lucide-svelte";
+  import { CaseSensitive, Check, Code, Lock, LogOut, Moon, Palette, RefreshCw, Shield, Sun, TriangleAlert, User, Users, X } from "lucide-svelte";
   import { AsyncNoOp, NoOp } from "../../lib/client/placeholders";
   import ButtonList from "../forms/ButtonList.svelte";
   import Modal from "./Modal.svelte";
@@ -446,7 +446,7 @@
   onModalHide={restoreSettings}
 >
   {#snippet topButtons()}
-    <IconButton click={forceRefresh} alt="Refresh">
+    <IconButton onClick={forceRefresh} alt="Refresh">
       <span class="refreshButtonWrapper" class:spin={loaderAnimation} onanimationiteration={() => { loaderAnimation = false; }}>
         <RefreshCw/>
       </span>
@@ -455,16 +455,18 @@
 
   {#snippet buttons()}
     {#if showSaveButton}
-      <Button type="submit" color={ColorKeys.Success} enabled={submittable} onClick={() => { saveSettings().catch(NoOp); }}>
+      <IconButton type="submit" color={ColorKeys.Success} enabled={submittable} onClick={() => { saveSettings().catch(NoOp); }} alt="Save" canRenderAsButton={true}>
         {#if saving}
           <Loader/>
         {:else}
-          Save
+          <Check/>
         {/if}
-      </Button>
-      <Button color={ColorKeys.Danger} onClick={restoreSettings}>Cancel</Button>
+      </IconButton>
+      <IconButton color={ColorKeys.Danger} onClick={restoreSettings} alt="Cancel" canRenderAsButton={true}>
+        <X/>
+      </IconButton>
     {:else}
-      <Button onClick={hideModalInternal}>Close</Button>
+      <!--<Button onClick={hideModalInternal}>Close</Button>-->
     {/if}
   {/snippet}
 

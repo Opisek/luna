@@ -169,10 +169,10 @@
     </span>
 
     <div class="buttons">
-      <IconButton click={() => { downloadFileToClient(`/themes/${isLightTheme ? "light" : "dark"}/${theme.value}.css`); }} alt="Download">
+      <IconButton onClick={() => { downloadFileToClient(`/themes/${isLightTheme ? "light" : "dark"}/${theme.value}.css`); }} color={ColorKeys.Accent} alt="Download">
         <Download size={20}/>
       </IconButton>
-      <IconButton click={() => { deleteTheme(theme.value, theme.name, isLightTheme); }} alt="Delete">
+      <IconButton onClick={() => { deleteTheme(theme.value, theme.name, isLightTheme); }} color={ColorKeys.Danger} alt="Delete">
         <Trash2 size={20}/>
       </IconButton>
     </div>

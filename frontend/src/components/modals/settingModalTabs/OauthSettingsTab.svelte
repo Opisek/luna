@@ -105,10 +105,10 @@
     </span>
 
     <div class="buttons">
-      <IconButton click={() => showOauthClient(client, true)} alt="Edit">
+      <IconButton onClick={() => showOauthClient(client, true)} alt="Edit">
         <Pencil size={20}/>
       </IconButton>
-      <IconButton click={() => deleteClient(client.id)} alt="Delete">
+      <IconButton onClick={() => deleteClient(client.id)} color={ColorKeys.Danger} alt="Delete">
         <Trash2 size={20}/>
       </IconButton>
     </div>

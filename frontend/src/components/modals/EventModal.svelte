@@ -283,8 +283,7 @@
       {#if event != EmptyEvent && event.overridden}
         <Button color={ColorKeys.Accent} onClick={resetOverrides}>Reset</Button>
       {/if}
-      <Button color={ColorKeys.Accent} onClick={copyEvent}>Copy</Button>
-      <IconButton alt="Copy">
+      <IconButton onClick={copyEvent} alt="Copy" canRenderAsButton={true}>
         <Copy/>
       </IconButton>
     {/if}

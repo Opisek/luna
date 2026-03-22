@@ -3,16 +3,24 @@
 
   import { NoOp } from "$lib/client/placeholders";
   import Tooltip from "./Tooltip.svelte";
+  import { ColorKeys } from "../../types/colors";
+  import Button from "./Button.svelte";
+  import { getSettings } from "../../lib/client/data/settings.svelte";
+  import { UserSettingKeys } from "../../types/settings";
 
   interface Props {
     alt: string;
     up?: () => void;
     down?: () => void;
-    click?: () => void;
+    onClick?: () => void;
     visible?: boolean;
     style?: string;
     tabindex?: number;
     href?: string;
+    type?: "button" | "submit";
+    enabled?: boolean;
+    color?: ColorKeys;
+    canRenderAsButton?: boolean;
     children?: Snippet;
   }
 
@@ -20,21 +28,26 @@
     alt,
     up = NoOp,
     down = NoOp,
-    click = NoOp,
+    onClick = NoOp,
     visible = true,
     style = "",
     tabindex = 0,
     href = "",
+    type = "button",
+    enabled = true,
+    color = ColorKeys.Neutral,
+    canRenderAsButton = false,
     children
   }: Props = $props();
 
   // svelte-ignore non_reactive_update
   // isLink is set once and never changed
   let button = $state<HTMLElement | null>(null);
+  const settings = getSettings();
 
   function clickInternal(e: MouseEvent) {
     e.stopPropagation();
-    click();
+    onClick();
   }
 
   function leaveInternal() {
@@ -71,8 +84,6 @@
 
   div.circle {
     position: absolute;
-    background-color: colors.$backgroundSecondary;
-    z-index: -1;
     border-radius: 50%;
     left: 50%;
     top: 50%;
@@ -97,22 +108,66 @@
   }
 
   button:hover, button:focus, a:hover, a:focus {
-    color: colors.$foregroundSecondary;
+    &.neutral {
+      color: colors.$foregroundSecondary;
+      .circle {
+        background-color: colors.$backgroundSecondary;
+      }
+    } 
+    &.success {
+      color: colors.$foregroundSuccess;
+      .circle {
+        background-color: colors.$backgroundSuccess;
+      }
+    } 
+    &.accent {
+      color: colors.$foregroundAccent;
+      .circle {
+        background-color: colors.$backgroundAccent;
+      }
+    } 
+    &.warning {
+      color: colors.$foregroundWarning;
+      .circle {
+        background-color: colors.$backgroundWarning;
+      }
+    } 
+    &.danger {
+      color: colors.$foregroundFailure;
+      .circle {
+        background-color: colors.$backgroundFailure;
+      }
+    } 
+  }
+
+  .disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
   }
 </style>
 
-{#if alt == ""}
-  {@render buttonSnippet()}
+{#if canRenderAsButton && settings.userSettings[UserSettingKeys.UseTextButtons]}
+  <Button
+     onClick={onClick}
+     color={color}
+     type={type}
+     enabled={enabled}
+     href={href}
+  >{alt}</Button>
 {:else}
-  <Tooltip
-    icon={buttonSnippet} 
-    inheritColor={true}
-    tight={true}
-    pointerCursor={true}
-    delayed={true}
-  >
-    {alt}
-  </Tooltip>
+  {#if alt == ""}
+    {@render buttonSnippet()}
+  {:else}
+    <Tooltip
+      icon={buttonSnippet} 
+      inheritColor={true}
+      tight={true}
+      pointerCursor={true}
+      delayed={true}
+    >
+      {alt}
+    </Tooltip>
+  {/if}
 {/if}
 
 {#snippet buttonSnippet()}
@@ -120,9 +175,16 @@
     <a
       bind:this={button}
       class:hidden={!visible}
-      href={href}
+      href={enabled ? href : "#"}
       style={style}
       tabindex="{tabindex}"
+      type={type}
+      class:disabled={!enabled}
+      class:success={color == ColorKeys.Success}
+      class:accent={color == ColorKeys.Accent}
+      class:warning={color == ColorKeys.Warning}
+      class:danger={color == ColorKeys.Danger}
+      class:neutral={color == ColorKeys.Neutral}
     >
       <div class="circle"></div>
       {@render children?.()}
@@ -135,9 +197,16 @@
       onmouseleave={leaveInternal}
       onmouseup={upInternal}
       class:hidden={!visible}
-      type="button"
+      type={type}
       style={style}
       tabindex="{tabindex}"
+      class:disabled={!enabled}
+      class:success={color == ColorKeys.Success}
+      class:accent={color == ColorKeys.Accent}
+      class:warning={color == ColorKeys.Warning}
+      class:danger={color == ColorKeys.Danger}
+      class:neutral={color == ColorKeys.Neutral}
+      disabled={!enabled}
     >
       <div class="circle"></div>
       {@render children?.()}
