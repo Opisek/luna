@@ -82,7 +82,7 @@
 />
 <ToggleInput
   name={UserSettingKeys.UseTextButtons}
-  description="Use textual buttons"
+  description="Use Textual Buttons"
   bind:value={settings.userSettings[UserSettingKeys.UseTextButtons]}
 />
 <SliderInput
