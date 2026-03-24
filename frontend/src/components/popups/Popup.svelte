@@ -1,77 +1,60 @@
 <script lang="ts">
   import type { Snippet } from "svelte";
-
-  import { browser } from "$app/environment";
-
-  import { calculateOptimalPopupPosition } from "$lib/common/calculations";
   import { NoOp } from "../../lib/client/placeholders";
 
   interface Props {
-    visible?: boolean;
+    tooltip?: boolean;
+    delayed?: boolean;
     children?: Snippet;
     showPopup?: () => void;
     hidePopup?: () => void;
   }
 
   let {
-    visible = $bindable(false),
+    tooltip = true,
+    delayed = false,
     children,
     showPopup = $bindable(),
-    hidePopup = $bindable(NoOp)
+    hidePopup = $bindable(NoOp),
   }: Props = $props();
 
-  let dialog: HTMLDialogElement;
+  let visible = $state(false);
+  let anchorName = Math.floor(Math.random() * 100000000).toString();
+  let popover: (HTMLElement | undefined) = $state();
 
-  function clickOutside(event: MouseEvent) {
-    if (!dialog || event.detail === 0) return;
+  $effect(() => {
+    if (!popover || !popover.parentElement) return;
+    Object.assign(popover.parentElement.style, {
+      "anchor-name": `--anchor${anchorName}`,
+    });
+    if (tooltip) popover.parentElement.setAttribute("aria-describedby", `tooltip${anchorName}`);
+  })
 
-    const clickX = event.clientX;
-    const clickY = event.clientY;
-
-    const rect = dialog.getBoundingClientRect();
-
-    const minX = rect.left;
-    const maxX = rect.right;
-    const minY = rect.top;
-    const maxY = rect.bottom;
-
-    if (clickX < minX || clickX > maxX || clickY < minY || clickY > maxY) {
-      hidePopup();
-      event.stopPropagation();
-    }
-  }
-
+  let openTimeout = $state<ReturnType<typeof setTimeout>>();
   showPopup = () => {
-    visible = true;
-    checkPosition();
-    dialog.show();
-
-    if (browser) window.addEventListener("click", clickOutside);
-
-    setTimeout(() => {
-      dialog.focus();
-    }, 0);
+    clearTimeout(openTimeout);
+    openTimeout = setTimeout(() => {
+      if (!popover || popover.matches(":popover-open")) return;
+      visible = true;
+      popover.showPopover();
+      if (!tooltip) {
+        setTimeout(() => {
+          if (!popover) return;
+          popover.focus();
+        }, 0);
+      }
+    }, delayed ? 1000 : 0);
   }
 
   hidePopup = () => {
+    clearTimeout(openTimeout);
+    if (!popover) return;
     visible = false;
-    dialog.close();
-
-    if (browser) window.removeEventListener("click", clickOutside);
   }
 
-  let bottom: boolean = $state(false);
-  let center: boolean = $state(false);
-  let right: boolean = $state(false);
-
-  function checkPosition() {
-    if (!dialog || !dialog.parentElement || !browser) return;
-
-    const res = calculateOptimalPopupPosition(dialog.parentElement, 5);
-
-    bottom = res.bottom;
-    right = res.right;
-    center = res.center;
+  function transitionEnd() {
+    if (!popover || visible || !popover.matches(":popover-open")) return;
+    popover.hidePopover();
   }
 </script>
 
@@ -80,64 +63,63 @@
   @use "../../styles/colors.scss";
   @use "../../styles/decorations.scss";
   @use "../../styles/dimensions.scss";
+  @use "../../styles/text.scss";
+  
+  .popup {
+    inset: unset;
 
-  dialog {
     border: 0;
-    padding: dimensions.$gapSmall dimensions.$gapLarge dimensions.$gapLarge dimensions.$gapLarge;
+    padding: dimensions.$gapSmall;
     border-radius: dimensions.$borderRadius;
-    max-width: 50vw;
-    min-width: fit-content;
+    max-width: 30vw;
     box-shadow: decorations.$boxShadow;
-    position: absolute !important;
-    z-index: 50;
+    font-size: text.$fontSize;
     background-color: colors.$backgroundSecondary;
     color: colors.$foregroundSecondary;
+
+    position: fixed;
+    position-area: top;
+    position-try-fallbacks: bottom, right, left;
+    position-try-order: most-width;
+    container-type: anchored;
+
+    margin: dimensions.$gapSmall;
+
+    opacity: 0;
+    transition: opacity animations.$animationSpeed;
+
+    &.visible:popover-open {
+      opacity: 1;
+
+      @starting-style {
+        & {
+          opacity: 0;
+        }
+      }
+    }
   }
-  :global(html[data-frost="true"]) dialog {
+
+  :global(html[data-frost="true"]) .popup {
     background-color: color-mix(in srgb, colors.$backgroundSecondary 50%, transparent) !important;
     backdrop-filter: blur(dimensions.$blurLarge);
   }
 
-  dialog[open] {
-		animation: zoom animations.$animationSpeed animations.$cubic forwards;
-	}
-
-  dialog:focus {
-    outline: none;
-  }
-
-  div.contents {
-    display: flex;
-    flex-direction: column;
-    gap: dimensions.$gapSmall;
-  }
-
-  dialog.center {
-    left: 0;
-  }
-  dialog.left {
-    left: 100%;
-  }
-  dialog.right {
-    left: -100%;
-  }
-  dialog.below {
-    top: -100%;
-  }
-  dialog.above {
-    top: 100%;
+  .popup:focus {
+    outline: 0;
   }
 </style>
 
-<dialog
-  bind:this={dialog}
-  class:center={center}
-  class:left={!right && !center}
-  class:right={right && !center}
-  class:below={bottom}
-  class:above={!bottom}
+<!-- The typecast to "auto" is because the linter does not yet know about "hint" -->
+<div
+  bind:this={popover}
+  class="popup"
+  popover={(tooltip ? "hint" : "auto") as "auto"}
+  style={`position-anchor: --anchor${anchorName};`}
+  id={`tooltip${anchorName}`}
+  class:visible={visible}
+  tabindex="-1"
+  ontransitionend={transitionEnd}
+  role={tooltip ? "tooltip" : "dialog"}
 >
-  <div class="contents">
-    {@render children?.()}
-  </div>
-</dialog>
+  {@render children?.()}
+</div>

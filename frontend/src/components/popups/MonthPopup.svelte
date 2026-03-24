@@ -11,6 +11,7 @@
   import { svelteFlyInHorizontal, svelteFlyOutHorizontal } from "$lib/client/animations";
   import { getSettings } from "../../lib/client/data/settings.svelte";
   import { UserSettingKeys } from "../../types/settings";
+  import { ColorKeys } from "../../types/colors";
 
   interface Props {
     date: Date;
@@ -28,7 +29,6 @@
 
   const settings = getSettings();
 
-  let popupVisible: boolean = $state(false);
   let selectingMonth: boolean = $state(true);
 
   let internalShow: () => void = $state(NoOp);
@@ -36,7 +36,6 @@
 
   /* Popup */
   showPopup = () => {
-    if (popupVisible) return;
     selectedYear = date.getFullYear();
     selectingMonth = true;
     setTimeout(internalShow, 0);
@@ -157,9 +156,9 @@
   }
 </style>
 
-<Popup bind:showPopup={internalShow} bind:hidePopup={internalClose} bind:visible={popupVisible}>
+<Popup bind:showPopup={internalShow} bind:hidePopup={internalClose} tooltip={false}>
   <div class="topRow">
-    <IconButton onClick={prev} alt="Previous month">
+    <IconButton onClick={prev} alt="Previous month" color={ColorKeys.Accent}>
       <ChevronLeft/>
     </IconButton>
     <button
@@ -174,7 +173,7 @@
         {decadeStart} - {decadeStart + 9}
       {/if}
     </button>
-    <IconButton onClick={next} alt="Next month">
+    <IconButton onClick={next} alt="Next month" color={ColorKeys.Accent}>
       <ChevronRight/>
     </IconButton>
   </div>

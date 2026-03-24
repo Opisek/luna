@@ -8,6 +8,7 @@
   import { getSettings } from "../../lib/client/data/settings.svelte";
   import { UserSettingKeys } from "../../types/settings";
   import Spinner from "../decoration/Spinner.svelte";
+  import Popup from "../popups/Popup.svelte";
 
   interface Props {
     alt: string;
@@ -41,10 +42,12 @@
     children
   }: Props = $props();
 
-  // svelte-ignore non_reactive_update
-  // isLink is set once and never changed
-  let button = $state<HTMLElement | null>(null);
   const settings = getSettings();
+
+  let button = $state<HTMLElement | undefined>();
+
+  let showPopover = $state(NoOp);
+  let hidePopover = $state(NoOp);
 
   let loading = $state(false);
   async function clickInternal(e: MouseEvent) {
@@ -58,6 +61,7 @@
   }
 
   function leaveInternal() {
+    hidePopover();
     if (!button) return;
     button.blur();
     up();
@@ -191,19 +195,7 @@
      href={href}
   >{alt}</Button>
 {:else}
-  {#if alt == ""}
-    {@render buttonSnippet()}
-  {:else}
-    <Tooltip
-      icon={buttonSnippet} 
-      inheritColor={true}
-      tight={true}
-      pointerCursor={true}
-      delayed={true}
-    >
-      {alt}
-    </Tooltip>
-  {/if}
+  {@render buttonSnippet()}
 {/if}
 
 {#snippet buttonSnippet()}
@@ -232,6 +224,7 @@
       onclick={clickInternal}
       onmousedown={down}
       onmouseleave={leaveInternal}
+      onmouseenter={showPopover}
       onmouseup={upInternal}
       class:hidden={!visible}
       type={type}
@@ -246,6 +239,7 @@
       class:inherit={color == ColorKeys.Inherit}
       disabled={!enabled}
       class:loading
+      aria-label={alt}
     >
       <div class="circle"></div>
       <div class="icon" class:loading>
@@ -255,6 +249,11 @@
         <div class="spinner">
           <Spinner/>
         </div>
+      {/if}
+      {#if alt != ""}
+        <Popup bind:showPopup={showPopover} bind:hidePopup={hidePopover} delayed={true}>
+          {alt}
+        </Popup>
       {/if}
     </button>
   {/if}
