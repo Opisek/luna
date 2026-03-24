@@ -222,7 +222,7 @@ func (calendar *GoogleCalendar) GetEvents(start time.Time, end time.Time, q type
 						Append(errors.LvlDebug, "Could not parse event %v", modification.settings.rawEvent.Id).
 						AltStr(errors.LvlWordy, "Could not parse event")
 				}
-				event.GetDate().Recurrence().AddModifiedInstance(modifiedTime)
+				event.GetDate().Recurrence().MarkModification(modifiedTime)
 				modification.SupplyMasterEvent(event)
 			}
 		}
@@ -291,20 +291,13 @@ func (calendar *GoogleCalendar) AddEvent(name string, desc string, color *types.
 		}
 	}
 
-	var recurrence []string
-	if date.Recurrence().Repeats() {
-		recurrence = []string{date.Recurrence().Rule().String()}
-	} else {
-		recurrence = []string{}
-	}
-
 	event := google.Event{
 		Name:        name,
 		Description: desc,
 		ColorId:     colId,
-		Start:       start,
-		End:         end,
-		Recurrence:  recurrence,
+		Start:       &start,
+		End:         &end,
+		Recurrence:  date.Recurrence().Lines(),
 	}
 
 	url := google.ApiUrl().Subpage("calendars", calendar.settings.GoogleId, "events")
@@ -348,37 +341,33 @@ func (calendar *GoogleCalendar) EditEvent(originalEvent types.Event, name string
 
 	var start google.TimeDefinition
 	var end google.TimeDefinition
-	// TODO: timezones
 	if date.AllDay() {
 		start = google.TimeDefinition{
-			Date: date.Start().Format("2006-01-02"),
+			Date:     date.Start().Format("2006-01-02"),
+			TimeZone: date.Timezone().String(),
 		}
 		end = google.TimeDefinition{
-			Date: date.End().Format("2006-01-02"),
+			Date:     date.End().Format("2006-01-02"),
+			TimeZone: date.Timezone().String(),
 		}
 	} else {
 		start = google.TimeDefinition{
 			DateTime: date.Start().Local().Format(time.RFC3339),
+			TimeZone: date.Timezone().String(),
 		}
 		end = google.TimeDefinition{
 			DateTime: date.End().Local().Format(time.RFC3339),
+			TimeZone: date.Timezone().String(),
 		}
-	}
-
-	var recurrence []string
-	if date.Recurrence().Repeats() {
-		recurrence = []string{date.Recurrence().Rule().String()}
-	} else {
-		recurrence = []string{}
 	}
 
 	event := google.Event{
 		Name:        name,
 		Description: desc,
 		ColorId:     colId,
-		Start:       start,
-		End:         end,
-		Recurrence:  recurrence,
+		Start:       &start,
+		End:         &end,
+		Recurrence:  date.Recurrence().Lines(),
 	}
 
 	url := google.ApiUrl().Subpage("calendars", calendar.settings.GoogleId, "events", originalEvent.GetSettings().(*GoogleEventSettings).GoogleId)

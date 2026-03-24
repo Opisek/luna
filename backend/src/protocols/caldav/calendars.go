@@ -200,7 +200,7 @@ func (calendar *CaldavCalendar) getEvents(query *caldav.CalendarQuery, q types.D
 		}
 		eventSettings := event.GetSettings().(*CaldavEventSettings)
 		if masterEvent, exists := masterEvents[eventSettings.Uid]; exists {
-			convertedEvents[masterEvent].GetDate().Recurrence().AddModifiedInstance(common.ExtractDateFromRecurrenceId(event))
+			convertedEvents[masterEvent].GetDate().Recurrence().MarkModification(common.ExtractDateFromRecurrenceId(event))
 		}
 	}
 

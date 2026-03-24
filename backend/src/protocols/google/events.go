@@ -6,7 +6,6 @@ import (
 	"luna-backend/crypto"
 	"luna-backend/errors"
 	google "luna-backend/protocols/google/internal"
-	common "luna-backend/protocols/internal"
 	"luna-backend/types"
 
 	"net/http"
@@ -69,7 +68,7 @@ func (calendar *GoogleCalendar) eventFromGoogle(googleEvent *google.Event, q typ
 				Append(errors.LvlDebug, "Could not parse event %v", googleEvent.Id).
 				AltStr(errors.LvlWordy, "Could not parse event")
 		}
-		recurrenceId = common.CalculateRecurrenceId(time, allDay)
+		recurrenceId = types.SerializeIcalTime(time, allDay, true)
 	}
 
 	settings := &GoogleEventSettings{
@@ -208,7 +207,7 @@ func (event *GoogleEvent) SupplyMasterEvent(masterEvent types.Event) {
 	event.settings.RecurrenceMasterId = masterEvent.GetSettings().(*GoogleEventSettings).GoogleId
 
 	if event.settings.RecurrenceId == "" {
-		event.settings.RecurrenceId = common.CalculateRecurrenceId(event.eventDate.Start(), event.eventDate.AllDay())
+		event.settings.RecurrenceId = types.SerializeIcalTime(event.eventDate.Start(), event.eventDate.AllDay(), true)
 		event.settings.GoogleId = fmt.Sprintf("%s_%s", event.settings.RecurrenceMasterId, event.settings.RecurrenceId)
 	}
 
@@ -216,7 +215,7 @@ func (event *GoogleEvent) SupplyMasterEvent(masterEvent types.Event) {
 		event.GetDate().SetRecurrence(masterEvent.GetDate().Recurrence())
 	}
 
-	event.settings.IsFirstRecurrence = common.CalculateRecurrenceId(masterEvent.GetDate().Start(), masterEvent.GetDate().AllDay()) == event.settings.RecurrenceId
+	event.settings.IsFirstRecurrence = types.SerializeIcalTime(masterEvent.GetDate().Start(), masterEvent.GetDate().AllDay(), true) == event.settings.RecurrenceId
 }
 
 func (event *GoogleEvent) IsRecurrenceInstance() bool {

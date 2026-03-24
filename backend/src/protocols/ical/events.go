@@ -141,7 +141,7 @@ func (event *IcalEvent) Clone() types.Event {
 }
 
 func (event *IcalEvent) SupplyMasterEvent(masterEvent types.Event) {
-	event.settings.RecurrenceId = common.CalculateRecurrenceId(event.eventDate.Start(), event.eventDate.AllDay())
+	event.settings.RecurrenceId = types.SerializeIcalTime(event.eventDate.Start(), event.eventDate.AllDay(), true)
 	event.settings.IsFirstRecurrence = masterEvent.GetDate().Start().Equal(*event.eventDate.Start())
 }
 

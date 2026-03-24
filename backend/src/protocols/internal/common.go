@@ -154,19 +154,10 @@ func ParseIcalEvent(props *ical.Props) (*IcalEventProps, bool, error) {
 	return parsedProps, mustUpdate, nil
 }
 
-// TODO: timezones?
-func CalculateRecurrenceId(startTime *time.Time, allDay bool) string {
-	if allDay {
-		return startTime.Format("20060102")
-	} else {
-		return startTime.Format("20060102T150405")
-	}
-}
-
 func ExtractDateFromRecurrenceId(event types.Event) *time.Time {
 	parsedTime, _, _ := types.ParseIcalTime(&ical.Prop{
 		Value:  event.GetRecurrenceId(),
-		Params: ical.Params{"TZID": {event.GetDate().Timezone()}},
+		Params: ical.Params{"TZID": {event.GetDate().Timezone().String()}},
 	})
 	return parsedTime
 }

@@ -15,13 +15,13 @@ type exposedEvent struct {
 	Id         types.ID         `json:"id"`
 	Calendar   types.ID         `json:"calendar"`
 	Name       string           `json:"name"`
-	Desc       string           `json:"desc"`
+	Desc       string           `json:"desc,omitempty"`
 	Color      *types.Color     `json:"color"`
 	Date       *types.EventDate `json:"date"`
 	Overridden bool             `json:"overridden"`
 	CanEdit    bool             `json:"can_edit"` // TODO: might exclude from here and add to "detailed" view instead
 	CanDelete  bool             `json:"can_delete"`
-	Settings   any              `json:"settings"` // TODO: delete, this is temporary for debugging recurrences
+	Settings   any              `json:"settings,omitempty"` // TODO: delete, this is temporary for debugging recurrences
 }
 
 func GetEvents(c *gin.Context) {
@@ -260,15 +260,15 @@ func PatchEvent(c *gin.Context) {
 
 	userId := util.GetUserId(c)
 
-	eventId, err := util.GetId(c, "event")
-	if err != nil {
-		u.Error(err)
+	eventId, tr := util.GetId(c, "event")
+	if tr != nil {
+		u.Error(tr)
 		return
 	}
 
-	event, err := u.Tx.Queries().GetEvent(userId, eventId, u.Context, u.Config)
-	if err != nil {
-		u.Error(err)
+	event, tr := u.Tx.Queries().GetEvent(userId, eventId, u.Context, u.Config)
+	if tr != nil {
+		u.Error(tr)
 		return
 	}
 
@@ -293,7 +293,17 @@ func PatchEvent(c *gin.Context) {
 	eventDateEnd, endErr := time.Parse(time.RFC3339, eventDateEndStr)
 	eventDateDuration, durationErr := time.ParseDuration(eventDateDurationStr)
 
-	if !isOverridden && (newEventName == "" && newEventDesc == event.GetDesc() && (newEventColor == event.GetColor() || colErr != nil) && startErr != nil && endErr != nil && durationErr != nil) {
+	eventDateRrule := c.PostForm("date_rrule")
+	eventDateRdate := c.PostForm("date_rdate")
+	eventDateExdate := c.PostForm("date_exdate")
+
+	if !isOverridden &&
+		(newEventName == "" && newEventDesc == event.GetDesc() && (newEventColor == event.GetColor() || colErr != nil) &&
+			startErr != nil &&
+			endErr != nil &&
+			durationErr != nil) &&
+		eventDateRrule == "" &&
+		eventDateRdate == "" {
 		u.Error(errors.New().Status(http.StatusBadRequest).
 			Append(errors.LvlPlain, "Nothing to change"))
 		return
@@ -333,9 +343,20 @@ func PatchEvent(c *gin.Context) {
 		}
 	}
 
-	_, err = event.GetCalendar().EditEvent(event, newEventName, newEventDesc, newEventColor, newEventDate, isOverridden, u.Tx.Queries())
+	// Event recurrence
+	recurrence, err := types.EventRecurrenceFromStrings(eventDateRrule, eventDateRdate, eventDateExdate)
 	if err != nil {
-		u.Error(err)
+		u.Error(errors.New().Status(http.StatusBadRequest).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlWordy, "Invalid recurrence").
+			AltStr(errors.LvlPlain, "Invalid date"),
+		)
+	}
+	newEventDate.SetRecurrence(recurrence)
+
+	_, tr = event.GetCalendar().EditEvent(event, newEventName, newEventDesc, newEventColor, newEventDate, isOverridden, u.Tx.Queries())
+	if tr != nil {
+		u.Error(tr)
 		return
 	}
 
