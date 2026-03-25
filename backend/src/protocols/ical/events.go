@@ -39,9 +39,13 @@ func (settings *IcalEventSettings) Clone() *IcalEventSettings {
 func (calendar *IcalCalendar) eventFromIcal(props *ical.Props) (*IcalEvent, *errors.ErrorTrace) {
 	parsedProps, _, err := common.ParseIcalEvent(props)
 	if err != nil {
+		uid := "unknown"
+		if uidProp := props.Get(ical.PropUID); uidProp != nil {
+			uid = uidProp.Value
+		}
 		return nil, errors.New().Status(http.StatusInternalServerError).
 			AddErr(errors.LvlDebug, err).
-			Append(errors.LvlWordy, "Could not parse iCal event")
+			Append(errors.LvlWordy, "Could not parse iCal event %v", uid)
 	}
 
 	event := &IcalEvent{

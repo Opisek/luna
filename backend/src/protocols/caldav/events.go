@@ -8,6 +8,7 @@ import (
 	"luna-backend/types"
 	"net/http"
 
+	"github.com/emersion/go-ical"
 	"github.com/emersion/go-webdav/caldav"
 )
 
@@ -56,9 +57,13 @@ func (calendar *CaldavCalendar) eventFromCaldav(obj *caldav.CalendarObject, q ty
 
 	parsedProps, mustUpdate, err := common.ParseIcalEvent(&obj.Data.Children[eventIndex].Props)
 	if err != nil {
+		uid := "unknown"
+		if uidProp := obj.Data.Children[eventIndex].Props.Get(ical.PropUID); uidProp != nil {
+			uid = uidProp.Value
+		}
 		return nil, errors.New().Status(http.StatusInternalServerError).
 			AddErr(errors.LvlDebug, err).
-			Append(errors.LvlDebug, "Could not parse iCal event")
+			Append(errors.LvlWordy, "Could not parse iCal event %v", uid)
 	}
 
 	url, err := types.NewUrl(obj.Path)
