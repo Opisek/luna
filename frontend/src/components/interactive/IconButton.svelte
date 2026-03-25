@@ -89,37 +89,46 @@
     transition: all animations.$cubic animations.$animationSpeed;
   }
 
-  button.hidden, a.hidden, .icon.loading {
+  button.hidden, a.hidden, .loading > :global(svg) {
     visibility: hidden;
   }
 
-  div.circle {
-    position: absolute;
-    border-radius: 50%;
-    left: 50%;
-    top: 50%;
-    width: 0%;
-    height: 0%;
-    transition: all animations.$cubic animations.$animationSpeed;
-    pointer-events: none;
+  button,
+  a {
+    &::before {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      left: 50%;
+      top: 50%;
+      width: 0%;
+      height: 0%;
+      transition: all animations.$cubic animations.$animationSpeed;
+      pointer-events: none;
+    }
   }
 
-  button:hover div.circle,
-  button:focus div.circle,
-  button.loading div.circle,
-  a:hover div.circle,
-  a:focus div.circle {
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
+  button:hover,
+  button:focus,
+  button.loading,
+  a:hover,
+  a:focus {
+    &::before {
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+    }
   }
 
-  button:active:not(.loading) div.circle, a:active div.circle {
-    width: 125%;
-    height: 125%;
-    left: -12.5%;
-    top: -12.5%;
+  button:active:not(.loading),
+  a:active {
+    &::before {
+      width: 125%;
+      height: 125%;
+      left: -12.5%;
+      top: -12.5%;
+    }
   }
 
   button:hover,
@@ -129,37 +138,37 @@
   a:focus {
     &.neutral {
       color: colors.$foregroundSecondary;
-      .circle {
+      &::before {
         background-color: colors.$backgroundSecondary;
       }
     } 
     &.success {
       color: colors.$foregroundSuccess;
-      .circle {
+      &::before {
         background-color: colors.$backgroundSuccess;
       }
     } 
     &.accent {
       color: colors.$foregroundAccent;
-      .circle {
+      &::before {
         background-color: colors.$backgroundAccent;
       }
     } 
     &.warning {
       color: colors.$foregroundWarning;
-      .circle {
+      &::before {
         background-color: colors.$backgroundWarning;
       }
     } 
     &.danger {
       color: colors.$foregroundFailure;
-      .circle {
+      &::before {
         background-color: colors.$backgroundFailure;
       }
     } 
     &.inherit {
       color: inherit;
-      .circle {
+      &::before {
         background-color: inherit;
       }
     } 
@@ -170,11 +179,7 @@
     opacity: 0.5;
   }
 
-  .icon {
-    display: contents;
-  }
-
-  .spinner {
+  .loading > :global(:nth-child(2)) {
     position: absolute;
     width: 100%;
     height: 100%;
@@ -215,7 +220,6 @@
       class:neutral={color == ColorKeys.Neutral}
       class:inherit={color == ColorKeys.Inherit}
     >
-      <div class="circle"></div>
       {@render children?.()}
     </a>
   {:else}
@@ -241,14 +245,9 @@
       class:loading
       aria-label={alt}
     >
-      <div class="circle"></div>
-      <div class="icon" class:loading>
-        {@render children?.()}
-      </div>
+      {@render children?.()}
       {#if loading}
-        <div class="spinner">
-          <Spinner/>
-        </div>
+        <Spinner/>
       {/if}
       {#if alt != ""}
         <Popup bind:showPopup={showPopover} bind:hidePopup={hidePopover} delayed={true}>
