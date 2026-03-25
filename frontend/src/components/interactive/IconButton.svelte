@@ -1,8 +1,7 @@
 <script lang="ts">
   import type { Snippet } from "svelte";
 
-  import { NoOp } from "$lib/client/placeholders";
-  import Tooltip from "./Tooltip.svelte";
+  import { AsyncNoOp, NoOp } from "$lib/client/placeholders";
   import { ColorKeys } from "../../types/colors";
   import Button from "./Button.svelte";
   import { getSettings } from "../../lib/client/data/settings.svelte";
@@ -46,7 +45,7 @@
 
   let button = $state<HTMLElement | undefined>();
 
-  let showPopover = $state(NoOp);
+  let showPopover = $state(AsyncNoOp);
   let hidePopover = $state(NoOp);
 
   let loading = $state(false);
@@ -56,10 +55,16 @@
     const result = onClick();
     if (!(result instanceof Promise)) return;
     loading = true;
-    await result;
+    hidePopover();
+    await result.catch(NoOp);
     loading = false;
   }
 
+  function enterInternal() {
+    if (!button) return;
+    if (loading) return;
+    showPopover();
+  }
   function leaveInternal() {
     hidePopover();
     if (!button) return;
@@ -179,7 +184,7 @@
     opacity: 0.5;
   }
 
-  .loading > :global(:nth-child(2)) {
+  .loading > :global(.spinner) {
     position: absolute;
     width: 100%;
     height: 100%;
@@ -228,7 +233,7 @@
       onclick={clickInternal}
       onmousedown={down}
       onmouseleave={leaveInternal}
-      onmouseenter={showPopover}
+      onmouseenter={enterInternal}
       onmouseup={upInternal}
       class:hidden={!visible}
       type={type}

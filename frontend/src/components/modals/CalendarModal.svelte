@@ -144,7 +144,7 @@
 >
   {#if calendar != EmptyCalendar}
     <TextInput bind:value={calendar.name} name="name" placeholder="Name" editable={editMode} />
-    <SelectInput bind:value={calendar.source} name="source" placeholder="Source" options={selectableSources} editable={false} />
+    <SelectInput bind:value={calendar.source} name="source" placeholder="Source" options={selectableSources} editable={calendar.id === ""} />
     {#if editMode}
       <ColorInput bind:color={calendar.color} name="color" editable={editMode} />
     {/if}

@@ -6,7 +6,7 @@
     tooltip?: boolean;
     delayed?: boolean;
     children?: Snippet;
-    showPopup?: () => void;
+    showPopup?: () => Promise<void>;
     hidePopup?: () => void;
   }
 
@@ -19,42 +19,64 @@
   }: Props = $props();
 
   let visible = $state(false);
-  let anchorName = Math.floor(Math.random() * 100000000).toString();
+  let anchorName = $state(Math.floor(Math.random() * 100000000).toString());
   let popover: (HTMLElement | undefined) = $state();
+
+  let promiseResolve: () => void = $state(NoOp);
+  let promiseReject: (reason?: any) => void = $state(NoOp);
 
   $effect(() => {
     if (!popover || !popover.parentElement) return;
-    Object.assign(popover.parentElement.style, {
-      "anchor-name": `--anchor${anchorName}`,
-    });
-    if (tooltip) popover.parentElement.setAttribute("aria-describedby", `tooltip${anchorName}`);
+    // @ts-ignore
+    const currentAnchor = popover.parentElement.style["anchor-name"] as string;
+    if (currentAnchor.startsWith("--anchor")) {
+      anchorName = currentAnchor.substring(8);
+    } else {
+      Object.assign(popover.parentElement.style, {
+        "anchor-name": `--anchor${anchorName}`,
+      });
+      if (tooltip) popover.parentElement.setAttribute("aria-describedby", `tooltip${anchorName}`);
+    }
   })
 
   let openTimeout = $state<ReturnType<typeof setTimeout>>();
-  showPopup = () => {
+  showPopup = async () => {
     clearTimeout(openTimeout);
     openTimeout = setTimeout(() => {
       if (!popover || popover.matches(":popover-open")) return;
       visible = true;
       popover.showPopover();
-      if (!tooltip) {
-        setTimeout(() => {
-          if (!popover) return;
-          popover.focus();
-        }, 0);
-      }
     }, delayed ? 1000 : 0);
+
+    if (!delayed && popover && !visible) {
+      return new Promise<void>((resolve, reject) => {
+        promiseResolve = (() => {
+          resolve();
+        });
+        promiseReject = ((err) => {
+          reject(err);
+        });
+      })
+    }
   }
 
   hidePopup = () => {
     clearTimeout(openTimeout);
-    if (!popover) return;
+    if (!popover || !visible) return;
     visible = false;
+    promiseResolve();
   }
 
   function transitionEnd() {
     if (!popover || visible || !popover.matches(":popover-open")) return;
     popover.hidePopover();
+  }
+
+  function popoverToggled(event: ToggleEvent) {
+    if (event.newState != "closed") return;
+    if (!visible) return;
+    visible = false;
+    promiseReject();
   }
 </script>
 
@@ -81,12 +103,12 @@
     position-area: top;
     position-try-fallbacks: bottom, right, left;
     position-try-order: most-width;
-    container-type: anchored;
 
     margin: dimensions.$gapSmall;
 
     opacity: 0;
     transition: opacity animations.$animationSpeed;
+    //transition: opacity animations.$animationSpeed, display animations.$animationSpeed allow-discrete; // blocked by https://bugzilla.mozilla.org/show_bug.cgi?id=1882408
 
     &.visible:popover-open {
       opacity: 1;
@@ -97,6 +119,12 @@
         }
       }
     }
+  }
+
+  .popup:popover-open {
+    display: flex;
+    flex-direction: column;
+    gap: dimensions.$gapSmall;
   }
 
   :global(html[data-frost="true"]) .popup {
@@ -120,6 +148,7 @@
   tabindex="-1"
   ontransitionend={transitionEnd}
   role={tooltip ? "tooltip" : "dialog"}
+  ontoggle={popoverToggled}
 >
   {@render children?.()}
 </div>

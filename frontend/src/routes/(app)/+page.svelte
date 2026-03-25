@@ -36,6 +36,7 @@
   import { ColorKeys } from "../../types/colors";
   import { page } from "$app/state";
   import CreditsModal from "../../components/modals/CreditsModal.svelte";
+  import CreatePopup from "../../components/popups/CreatePopup.svelte";
 
   /* Singletons */
   const settings = getSettings();
@@ -195,6 +196,8 @@
   let showSettingsModal: () => any = $state(NoOp);
 
   let showCreditsModal: () => any = $state(NoOp);
+
+  let showCreatePopup: () => any = $state(NoOp);
 </script>
 
 <style lang="scss">
@@ -304,8 +307,14 @@
     <IconButton onClick={showSettingsModal} alt="Settings">
       <Settings/>
     </IconButton>
-    <IconButton onClick={showSourceWizardModal} alt="Add source">
+    <IconButton onClick={showCreatePopup} alt="Add source">
       <PlusIcon/>
+      <CreatePopup
+        bind:showPopup={showCreatePopup}
+        addSource={showSourceWizardModal}
+        addCalendar={showNewCalendarModal}
+        addEvent={() => showNewEventModal(today)}
+      />
     </IconButton>
     <IconButton onClick={showCreditsModal} alt="Credits">
       <Copyleft/>

@@ -1,7 +1,6 @@
 <script lang="ts">
   import type { Snippet } from "svelte";
 
-  import Button from "../interactive/Button.svelte";
   import CloseButton from "../interactive/CloseButton.svelte";
   import Horizontal from "../layout/Horizontal.svelte";
   import Title from "../layout/Title.svelte";

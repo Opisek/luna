@@ -278,7 +278,7 @@ func (q *Queries) InsertCalendar(calendar types.Calendar) *errors.ErrorTrace {
 	_, err := q.Tx.Exec(
 		q.Context,
 		`
-		INSERT INTO calendars (id, source, settings)
+		INSERT INTO calendars (id, source, settings, display_order)
 		SELECT $1, $2, $3, COALESCE(MAX(display_order) + 1, 0)
 		FROM calendars
 		WHERE source = $2;
@@ -415,7 +415,6 @@ func (q *Queries) DeleteCalendar(userId types.ID, calendarId types.ID) *errors.E
 		SET display_order = display_order - 1
 		WHERE source = $1 AND display_order > $2;
 		`,
-		userId.UUID(),
 		deletedCalendarSourceId,
 		deletedCalendarDisplayOrder,
 	)

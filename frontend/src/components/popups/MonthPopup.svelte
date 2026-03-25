@@ -5,7 +5,7 @@
   import IconButton from "../interactive/IconButton.svelte";
   import Popup from "./Popup.svelte";
 
-  import { NoOp } from '$lib/client/placeholders';
+  import { AsyncNoOp, NoOp } from '$lib/client/placeholders';
   import { focusIndicator } from "$lib/client/decoration";
   import { getMonthName } from "$lib/common/humanization";
   import { svelteFlyInHorizontal, svelteFlyOutHorizontal } from "$lib/client/animations";
@@ -15,14 +15,14 @@
 
   interface Props {
     date: Date;
-    showPopup?: () => any;
-    hidePopup?: () => any;
+    showPopup?: () => Promise<void>;
+    hidePopup?: () => void;
     onSelect?: (date: Date) => void;
   }
 
   let {
     date = $bindable(new Date()),
-    showPopup = $bindable(NoOp),
+    showPopup = $bindable(AsyncNoOp),
     hidePopup = $bindable(NoOp),
     onSelect = NoOp,
   }: Props = $props();
@@ -31,14 +31,14 @@
 
   let selectingMonth: boolean = $state(true);
 
-  let internalShow: () => void = $state(NoOp);
+  let internalShow: () => Promise<void> = $state(AsyncNoOp);
   let internalClose: () => void = $state(NoOp);
 
   /* Popup */
   showPopup = () => {
     selectedYear = date.getFullYear();
     selectingMonth = true;
-    setTimeout(internalShow, 0);
+    return internalShow();
   }
 
   hidePopup = () => {
