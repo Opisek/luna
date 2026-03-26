@@ -15,18 +15,27 @@ export const addRipple = (e: MouseEvent, addToParent: boolean = true) => {
 
 export const focusIndicator = (node: HTMLElement, settings: FocusIndicatorSettings = { type: "bar" }) => {
   let clicked = 0;
-  const mouseDown = () => {
+  let outTimeout: ReturnType<typeof setTimeout> | null = null;
+
+  const click = () => {
+    console.log("click")
     node.classList.add("clicked");
     clicked = (new Date()).getTime();
   }
 
-  const focusOut = (e: FocusEvent) => {
+  const focusIn = () => {
+    console.log("in")
+    if (!outTimeout) return;
+    clearTimeout(outTimeout);
+    outTimeout = null;
+  }
+
+  const focusOut = () => {
+    console.log("out")
     if ((new Date()).getTime() - clicked < 100) return;
-    const original = e.relatedTarget as HTMLElement;
-    const current = e.target as HTMLElement;
-    if (!original) return;
-    if (current instanceof HTMLInputElement && isDescendentOf(original, current)) return; // for select buttons
-    node.classList.remove("clicked");
+    outTimeout = setTimeout(() => {
+      node.classList.remove("clicked");
+    }, 100);
   }
 
   switch (settings.type) {
@@ -41,13 +50,17 @@ export const focusIndicator = (node: HTMLElement, settings: FocusIndicatorSettin
   }
 
 
-  node.addEventListener("mousedown", mouseDown);
+  node.addEventListener("mousedown", click);
+  node.addEventListener("click", click);
   node.addEventListener("focusout", focusOut);
+  node.addEventListener("focusin", focusIn);
 
   return {
     destroy() {
-      node.removeEventListener("mousedown", mouseDown);
+      node.addEventListener("mousedown", click);
+      node.removeEventListener("click", click);
       node.addEventListener("focusout", focusOut);
+      node.addEventListener("focusin", focusIn);
     }
   }
 }
