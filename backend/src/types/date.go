@@ -265,11 +265,13 @@ func EventRecurrenceFromIcal(ical *ical.Props) (*EventRecurrence, error) {
 	if err != nil {
 		return nil, fmt.Errorf("could not get recurrence rule: %v", err)
 	}
-	rrule, err := rrule.NewRRule(*roption)
-	if err != nil {
-		return nil, fmt.Errorf("could not build recurrence rule: %v", err)
+	if roption != nil {
+		rrule, err := rrule.NewRRule(*roption)
+		if err != nil {
+			return nil, fmt.Errorf("could not build recurrence rule: %v", err)
+		}
+		rset.RRule(rrule)
 	}
-	rset.RRule(rrule)
 
 	for _, prop := range ical.Values("EXDATE") {
 		exdateTime, _, err := ParseIcalTime(&prop)
