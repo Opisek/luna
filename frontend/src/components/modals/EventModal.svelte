@@ -54,7 +54,6 @@
 
   showModal = async (initial?: EventModel, date?: Date): Promise<EventModel> => {
     if (!initial) {
-      console.log(date);
       const start = new Date(date || new Date());
       start.setHours(12, 0, 0, 0);
 

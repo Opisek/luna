@@ -23,23 +23,18 @@
     children,
   }: Props = $props();
 
-  let form = $state<HTMLFormElement>();
-
+  let registerButtonPromise: (promise: Promise<any>) => void = $state(NoOp);
   let promiseResult = $state(NoOp);
 
-  async function submit() {
-    if (!form) return;
-    form.submit();
-    return new Promise<void>(res => {
-      promiseResult = () => {
-        promiseResult = NoOp;
-        res();
-      }
-    });
-  }
-
   function onSubmit(e: SubmitEvent) {
-    if (!submittable) {
+    if (submittable) {
+      registerButtonPromise(new Promise<void>(res => {
+        promiseResult = () => {
+          promiseResult = NoOp;
+          res();
+        }
+      }));
+    } else {
       e.preventDefault();
       return; // TODO: add some user feedback when a form fails to submit
     }
@@ -72,11 +67,11 @@
   }
 </style>
 
-<form bind:this={form} method="POST" onsubmit={onSubmit} use:enhance={() => onResult}>
+<form method="POST" onsubmit={onSubmit} use:enhance={() => onResult}>
   <Title>{title}</Title>
   {@render children?.()}
   <Horizontal position="right">
-    <IconButton type="button" onClick={submit} color={ColorKeys.Success} enabled={submittable} alt="Submit" canRenderAsButton={true}>
+    <IconButton type="submit" bind:externalLoading={registerButtonPromise} color={ColorKeys.Success} enabled={submittable} alt="Submit" canRenderAsButton={true}>
       <Send/>
     </IconButton>
   </Horizontal>

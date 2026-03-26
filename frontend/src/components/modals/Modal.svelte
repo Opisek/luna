@@ -146,11 +146,11 @@
         {/if}
       </Horizontal>
       {@render children?.()}
-      <Horizontal position="right">
-        {#if buttons}{@render buttons()}{:else}
-          <!--<Button onClick={hideModal}>Close</Button>-->
-        {/if}
-      </Horizontal>
+      {#if buttons}
+        <Horizontal position="right">
+          {@render buttons()}
+        </Horizontal>
+      {/if}
     </form>
   {/if}
 </dialog>

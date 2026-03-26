@@ -7,6 +7,7 @@
 
   interface Props {
     onClick?: () => any;
+    externalLoading?: (promise: Promise<any>) => void;
     color?: ColorKeys;
     type?: "button" | "submit";
     compact?: boolean;
@@ -17,6 +18,7 @@
 
   let {
     onClick = () => {},
+    externalLoading = $bindable(),
     color = ColorKeys.Neutral,
     type = "button",
     compact = false,
@@ -32,6 +34,12 @@
     if (!(result instanceof Promise)) return;
     loading = true;
     await result.catch(NoOp);
+    loading = false;
+  }
+  externalLoading = async promise => {
+    if (loading) return;
+    loading = true;
+    await promise.catch(NoOp);
     loading = false;
   }
 </script>

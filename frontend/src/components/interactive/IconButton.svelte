@@ -14,6 +14,7 @@
     up?: () => void;
     down?: () => void;
     onClick?: () => any;
+    externalLoading?: (promise: Promise<any>) => void;
     visible?: boolean;
     style?: string;
     tabindex?: number;
@@ -30,6 +31,7 @@
     up = NoOp,
     down = NoOp,
     onClick = NoOp,
+    externalLoading = $bindable(),
     visible = true,
     style = "",
     tabindex = 0,
@@ -57,6 +59,13 @@
     loading = true;
     hidePopover();
     await result.catch(NoOp);
+    loading = false;
+  }
+  externalLoading = async promise => {
+    if (loading) return;
+    loading = true;
+    hidePopover();
+    await promise.catch(NoOp);
     loading = false;
   }
 
@@ -200,6 +209,7 @@
 {#if canRenderAsButton && settings.userSettings[UserSettingKeys.UseTextButtons]}
   <Button
      onClick={onClick}
+     bind:externalLoading
      color={color}
      type={type}
      enabled={enabled}

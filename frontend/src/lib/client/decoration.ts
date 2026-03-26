@@ -31,7 +31,6 @@ export const focusIndicator = (node: HTMLElement, settings: FocusIndicatorSettin
 
   switch (settings.type) {
     case "bar":
-      console.log("mount")
       mount(BarFocusIndicator, { target: node });
       break;
     case "underline":
