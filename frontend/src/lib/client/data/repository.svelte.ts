@@ -179,7 +179,7 @@ export class Repository {
   private getEventFormData(event: EventModel, changes: EventModelChanges = AllChangesEvent): FormData {
     const formData = new FormData();
     if (changes.name) formData.set("name", event.name);
-    if (changes.desc) formData.set("desc", event.desc);
+    if (changes.desc) formData.set("desc", event.desc || "");
     if (changes.date) {
       if (event.date.allDay) {
         const start = new Date(event.date.start.getTime() - (event.date.start.getTimezoneOffset() * 60000));
@@ -191,6 +191,11 @@ export class Repository {
         formData.set("date_end", event.date.end.toISOString());
       }
       formData.set("date_all_day", event.date.allDay ? "true" : "false");
+      if (event.date.recurrence) {
+        if (event.date.recurrence.RRULE) formData.set("date_rrule", event.date.recurrence.RRULE);
+        if (event.date.recurrence.RDATE) formData.set("date_rrule", event.date.recurrence.RDATE);
+        if (event.date.recurrence.EXDATE) formData.set("date_rrule", event.date.recurrence.EXDATE);
+      }
     }
     if (changes.color) {
       if (event.color && event.color !== "") {

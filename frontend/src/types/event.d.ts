@@ -2,13 +2,17 @@ type EventModel = {
   id: string;
   calendar: string;
   name: string;
-  desc: string;
+  desc?: string;
   color: string;
   date: {
     start: Date;
     end: Date;
     allDay: boolean;
-    recurrence: any;
+    recurrence?: {
+      RRULE?: string,
+      RDATE?: string,
+      EXDATE?: string
+    };
   };
   overridden: boolean;
   can_edit: boolean;
@@ -16,8 +20,8 @@ type EventModel = {
 };
 
 type EventModelChanges = {
-  name: boolean;
-  desc: boolean;
-  color: boolean;
-  date: boolean;
+  name?: boolean;
+  desc?: boolean;
+  color?: boolean;
+  date?: boolean;
 }

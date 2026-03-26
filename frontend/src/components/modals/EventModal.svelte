@@ -19,8 +19,9 @@
   import EventCopyModal from "./EventCopyModal.svelte";
   import IconButton from "../interactive/IconButton.svelte";
   import { Copy } from "lucide-svelte";
-  import { browser } from "$app/environment";
   import { RRule } from "rrule";
+  import { parseTimestampList } from "../../lib/common/ical";
+  import { SvelteSet } from "svelte/reactivity";
 
   interface Props {
     showModal?: (initial?: EventModel, date?: Date) => Promise<EventModel>;
@@ -34,13 +35,15 @@
   const repository = getRepository();
 
   let showModalInternal: (initial?: EventModel, edit?: boolean) => Promise<EventModel> = $state(Promise.reject);
-  let showCopyModal: (event: EventModel) => Promise<boolean> = $state(async () => false);
+  let showCopyModal: (event: EventModel) => Promise<EventModel> = $state(Promise.reject);
   let editMode: boolean = $state(false);
 
   let event: EventModel = $state(EmptyEvent);
   let originalEvent: EventModel = $state(EmptyEvent);
-  let eventRecurrenceBoolean = $state(false);
-  //let eventRecurrenceObject: RRule | null = $state(null);
+  let eventRepeats = $state(false);
+  let eventRecurrenceRrule = $state(new RRule());
+  let eventRecurrenceRdate = $state(new SvelteSet());
+  let eventRecurrenceExdate = $state(new SvelteSet());
 
   let eventSourceType = $derived.by(() => {
     const calendar = repository.calendars.find(x => x.id === event.calendar);
@@ -70,14 +73,14 @@
           start: start,
           end: end,
           allDay: false,
-          recurrence: false,
+          recurrence: undefined,
         },
         overridden: false,
         can_edit: true,
         can_delete: true,
       };
 
-      eventRecurrenceBoolean = false;
+      eventRepeats = false;
       //eventRecurrenceObject = null;
     } else {
       event = {
@@ -102,8 +105,17 @@
 
       originalEvent = await deepCopy(initial);
 
-      eventRecurrenceBoolean = event.date.recurrence != false;
-      //eventRecurrenceObject = eventRecurrenceBoolean ? RRule.fromString(event.date.recurrence) : null;
+      eventRepeats = event.date.recurrence != undefined;
+      if (event.date.recurrence) {
+        if (event.date.recurrence.RRULE)
+          eventRecurrenceRrule = RRule.fromString(event.date.recurrence.RRULE);
+
+        if (event.date.recurrence.RDATE)
+          eventRecurrenceRdate = new SvelteSet(parseTimestampList(event.date.recurrence.RDATE));
+
+        if (event.date.recurrence.EXDATE)
+          eventRecurrenceExdate = new SvelteSet(parseTimestampList(event.date.recurrence.EXDATE));
+      }
     }
 
     return showModalInternal(event);
@@ -187,10 +199,11 @@
   }
   
   const copyEvent = async () => {
-    showCopyModal(originalEvent).then(() => {
-
+    await showCopyModal(originalEvent).then((newEvent) => {
+      console.log(originalEvent);
+      console.log(newEvent);
     }).catch(() => {
-
+      console.log("aborted copy")
     });
   }
 </script>
@@ -228,9 +241,10 @@
       <TextInput value={event.id} name="id" placeholder="Event ID" editable={false} />
     {/if}
     {#if editMode}
-      <ToggleInput bind:value={eventRecurrenceBoolean} name="repeats" description="Repeats"/>
+      <ToggleInput bind:value={eventRepeats} name="repeats" description="Repeats"/>
     {/if}
-    {#if eventRecurrenceBoolean}
+    {#if eventRepeats}
+      <!--
       {#if editMode}
         <SelectInput bind:value={event.date.recurrence} name="recurrence_freq" placeholder="Frequency" showLabel={true} options={[
           { value: "daily", name: "Daily" },
@@ -241,6 +255,7 @@
       {:else}
         Repeats xyz times or something
       {/if}
+      -->
     {/if}
   {/if}
   {#snippet extraButtonsLeft()}

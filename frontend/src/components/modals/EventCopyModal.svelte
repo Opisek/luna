@@ -7,27 +7,31 @@
   import { getRepository } from "../../lib/client/data/repository.svelte";
   import SmallCalendar from "../interactive/SmallCalendar.svelte";
   import MonthSelection from "../interactive/MonthSelection.svelte";
-  import { SvelteSet } from "svelte/reactivity";
+  import { SvelteMap, SvelteSet } from "svelte/reactivity";
   import Button from "../interactive/Button.svelte";
   import { ColorKeys } from "../../types/colors";
   import SelectInput from "../forms/SelectInput.svelte";
   import { deepCopy } from "../../lib/common/misc";
   import IconButton from "../interactive/IconButton.svelte";
   import { Check, Save, X } from "lucide-svelte";
+  import { parseTimestampList, serializeTimestampList } from "../../lib/common/ical";
   
   interface Props {
-    copy?: (event: EventModel) => Promise<boolean>;
+    copy?: (event: EventModel) => Promise<EventModel>;
   }
 
   let {
     copy = $bindable(),
   }: Props = $props();
 
-  const settings = getSettings();
+  let showModalInternal: () => Promise<EventModel> = $state(Promise.reject);
+  let success: (result: EventModel) => void = $state(NoOp);
+  let failure: () => void = $state(NoOp);
+
   const repository = getRepository();
 
   let date = $state(new Date());
-  let marked: Set<string> = $state(new Set());
+  let marked: Map<string, Date> = $state(new SvelteMap());
   
   let event = $state(EmptyEvent)
   let original = $state(EmptyEvent)
@@ -38,40 +42,47 @@
       .map(calendar => ({ value: calendar.id, name: calendar.name }))
   );
 
-  let showModalInternal = $state(NoOp);
-  let hideModalInternal = $state(NoOp);
-
-  let promiseResolve: (copied: boolean | PromiseLike<boolean>) => void = $state(NoOp);
-  let promiseReject: (reason?: any) => void = $state(NoOp);
-
   copy = async (eventToCopy: EventModel) => {
-    promiseReject();
-
     event = await deepCopy(eventToCopy);
     original = eventToCopy;
+
     date = new Date(event.date.start);
-    //marked = new SvelteSet([date.toISOString().substring(0, 10)]);
-    marked = new SvelteSet();
+    marked = new SvelteMap();
+    if (event.date.recurrence && event.date.recurrence.RDATE) {
+      parseTimestampList(event.date.recurrence.RDATE).forEach(markDay);
+    } else {
+      markDay(date);
+    }
 
-    showModalInternal();
+    return showModalInternal();
+  }
 
-    return new Promise((resolve, reject) => {
-      promiseResolve = ((res) => {
-        resolve(res);
-      });
-      promiseReject = ((err) => {
-        reject(err);
-      });
-    })
+  function markDay(day: Date) {
+    marked.set(day.toISOString().substring(0, 10), day);
+  }
+
+  function unmarkDay(day: Date) {
+    marked.delete(day.toISOString().substring(0, 10));
+  }
+
+  function isMarked(day: Date): boolean {
+    return marked.has(day.toISOString().substring(0, 10));
   }
 
   function daySelected(day: Date) {
-    const isoDay = day.toISOString().substring(0, 10);
-    if (marked.has(isoDay)) marked.delete(isoDay);
-    else marked.add(isoDay);
+    day.setHours(date.getHours());
+    day.setMinutes(date.getMinutes());
+    day.setSeconds(date.getSeconds());
+    if (isMarked(day)) unmarkDay(day);
+    else markDay(day);
   }
 
   async function save() {
+    if (!event.date.recurrence) event.date.recurrence = {};
+    event.date.recurrence.RDATE = serializeTimestampList("RDATE", event.date.allDay, "UTC", [...marked.values()]);
+    return getRepository().editEvent(event, { date: true }, false).then(() => success(event)).catch(err => {
+      throw new Error(`Could not copy event ${event.name}: ${err.message}`);
+    });
   }
 </script>
 
@@ -84,10 +95,8 @@
 <Modal
   title={"Copy Event"}
   bind:showModal={showModalInternal}
-  bind:hideModal={hideModalInternal}
-  onModalHide={() => {
-    promiseReject();
-  }}
+  bind:success
+  bind:failure
 >
   <SelectInput bind:value={event.calendar} name="calendar" placeholder="Calendar" options={selectableCalendars} />
 
@@ -99,7 +108,7 @@
   <SmallCalendar bind:date bind:marked onDayClick={daySelected} />
 
   {#snippet buttons()}
-    <IconButton onClick={NoOp} color={ColorKeys.Success} enabled={marked.size != 0} type="submit" alt="Save" canRenderAsButton={true}><Check/></IconButton>
-    <IconButton onClick={hideModalInternal} color={ColorKeys.Danger} alt="Cancel" canRenderAsButton={true}><X/></IconButton>
+    <IconButton onClick={save} color={ColorKeys.Success} enabled={marked.size != 0} type="submit" alt="Save" canRenderAsButton={true}><Check/></IconButton>
+    <IconButton onClick={failure} color={ColorKeys.Danger} alt="Cancel" canRenderAsButton={true}><X/></IconButton>
   {/snippet}
 </Modal>

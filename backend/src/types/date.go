@@ -229,11 +229,20 @@ func (er *EventRecurrence) Repeats() bool {
 }
 
 func (er *EventRecurrence) RuleSet() *rrule.Set {
+	ruleSet := rrule.Set{}
 	if er.ruleSet == nil {
-		return &rrule.Set{}
+		return &ruleSet
 	}
-	ruleSet := &er.ruleSet
-	return *ruleSet
+	if er.ruleSet.GetRRule() != nil {
+		ruleSet.RRule(er.ruleSet.GetRRule())
+	}
+	for _, date := range er.ruleSet.GetRDate() {
+		ruleSet.RDate(date)
+	}
+	for _, date := range er.ruleSet.GetExDate() {
+		ruleSet.ExDate(date)
+	}
+	return &ruleSet
 }
 
 func (er *EventRecurrence) EffectiveRuleSet() *rrule.Set {
@@ -399,10 +408,10 @@ type eventRecurrenceMarshal struct {
 }
 
 func (er EventRecurrence) RruleString() string {
-	if !er.repeats || er.ruleSet.GetRRule().String() == "" {
+	if !er.repeats || er.ruleSet.GetRRule() == nil || er.ruleSet.GetRRule().String() == "" {
 		return ""
 	}
-	return fmt.Sprintf("RRULE:%s", er.ruleSet.GetRRule().String())
+	return fmt.Sprintf("%s", er.ruleSet.GetRRule().Options.RRuleString())
 }
 
 func (er EventRecurrence) RdateString() string {

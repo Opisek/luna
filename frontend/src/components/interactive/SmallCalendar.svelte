@@ -14,7 +14,7 @@
     date: Date;
     onDayClick?: (date: Date) => any;
     smaller?: boolean;
-    marked?: Set<string>;
+    marked?: Set<string> | Map<string, any>;
   }
 
   let {
