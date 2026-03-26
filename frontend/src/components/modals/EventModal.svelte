@@ -6,7 +6,7 @@
   import SelectInput from "../forms/SelectInput.svelte";
   import TextInput from "../forms/TextInput.svelte";
 
-  import { EmptyEvent, NoChangesEvent, NoOp } from "$lib/client/placeholders";
+  import { EmptyEvent, NoChangesEvent } from "$lib/client/placeholders";
   import { deepCopy, deepEquality } from "$lib/common/misc";
   import { getRepository } from "$lib/client/data/repository.svelte";
   import { isSameDay } from "$lib/common/date";
@@ -19,8 +19,8 @@
   import EventCopyModal from "./EventCopyModal.svelte";
   import IconButton from "../interactive/IconButton.svelte";
   import { Copy } from "lucide-svelte";
-
-  //import { RRule } from "rrule";
+  import { browser } from "$app/environment";
+  import { RRule } from "rrule";
 
   interface Props {
     showModal?: (initial?: EventModel, date?: Date) => Promise<EventModel>;
@@ -104,6 +104,10 @@
 
       eventRecurrenceBoolean = event.date.recurrence != false;
       //eventRecurrenceObject = eventRecurrenceBoolean ? RRule.fromString(event.date.recurrence) : null;
+    }
+
+    if (browser) {
+      console.log(RRule.DAILY);
     }
 
     return showModalInternal(event);
