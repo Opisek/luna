@@ -10,25 +10,12 @@
   import Vertical from "../layout/Vertical.svelte";
 
   interface Props {
-    showModal?: () => any;
-    hideModal?: () => any;
+    showModal: () => any;
   }
 
   let {
     showModal = $bindable(),
-    hideModal = $bindable(),
   }: Props = $props();
-
-  let showModalInternal: () => any = $state(NoOp);
-  let hideModalInternal: () => any = $state(NoOp);;
-
-  showModal = () => {
-    showModalInternal();
-  };
-
-  hideModal = () => {
-    hideModalInternal();
-  };
 
   const categories: Option<string>[][] = [
     [
@@ -116,8 +103,7 @@
 
 <Modal
   title={"Credits"}
-  bind:showModal={showModalInternal}
-  bind:hideModal={hideModalInternal}
+  bind:showModal
 >
   <div class="container">
     <Vertical height="auto" position="top">

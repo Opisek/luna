@@ -13,7 +13,6 @@
     onModalHide?: any;
     onModalSubmit?: any;
     showModal: () => Promise<T>;
-    hideModal?: () => any;
     success?: (result: T) => void;
     failure?: (reason?: string | Error) => void;
     children?: Snippet;
@@ -25,10 +24,9 @@
     title,
     onModalHide = NoOp,
     showModal = $bindable(),
-    hideModal = $bindable(NoOp),
     success = $bindable(),
     failure = $bindable(),
-    onModalSubmit = hideModal,
+    onModalSubmit = NoOp,
     children,
     buttons,
     topButtons,
@@ -58,9 +56,6 @@
       });
     })
   }
-  hideModal = () => {
-    dialog.close();
-  }
   success = (result) => {
     promiseResolve(result);
     hideModal();
@@ -68,6 +63,10 @@
   failure = (error) => {
     promiseReject(error);
     hideModal();
+  }
+
+  function hideModal() {
+    dialog.close();
   }
 
   function modalHideInternal() {
