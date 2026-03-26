@@ -106,10 +106,6 @@
       //eventRecurrenceObject = eventRecurrenceBoolean ? RRule.fromString(event.date.recurrence) : null;
     }
 
-    if (browser) {
-      console.log(RRule.DAILY);
-    }
-
     return showModalInternal(event);
   };
 

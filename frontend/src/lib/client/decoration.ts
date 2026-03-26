@@ -18,20 +18,17 @@ export const focusIndicator = (node: HTMLElement, settings: FocusIndicatorSettin
   let outTimeout: ReturnType<typeof setTimeout> | null = null;
 
   const click = () => {
-    console.log("click")
     node.classList.add("clicked");
     clicked = (new Date()).getTime();
   }
 
   const focusIn = () => {
-    console.log("in")
     if (!outTimeout) return;
     clearTimeout(outTimeout);
     outTimeout = null;
   }
 
   const focusOut = () => {
-    console.log("out")
     if ((new Date()).getTime() - clicked < 100) return;
     outTimeout = setTimeout(() => {
       node.classList.remove("clicked");
