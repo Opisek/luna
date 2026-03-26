@@ -165,28 +165,22 @@
   });
 
   /* Single instance modal logic */
-  let showSourceWizardModal: () => any = $state(NoOp);
+  let showSourceWizardModal: () => Promise<SourceModel> = $state(Promise.reject);
 
   let showNewSourceModal: () => any = $state(NoOp);
   const showNewSourceModalInternal = () => { return showNewSourceModal(); };
   setContext("showNewSourceModal", showNewSourceModalInternal);
 
-  let showSourceModal: (source: SourceModel) => any = $state(NoOp);
+  let showSourceModal: (initial?: SourceModel, edit?: boolean) => Promise<SourceModel> = $state(Promise.reject);
   const showSourceModalInternal = (source: SourceModel) => { return showSourceModal(source); };
   setContext("showSourceModal", showSourceModalInternal);
 
-  let showNewCalendarModal: () => any = $state(NoOp);
-
-  let showCalendarModal: (calendar: CalendarModel) => any = $state(NoOp);
+  let showCalendarModal: (initial?: CalendarModel) => any = $state(NoOp);
   const showCalendarModalInternal = (calendar: CalendarModel) => { return showCalendarModal(calendar); };
   setContext("showCalendarModal", showCalendarModalInternal);
 
-  let showNewEventModal: (date: Date) => any = $state(NoOp);
-  const showNewEventModalInternal = (date: Date) => { return showNewEventModal(date); };
-  setContext("showNewEventModal", showNewEventModalInternal);
-
-  let showEventModal: (event: EventModel) => any = $state(NoOp);
-  const showEventModalInternal = (event: EventModel) => { return showEventModal(event); };
+  let showEventModal: (initial?: EventModel, date?: Date) => any = $state(NoOp);
+  const showEventModalInternal = (initial?: EventModel, date?: Date) => { return showEventModal(initial, date); };
   setContext("showEventModal", showEventModalInternal);
 
   let showDateModal: (date: Date, events: (EventModel | null)[]) => any = $state(NoOp);
@@ -285,9 +279,9 @@
 </style>
 
 <SourceWizardModal bind:showModal={showSourceWizardModal}/>
-<SourceModal bind:showCreateModal={showNewSourceModal} bind:showModal={showSourceModal}/>
-<CalendarModal bind:showCreateModal={showNewCalendarModal} bind:showModal={showCalendarModal}/>
-<EventModal bind:showCreateModal={showNewEventModal} bind:showModal={showEventModal}/>
+<SourceModal bind:showModal={showSourceModal}/>
+<CalendarModal bind:showModal={showCalendarModal}/>
+<EventModal bind:showModal={showEventModal}/>
 <DayViewModal bind:showModal={showDateModal}/>
 <SettingsModal bind:showModal={showSettingsModal}/>
 <CreditsModal bind:showModal={showCreditsModal}/>
@@ -312,8 +306,8 @@
       <CreatePopup
         bind:showPopup={showCreatePopup}
         addSource={showSourceWizardModal}
-        addCalendar={showNewCalendarModal}
-        addEvent={() => showNewEventModal(today)}
+        addCalendar={showCalendarModal}
+        addEvent={showEventModal}
       />
     </IconButton>
     <IconButton onClick={showCreditsModal} alt="Credits">

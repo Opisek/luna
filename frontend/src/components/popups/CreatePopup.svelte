@@ -8,9 +8,9 @@
   interface Props {
     showPopup?: () => Promise<void>;
     hidePopup?: () => void;
-    addSource: () => Promise<void>;
-    addCalendar: () => Promise<void>;
-    addEvent: () => Promise<void>;
+    addSource: () => Promise<SourceModel>;
+    addCalendar: () => Promise<CalendarModel>;
+    addEvent: () => Promise<EventModel>;
   }
 
   let {
@@ -30,7 +30,7 @@
 
   /* Popup */
   showPopup = async () => {
-    if (!canAddCalendars && !canAddEvents) return addSource();
+    if (!canAddCalendars && !canAddEvents) return addSource().catch(NoOp).then(NoOp);
     return internalShow();
   }
 
@@ -40,88 +40,17 @@
 
   /* Buttons */
   function onAddSourceButtonClick() {
-    addSource().finally(hidePopup);
+    addSource().catch(NoOp).finally(hidePopup);
   }
 
   function onAddCalendarButtonClick() {
-    addCalendar().finally(hidePopup);
+    addCalendar().catch(NoOp).finally(hidePopup);
   }
 
   function onAddEventButtonClick() {
-    addEvent().finally(hidePopup);
+    addEvent().catch(NoOp).finally(hidePopup);
   }
 </script>
-
-<style lang="scss">
-  @use "../../styles/animations.scss";
-  @use "../../styles/colors.scss";
-  @use "../../styles/dimensions.scss";
-
-  div.body {
-    overflow: hidden;
-    position: relative;
-  }
-
-  div.grid {
-    display: grid;
-    gap: dimensions.$gapSmall;
-  }
-
-  div.grid:not(:first-child) {
-    position: absolute;
-    top: 0;
-    left: 0;
-  }
-
-  div.grid.month {
-    grid-template-columns: repeat(4, 1fr);
-    grid-template-rows: repeat(3, 1fr);
-  }
-
-  div.grid.year {
-    grid-template-columns: repeat(5, 1fr);
-    grid-template-rows: repeat(2, 1fr);
-  }
-
-  div.topRow {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  button.display {
-    all: unset;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    user-select: none;
-    position: relative;
-  } 
-
-  button.button {
-    all: unset;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border-radius: dimensions.$borderRadiusSmall;
-    //color: colors.$foregroundTertiary;
-    //background-color: colors.$backgroundTertiary;
-    padding: dimensions.$gapSmall;
-    cursor: pointer;
-    user-select: none;
-    position: relative;
-    overflow: hidden;
-  }
-
-  button.month {
-    width: 2em;
-  }
-
-  button.year {
-    width: 3em;
-  }
-</style>
 
 <Popup bind:showPopup={internalShow} bind:hidePopup={internalClose} tooltip={false}>
   <Button onClick={onAddSourceButtonClick}>Add Source</Button>

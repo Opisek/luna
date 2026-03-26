@@ -3,7 +3,7 @@ import { mount } from "svelte";
 import BarFocusIndicator from "../../components/decoration/focus/BarFocusIndicator.svelte";
 import Ripple from "../../components/decoration/Ripple.svelte"
 import UnderlineFocusIndicator from "../../components/decoration/focus/UnderlineFocusIndicator.svelte";
-import { isChildOfModal, isDescendentOf, parentModal } from "$lib/common/misc";
+import { isDescendentOf } from "../common/misc";
 
 export const addRipple = (e: MouseEvent, addToParent: boolean = true) => {
   if (!e.target) return;
@@ -14,23 +14,24 @@ export const addRipple = (e: MouseEvent, addToParent: boolean = true) => {
 }
 
 export const focusIndicator = (node: HTMLElement, settings: FocusIndicatorSettings = { type: "bar" }) => {
+  let clicked = 0;
   const mouseDown = () => {
     node.classList.add("clicked");
+    clicked = (new Date()).getTime();
   }
 
   const focusOut = (e: FocusEvent) => {
+    if ((new Date()).getTime() - clicked < 100) return;
     const original = e.relatedTarget as HTMLElement;
     const current = e.target as HTMLElement;
-
     if (!original) return;
-    if (node.parentElement?.contains(original as HTMLElement)) return; // Focus within the same element
     if (current instanceof HTMLInputElement && isDescendentOf(original, current)) return; // for select buttons
-    if (isChildOfModal(original as HTMLElement) && parentModal(current as HTMLElement) != parentModal(original as HTMLElement) && (original instanceof HTMLButtonElement || original.ariaRoleDescription != null)) return; // Buttons that open modals
     node.classList.remove("clicked");
   }
 
   switch (settings.type) {
     case "bar":
+      console.log("mount")
       mount(BarFocusIndicator, { target: node });
       break;
     case "underline":
@@ -47,7 +48,7 @@ export const focusIndicator = (node: HTMLElement, settings: FocusIndicatorSettin
   return {
     destroy() {
       node.removeEventListener("mousedown", mouseDown);
-      node.removeEventListener("focusout", focusOut);
+      node.addEventListener("focusout", focusOut);
     }
   }
 }

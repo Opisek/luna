@@ -1,4 +1,4 @@
-<script lang="ts">
+<script lang="ts" generics="T">
   import type { Snippet } from "svelte";
 
   import CloseButton from "../interactive/CloseButton.svelte";
@@ -7,16 +7,15 @@
 
   import { NoOp } from "$lib/client/placeholders";
   import { redrawNotifications } from "$lib/client/notifications";
-  import { isChildOfModal } from "../../lib/common/misc";
 
   interface Props {
     title: string;
-    focusElement?: HTMLElement | null;
     onModalHide?: any;
     onModalSubmit?: any;
-    showModal?: () => any;
+    showModal: () => Promise<T>;
     hideModal?: () => any;
-    resetFocus?: () => any;
+    success?: (result: T) => void;
+    failure?: (reason?: string | Error) => void;
     children?: Snippet;
     buttons?: Snippet;
     topButtons?: Snippet;
@@ -24,11 +23,11 @@
 
   let {
     title,
-    focusElement = null,
     onModalHide = NoOp,
     showModal = $bindable(),
     hideModal = $bindable(NoOp),
-    resetFocus = $bindable(),
+    success = $bindable(),
+    failure = $bindable(),
     onModalSubmit = hideModal,
     children,
     buttons,
@@ -39,38 +38,42 @@
 
   let visible = $state(false);
 
-  let ignoreClickOutside = $state(false);
-  function mouseDown(event: MouseEvent) {
-    ignoreClickOutside = isChildOfModal(event.target as HTMLElement) && event.target !== dialog;
-  }
+  let promiseResolve: (result: T) => void = $state(NoOp);
+  let promiseReject: (reason?: string | Error) => void = $state(NoOp);
 
-  function clickOutside(event: MouseEvent) {
-    if (!dialog || ignoreClickOutside) return;
-    if (event.target === dialog) {
-      hideModal();
-      event.stopPropagation();
-    }
-  }
-
-  $effect(() => {
-    if (visible) dialog.showModal();
-  });
-
-  resetFocus = () => {
-    if (focusElement) focusElement.focus();
-    else dialog.focus();
-  }
   showModal = () => {
-    window.addEventListener("mousedown", mouseDown);
-    window.addEventListener("click", clickOutside);
     visible = true
-    setTimeout(resetFocus, 0);
+    dialog.showModal();
     setTimeout(redrawNotifications, 0); // hacky way to make sure that notifications are always on the very top. sometimes has a visible blink. should revisit one day.
+    return new Promise<T>((resolve, reject) => {
+      promiseResolve = ((result) => {
+        promiseResolve = NoOp;
+        promiseReject = NoOp;
+        resolve(result);
+      });
+      promiseReject = ((err) => {
+        promiseResolve = NoOp;
+        promiseReject = NoOp;
+        reject(err);
+      });
+    })
   }
   hideModal = () => {
-    window.removeEventListener("mousedown", mouseDown);
-    window.removeEventListener("click", clickOutside);
     dialog.close();
+  }
+  success = (result) => {
+    promiseResolve(result);
+    hideModal();
+  }
+  failure = (error) => {
+    promiseReject(error);
+    hideModal();
+  }
+
+  function modalHideInternal() {
+    visible = false;
+    promiseReject();
+    onModalHide();
   }
 
   function submitInternal(event: Event) {
@@ -123,8 +126,10 @@
 
 <dialog
   bind:this={dialog}
-  onclose={() => {visible = false; onModalHide();}}
+  closedby="any"
+  onclose={modalHideInternal}
   class:closed={visible}
+  tabindex="-1"
 >
   {#if visible}
     <form onsubmit={submitInternal}>

@@ -1,5 +1,4 @@
 <script lang="ts">
-  import Button from "../interactive/Button.svelte";
   import EditableModal from "./EditableModal.svelte";
   import TextInput from "../forms/TextInput.svelte";
 
@@ -17,7 +16,7 @@
 
   interface Props {
     showCreateModal?: () => any;
-    showModal?: (calendar: CalendarModel) => Promise<CalendarModel>;
+    showModal?: (initial?: CalendarModel) => Promise<CalendarModel>;
   }
 
   let {
@@ -28,48 +27,33 @@
   const settings = getSettings();
   const repository = getRepository();
 
+  let showModalInternal: (initial?: CalendarModel, edit?: boolean) => Promise<CalendarModel> = $state(Promise.reject);
+
   let calendar: CalendarModel = $state(EmptyCalendar);
   let originalCalendar: CalendarModel = $state(EmptyCalendar);
+  let editMode: boolean = $state(false);
 
-  let promiseResolve: (value: CalendarModel | PromiseLike<CalendarModel>) => void = $state(NoOp);
-  let promiseReject: (reason?: any) => void = $state(NoOp);
+  showModal = async (initial?: CalendarModel): Promise<CalendarModel> => {
+    if (!initial) {
+      calendar = {
+        id: "",
+        source: "",
+        name: "",
+        desc: "",
+        color: "",
+        overridden: false,
+        can_edit: true,
+        can_delete: true,
+        can_add_events: true,
+      };
+    } else {
+      calendar = await deepCopy(initial);
+      originalCalendar = await deepCopy(initial);
+    }
 
-  showCreateModal = async () => {
-    promiseReject();
-
-    calendar = {
-      id: "",
-      source: "",
-      name: "",
-      desc: "",
-      color: "",
-      overridden: false,
-      can_edit: true,
-      can_delete: true,
-      can_add_events: true,
-    };
-
-    showCreateModalInternal();
-  }
-  showModal = async (original: CalendarModel): Promise<CalendarModel> => {
-    promiseReject();
-
-    editMode = false;
-    calendar = await deepCopy(original);
-    originalCalendar = await deepCopy(original);
-
-    setTimeout(showModalInternal(), 0);
-
-    return new Promise((resolve, reject) => {
-      promiseResolve = resolve;
-      promiseReject = reject;
-    })
+    return showModalInternal(calendar);
   };
 
-  let showCreateModalInternal: () => any = $state(NoOp);
-  let showModalInternal: () => any = $state(NoOp);
-
-  let editMode: boolean = $state(false);
   let title: string = $derived(calendar.id ? (editMode ? "Edit calendar" : "Calendar") : "Add calendar");
 
   let selectableSources = $derived(
@@ -79,35 +63,28 @@
   );
 
   const onDelete = async () => {
-    await getRepository().deleteCalendar(calendar.id).catch(err => {
+    return await getRepository().deleteCalendar(calendar.id).then(() => calendar).catch(err => {
       throw new Error(`Could not delete calendar ${calendar.name}: ${err.message}`);
     });
-    promiseReject();
   };
   const onEdit = async () => {
     if (calendar.id === "") {
-      await getRepository().createCalendar(calendar).catch(err => {
-        promiseReject();
+      return await getRepository().createCalendar(calendar).then(() => calendar).catch(err => {
         throw new Error(`Could not create calendar ${calendar.name}: ${err.message}`);
       });
-      promiseResolve(calendar);
     } else if (calendar.source === originalCalendar.source) {
       const changes = {
         name: calendar.name != originalCalendar.name,
         desc: calendar.desc != originalCalendar.desc,
         color: calendar.color != originalCalendar.color
       }
-      await getRepository().editCalendar(calendar, changes, !calendar.can_edit).catch(err => {
-        promiseReject();
+      return await getRepository().editCalendar(calendar, changes, !calendar.can_edit).then(() => calendar).catch(err => {
         throw new Error(`Could not edit calendar ${calendar.name}: ${err.message}`);
       });
-      promiseResolve(calendar);
     } else {
-      await getRepository().moveCalendar(calendar).catch(err => {
-        promiseReject();
+      return await getRepository().moveCalendar(calendar).then(() => calendar).catch(err => {
         throw new Error(`Could not move calendar ${calendar.name}: ${err.message}`);
       });
-      promiseResolve(calendar);
     }
   };
   const resetOverrides = async () => {
@@ -134,11 +111,9 @@
   title={title}
   deleteConfirmation={`Are you sure you want to delete calendar "${calendar ? calendar.name : ""}"?`}
   bind:editMode={editMode}
-  bind:showCreateModal={showCreateModalInternal}
   bind:showModal={showModalInternal}
   onDelete={onDelete}
   onEdit={onEdit}
-  onCancel={promiseReject}
   deletable={calendar?.can_delete}
   submittable={canSubmit}
 >

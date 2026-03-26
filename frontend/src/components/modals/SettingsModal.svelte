@@ -33,13 +33,11 @@
   import { getOauthClients } from "../../lib/client/data/oauth.svelte";
 
   interface Props {
-    showModal?: () => any;
-    hideModal?: () => any;
+    showModal: () => void;
   }
 
   let {
     showModal = $bindable(),
-    hideModal = $bindable(NoOp),
   }: Props = $props();
 
   // Global data structures
@@ -87,12 +85,7 @@
     showModalInternal();
   };
 
-  hideModal = () => {
-    hideModalInternal();
-  };
-
-  let showModalInternal = $state(NoOp);
-  let hideModalInternal = $state(NoOp);
+  let showModalInternal: () => Promise<void> = $state(Promise.reject);
 
   // Settings categories
   const categoriesAdmin: Option<string>[][] = [
@@ -236,9 +229,12 @@
   // Account Settings
   let passwordPrompt = $state<() => Promise<string>>(() => Promise.reject(""));
     
-  function deleteAccount(id: string = "self") {
+  async function deleteAccount(id: string = "self") {
     const ownAccount = id === "self" || id === users.currentUser;
-    showConfirmation(`Are you sure you want to delete ${ownAccount ? "your" : "this"} account?\nThis action is irreversible.`, async () => {
+    await showConfirmation(
+      `Are you sure you want to delete ${ownAccount ? "your" : "this"} account?\nThis action is irreversible.`,
+      `All ${ownAccount ? "your" : "user"} data will be deleted.`
+    ).then(async () => {
       accountDeletionReauthenticationRequired = true;
       const password = await new Promise<string>(resolve => setTimeout(async () => resolve(await passwordPrompt().catch(() => "")), 0));
       accountDeletionReauthenticationRequired = false;
@@ -253,7 +249,7 @@
       });
       if (ownAccount) clearSession();
       else users.fetchAll();
-    }, `All ${ownAccount ? "your" : "user"} data will be deleted.`);
+    }).catch(NoOp);
   }
 
   let saving = $state(false);
@@ -374,20 +370,15 @@
   });
 
   // Dialogs
-  let editApiToken = $state<(session: Session, editable: boolean) => Promise<Session>>(Promise.reject);
-  let createApiToken = $state<() => Promise<Session>>(Promise.reject);
+  let showSessionModal: (initial?: Session, edit?: boolean) => Promise<Session> = $state(Promise.reject);
 
-  let internalShowConfirmation = $state(NoOp);
-  let confirmationCallback = $state(AsyncNoOp);
-  let cancellationCallback = $state(AsyncNoOp);
+  let internalShowConfirmation: () => Promise<void> = $state(Promise.reject);
   let confirmationMessage = $state("");
   let confirmationDetails = $state("");
-  function showConfirmation(message: string, callback: () => Promise<void>, details: string = "", cancel: () => Promise<void> = AsyncNoOp) {
+  function showConfirmation(message: string, details: string = "") {
     confirmationMessage = message;
     confirmationDetails = details;
-    confirmationCallback = callback;
-    cancellationCallback = cancel;
-    internalShowConfirmation();
+    return internalShowConfirmation();
   }
 </script>
 
@@ -440,7 +431,6 @@
 <Modal
   title={"Settings"}
   bind:showModal={showModalInternal}
-  bind:hideModal={hideModalInternal}
   onModalHide={restoreSettings}
 >
   {#snippet topButtons()}
@@ -459,8 +449,6 @@
       <IconButton color={ColorKeys.Danger} onClick={restoreSettings} alt="Cancel" canRenderAsButton={true}>
         <X/>
       </IconButton>
-    {:else}
-      <!--<Button onClick={hideModalInternal}>Close</Button>-->
     {/if}
   {/snippet}
 
@@ -494,8 +482,7 @@
           settings={settings} 
           sessions={sessions}
           today={today}
-          editApiToken={editApiToken}
-          createApiToken={createApiToken}
+          showSessionModal={showSessionModal}
         />
       {:else if selectedCategory === "users"}
         <UsersSettingsTab
@@ -531,7 +518,7 @@
           settings={settings} 
           sessions={sessions}
           today={today}
-          editApiToken={editApiToken}
+          editApiToken={showSessionModal}
           showConfirmation={showConfirmation} 
         />
       {:else if selectedCategory === "themes"}
@@ -553,19 +540,14 @@
 </Modal>
 
 <SessionModal
-  bind:showModal={editApiToken}
-  bind:showCreateModal={createApiToken}
+  bind:showModal={showSessionModal}
 />
 
 {#if submittable && reauthenticationRequired}
   <PasswordPromptModal bind:prompt={passwordPrompt}/>
 {/if}
 
-<ConfirmationModal
-  bind:showModal={internalShowConfirmation}
-  confirmCallback={confirmationCallback}
-  cancelCallback={cancellationCallback} 
->
+<ConfirmationModal bind:showModal={internalShowConfirmation}>
   <span class="confirmation">
     {confirmationMessage}
     {#if confirmationDetails != ""}

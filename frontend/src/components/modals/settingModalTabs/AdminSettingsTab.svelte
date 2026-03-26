@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Settings } from "../../../lib/client/data/settings.svelte";
   import { fetchResponse } from "../../../lib/client/net";
+  import { NoOp } from "../../../lib/client/placeholders";
   import { ColorKeys } from "../../../types/colors";
   import { GlobalSettingKeys } from "../../../types/settings";
   import SelectButtons from "../../forms/SelectButtons.svelte";
@@ -9,7 +10,7 @@
 
   interface Props {
     settings: Settings;
-    showConfirmation: (message: string, onConfirm: () => Promise<void>, confirmText?: string, onCancel?: () => Promise<void>, cancelText?: string) => void;
+    showConfirmation: (message: string, confirmText?: string, cancelText?: string) => Promise<void>;
     refetchProfilePicture: () => void;
     snapshotSettings: () => void;
   }
@@ -21,14 +22,14 @@
     snapshotSettings,
   }: Props = $props();
 
-  function resetGlobalSettings() {
-    showConfirmation("Are you sure you want to reset all global settings?\nThis action is irreversible.", async () => {
+  async function resetGlobalSettings() {
+    await showConfirmation("Are you sure you want to reset all global settings?\nThis action is irreversible.").then(async () => {
       await fetchResponse("/api/settings", { method: "DELETE" });
       settings.fetchSettings().then(() => {
         snapshotSettings();
         refetchProfilePicture();
       });
-    });
+    }).catch(NoOp);
   }
 </script>
 

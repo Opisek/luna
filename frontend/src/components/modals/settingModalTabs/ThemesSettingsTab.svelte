@@ -14,7 +14,7 @@
     lightThemes: Option<string>[];
     darkThemes: Option<string>[];
     fetchThemes: () => void;
-    showConfirmation: (message: string, onConfirm: () => Promise<void>, confirmText?: string, onCancel?: () => Promise<void>, cancelText?: string) => void;
+    showConfirmation: (message: string, confirmText?: string, cancelText?: string) => Promise<void>;
   }
 
   let {
@@ -41,12 +41,8 @@
     const themeFiles = lightThemes.concat(darkThemes).map(x => x.value.split("/").pop() + ".css");
 
     if (themeFiles.includes(themeFile[0].name)) {
-      if (!(await new Promise<boolean>((resolve) => {
-        showConfirmation(
-          "A theme with the same file name already exists.\nContinuing will overwrite that theme.\nAre you sure you want to proceed?",
-          async () => {resolve(true)}, "", async () => {resolve(false)}
-        );
-      }))) {
+      const confirmed = await showConfirmation("A theme with the same file name already exists.\nContinuing will overwrite that theme.\nAre you sure you want to proceed?").then(() => true).catch(() => false);
+      if (!confirmed) {
         uploadingThemeFile = false;
         return;
       }
@@ -70,12 +66,8 @@
   }
 
   async function deleteTheme(theme: string, name: string, isLightTheme: boolean) {
-    if (!(await new Promise<boolean>((resolve) => {
-      showConfirmation(
-        `Are you sure you want to uninstall the theme "${name}"?\nThis action is irreversible.`,
-        async () => {resolve(true)}, "", async () => {resolve(false)}
-      );
-    }))) return;
+    const confirmed = await showConfirmation(`Are you sure you want to uninstall the theme "${name}"?\nThis action is irreversible.`).then(() => true).catch(() => false);
+    if (!confirmed) return;
 
     await fetchResponse(`/installed/themes/${isLightTheme ? "light" : "dark"}/${theme}`, {
       method: "DELETE",

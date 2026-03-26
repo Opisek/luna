@@ -55,7 +55,7 @@
   let currentlyHoveredEvent = $state((getContext("currentlyHoveredEvent") as () => (EventModel | null))());
   let currentlyClickedEvent = $state((getContext("currentlyClickedEvent") as () => (EventModel | null))());
 
-  let showModal: ((event: EventModel) => Promise<EventModel>) = getContext("showEventModal");
+  let showModal: ((initial?: EventModel, date?: Date) => Promise<EventModel>) = getContext("showEventModal");
 
   let element: HTMLDivElement | null = $state(null);
 

@@ -8,19 +8,18 @@
   import { ColorKeys } from "../../types/colors";
 
   interface Props {
-    date: Date;
-    dateCopy?: Date;
-    onChange?: (date: Date) => void;
-    showModal?: () => any;
-    hideModal?: () => any;
+    showModal: (initial: Date) => Promise<Date>;
   }
 
   let {
-    date = $bindable(),
-    onChange = NoOp,
     showModal = $bindable(),
-    hideModal = $bindable()
   }: Props = $props();
+
+  let showModalInternal: () => Promise<Date> = $state(Promise.reject);
+  let success: (result: Date) => void = $state(NoOp);
+  let failure: () => void = $state(NoOp);
+
+  let date = $state(new Date());
 
   let selectedHours: number = $state(date.getHours());
   let selectedMinutes: number = $state(date.getMinutes());
@@ -51,9 +50,6 @@
     }
   });
 
-  let showModalInternal: () => any = $state(NoOp);
-  let hideModalInternal: () => any = $state(NoOp);
-
   showModal = () => {
     selectedHours = date.getHours();
     selectedMinutes = date.getMinutes();
@@ -64,19 +60,14 @@
     }
     pickingHour = true;
     goBackToHour = false;
+    const promise = showModalInternal();
     setTimeout(() => hourInput.focus(), 10)
-    setTimeout(showModalInternal, 0);
-  };
-
-  hideModal = () => {
-    hideModalInternal();
+    return promise;
   };
 
   function dateSelected() {
     date.setHours(selectedHours, selectedMinutes, 0, 0);
-    date = new Date(date);
-    hideModalInternal();
-    onChange(date);
+    success(new Date(date));
   }
 </script>
 
@@ -154,7 +145,12 @@
   }
 </style>
 
-<Modal title="Pick Time" bind:showModal={showModalInternal} bind:hideModal={hideModalInternal} focusElement={hourInput}>
+<Modal
+  title="Pick Time"
+  bind:showModal={showModalInternal}
+  bind:success
+  bind:failure
+>
   <div class="time">
     <span class="time" class:selecting={pickingHour}>
       <input
@@ -267,6 +263,6 @@
   <SelectButtons bind:value={amPm} name="AM/PM" placeholder="AM/PM" editable={true} options={[{name: "AM", value: "am"}, {name: "PM", value: "pm"}]} label={false}/>
   {#snippet buttons()}
       <Button onClick={dateSelected} color={ColorKeys.Success}>Confirm</Button>
-      <Button onClick={hideModalInternal} color={ColorKeys.Danger}>Cancel</Button>
+      <Button onClick={failure} color={ColorKeys.Danger}>Cancel</Button>
   {/snippet}
 </Modal>

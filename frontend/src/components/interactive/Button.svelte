@@ -3,6 +3,7 @@
   import { ColorKeys } from "../../types/colors";
   import { addRipple, focusIndicator } from "../../lib/client/decoration";
   import Loader from "../decoration/Loader.svelte";
+  import { NoOp } from "../../lib/client/placeholders";
 
   interface Props {
     onClick?: () => any;
@@ -30,7 +31,7 @@
     const result = onClick();
     if (!(result instanceof Promise)) return;
     loading = true;
-    await result;
+    await result.catch(NoOp);
     loading = false;
   }
 </script>

@@ -12,13 +12,14 @@
   import Tooltip from "../../interactive/Tooltip.svelte";
   import type { Settings } from "../../../lib/client/data/settings.svelte";
   import RegistrationInviteModal from "../RegistrationInviteModal.svelte";
+  import { NoOp } from "../../../lib/client/placeholders";
 
   interface Props {
     today: Date;
     settings: Settings;
     invites: RegistrationInvites;
     users: Users;
-    showConfirmation: (message: string, onConfirm: () => Promise<void>, confirmText?: string, onCancel?: () => Promise<void>, cancelText?: string) => void;
+    showConfirmation: (message: string, confirmText?: string, cancelText?: string) => Promise<void>;
     deleteAccount: (id: string) => void;
   }
 
@@ -31,8 +32,7 @@
     deleteAccount
   }: Props = $props();
 
-  let showRegistrationInvite = $state<(session: RegistrationInvite, editable: boolean) => Promise<RegistrationInvite>>(Promise.reject);
-  let issueRegistrationInvite = $state<() => Promise<RegistrationInvite>>(Promise.reject);
+  let showRegistrationInviteModal: (initial?: RegistrationInvite, edit?: boolean) => Promise<RegistrationInvite> = $state(Promise.reject);
 
   function deleteInvite(id: string) {
     invites.revokeInvite(id).catch((err) => {
@@ -46,20 +46,20 @@
     });
   }
 
-  function disableAccount(id: string) {
-    showConfirmation("Are you sure you want to disable this account?\nThe user will no longer be able to log in.\nThe user's account will remain intact.", async () => {
+  async function disableAccount(id: string) {
+    await showConfirmation("Are you sure you want to disable this account?\nThe user will no longer be able to log in.\nThe user's account will remain intact.").then(async () => {
       users.disableUser(id).catch((err) => {
         queueNotification(ColorKeys.Danger, `Could not disable user account: ${err.message}`)
       })
-    });
+    }).catch(NoOp);
   }
 
-  function enableAccount(id: string) {
-    showConfirmation("Are you sure you want to enable this account?\nThe user will be able log in again.", async () => {
+  async function enableAccount(id: string) {
+    await showConfirmation("Are you sure you want to enable this account?\nThe user will be able log in again.").then(async () => {
       users.enableUser(id).catch((err) => {
         queueNotification(ColorKeys.Danger, `Could not enable user account: ${err.message}`)
       })
-    });
+    }).catch(NoOp);
   }
 </script>
 
@@ -173,13 +173,13 @@
   } 
 </style>
 
-<Button color={ColorKeys.Accent} onClick={issueRegistrationInvite}>Invite a user</Button>
+<Button color={ColorKeys.Accent} onClick={showRegistrationInviteModal}>Invite a user</Button>
 
 {#if invites.activeInvites.length !== 0}
   <List
     label="Active Invites"
     items={invites.activeInvites}
-    id={item => item.invite_id}
+    id={item => item.id}
     template={inviteTemplate}
   />
 
@@ -217,16 +217,16 @@
     </span>
 
     <div class="buttons">
-      <IconButton onClick={() => showRegistrationInvite(invite, false)} alt="Details">
+      <IconButton onClick={async () => showRegistrationInviteModal(invite)} alt="Details">
         <Eye size={20}/>
       </IconButton>
-      <IconButton onClick={async () => deleteInvite(invite.invite_id)} color={ColorKeys.Danger} alt="Delete">
+      <IconButton onClick={async () => deleteInvite(invite.id)} color={ColorKeys.Danger} alt="Delete">
         <Trash2 size={20}/>
       </IconButton>
     </div>
 
     <span class="id">
-      ID: {invite.invite_id}
+      ID: {invite.id}
     </span>
   </div>
 {/snippet}
@@ -281,7 +281,7 @@
 
     <div class="buttons">
       {#if !u.admin}
-        <IconButton onClick={() => { u.enabled ? disableAccount(u.id) : enableAccount(u.id) }} alt={ u.enabled ? "Disable account" : "Enable account"}>
+        <IconButton onClick={async () => { u.enabled ? disableAccount(u.id) : enableAccount(u.id) }} alt={ u.enabled ? "Disable account" : "Enable account"}>
           {#if u.enabled}
             <UserRoundX size={20}/>
           {:else}
@@ -303,6 +303,5 @@
 {/snippet}
 
 <RegistrationInviteModal
-  bind:showModal={showRegistrationInvite}
-  bind:showCreateModal={issueRegistrationInvite}
+  bind:showModal={showRegistrationInviteModal}
 />

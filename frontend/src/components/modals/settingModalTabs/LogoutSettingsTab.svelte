@@ -10,13 +10,14 @@
   import { clearSession, type ActiveSessions } from "../../../lib/client/data/sessions.svelte";
   import { fetchResponse } from "../../../lib/client/net";
   import { queueNotification } from "../../../lib/client/notifications";
+  import { NoOp } from "../../../lib/client/placeholders";
 
   interface Props {
     settings: Settings;
     sessions: ActiveSessions;
     today: Date;
     editApiToken: (session: Session, editable: boolean) => Promise<Session>;
-    showConfirmation: (message: string, onConfirm: () => Promise<void>, confirmText?: string, onCancel?: () => Promise<void>, cancelText?: string) => void;
+    showConfirmation: (message: string, confirmText?: string, cancelText?: string) => Promise<void>;
   }
 
   let {
@@ -28,17 +29,20 @@
   }: Props = $props();
 
   function logout() {
-    showConfirmation("Are you sure you want to log out?", async () => {
+    showConfirmation("Are you sure you want to log out?").then(async () => {
       await fetchResponse("/api/sessions/current", { method: "DELETE" }); // We don't need to check for errors, because the cookie is deleted either way
       clearSession();
     });
   }
-  function deauthorizeSessions() {
-    showConfirmation("Are you sure you want to deauthorize all sessions?\nThis will log you out of all your devices.", async () => {
+  async function deauthorizeSessions() {
+    await showConfirmation(
+      "Are you sure you want to deauthorize all sessions?\nThis will log you out of all your devices.",
+      "Your API tokens will remain valid.\nTo deauthorize those, head to the \"Developer\" tab."
+    ).then(async () => {
       sessions.deauthorizeUserSessions().catch((err) => {
         queueNotification(ColorKeys.Danger, err);
       });
-    }, "Your API tokens will remain valid.\nTo deauthorize those, head to the \"Developer\" tab.");
+    }).catch(NoOp);
   }
   function deauthorizeSession(id: string) {
     if (id === sessions.currentSession) return logout();
@@ -110,14 +114,14 @@
   label="Active Sessions"
   info={"To see your API sessions, head to the \"Developer\" tab."}
   items={sessions.activeSessions.filter(x => !x.is_api)}
-  id={item => item.session_id}
+  id={item => item.id}
   template={sessionTemplate}
 />
 
 {#snippet sessionTemplate(s: Session)}
   {@const userAgent=UAParser(s.is_api ? "" : s.user_agent)}
   {@const deviceName=`${userAgent.os.name || ""} ${userAgent.browser.name || ""}`.trim()}
-  {@const isActive=s.session_id === sessions.currentSession}
+  {@const isActive=s.id === sessions.currentSession}
 
   <div class="session" class:active={isActive} class:showId={settings.userSettings[UserSettingKeys.DebugMode]}>
     <div class="device">
@@ -169,13 +173,13 @@
       <IconButton onClick={() => editApiToken(s, s.is_api)} alt="Details">
         <Info size={20}/>
       </IconButton>
-      <IconButton onClick={() => deauthorizeSession(s.session_id)} color={ColorKeys.Danger} alt="Log out">
+      <IconButton onClick={() => deauthorizeSession(s.id)} color={ColorKeys.Danger} alt="Log out">
         <LogOut size={20}/>
       </IconButton>
     </div>
 
     <span class="id">
-      ID: {s.session_id}
+      ID: {s.id}
     </span>
   </div>
 {/snippet}

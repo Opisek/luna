@@ -20,7 +20,7 @@
   import OauthTokensModal from "./OauthTokensModal.svelte";
   import Spinner from "../decoration/Spinner.svelte";
   import IconButton from "../interactive/IconButton.svelte";
-  import { Check, Pencil, Trash, X } from "lucide-svelte";
+  import { Check, X } from "lucide-svelte";
 
   interface Props {
     showModal?: () => Promise<SourceModel>;
@@ -32,9 +32,10 @@
 
   const oauthClients = getOauthClients();
 
-  let showNewSourceModal: () => Promise<SourceModel> = getContext("showNewSourceModal");
-  let showModalInternal = $state(NoOp)
-  let hideModalInternal = $state(NoOp)
+  let showSourceModal: () => Promise<SourceModel> = getContext("showSourceModal");
+  let showModalInternal: () => Promise<SourceModel> = $state(Promise.reject);
+  let success: (result: SourceModel) => void = $state(NoOp);
+  let failure: () => void = $state(NoOp);
 
   let urlValid: Validity = $state(valid);
   let fileValid: Validity = $state(valid);
@@ -115,8 +116,8 @@
   });
 
   function advanced() {
-    showNewSourceModal().then((source) => {
-      saveInternal(source);
+    showSourceModal().then((source) => {
+      success(source);
     }).catch(NoOp);
   }
 
@@ -141,18 +142,10 @@
     }
 
     return getRepository().createSource(source).then(() => {
-      saveInternal(source);
+      success(source);
     }).catch(err => {
       queueNotification(ColorKeys.Danger, `Could not create source ${source.name}: ${err.message}`);
     });
-  }
-  async function saveInternal(source: SourceModel) {
-    promiseResolve(source);
-    hideModalInternal();
-  }
-  function cancel() {
-    promiseReject();
-    hideModalInternal();
   }
 
   let cachedChecks = $state(new Map<string, Validity>());
@@ -284,7 +277,8 @@
 <Modal
   title="Source wizard"
   bind:showModal={showModalInternal}
-  bind:hideModal={hideModalInternal}
+  bind:success
+  bind:failure
   onModalHide={() => {
     promiseReject();
     abortOauthAuthorization();
@@ -373,7 +367,7 @@
     <IconButton onClick={save} color={ColorKeys.Success} enabled={submittable} type="submit" alt="Save" canRenderAsButton={true}>
       <Check/>
     </IconButton>
-    <IconButton onClick={cancel} color={ColorKeys.Danger} alt="Cancel" canRenderAsButton={true}><X/></IconButton>
+    <IconButton onClick={failure} color={ColorKeys.Danger} alt="Cancel" canRenderAsButton={true}><X/></IconButton>
   {/snippet}
 </Modal>
 

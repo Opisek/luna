@@ -1,5 +1,5 @@
 type RegistrationInvite = {
-  invite_id: string;
+  id: string;
   author: string;
   email: string;
   created_at: Date;

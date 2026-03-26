@@ -94,7 +94,7 @@
     transition: all animations.$cubic animations.$animationSpeed;
   }
 
-  button.hidden, a.hidden, .loading > :global(svg) {
+  button.hidden, a.hidden, .loading > :global(:first-child) {
     visibility: hidden;
   }
 
@@ -110,6 +110,7 @@
       height: 0%;
       transition: all animations.$cubic animations.$animationSpeed;
       pointer-events: none;
+      z-index: -1;
     }
   }
 

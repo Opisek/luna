@@ -22,108 +22,83 @@
   import Link from "../forms/Link.svelte";
 
   interface Props {
-    showCreateModal?: () => Promise<SourceModel>;
-    showModal?: (source: SourceModel) => Promise<SourceModel>;
+    showModal?: (source?: SourceModel) => Promise<SourceModel>;
   }
 
   let {
-    showCreateModal = $bindable(),
     showModal = $bindable(),
   }: Props = $props();
 
   const settings = getSettings();
   const oauthClients = getOauthClients();
 
+  let showModalInternal: (initial?: SourceModel, edit?: boolean) => Promise<SourceModel> = $state(Promise.reject);
+
   let sourceDetailed: SourceModel = $state(EmptySource);
   let originalSource: SourceModel;
 
-  let promiseResolve: (value: SourceModel | PromiseLike<SourceModel>) => void = $state(NoOp);
-  let promiseReject: (reason?: any) => void = $state(NoOp);
-
-  showCreateModal = () => {
-    promiseReject();
-
+  showModal = async (source?: SourceModel): Promise<SourceModel> => {
     oauthClients.fetch();
     oauthClients.fetchTokens();
 
-    sourceDetailed = {
-      id: "",
-      name: "",
-      type: "caldav",
-      settings: {
-        location: "remote",
-        file: null,
-        fileId: "",
-      },
-      auth_type: "none",
-      auth: {},
-      can_add_calendars: true,
-    };
-
-    showCreateModalInternal();
-    return new Promise((resolve, reject) => {
-      promiseResolve = resolve;
-      promiseReject = reject;
-    })
-  }
-  showModal = async (source: SourceModel): Promise<SourceModel> => {
-    promiseReject();
-
-    oauthClients.fetch();
-    oauthClients.fetchTokens();
-
-    sourceDetailed = await getRepository().getSourceDetails(source.id, true).catch(err => {
-      queueNotification(ColorKeys.Danger, `Could not get source details: ${err.message}`);
-      return Promise.reject();
-    });
-
-    // so that when we edit a caldav source into an ical source, the location selection will default to some value (remote):
-    if (sourceDetailed.type !== "ical") sourceDetailed.settings.location = "remote";
-
-    if (sourceDetailed.type === "ical" && sourceDetailed.settings.location === "database" && sourceDetailed.settings.file !== null) {
-      const fileId = sourceDetailed.settings.file;
-      sourceDetailed.settings.fileId = fileId;
-
-      await fetchFileById(fileId).then(fileList => {
-        sourceDetailed.settings.file = fileList;
-      }).catch(err => {
-        queueNotification(ColorKeys.Danger, `Could not get file: ${err.message}`);
-        sourceDetailed.settings.file = null;
-      });
+    if (!source) {
+      sourceDetailed = {
+        id: "",
+        name: "",
+        type: "caldav",
+        settings: {
+          location: "remote",
+          file: null,
+          fileId: "",
+        },
+        auth_type: "none",
+        auth: {},
+        can_add_calendars: true,
+      };
     } else {
-      sourceDetailed.settings.file = null;
-      sourceDetailed.settings.fileId = "";
+      sourceDetailed = await getRepository().getSourceDetails(source.id, true).catch(err => {
+        queueNotification(ColorKeys.Danger, `Could not get source details: ${err.message}`);
+        return Promise.reject();
+      });
+
+      // so that when we edit a caldav source into an ical source, the location selection will default to some value (remote):
+      if (sourceDetailed.type !== "ical") sourceDetailed.settings.location = "remote";
+
+      if (sourceDetailed.type === "ical" && sourceDetailed.settings.location === "database" && sourceDetailed.settings.file !== null) {
+        const fileId = sourceDetailed.settings.file;
+        sourceDetailed.settings.fileId = fileId;
+
+        await fetchFileById(fileId).then(fileList => {
+          sourceDetailed.settings.file = fileList;
+        }).catch(err => {
+          queueNotification(ColorKeys.Danger, `Could not get file: ${err.message}`);
+          sourceDetailed.settings.file = null;
+        });
+      } else {
+        sourceDetailed.settings.file = null;
+        sourceDetailed.settings.fileId = "";
+      }
+
+      originalSource = await deepCopy(sourceDetailed);
+      if (sourceDetailed.settings.file !== null) originalSource.settings.file = sourceDetailed.settings.file;
     }
 
-    originalSource = await deepCopy(sourceDetailed);
-    if (sourceDetailed.settings.file !== null) originalSource.settings.file = sourceDetailed.settings.file;
-
-    showModalInternal();
-    return new Promise((resolve, reject) => {
-      promiseResolve = resolve;
-      promiseReject = reject;
-    })
+    return showModalInternal(sourceDetailed);
   };
-
-  let showCreateModalInternal: () => any = $state(NoOp);
-  let showModalInternal: () => any = $state(NoOp);
 
   let editMode: boolean = $state(false);
   let title: string = $derived(sourceDetailed.id ? (editMode ? "Edit source" : "Source") : "Add source");
 
   const onDelete = async () => {
-    await getRepository().deleteSource(sourceDetailed.id).catch(err => {
+    return await getRepository().deleteSource(sourceDetailed.id).then(() => sourceDetailed).catch(err => {
       throw new Error(`Could not delete source ${sourceDetailed.name}: ${err.message}`);
     });
-    promiseReject();
   };
   const onEdit = async () => {
     if (sourceDetailed.id === "") {
-      await getRepository().createSource(sourceDetailed).catch(err => {
-        promiseReject();
+      return await getRepository().createSource(sourceDetailed).then(() => sourceDetailed).catch(err => {
         throw new Error(`Could not create source ${sourceDetailed.name}: ${err.message}`);
       });
-      promiseResolve(sourceDetailed);
     } else {
       if (originalSource.settings.file instanceof String && sourceDetailed.settings.file instanceof FileList && sourceDetailed.settings.file.length === 1 && sourceDetailed.settings.file[0].name === originalSource.settings.file) {
         sourceDetailed.settings.file = sourceDetailed.settings.file[0];
@@ -134,11 +109,9 @@
         settings: !deepEquality(sourceDetailed.settings, originalSource.settings),
         auth: sourceDetailed.auth_type != originalSource.auth_type || !deepEquality(sourceDetailed.auth, originalSource.auth)
       }
-      await getRepository().editSource(sourceDetailed, changes).catch(err => {
-        promiseReject();
+      return await getRepository().editSource(sourceDetailed, changes).then(() => sourceDetailed).catch(err => {
         throw new Error(`Could not edit source ${sourceDetailed.name}: ${err.message}`);
       });
-      promiseResolve(sourceDetailed);
     }
   };
 
@@ -201,12 +174,10 @@
   title={title}
   deleteConfirmation={`Are you sure you want to delete source "${sourceDetailed ? sourceDetailed.name : ""}"?`}
   bind:editMode={editMode}
-  bind:showCreateModal={showCreateModalInternal}
   bind:showModal={showModalInternal}
   onModalHide={abortOauthAuthorization}
   onDelete={onDelete}
   onEdit={onEdit}
-  onCancel={promiseReject}
   submittable={canSubmit}
 >
   {#if sourceDetailed}

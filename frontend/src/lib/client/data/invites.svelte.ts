@@ -29,7 +29,7 @@ export class RegistrationInvites {
 
   public async revokeInvite(id: string) {
     return fetchResponse(`/api/invites/${id}`, { method: "DELETE" }).then(() => {
-      this.activeInvites = this.activeInvites.filter(x => x.invite_id != id);
+      this.activeInvites = this.activeInvites.filter(x => x.id != id);
     });
   }
 

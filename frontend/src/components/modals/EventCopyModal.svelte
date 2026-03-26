@@ -12,6 +12,8 @@
   import { ColorKeys } from "../../types/colors";
   import SelectInput from "../forms/SelectInput.svelte";
   import { deepCopy } from "../../lib/common/misc";
+  import IconButton from "../interactive/IconButton.svelte";
+  import { Check, Save, X } from "lucide-svelte";
   
   interface Props {
     copy?: (event: EventModel) => Promise<boolean>;
@@ -28,6 +30,7 @@
   let marked: Set<string> = $state(new Set());
   
   let event = $state(EmptyEvent)
+  let original = $state(EmptyEvent)
 
   let selectableCalendars = $derived(
     repository.calendars
@@ -45,8 +48,10 @@
     promiseReject();
 
     event = await deepCopy(eventToCopy);
+    original = eventToCopy;
     date = new Date(event.date.start);
-    marked = new SvelteSet([date.toISOString().substring(0, 10)]);
+    //marked = new SvelteSet([date.toISOString().substring(0, 10)]);
+    marked = new SvelteSet();
 
     showModalInternal();
 
@@ -64,6 +69,9 @@
     const isoDay = day.toISOString().substring(0, 10);
     if (marked.has(isoDay)) marked.delete(isoDay);
     else marked.add(isoDay);
+  }
+
+  async function save() {
   }
 </script>
 
@@ -91,9 +99,7 @@
   <SmallCalendar bind:date bind:marked onDayClick={daySelected} />
 
   {#snippet buttons()}
-    <Button onClick={NoOp} color={ColorKeys.Success} enabled={marked.size != 0} type="submit">
-      Save
-    </Button>
-    <Button onClick={hideModalInternal} color={ColorKeys.Danger}>Cancel</Button>
+    <IconButton onClick={NoOp} color={ColorKeys.Success} enabled={marked.size != 0} type="submit" alt="Save" canRenderAsButton={true}><Check/></IconButton>
+    <IconButton onClick={hideModalInternal} color={ColorKeys.Danger} alt="Cancel" canRenderAsButton={true}><X/></IconButton>
   {/snippet}
 </Modal>

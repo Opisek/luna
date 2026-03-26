@@ -9,83 +9,56 @@
   import { ColorKeys } from "../../types/colors";
   
   interface Props {
-    showCreateModal?: () => Promise<OauthClientModel>;
-    showModal?: (session: OauthClientModel, editable: boolean) => Promise<OauthClientModel>;
+    showModal: (initial?: OauthClientModel, edit?: boolean) => Promise<OauthClientModel>;
   }
 
   let {
-    showCreateModal = $bindable(),
     showModal = $bindable(),
   }: Props = $props();
+
+  let showModalInternal: (initial?: OauthClientModel, edit?: boolean) => Promise<OauthClientModel> = $state(Promise.reject);
 
   const clients = getOauthClients();
 
   let client: OauthClientModel = $state(EmptyOauthClient);
   let originalClient: OauthClientModel = $state(EmptyOauthClient);
 
-  let promiseResolve: (value: OauthClientModel | PromiseLike<OauthClientModel>) => void = $state(NoOp);
-  let promiseReject: (reason?: any) => void = $state(NoOp);
+  showModal = async (initial?: OauthClientModel, edit?: boolean): Promise<OauthClientModel> => {
+    if (!initial) initial = EmptyOauthClient;
 
-  showModal = async (original: OauthClientModel, edit: boolean = false): Promise<OauthClientModel> => {
-    promiseReject();
-
-    editMode = edit;
-    client = await deepCopy(original);
-    originalClient = await deepCopy(original);
+    client = await deepCopy(initial);
+    originalClient = await deepCopy(initial);
 
     if (client.id !== "") {
       const details = await clients.getClientDetails(client.id).catch((err) => {
         queueNotification(ColorKeys.Danger, `Could not get OAuth 2.0 client details: ${err.message}`);
-          return Promise.reject();
-        });
+        return Promise.reject();
+      });
       client.client_secret = details.client_secret;
-      setTimeout(showModalInternal(), 0);
-    } else setTimeout(showCreateModalInternal(), 0);
+    }
 
-    // TODO: what if we only show but the modal and the close? memory leak?
-    return new Promise((resolve, reject) => {
-      promiseResolve = ((res) => {
-        client = EmptyOauthClient;
-        resolve(res);
-      });
-      promiseReject = ((err) => {
-        client = EmptyOauthClient;
-        reject(err);
-      });
-    })
+    return showModalInternal();
   };
-  showCreateModal = () => {
-    return showModal(EmptyOauthClient, true);
-  }
 
   let showCreateModalInternal: () => any = $state(NoOp);
-  let showModalInternal: () => any = $state(NoOp);
 
   let editMode: boolean = $state(false);
   let title: string = $derived(client.id ? "Edit OAuth 2.0 Client" : "Register OAuth 2.0 Client");
 
   const onDelete = async () => {
-    await clients.deleteClient(client.id).catch(err => {
+    return clients.deleteClient(client.id).then(() => client).catch(err => {
       throw new Error(`Could not delete OAuth 2.0 client: ${err.message}`);
     });
-
-    promiseResolve(originalClient);
   };
   const onEdit = async () => {
     if (client.id === "") {
-      const newClient = await clients.registerClient(client).catch(err => {
+      return clients.registerClient(client).then(newClient => newClient).catch(err => {
         throw new Error(`Could not register OAuth 2.0 client: ${err.message}`);
       });
-
-      editMode = false;
-
-      promiseResolve(newClient);
     } else {
-      const updatedClient = await clients.updateClient(client).catch(err => {
+      return clients.updateClient(client).then(updatedClient => updatedClient).catch(err => {
         throw new Error(`Could not update OAuth 2.0 client: ${err.message}`);
       });
-
-      promiseResolve(updatedClient);
     }
   };
 </script>
@@ -94,11 +67,9 @@
   title={title}
   deleteConfirmation={`Are you sure you want to delete the OAuth 2.0 client?`}
   bind:editMode={editMode}
-  bind:showCreateModal={showCreateModalInternal}
-  bind:showEditModal={showModalInternal}
+  bind:showModal={showModalInternal}
   onDelete={onDelete}
   onEdit={onEdit}
-  onCancel={promiseReject}
   editable={editMode}
   deletable={true}
   submittable={true}

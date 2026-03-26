@@ -59,7 +59,7 @@ export const DefaultTokenPermissions = [
 ]
 
 export const EmptySession: Session = {
-  session_id: "",
+  id: "",
   user_id: "",
   created_at: new Date(0),
   last_seen: new Date(0),
@@ -73,7 +73,7 @@ export const EmptySession: Session = {
 }
 
 export const EmptyRegistrationInvite: RegistrationInvite = {
-  invite_id: "",
+  id: "",
   author: "",
   email: "",
   created_at: new Date(0),

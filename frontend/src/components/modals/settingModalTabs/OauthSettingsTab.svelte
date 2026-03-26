@@ -20,8 +20,7 @@
     clients,
   }: Props = $props();
 
-  let showOauthClient = $state<(session: OauthClientModel, editable: boolean) => Promise<OauthClientModel>>(Promise.reject);
-  let registerOauthClient = $state<() => Promise<OauthClientModel>>(Promise.reject);
+  let showOauthClientModal: (initial?: OauthClientModel, edit?: boolean) => Promise<OauthClientModel> = $state(Promise.reject);
 
   function deleteClient(id: string) {
     clients.deleteClient(id).catch((err) => {
@@ -83,7 +82,7 @@
   }
 </style>
 
-<Button color={ColorKeys.Accent} onClick={registerOauthClient}>Register an OAuth 2.0 Client</Button>
+<Button color={ColorKeys.Accent} onClick={showOauthClientModal}>Register an OAuth 2.0 Client</Button>
 
 {#if clients.clients.length !== 0}
   <List
@@ -105,7 +104,7 @@
     </span>
 
     <div class="buttons">
-      <IconButton onClick={() => showOauthClient(client, true)} alt="Edit">
+      <IconButton onClick={async () => showOauthClientModal(client, true)} alt="Edit">
         <Pencil size={20}/>
       </IconButton>
       <IconButton onClick={async () => deleteClient(client.id)} color={ColorKeys.Danger} alt="Delete">
@@ -120,6 +119,5 @@
 {/snippet}
 
 <OauthClientModal
-  bind:showModal={showOauthClient}
-  bind:showCreateModal={registerOauthClient}
+  bind:showModal={showOauthClientModal}
 />

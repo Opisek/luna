@@ -23,17 +23,19 @@
   //import { RRule } from "rrule";
 
   interface Props {
-    showCreateModal?: (date: Date) => Promise<EventModel>;
-    showModal?: (event: EventModel) => Promise<EventModel>;
+    showModal?: (initial?: EventModel, date?: Date) => Promise<EventModel>;
   }
 
   let {
-    showCreateModal = $bindable(),
     showModal = $bindable(),
   }: Props = $props();
 
   const settings = getSettings();
   const repository = getRepository();
+
+  let showModalInternal: (initial?: EventModel, edit?: boolean) => Promise<EventModel> = $state(Promise.reject);
+  let showCopyModal: (event: EventModel) => Promise<boolean> = $state(async () => false);
+  let editMode: boolean = $state(false);
 
   let event: EventModel = $state(EmptyEvent);
   let originalEvent: EventModel = $state(EmptyEvent);
@@ -50,91 +52,64 @@
     return source.type;
   });
 
-  let promiseResolve: (value: EventModel | PromiseLike<EventModel>) => void = $state(NoOp);
-  let promiseReject: (reason?: any) => void = $state(NoOp);
+  showModal = async (initial?: EventModel, date?: Date): Promise<EventModel> => {
+    if (!initial) {
+      console.log(date);
+      const start = new Date(date || new Date());
+      start.setHours(12, 0, 0, 0);
 
-  showCreateModal = async (date: Date) => {
-    promiseReject();
+      const end = new Date(date || new Date());
+      end.setHours(13, 0, 0, 0);
 
-    editMode = false;
+      event = {
+        id: "",
+        calendar: "",
+        name: "",
+        desc: "",
+        color: "",
+        date: {
+          start: start,
+          end: end,
+          allDay: false,
+          recurrence: false,
+        },
+        overridden: false,
+        can_edit: true,
+        can_delete: true,
+      };
 
-    const start = new Date(date);
-    start.setHours(12, 0, 0, 0);
+      eventRecurrenceBoolean = false;
+      //eventRecurrenceObject = null;
+    } else {
+      event = {
+        id: initial.id,
+        calendar: initial.calendar,
+        name: initial.name,
+        desc: initial.desc,
+        color: initial.color,
+        date: {
+          start: new Date(initial.date.start),
+          end: new Date(initial.date.end),
+          allDay: initial.date.allDay,
+          recurrence: await deepCopy(initial.date.recurrence),
+        },
+        overridden: initial.overridden,
+        can_edit: initial.can_edit,
+        can_delete: initial.can_delete,
+      }
+      if (event.date.allDay && event.date.end.getTime() !== event.date.start.getTime() && event.date.end.getHours() === 0 && event.date.end.getMinutes() === 0 && event.date.end.getSeconds() === 0 && event.date.end.getMilliseconds() === 0) {
+        event.date.end.setDate(event.date.end.getDate() - 1);
+      }
 
-    const end = new Date(date);
-    end.setHours(13, 0, 0, 0);
+      originalEvent = await deepCopy(initial);
 
-    event = {
-      id: "",
-      calendar: "",
-      name: "",
-      desc: "",
-      color: "",
-      date: {
-        start: start,
-        end: end,
-        allDay: false,
-        recurrence: false,
-      },
-      overridden: false,
-      can_edit: true,
-      can_delete: true,
-    };
-
-    eventRecurrenceBoolean = false;
-    //eventRecurrenceObject = null;
-
-    setTimeout(showCreateModalInternal, 0);
-
-    return new Promise((resolve, reject) => {
-      promiseResolve = resolve;
-      promiseReject = reject;
-    });
-  }
-
-  showModal = async (original: EventModel): Promise<EventModel> => {
-    promiseReject();
-
-    editMode = false;
-
-    event = {
-      id: original.id,
-      calendar: original.calendar,
-      name: original.name,
-      desc: original.desc,
-      color: original.color,
-      date: {
-        start: new Date(original.date.start),
-        end: new Date(original.date.end),
-        allDay: original.date.allDay,
-        recurrence: await deepCopy(original.date.recurrence),
-      },
-      overridden: original.overridden,
-      can_edit: original.can_edit,
-      can_delete: original.can_delete,
-    }
-    if (event.date.allDay && event.date.end.getTime() !== event.date.start.getTime() && event.date.end.getHours() === 0 && event.date.end.getMinutes() === 0 && event.date.end.getSeconds() === 0 && event.date.end.getMilliseconds() === 0) {
-      event.date.end.setDate(event.date.end.getDate() - 1);
+      eventRecurrenceBoolean = event.date.recurrence != false;
+      //eventRecurrenceObject = eventRecurrenceBoolean ? RRule.fromString(event.date.recurrence) : null;
     }
 
-    originalEvent = await deepCopy(original);
-
-    eventRecurrenceBoolean = event.date.recurrence != false;
-    //eventRecurrenceObject = eventRecurrenceBoolean ? RRule.fromString(event.date.recurrence) : null;
-
-    setTimeout(showModalInternal, 0);
-
-    return new Promise((resolve, reject) => {
-      promiseResolve = resolve;
-      promiseReject = reject;
-    });
+    return showModalInternal(event);
   };
 
-  let showCreateModalInternal: () => boolean = $state(() => false);
-  let showModalInternal: () => boolean = $state(() => false);
-  let showCopyModal: (event: EventModel) => Promise<boolean> = $state(async () => false);
-
-  let editMode: boolean = $state(false);
   let title: string = $derived((event && event.id) ? (editMode ? "Edit event" : "Event") : "Create event");
   let showEndDate: boolean = $derived(editMode || (event && (!event.date.allDay || !isSameDay(event.date.start, event.date.end))));
 
@@ -145,21 +120,18 @@
   );
 
   const onDelete = async () => {
-    await getRepository().deleteEvent(event.id).catch(err => {
+    return await getRepository().deleteEvent(event.id).then(() => event).catch(err => {
       throw new Error(`Could not delete event ${event.name}: ${err.message}`);
     });
-    promiseReject();
   };
   const onEdit = async () => {
     if (event.date.allDay) {
       event.date.end.setDate(event.date.end.getDate() + 1);
     }
     if (event.id === "") {
-      await getRepository().createEvent(event).catch(err => {
-        promiseReject();
+      return await getRepository().createEvent(event).then(() => event).catch(err => {
         throw new Error(`Could not create event ${event.name}: ${err.message}`);
       });
-      promiseResolve(event);
     } else if (event.calendar == originalEvent.calendar) {
       const changes = {
         name: event.name != originalEvent.name,
@@ -167,17 +139,13 @@
         color: event.color != originalEvent.color,
         date: !deepEquality(event.date, originalEvent.date)
       };
-      await getRepository().editEvent(event, changes, eventSourceType === "ical").catch(err => {
-        promiseReject();
+      return await getRepository().editEvent(event, changes, eventSourceType === "ical").then(() => event).catch(err => {
         throw new Error(`Could not edit event ${event.name}: ${err.message}`);
       });
-      promiseResolve(event);
     } else {
-      await getRepository().moveEvent(event).catch(err => {
-        promiseReject();
+      return await getRepository().moveEvent(event).then(() => event).catch(err => {
         throw new Error(`Could not move event ${event.name}: ${err.message}`);
       });
-      promiseResolve(event);
     }
   };
   const resetOverrides = async () => {
@@ -232,11 +200,9 @@
   title={title}
   deleteConfirmation={`Are you sure you want to delete event "${event ? event.name : ""}"?`}
   bind:editMode={editMode}
-  bind:showCreateModal={showCreateModalInternal}
   bind:showModal={showModalInternal}
   onDelete={onDelete}
   onEdit={onEdit}
-  onCancel={promiseReject}
   deletable={event?.can_edit}
   editable={event?.can_delete}
   submittable={event.calendar !== "" && event.name !== "" && (event.date.start.getTime() < event.date.end.getTime() || (event.date.start.getTime() <= event.date.end.getTime() && event.date.allDay))}
