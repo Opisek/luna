@@ -114,7 +114,7 @@ export const EmptyEvent: EventModel = {
     start: PlaceholderDate,
     end: PlaceholderDate,
     allDay: false,
-    recurrence: false
+    recurrence: undefined
   },
   overridden: false,
   can_edit: false,

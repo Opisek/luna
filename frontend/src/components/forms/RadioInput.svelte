@@ -1,26 +1,29 @@
-<script lang="ts">
+<script lang="ts" generics="T">
   import Toggle from "../interactive/Toggle.svelte";
   import Tooltip from "../interactive/Tooltip.svelte";
 
   import { NoOp } from "$lib/client/placeholders";
+  import RadioToggle from "../interactive/RadioToggle.svelte";
+  import type { Option } from "../../types/options";
+  import { SvelteMap } from "svelte/reactivity";
 
   interface Props {
-    value?: boolean;
-    description: string;
-    info?: string;
+    value: T | null;
     name: string;
     editable?: boolean;
-    onChange?: (value: boolean) => any;
+    options: Option<T>[];
+    onClick?: (selected: T) => any;
   }
 
   let {
-    value = $bindable(false),
-    description,
-    info,
+    value = $bindable(),
     name,
     editable = true,
-    onChange = NoOp,
+    options,
+    onClick = NoOp,
   }: Props = $props();
+
+  let clicked: Map<T, () => any> = $state(new SvelteMap());
 </script>
 
 <style lang="scss">
@@ -48,23 +51,20 @@
 </style>
 
 <!-- svelte-ignore a11y_click_events_have_key_events -->
-<div
-  role="checkbox"
-  tabindex="-1"
-  aria-checked={value}
->
-  <Toggle
-    bind:value
-    name={name}
-    onChange={onChange}
-    enabled={editable}
-  />
-  <label for={name}>
-    {description}
-  </label>
-  {#if info}
-    <Tooltip tight={true}>
-      {info}
-    </Tooltip>
-  {/if}
-</div>
+{#each options as option (option.value)}
+  <div
+    role="radio"
+    tabindex="-1"
+    aria-checked={value == option.value}
+  >
+    <RadioToggle
+      name={name}
+      value={option.value}
+      bind:selected={value}
+      enabled={editable}
+    />
+    <label for={`${name}-${option.value}`}>
+      {option.name}
+    </label>
+  </div>
+{/each}

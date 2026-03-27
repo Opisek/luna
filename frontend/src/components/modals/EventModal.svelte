@@ -22,6 +22,7 @@
   import { RRule } from "rrule";
   import { parseTimestampList } from "../../lib/common/ical";
   import { SvelteSet } from "svelte/reactivity";
+  import AffectedRecurrencesModal from "./AffectedRecurrencesModal.svelte";
 
   interface Props {
     showModal?: (initial?: EventModel, date?: Date) => Promise<EventModel>;
@@ -36,6 +37,7 @@
 
   let showModalInternal: (initial?: EventModel, edit?: boolean) => Promise<EventModel> = $state(Promise.reject);
   let showCopyModal: (event: EventModel) => Promise<EventModel> = $state(Promise.reject);
+  let selectAffectedRecurrences: (edit: boolean) => Promise<"this" | "thisandfuture" | "all"> = $state(Promise.reject);
   let editMode: boolean = $state(false);
 
   let event: EventModel = $state(EmptyEvent);
@@ -131,11 +133,15 @@
   );
 
   const onDelete = async () => {
-    return await getRepository().deleteEvent(event.id).then(() => event).catch(err => {
+    const affect = originalEvent.date.recurrence != undefined ? await selectAffectedRecurrences(false).catch(() => { throw new Error("Cancelled"); }) : "this";
+
+    return await getRepository().deleteEvent(event.id, affect).then(() => event).catch(err => {
       throw new Error(`Could not delete event ${event.name}: ${err.message}`);
     });
   };
   const onEdit = async () => {
+    const affect = originalEvent.date.recurrence != undefined ? await selectAffectedRecurrences(true).catch(() => { throw new Error("Cancelled"); }) : "this";
+
     if (event.date.allDay) {
       event.date.end.setDate(event.date.end.getDate() + 1);
     }
@@ -150,7 +156,7 @@
         color: event.color != originalEvent.color,
         date: !deepEquality(event.date, originalEvent.date)
       };
-      return await getRepository().editEvent(event, changes, eventSourceType === "ical").then(() => event).catch(err => {
+      return await getRepository().editEvent(event, changes, eventSourceType === "ical", affect).then(() => event).catch(err => {
         throw new Error(`Could not edit event ${event.name}: ${err.message}`);
       });
     } else {
@@ -271,3 +277,4 @@
 </EditableModal>
 
 <EventCopyModal bind:copy={showCopyModal}/>
+<AffectedRecurrencesModal bind:showModal={selectAffectedRecurrences}/>

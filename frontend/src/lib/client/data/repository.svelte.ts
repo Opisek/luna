@@ -894,7 +894,7 @@ export class Repository {
     this.saveCache();
   };
 
-  async editEvent(modifiedEvent: EventModel, changes: EventModelChanges, override: boolean): Promise<void> {
+  async editEvent(modifiedEvent: EventModel, changes: EventModelChanges, override: boolean, affectRecurrence: "this" | "thisandfuture" | "all" = "this"): Promise<void> {
     if (!browser) return;
 
     // update in database
@@ -907,7 +907,8 @@ export class Repository {
     const formData = this.getEventFormData(modifiedEvent, changes);
     formData.set("overridden", override ? "true" : "false");
 
-    await fetchResponse(`/api/events/${modifiedEvent.id}`, { method: "PATCH", body: formData }).catch((err) => { throw err; });
+    const url = `/api/events/${modifiedEvent.id}${affectRecurrence == "this" ? "" : `?affect=${affectRecurrence}`}`;
+    await fetchResponse(url, { method: "PATCH", body: formData }).catch((err) => { throw err; });
 
     // update in cache
     modifiedEvent.overridden = override;
@@ -937,11 +938,12 @@ export class Repository {
     this.saveCache();
   }
 
-  async deleteEvent(id: string): Promise<void> {
+  async deleteEvent(id: string, affectRecurrence: "this" | "thisandfuture" | "all" = "this"): Promise<void> {
     if (!browser) return;
 
     // remove from database
-    await fetchResponse(`/api/events/${id}`, { method: "DELETE" }).catch((err) => { throw err; });
+    const url = `/api/events/${id}${affectRecurrence == "this" ? "" : `?affect=${affectRecurrence}`}`;
+    await fetchResponse(url, { method: "DELETE" }).catch((err) => { throw err; });
 
     const event = this.eventsMap.get(id);
     if (!event) return;

@@ -1,23 +1,28 @@
-<script lang="ts">
+<script lang="ts" generics="T">
   import { focusIndicator } from "$lib/client/decoration";
 
   interface Props {
-    value: boolean;
     name: string;
+    value: T;
+    selected: T | null;
     enabled?: boolean;
-    onChange?: (value: boolean) => any;
+    onChange?: (value: T | null) => any;
   }
 
   let {
-    value = $bindable(),
     name,
+    value,
+    selected = $bindable(),
     enabled = true,
     onChange = () => {},
   }: Props = $props();
 
-  function toggle(e: MouseEvent | KeyboardEvent) {
-    value = !value;
-    onChange(value);
+  let checked = $derived(value == selected);
+
+  const toggle = (e: MouseEvent | KeyboardEvent) => {
+    if (checked) selected = null;
+    else selected = value;
+    onChange(selected);
     e.stopPropagation();
   }
 </script>
@@ -110,14 +115,14 @@
 <button
   type="button"
   class:disabled={!enabled}
-  class:check={value}
+  class:check={checked}
   onclick={toggle}
   use:focusIndicator
 >
   <div
     class="handle"
-    class:check={value}
+    class:check={checked}
   >
   </div>
-  <input type="button" name={name} value={value}>
+  <input type="radio" id={`${name}-${value}`} name={name} value={value} bind:group={selected}>
 </button>
