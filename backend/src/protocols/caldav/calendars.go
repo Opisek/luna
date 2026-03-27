@@ -316,6 +316,28 @@ func setEventProps(cal *ical.Calendar, id string, name string, desc string, colo
 		event.Props.Del(ical.PropDuration)
 	}
 
+	if recurrenceProps := types.EventRecurrenceToIcal(date.Recurrence()); recurrenceProps != nil {
+		if rruleProp := recurrenceProps.Get(ical.PropRecurrenceRule); rruleProp != nil {
+			event.Props.Set(rruleProp)
+		} else {
+			event.Props.Del(ical.PropRecurrenceRule)
+		}
+
+		event.Props.Del(ical.PropRecurrenceDates)
+		if rdateProps := recurrenceProps.Values(ical.PropRecurrenceDates); len(rdateProps) != 0 {
+			for _, rdateProp := range rdateProps {
+				event.Props.Add(&rdateProp)
+			}
+		}
+
+		event.Props.Del(ical.PropExceptionDates)
+		if exdateProps := recurrenceProps.Values(ical.PropExceptionDates); len(exdateProps) != 0 {
+			for _, exdateProp := range exdateProps {
+				event.Props.Add(&exdateProp)
+			}
+		}
+	}
+
 	timestamp := time.Now()
 	event.Props.SetDateTime(ical.PropDateTimeStamp, timestamp)
 	//event.Props.SetDateTime(util.PropTimestamp, timestamp)

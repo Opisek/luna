@@ -184,9 +184,9 @@ func (event *CaldavEvent) GetRecurrenceId() string {
 }
 
 func (event *CaldavEvent) CanEdit() bool {
-	return !event.eventDate.Recurrence().Repeats()
+	return true
 }
 
 func (event *CaldavEvent) CanDelete() bool {
-	return !event.eventDate.Recurrence().Repeats()
+	return true
 }

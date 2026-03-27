@@ -215,8 +215,8 @@
   bind:showModal={showModalInternal}
   onDelete={onDelete}
   onEdit={onEdit}
-  deletable={event?.can_edit}
-  editable={event?.can_delete}
+  deletable={event?.can_delete}
+  editable={event?.can_edit}
   submittable={event.calendar !== "" && event.name !== "" && (event.date.start.getTime() < event.date.end.getTime() || (event.date.start.getTime() <= event.date.end.getTime() && event.date.allDay))}
 >
   {#if event != EmptyEvent}

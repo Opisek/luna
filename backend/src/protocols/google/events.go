@@ -227,9 +227,9 @@ func (event *GoogleEvent) GetRecurrenceId() string {
 }
 
 func (event *GoogleEvent) CanEdit() bool {
-	return !event.eventDate.Recurrence().Repeats()
+	return true
 }
 
 func (event *GoogleEvent) CanDelete() bool {
-	return !event.eventDate.Recurrence().Repeats()
+	return true
 }

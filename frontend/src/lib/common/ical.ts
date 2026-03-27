@@ -37,12 +37,12 @@ export function parseTimestampList(str: string): Date[] {
     }
   }
 
-  const format = dateType == "DATE" ? "YYMMDD" : "YYYYMMDD_HHmmss";
+  const format = dateType == "DATE" ? "YYYYMMDD" : "YYYYMMDD_HHmmss";
 
   return timestamps.map(timestamp => dayjs(timestamp, format, timezoneId).toDate());
 }
 
 export function serializeTimestampList(listName: string, allDay: boolean, timezoneId: string, dates: Date[]): string {
-  const format = allDay ? "YYMMDD" : "YYYYMMDD[T]HHmmss";
+  const format = allDay ? "YYYYMMDD" : "YYYYMMDD[T]HHmmss";
   return `${listName};VALUE=${allDay ? "DATE" : "DATE-TIME"};TZID=${timezoneId}:${dates.map(x => dayjs(x).tz(timezoneId).format(format))}`
 }

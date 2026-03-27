@@ -201,7 +201,6 @@ func (ed *EventDate) Clone() *EventDate {
 
 // RFC-5545 3.3.10, 3.8.5.3
 type EventRecurrence struct {
-	repeats           bool
 	ruleSet           *rrule.Set // TODO: change to rruleset?
 	modifiedInstances []time.Time
 	allDay            bool
@@ -209,14 +208,13 @@ type EventRecurrence struct {
 }
 
 func (er *EventRecurrence) Clone() *EventRecurrence {
-	if !er.repeats {
+	if !er.Repeats() {
 		return EmptyEventRecurrence()
 	}
 
 	ruleSet := *er.ruleSet
 
 	return &EventRecurrence{
-		repeats:           er.repeats,
 		ruleSet:           &ruleSet,
 		modifiedInstances: er.modifiedInstances,
 		allDay:            er.allDay,
@@ -225,7 +223,7 @@ func (er *EventRecurrence) Clone() *EventRecurrence {
 }
 
 func (er *EventRecurrence) Repeats() bool {
-	return er.repeats
+	return er.ruleSet != nil && (er.ruleSet.GetRRule() != nil || len(er.ruleSet.GetRDate()) != 0)
 }
 
 func (er *EventRecurrence) RuleSet() *rrule.Set {
@@ -263,14 +261,14 @@ func (er *EventRecurrence) MarkModification(modifiedTime *time.Time) {
 
 func EmptyEventRecurrence() *EventRecurrence {
 	return &EventRecurrence{
-		repeats: false,
+		ruleSet: nil,
 	}
 }
 
-func EventRecurrenceFromIcal(ical *ical.Props) (*EventRecurrence, error) {
+func EventRecurrenceFromIcal(props *ical.Props) (*EventRecurrence, error) {
 	var rset = rrule.Set{}
 
-	roption, err := ical.RecurrenceRule()
+	roption, err := props.RecurrenceRule()
 	if err != nil {
 		return nil, fmt.Errorf("could not get recurrence rule: %v", err)
 	}
@@ -282,14 +280,14 @@ func EventRecurrenceFromIcal(ical *ical.Props) (*EventRecurrence, error) {
 		rset.RRule(rrule)
 	}
 
-	for _, prop := range ical.Values("EXDATE") {
+	for _, prop := range props.Values(ical.PropExceptionDates) {
 		exdateTime, _, err := ParseIcalTime(&prop)
 		if err == nil {
 			rset.ExDate(*exdateTime)
 		}
 	}
 
-	for _, prop := range ical.Values("RDATE") {
+	for _, prop := range props.Values(ical.PropRecurrenceDates) {
 		rdateTime, _, err := ParseIcalTime(&prop)
 		if err == nil {
 			rset.RDate(*rdateTime)
@@ -297,17 +295,76 @@ func EventRecurrenceFromIcal(ical *ical.Props) (*EventRecurrence, error) {
 	}
 
 	var eventRecurrence *EventRecurrence
-	if roption == nil {
+	if rset.GetRRule() == nil && len(rset.GetRDate()) == 0 {
 		eventRecurrence = EmptyEventRecurrence()
 	} else {
+		var timezone *time.Location
+
+		if dtstart := rset.GetDTStart(); dtstart.Unix() != 0 {
+			timezone = dtstart.Location()
+		} else if rdate := rset.GetRDate(); len(rdate) != 0 {
+			timezone = rdate[0].Location()
+		} else if exdate := rset.GetExDate(); len(exdate) != 0 {
+			timezone = exdate[0].Location()
+		}
+
+		if timezone == nil {
+			timezone = time.UTC
+		}
+
 		eventRecurrence = &EventRecurrence{
-			repeats:  true,
 			ruleSet:  &rset,
 			allDay:   true, // TODO
-			timezone: roption.Dtstart.Location(),
+			timezone: timezone,
 		}
 	}
+
 	return eventRecurrence, nil
+}
+
+func EventRecurrenceToIcal(recurrence *EventRecurrence) *ical.Props {
+	if !recurrence.Repeats() {
+		return nil
+	}
+
+	props := make(ical.Props)
+
+	if rule := recurrence.RuleSet().GetRRule(); rule != nil {
+		prop := ical.NewProp(ical.PropRecurrenceRule)
+		prop.SetValueType(ical.ValueRecurrence)
+		prop.Value = rule.Options.RRuleString()
+		props.Set(prop)
+	}
+	if rdate := recurrence.RuleSet().GetRDate(); len(rdate) != 0 {
+		for _, date := range rdate {
+			prop := ical.NewProp(ical.PropRecurrenceDates)
+			prop.SetValueType(ical.ValueDateTime)
+			prop.Value = SerializeIcalTime(&date, recurrence.allDay, false)
+			prop.Params.Add(ical.ParamTimezoneID, recurrence.timezone.String())
+			if recurrence.allDay {
+				prop.Params.Add(ical.ParamValue, "DATE")
+			} else {
+				prop.Params.Add(ical.ParamValue, "DATE-TIME")
+			}
+			props.Add(prop)
+		}
+	}
+	if exdate := recurrence.RuleSet().GetExDate(); len(exdate) != 0 {
+		for _, date := range exdate {
+			prop := ical.NewProp(ical.PropExceptionDates)
+			prop.SetValueType(ical.ValueDateTime)
+			prop.Value = SerializeIcalTime(&date, recurrence.allDay, false)
+			prop.Params.Add(ical.ParamTimezoneID, recurrence.timezone.String())
+			if recurrence.allDay {
+				prop.Params.Add(ical.ParamValue, "DATE")
+			} else {
+				prop.Params.Add(ical.ParamValue, "DATE-TIME")
+			}
+			props.Add(prop)
+		}
+	}
+
+	return &props
 }
 
 func EventRecurrenceFromStrings(rrule string, rdate string, exdate string) (*EventRecurrence, error) {
@@ -344,7 +401,6 @@ func EventRecurrenceFromLines(lines []string) (*EventRecurrence, error) {
 	}
 
 	return &EventRecurrence{
-		repeats:  true,
 		ruleSet:  rset,
 		allDay:   true, // TODO
 		timezone: nil,  // TODO
@@ -408,14 +464,14 @@ type eventRecurrenceMarshal struct {
 }
 
 func (er EventRecurrence) RruleString() string {
-	if !er.repeats || er.ruleSet.GetRRule() == nil || er.ruleSet.GetRRule().String() == "" {
+	if !er.Repeats() || er.ruleSet.GetRRule() == nil || er.ruleSet.GetRRule().String() == "" {
 		return ""
 	}
 	return fmt.Sprintf("%s", er.ruleSet.GetRRule().Options.RRuleString())
 }
 
 func (er EventRecurrence) RdateString() string {
-	if !er.repeats || len(er.ruleSet.GetRDate()) == 0 {
+	if !er.Repeats() {
 		return ""
 	}
 	var valueType string
@@ -428,7 +484,7 @@ func (er EventRecurrence) RdateString() string {
 }
 
 func (er EventRecurrence) ExdateString() string {
-	if !er.repeats || len(er.ruleSet.GetExDate()) == 0 {
+	if !er.Repeats() {
 		return ""
 	}
 	var valueType string
@@ -441,7 +497,7 @@ func (er EventRecurrence) ExdateString() string {
 }
 
 func (er EventRecurrence) Lines() []string {
-	if !er.repeats {
+	if !er.Repeats() {
 		return []string{}
 	}
 
@@ -460,7 +516,7 @@ func (er EventRecurrence) Lines() []string {
 }
 
 func (er EventRecurrence) MarshalJSON() ([]byte, error) {
-	if er.repeats {
+	if er.Repeats() {
 		casted := eventRecurrenceMarshal{
 			Rrule:  er.RruleString(),
 			Rdate:  er.RdateString(),
@@ -475,7 +531,7 @@ func (er EventRecurrence) MarshalJSON() ([]byte, error) {
 func (er *EventRecurrence) UnmarshalJSON(data []byte) (err error) {
 	str := string(data)
 	if str == "false" || str == "null" || str == "" {
-		er.repeats = false
+		er = EmptyEventRecurrence()
 		return nil
 	}
 
