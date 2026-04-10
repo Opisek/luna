@@ -29,6 +29,7 @@ const (
 	KeyAnimateMonthSelectionSwipe   = "animate_month_selection_swipe"
 	KeyAppearanceFrostedGlass       = "appearance_frosted_glass"
 	KeyAnimationDuration            = "animation_duration"
+	KeyLanguage                     = "language"
 )
 
 func AllDefaultUserSettings() []SettingsEntry {
@@ -54,6 +55,7 @@ func AllDefaultUserSettings() []SettingsEntry {
 		&AnimateMonthSelectionSwipe{},
 		&AppearenceFrostedGlass{},
 		&AnimationDuration{},
+		&Language{},
 	}
 
 	for _, setting := range settings {
@@ -107,6 +109,8 @@ func GetMatchingUserSettingStruct(key string) (SettingsEntry, *errors.ErrorTrace
 		return &AppearenceFrostedGlass{}, nil
 	case KeyAnimationDuration:
 		return &AnimationDuration{}, nil
+	case KeyLanguage:
+		return &Language{}, nil
 	default:
 		return nil, errors.New().Status(http.StatusBadRequest).
 			Append(errors.LvlWordy, "Invalid setting key %s", key).
@@ -147,7 +151,7 @@ type DebugMode struct {
 }
 
 func (entry *DebugMode) Key() string {
-	return "debug_mode"
+	return KeyDebugMode
 }
 func (entry *DebugMode) Default() {
 	entry.Enabled = false
@@ -167,7 +171,7 @@ type DisplayWeekNumbers struct {
 }
 
 func (entry *DisplayWeekNumbers) Key() string {
-	return "display_week_numbers"
+	return KeyDisplayWeekNumbers
 }
 func (entry *DisplayWeekNumbers) Default() {
 	entry.Enabled = false
@@ -187,7 +191,7 @@ type FirstDayOfWeek struct {
 }
 
 func (entry *FirstDayOfWeek) Key() string {
-	return "first_day_of_week"
+	return KeyFirstDayOfWeek
 }
 func (entry *FirstDayOfWeek) Default() {
 	entry.Day = 1
@@ -214,7 +218,7 @@ type ThemeLight struct {
 }
 
 func (entry *ThemeLight) Key() string {
-	return "theme_light"
+	return KeyThemeLight
 }
 func (entry *ThemeLight) Default() {
 	entry.Theme = "luna-light"
@@ -234,7 +238,7 @@ type ThemeDark struct {
 }
 
 func (entry *ThemeDark) Key() string {
-	return "theme_dark"
+	return KeyThemeDark
 }
 func (entry *ThemeDark) Default() {
 	entry.Theme = "luna-dark"
@@ -274,7 +278,7 @@ type FontText struct {
 }
 
 func (entry *FontText) Key() string {
-	return "font_text"
+	return KeyFontText
 }
 func (entry *FontText) Default() {
 	entry.Font = "atkinson-hyperlegible-next"
@@ -294,7 +298,7 @@ type FontTime struct {
 }
 
 func (entry *FontTime) Key() string {
-	return "font_time"
+	return KeyFontTime
 }
 func (entry *FontTime) Default() {
 	entry.Font = "atkinson-hyperlegible-mono"
@@ -577,4 +581,24 @@ func (entry *AnimationDuration) UnmarshalJSON(data []byte) (err error) {
 		return fmt.Errorf("invalid scaling factor: %f", entry.Factor)
 	}
 	return nil
+}
+
+// Which language to use
+// Should default to "default"
+type Language struct {
+	Font string `json:"value"`
+}
+
+func (entry *Language) Key() string {
+	return KeyLanguage
+}
+func (entry *Language) Default() {
+	entry.Font = "default"
+}
+func (entry *Language) MarshalJSON() ([]byte, error) {
+	return common.MarshalString(entry.Font), nil
+}
+func (entry *Language) UnmarshalJSON(data []byte) (err error) {
+	entry.Font, err = common.UnmarshalString(data)
+	return err
 }

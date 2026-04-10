@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { TextIcon } from "lucide-svelte";
+  import { TextAlignStart, TextIcon } from "lucide-svelte";
 
   import { GetEventColor, GetEventHoverColor, GetEventRGB, isDark } from "$lib/common/colors";
   import { passIfEnter } from "$lib/common/inputs";
@@ -231,7 +231,7 @@
     </span>
     {#if (event.desc && event.desc != "")}
       <span class="icons">
-        <TextIcon size={12}/>
+        <TextAlignStart size={12}/>
       </span>
     {/if}
   </div>

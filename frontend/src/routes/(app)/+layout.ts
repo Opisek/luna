@@ -17,7 +17,9 @@ import { OauthClients } from "$lib/client/data/oauth.svelte";
 import { browser } from "$app/environment";
 
 import "$lib/common/i18n";
-import { getLocaleFromNavigator, locale, locales, waitLocale } from "@sveltia/i18n";
+import { getLocaleFromNavigator, getLocaleFromQueryString, locale, locales, waitLocale } from "@sveltia/i18n";
+import { UserSettingKeys } from "../../types/settings";
+import { loadLanguage } from "$lib/common/i18n";
 
 function getSingletons(version: string, preloadedSettings: { userData: any, userSettings: any, globalSettings: any } | null = null): {
   connectivity: Connectivity;
@@ -72,9 +74,6 @@ export const load: PageLoad = async (event: LoadEvent) => {
     singletons: getSingletons(version)
   }; 
 
-  if (browser) await locale.set(getLocaleFromNavigator() || "");
-  await waitLocale();
-
   const results = await Promise.all([
     fetchJsonFromEvent(event, "/api/users/self", {}, true),
     fetchJsonFromEvent(event, "/api/users/self/settings", {}, true),
@@ -86,7 +85,11 @@ export const load: PageLoad = async (event: LoadEvent) => {
     return null; 
   });
 
-  if (!results || results[0].user === undefined) return {
+  const settingsLoaded = results && results[0].user !== undefined;
+
+  await loadLanguage(((results || {})[1] || {})[UserSettingKeys.Language])
+
+  if (!settingsLoaded) return {
     version: version,
     singletons: getSingletons(version)
   };

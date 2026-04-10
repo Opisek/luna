@@ -8,7 +8,7 @@
   import SimplePage from "../../components/layout/SimplePage.svelte";
   import Title from "../../components/layout/Title.svelte";
 
-  import { _ as t } from "@sveltia/i18n";
+  import { t } from "@sveltia/i18n";
 </script>
 
 <style lang="scss">

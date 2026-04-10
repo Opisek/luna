@@ -14,6 +14,8 @@
   import IconButton from "../interactive/IconButton.svelte";
   import { ArchiveRestore } from "lucide-svelte";
 
+  import { t } from "@sveltia/i18n";
+
   interface Props {
     showCreateModal?: () => any;
     showModal?: (initial?: CalendarModel) => Promise<CalendarModel>;
@@ -54,7 +56,7 @@
     return showModalInternal(calendar);
   };
 
-  let title: string = $derived(calendar.id ? (editMode ? "Edit calendar" : "Calendar") : "Add calendar");
+  let title: string = $derived(calendar.id ? (editMode ? t("calendar.title.edit") : t("calendar.title.view")) : t("calendar.title.create"));
 
   let selectableSources = $derived(
     repository.sources
@@ -64,13 +66,13 @@
 
   const onDelete = async () => {
     return await getRepository().deleteCalendar(calendar.id).then(() => calendar).catch(err => {
-      throw new Error(`Could not delete calendar ${calendar.name}: ${err.message}`);
+      throw new Error(t("calendar.error.delete", { values: { name: calendar.name, msg: err.message } }));
     });
   };
   const onEdit = async () => {
     if (calendar.id === "") {
       return await getRepository().createCalendar(calendar).then(() => calendar).catch(err => {
-        throw new Error(`Could not create calendar ${calendar.name}: ${err.message}`);
+        throw new Error(t("calendar.error.create", { values: { name: calendar.name, msg: err.message } }));
       });
     } else if (calendar.source === originalCalendar.source) {
       const changes = {
@@ -79,11 +81,11 @@
         color: calendar.color != originalCalendar.color
       }
       return await getRepository().editCalendar(calendar, changes, !calendar.can_edit).then(() => calendar).catch(err => {
-        throw new Error(`Could not edit calendar ${calendar.name}: ${err.message}`);
+        throw new Error(t("calendar.error.edit", { values: { name: calendar.name, msg: err.message } }));
       });
     } else {
       return await getRepository().moveCalendar(calendar).then(() => calendar).catch(err => {
-        throw new Error(`Could not move calendar ${calendar.name}: ${err.message}`);
+        throw new Error(t("calendar.error.move", { values: { name: calendar.name, msg: err.message } }));
       });
     }
   };
@@ -91,12 +93,11 @@
     calendar.overridden = false;
     getRepository().editCalendar(calendar, NoChangesCalendar, true).catch(err => {
       calendar.overridden = true;
-      queueNotification(ColorKeys.Danger, `Could not reset calendar ${calendar.name}: ${err.message}`);
-      return;
+      queueNotification(ColorKeys.Danger, t("calendar.error.reset", { values: { name: calendar.name, msg: err.message } }));
     }).then(async () => {
       getRepository().getCalendar(calendar.id, true).catch(err => {
         calendar.overridden = true;
-        queueNotification(ColorKeys.Danger, `Could not reset event ${calendar.name}: ${err.message}`);
+        queueNotification(ColorKeys.Danger, t("calendar.error.reset", { values: { name: calendar.name, msg: err.message } }));
         return;
       }).then((fetched) => {
         calendar = fetched as CalendarModel;
@@ -109,7 +110,7 @@
 
 <EditableModal
   title={title}
-  deleteConfirmation={`Are you sure you want to delete calendar "${calendar ? calendar.name : ""}"?`}
+  deleteConfirmation={t("calendar.confirm.delete", { values: { name: calendar.name } })}
   bind:editMode={editMode}
   bind:showModal={showModalInternal}
   onDelete={onDelete}
@@ -118,21 +119,21 @@
   submittable={canSubmit}
 >
   {#if calendar != EmptyCalendar}
-    <TextInput bind:value={calendar.name} name="name" placeholder="Name" editable={editMode} />
-    <SelectInput bind:value={calendar.source} name="source" placeholder="Source" options={selectableSources} editable={calendar.id === ""} />
+    <TextInput bind:value={calendar.name} name="name" placeholder={t("form.name")} editable={editMode} />
+  <SelectInput bind:value={calendar.source} name="source" placeholder={t("source.display")} options={selectableSources} editable={calendar.id === ""} />
     {#if editMode}
       <ColorInput bind:color={calendar.color} name="color" editable={editMode} />
     {/if}
     {#if editMode || calendar.desc}
-      <TextInput bind:value={calendar.desc} name="desc" placeholder="Description" multiline={true} editable={editMode} />
+      <TextInput bind:value={calendar.desc} name="desc" placeholder={t("form.desc")} multiline={true} editable={editMode} />
     {/if}
     {#if calendar.id && settings.userSettings[UserSettingKeys.DebugMode]}
-      <TextInput value={calendar.id} name="id" placeholder="Calendar ID" editable={false} />
+      <TextInput value={calendar.id} name="id" placeholder={t("calendar.id")} editable={false} />
     {/if}
   {/if}
   {#snippet extraButtonsLeft()}
     {#if calendar != EmptyCalendar && !editMode && calendar.overridden}
-      <IconButton onClick={resetOverrides} alt="Reset">
+      <IconButton onClick={resetOverrides} alt={t("button.reset")}>
         <ArchiveRestore/>
       </IconButton>
     {/if}

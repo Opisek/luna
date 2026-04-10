@@ -11,6 +11,7 @@
   import { fetchResponse } from "../../../lib/client/net";
   import { queueNotification } from "../../../lib/client/notifications";
   import { NoOp } from "../../../lib/client/placeholders";
+  import { t } from "@sveltia/i18n";
 
   interface Props {
     settings: Settings;
@@ -170,7 +171,7 @@
     </span>
 
     <div class="buttons">
-      <IconButton onClick={() => editApiToken(s, s.is_api)} alt="Details">
+      <IconButton onClick={() => editApiToken(s, s.is_api)} alt={t("button.details")}>
         <Info size={20}/>
       </IconButton>
       <IconButton onClick={() => deauthorizeSession(s.id)} color={ColorKeys.Danger} alt="Log out">

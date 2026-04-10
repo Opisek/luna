@@ -23,6 +23,7 @@
   import { parseTimestampList } from "../../lib/common/ical";
   import { SvelteSet } from "svelte/reactivity";
   import AffectedRecurrencesModal from "./AffectedRecurrencesModal.svelte";
+  import { t } from "@sveltia/i18n";
 
   interface Props {
     showModal?: (initial?: EventModel, date?: Date) => Promise<EventModel>;
@@ -123,7 +124,7 @@
     return showModalInternal(event);
   };
 
-  let title: string = $derived((event && event.id) ? (editMode ? "Edit event" : "Event") : "Create event");
+  let title: string = $derived((event && event.id) ? (editMode ? t("event.title.edit") : t("event.title.view")) : t("event.title.create"));
   let showEndDate: boolean = $derived(editMode || (event && (!event.date.allDay || !isSameDay(event.date.start, event.date.end))));
 
   let selectableCalendars = $derived(
@@ -136,7 +137,7 @@
     const affect = originalEvent.date.recurrence != undefined ? await selectAffectedRecurrences(false).catch(() => { throw new Error("Cancelled"); }) : "this";
 
     return await getRepository().deleteEvent(event.id, affect).then(() => event).catch(err => {
-      throw new Error(`Could not delete event ${event.name}: ${err.message}`);
+      throw new Error(t("event.error.delete", { values: { name: event.name, msg: err.message } }));
     });
   };
   const onEdit = async () => {
@@ -147,7 +148,7 @@
     }
     if (event.id === "") {
       return await getRepository().createEvent(event).then(() => event).catch(err => {
-        throw new Error(`Could not create event ${event.name}: ${err.message}`);
+        throw new Error(t("event.error.create", { values: { name: event.name, msg: err.message } }));
       });
     } else if (event.calendar == originalEvent.calendar) {
       const changes = {
@@ -157,11 +158,11 @@
         date: !deepEquality(event.date, originalEvent.date)
       };
       return await getRepository().editEvent(event, changes, eventSourceType === "ical", affect).then(() => event).catch(err => {
-        throw new Error(`Could not edit event ${event.name}: ${err.message}`);
+        throw new Error(t("event.error.edit", { values: { name: event.name, msg: err.message } }));
       });
     } else {
       return await getRepository().moveEvent(event).then(() => event).catch(err => {
-        throw new Error(`Could not move event ${event.name}: ${err.message}`);
+        throw new Error(t("event.error.move", { values: { name: event.name, msg: err.message } }));
       });
     }
   };
@@ -169,12 +170,12 @@
     event.overridden = false;
     getRepository().editEvent(event, NoChangesEvent, true).catch(err => {
       event.overridden = true;
-      queueNotification(ColorKeys.Danger, `Could not reset event ${event.name}: ${err.message}`);
+      queueNotification(ColorKeys.Danger, t("event.error.reset", { values: { name: event.name, msg: err.message } }));
       return;
     }).then(async () => {
       getRepository().getEvent(event.id, true).catch(err => {
         event.overridden = true;
-        queueNotification(ColorKeys.Danger, `Could not reset event ${event.name}: ${err.message}`);
+        queueNotification(ColorKeys.Danger, t("event.error.reset", { values: { name: event.name, msg: err.message } }));
         return;
       }).then((fetched) => {
         event = fetched as EventModel;
@@ -216,7 +217,7 @@
 
 <EditableModal
   title={title}
-  deleteConfirmation={`Are you sure you want to delete event "${event ? event.name : ""}"?`}
+  deleteConfirmation={t("event.confirm.delete", { values: { name: event.name } })}
   bind:editMode={editMode}
   bind:showModal={showModalInternal}
   onDelete={onDelete}
@@ -226,28 +227,28 @@
   submittable={event.calendar !== "" && event.name !== "" && (event.date.start.getTime() < event.date.end.getTime() || (event.date.start.getTime() <= event.date.end.getTime() && event.date.allDay))}
 >
   {#if event != EmptyEvent}
-    <TextInput bind:value={event.name} name="name" placeholder="Name" editable={editMode} />
-    <SelectInput bind:value={event.calendar} name="calendar" placeholder="Calendar" options={selectableCalendars} editable={editMode && eventSourceType !== "ical"} />
+    <TextInput bind:value={event.name} name="name" placeholder={t("form.name")} editable={editMode} />
+    <SelectInput bind:value={event.calendar} name="calendar" placeholder={t("calendar.display")} options={selectableCalendars} editable={editMode && eventSourceType !== "ical"} />
     {#if editMode}
       <ColorInput bind:color={event.color} name="color" editable={editMode} />
     {/if}
     {#if editMode || event.desc}
-      <TextInput bind:value={event.desc} name="desc" placeholder="Description" multiline={true} editable={editMode} />
+      <TextInput bind:value={event.desc} name="desc" placeholder={t("form.desc")} multiline={true} editable={editMode} />
     {/if}
     {#if editMode}
-      <ToggleInput bind:value={event.date.allDay} name="all_day" description="All Day"/>
+      <ToggleInput bind:value={event.date.allDay} name="all_day" description={t("date.allDay")}/>
     {/if}
     <Horizontal position="left">
-      <DateTimeInput bind:value={event.date.start} name="date_start" placeholder={showEndDate ? "Start" : "Date"} editable={editMode} allDay={event.date.allDay} onChange={changeStart} wrap={true}/>
+      <DateTimeInput bind:value={event.date.start} name="date_start" placeholder={showEndDate ? t("date.start") : t("date.date")} editable={editMode} allDay={event.date.allDay} onChange={changeStart} wrap={true}/>
       {#if showEndDate}
-        <DateTimeInput bind:value={event.date.end} name="date_end" placeholder="End" editable={editMode} allDay={event.date.allDay} onChange={changeEnd} wrap={true}/>
+        <DateTimeInput bind:value={event.date.end} name="date_end" placeholder={t("date.end")} editable={editMode} allDay={event.date.allDay} onChange={changeEnd} wrap={true}/>
       {/if}
     </Horizontal>
     {#if event.id && settings.userSettings[UserSettingKeys.DebugMode]}
-      <TextInput value={event.id} name="id" placeholder="Event ID" editable={false} />
+      <TextInput value={event.id} name="id" placeholder={t("event.id")} editable={false} />
     {/if}
     {#if editMode}
-      <ToggleInput bind:value={eventRepeats} name="repeats" description="Repeats"/>
+      <ToggleInput bind:value={eventRepeats} name="repeats" description={t("recurrence.repeats")}/>
     {/if}
     {#if eventRepeats}
       <!--
@@ -267,9 +268,9 @@
   {#snippet extraButtonsLeft()}
     {#if !editMode}
       {#if event != EmptyEvent && event.overridden}
-        <Button color={ColorKeys.Accent} onClick={resetOverrides}>Reset</Button>
+        <Button color={ColorKeys.Accent} onClick={resetOverrides}>{t("button.reset")}</Button>
       {/if}
-      <IconButton onClick={copyEvent} alt="Copy" canRenderAsButton={true}>
+      <IconButton onClick={copyEvent} alt={t("button.copy")} canRenderAsButton={true}>
         <Copy/>
       </IconButton>
     {/if}

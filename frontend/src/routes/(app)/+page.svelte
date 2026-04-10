@@ -37,7 +37,7 @@
   import { page } from "$app/state";
   import CreditsModal from "../../components/modals/CreditsModal.svelte";
   import CreatePopup from "../../components/popups/CreatePopup.svelte";
-  import { _ as t } from "@sveltia/i18n";
+  import { locale, t } from "@sveltia/i18n";
 
   /* Singletons */
   const settings = getSettings();
@@ -288,7 +288,7 @@
 <CreditsModal bind:showModal={showCreditsModal}/>
 
 <aside>
-  <Title>Luna</Title>
+  <Title>{t("branding.name")}</Title>
 
   {#if settings.userSettings[UserSettingKeys.DisplaySmallCalendar]}
     <SmallCalendar date={date} smaller={true} onDayClick={(clickedDate) => smallCalendarClick(clickedDate)}></SmallCalendar>
@@ -299,10 +299,10 @@
   </div>
 
   <Horizontal position="center">
-    <IconButton onClick={showSettingsModal} alt="Settings">
+    <IconButton onClick={showSettingsModal} alt={t("button.settings")}>
       <Settings/>
     </IconButton>
-    <IconButton onClick={showCreatePopup} alt="Add source">
+    <IconButton onClick={showCreatePopup} alt={t("button.add.generic")}>
       <PlusIcon/>
       <CreatePopup
         bind:showPopup={showCreatePopup}
@@ -311,13 +311,13 @@
         addEvent={showEventModal}
       />
     </IconButton>
-    <IconButton onClick={showCreditsModal} alt="Credits">
+    <IconButton onClick={showCreditsModal} alt={t("button.credits")}>
       <Copyleft/>
     </IconButton>
   </Horizontal>
 
   <span class="copyright">
-    {t("copyright")}
+    {t("branding.copyright")}
   </span>
 </aside>
 
@@ -342,7 +342,7 @@
         </span>
       {/if}
 
-      <IconButton onClick={forceRefresh} alt="Refresh">
+      <IconButton onClick={forceRefresh} alt={t("button.refresh")}>
         <span class="refreshButtonWrapper" class:spin={loaderAnimation} onanimationiteration={() => { if (!isLoading) loaderAnimation = false; }}>
           <RefreshCw size={20}/>
         </span>
@@ -350,7 +350,7 @@
 
       {#if !todayInRange}
         <Button onClick={seeToday} compact={true}>
-          {t("calendar.scope.today")}
+          {t("scope.today")}
         </Button>
       {/if}
 
@@ -363,9 +363,9 @@
         compact={true}
         bind:value={view}
         options={[
-          { value: "day", name: "Day"},
-          { value: "week", name: "Week"},
-          { value: "month", name: "Month"},
+          { value: "day", name: t("scope.day")},
+          { value: "week", name: t("scope.week")},
+          { value: "month", name: t("scope.month")},
         ]}
       />
     </Horizontal>

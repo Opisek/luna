@@ -1,4 +1,4 @@
-import { _ as t } from "@sveltia/i18n";
+import { t } from "@sveltia/i18n";
 
 const dayNames = [
   "sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"
@@ -8,8 +8,8 @@ const monthNames = [
 ]
 
 export function getDayName(day: number, short?: boolean): string {
-  return t(`calendar.weekdays.${short ? "short" : "full"}.${dayNames[day]}`);
+  return t(`weekdays.${short ? "short" : "full"}.${dayNames[day]}`)
 }
 export function getMonthName(month: number, short?: boolean): string {
-  return t(`calendar.months.${short ? "short" : "full"}.${monthNames[month]}`);
+  return t(`months.${short ? "short" : "full"}.${monthNames[month]}`);
 }

@@ -11,6 +11,11 @@ const config = {
 		csrf: {
 			checkOrigin: false // own solution implemented in src/routes/api/[...endpoint]/+server.ts
 		}
+	},
+	compilerOptions: {
+		experimental: {
+			async: true
+		}
 	}
 };
 

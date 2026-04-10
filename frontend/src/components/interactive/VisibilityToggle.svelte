@@ -4,6 +4,8 @@
   import IconButton from "./IconButton.svelte";
   import { NoOp } from "../../lib/client/placeholders";
 
+  import { t } from "@sveltia/i18n";
+
   interface Props {
     visible: boolean;
     momentary?: boolean;
@@ -33,11 +35,11 @@
 </script>
 
 {#if momentary}
-  <IconButton down={show} up={hide} tabindex={-1} alt="Show">
+  <IconButton down={show} up={hide} tabindex={-1} alt={t("button.show")}>
     {@render icon()}
   </IconButton>
 {:else}
-  <IconButton onClick={toggleVisibility} alt={visible ? "Hide" : "Show"}>
+  <IconButton onClick={toggleVisibility} alt={visible ? t("button.hide") : t("button.show")}>
     {@render icon()}
   </IconButton>
 {/if}

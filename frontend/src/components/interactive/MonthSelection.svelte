@@ -9,6 +9,8 @@
   import { focusIndicator } from "$lib/client/decoration";
   import { getMonthName } from "$lib/common/humanization";
 
+  import { t } from "@sveltia/i18n";
+
   interface Props {
     date: Date;
     granularity?: "month" | "week" | "day";
@@ -91,10 +93,10 @@
 </div>
 
 {#snippet buttons(prev: () => void, next: () => void)}
-  <IconButton onClick={prev} alt="Previous month">
+  <IconButton onClick={prev} alt={t("button.month.previous")}>
     <LeftIcon/>
   </IconButton>
-  <IconButton onClick={next} alt="Next month">
+  <IconButton onClick={next} alt={t("button.month.next")}>
     <RightIcon/>
   </IconButton>
 {/snippet}

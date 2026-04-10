@@ -20,6 +20,7 @@
   import OauthTokensModal from "./OauthTokensModal.svelte";
   import Horizontal from "../layout/Horizontal.svelte";
   import Link from "../forms/Link.svelte";
+  import { t } from "@sveltia/i18n";
 
   interface Props {
     showModal?: (source?: SourceModel) => Promise<SourceModel>;
@@ -57,7 +58,7 @@
       };
     } else {
       sourceDetailed = await getRepository().getSourceDetails(source.id, true).catch(err => {
-        queueNotification(ColorKeys.Danger, `Could not get source details: ${err.message}`);
+        queueNotification(ColorKeys.Danger, t("source.error.details", { values: { msg: err.message } }));
         return Promise.reject();
       });
 
@@ -71,7 +72,7 @@
         await fetchFileById(fileId).then(fileList => {
           sourceDetailed.settings.file = fileList;
         }).catch(err => {
-          queueNotification(ColorKeys.Danger, `Could not get file: ${err.message}`);
+          queueNotification(ColorKeys.Danger, t("file.error.fetch", { values: { msg: err.message } }));
           sourceDetailed.settings.file = null;
         });
       } else {
@@ -87,17 +88,17 @@
   };
 
   let editMode: boolean = $state(false);
-  let title: string = $derived(sourceDetailed.id ? (editMode ? "Edit source" : "Source") : "Add source");
+  let title: string = $derived(sourceDetailed.id ? (editMode ? t("source.title.edit") : t("source.title.view")) : t("source.title.create"));
 
   const onDelete = async () => {
     return await getRepository().deleteSource(sourceDetailed.id).then(() => sourceDetailed).catch(err => {
-      throw new Error(`Could not delete source ${sourceDetailed.name}: ${err.message}`);
+      throw new Error(t("source.error.delete", { values: { name: sourceDetailed.name, msg: err.message } }));
     });
   };
   const onEdit = async () => {
     if (sourceDetailed.id === "") {
       return await getRepository().createSource(sourceDetailed).then(() => sourceDetailed).catch(err => {
-        throw new Error(`Could not create source ${sourceDetailed.name}: ${err.message}`);
+        throw new Error(t("source.error.create", { values: { name: sourceDetailed.name, msg: err.message } }));
       });
     } else {
       if (originalSource.settings.file instanceof String && sourceDetailed.settings.file instanceof FileList && sourceDetailed.settings.file.length === 1 && sourceDetailed.settings.file[0].name === originalSource.settings.file) {
@@ -110,7 +111,7 @@
         auth: sourceDetailed.auth_type != originalSource.auth_type || !deepEquality(sourceDetailed.auth, originalSource.auth)
       }
       return await getRepository().editSource(sourceDetailed, changes).then(() => sourceDetailed).catch(err => {
-        throw new Error(`Could not edit source ${sourceDetailed.name}: ${err.message}`);
+        throw new Error(t("source.error.edit", { values: { name: sourceDetailed.name, msg: err.message } }));
       });
     }
   };
@@ -140,7 +141,7 @@
     await performOauthAuhorization(sourceDetailed.auth.client_id).then((id) => {
       sourceDetailed.auth.tokens_id = id;
     }).catch(() => {
-      queueNotification(ColorKeys.Danger, "Authorization aborted");
+      queueNotification(ColorKeys.Danger, t("auth.oauth.abort"));
     }).finally(() => {
       oauthPending = false;
     });
@@ -172,7 +173,7 @@
 
 <EditableModal
   title={title}
-  deleteConfirmation={`Are you sure you want to delete source "${sourceDetailed ? sourceDetailed.name : ""}"?`}
+  deleteConfirmation={t("source.confirm.delete", { values: { name: sourceDetailed.name } })}
   bind:editMode={editMode}
   bind:showModal={showModalInternal}
   onModalHide={abortOauthAuthorization}
@@ -181,21 +182,21 @@
   submittable={canSubmit}
 >
   {#if sourceDetailed}
-    <TextInput bind:value={sourceDetailed.name} name="name" placeholder="Name" editable={editMode} />
+    <TextInput bind:value={sourceDetailed.name} name="name" placeholder={t("form.name")} editable={editMode} />
 
     <SelectButtons bind:value={sourceDetailed.type} name="type" placeholder={"Type"} editable={editMode}
       options={[
         {
           value: "caldav",
-          name: "CalDav"
+          name: t("caldav.display")
         },
         {
           value: "ical",
-          name: "iCal"
+          name: t("ical.display")
         },
         {
           value: "google",
-          name: "Google Calendar"
+          name: t("google.display")
         }
       ]}
       onClick={(value) => {
@@ -208,65 +209,65 @@
       <SelectButtons bind:value={sourceDetailed.settings.location} name="ical_location" placeholder={"File Location"} editable={editMode} options={[
         {
           value: "remote",
-          name: "Internet Link",
+          name: t("ical.location.remote"),
         },
         {
           value: "database",
-          name: "Upload File",
+          name: t("ical.location.database"),
         },
         {
           value: "local",
-          name: "Server Filepath",
+          name: t("ical.location.path"),
         },
       ]}/>
     {/if}
 
     {#if sourceDetailed.type === "caldav"}
-      <TextInput bind:value={sourceDetailed.settings.url} name="caldav_url" placeholder="CalDav URL" editable={editMode} validation={isValidUrl} bind:validity={caldavLinkValidity} />
+      <TextInput bind:value={sourceDetailed.settings.url} name="caldav_url" placeholder={t("caldav.url")} editable={editMode} validation={isValidUrl} bind:validity={caldavLinkValidity} />
     {/if}
     {#if sourceDetailed.type === "ical"}
       {#if sourceDetailed.settings.location === "remote"}
-        <TextInput bind:value={sourceDetailed.settings.url} name="ical_url" placeholder="iCal URL" editable={editMode} validation={isValidUrl} bind:validity={icalLinkValidity} />
+        <TextInput bind:value={sourceDetailed.settings.url} name="ical_url" placeholder={t("ical.url")} editable={editMode} validation={isValidUrl} bind:validity={icalLinkValidity} />
       {:else if sourceDetailed.settings.location === "database"}
-        <FileUpload bind:files={sourceDetailed.settings.file} bind:fileId={sourceDetailed.settings.fileId} name="ical_file" placeholder="iCal File" accept=".ical,.ics,.ifb,.icalendar" editable={editMode} validation={isValidIcalFile} bind:validity={icalFileValidity} />
+        <FileUpload bind:files={sourceDetailed.settings.file} bind:fileId={sourceDetailed.settings.fileId} name="ical_file" placeholder={t("ical.file")} accept=".ical,.ics,.ifb,.icalendar" editable={editMode} validation={isValidIcalFile} bind:validity={icalFileValidity} />
         {#if sourceDetailed.settings.fileId && sourceDetailed.settings.file && settings.userSettings[UserSettingKeys.DebugMode]}
-          <TextInput value={sourceDetailed.settings.fileId} name="id" placeholder="File ID" editable={false} />
+          <TextInput value={sourceDetailed.settings.fileId} name="id" placeholder={t("file.id")} editable={false} />
         {/if}
       {:else if sourceDetailed.settings.location === "local"}
-        <TextInput bind:value={sourceDetailed.settings.path} name="ical_path" placeholder="iCal Path" editable={editMode} validation={isValidPath} bind:validity={icalPathValidity} />
+        <TextInput bind:value={sourceDetailed.settings.path} name="ical_path" placeholder={t("ical.path")} editable={editMode} validation={isValidPath} bind:validity={icalPathValidity} />
       {/if}
     {/if}
     
     {#if !(sourceDetailed.type === "ical" && sourceDetailed.settings.location !== "remote")}
       {#if sourceDetailed.type !== "google"}
-        <SelectButtons bind:value={sourceDetailed.auth_type} name="auth_type" placeholder={"Authentication Type"} editable={editMode} options={[
+        <SelectButtons bind:value={sourceDetailed.auth_type} name="auth_type" placeholder={t("auth.type")} editable={editMode} options={[
           {
             value: "none",
-            name: "None",
+            name: t("auth.none.display"),
           },
           {
             value: "basic",
-            name: "Password",
+            name: t("auth.basic.display"),
           },
           {
             value: "bearer",
-            name: "Token",
+            name: t("auth.bearer.display"),
           },
           {
             value: "oauth",
-            name: "OAuth 2.0",
+            name: t("auth.oauth.display"),
           },
         ]}/>
       {/if}
       {#if sourceDetailed.auth_type === "basic"}
-        <TextInput bind:value={sourceDetailed.auth.username} name="auth_username" placeholder="Username" editable={editMode} />
-        <TextInput bind:value={sourceDetailed.auth.password} name="auth_password" placeholder="Password" editable={editMode} password={true} />
+        <TextInput bind:value={sourceDetailed.auth.username} name="auth_username" placeholder={t("auth.basic.username")} editable={editMode} />
+        <TextInput bind:value={sourceDetailed.auth.password} name="auth_password" placeholder={t("auth.basic.password")} editable={editMode} password={true} />
       {/if}
       {#if sourceDetailed.auth_type === "bearer"}
-        <TextInput bind:value={sourceDetailed.auth.token} name="auth_token" placeholder="Token" editable={editMode} password={true} />
+        <TextInput bind:value={sourceDetailed.auth.token} name="auth_token" placeholder={t("auth.bearer.token")} editable={editMode} password={true} />
       {/if}
       {#if sourceDetailed.auth_type === "oauth"}
-          <SelectInput bind:value={sourceDetailed.auth.client_id} name="oauth_client" placeholder="Authorization Provider" editable={editMode} options={oauthClients.clients.map(client => ({ value: client.id, name: client.name }))}/>
+          <SelectInput bind:value={sourceDetailed.auth.client_id} name="oauth_client" placeholder={t("auth.oauth.client.display")} editable={editMode} options={oauthClients.clients.map(client => ({ value: client.id, name: client.name }))}/>
         {#if editMode && sourceDetailed.auth.client_id != "" && selectedOauthClient?.name}
           <Button color={selectedOauthClientAuthorized ? ColorKeys.Success : ColorKeys.Accent} onClick={startOauthAuthorization} enabled={!oauthPending && !selectedOauthClientAuthorized}>
             {#if oauthPending}
@@ -279,7 +280,7 @@
           </Button>
           {#if selectedOauthClientAuthorized}
             <Horizontal position="right">
-              <Link onClick={startOauthAuthorization}>Choose a different account</Link>
+              <Link onClick={startOauthAuthorization}>{t("auth.oauth.different")}</Link>
             </Horizontal>
           {/if}
         {/if}
@@ -287,7 +288,7 @@
     {/if}
 
     {#if sourceDetailed.id && settings.userSettings[UserSettingKeys.DebugMode]}
-      <TextInput value={sourceDetailed.id} name="id" placeholder="Source ID" editable={false} />
+      <TextInput value={sourceDetailed.id} name="id" placeholder={t("source.id")} editable={false} />
     {/if}
   {/if}
 </EditableModal>

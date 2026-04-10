@@ -10,6 +10,7 @@
   import ToggleInput from "../../forms/ToggleInput.svelte";
   import Horizontal from "../../layout/Horizontal.svelte";
   import Image from "../../layout/Image.svelte";
+  import { t } from "@sveltia/i18n";
 
   interface Props {
     settings: Settings;
@@ -208,21 +209,21 @@
 
 <TextInput
   name="username"
-  placeholder="Username"
+  placeholder={t("settings.account.username")}
   bind:value={settings.userData.username}
   validation={isValidUsername}
   bind:validity={usernameValidity}
 />
 <TextInput
   name="email"
-  placeholder="Email"
+  placeholder={t("settings.account.email")}
   bind:value={settings.userData.email}
   validation={isValidEmail}
   bind:validity={emailValidity}
 />
 <TextInput
   name="new_password"
-  placeholder="New Password"
+  placeholder={t("settings.account.password.new")}
   password={true}
   bind:value={newPassword}
   validation={isValidPassword}
@@ -231,7 +232,7 @@
 {#if newPassword != "" && passwordValidity.valid}
   <TextInput
     name="new_password_confirm"
-    placeholder="Confirm New Password"
+    placeholder={t("settings.account.password.confirm")}
     password={true}
     validation={isValidRepeatPassword(newPassword)}
     bind:validity={repeatPasswordValidity}
@@ -239,34 +240,34 @@
 {/if}
 <ToggleInput
   name="searchable" 
-  description="Allow Other Users To Find Me"
+  description={t("settings.account.searchable")}
   bind:value={settings.userData.searchable}
 />
 <Horizontal position="justify" width="full">
   <div class="pfpButtons">
     <SelectButtons
       name="pfp_type"
-      placeholder="Profile Picture"
+      placeholder={t("settings.account.pfp.display")}
       bind:value={settings.userData.profile_picture_type}
       options={
         ([
-          [ { name: "Gravatar", value: "gravatar" }, settings.globalSettings[GlobalSettingKeys.EnableGravatar] ],
-          [ { name: "Upload File", value: "database" }, settings.globalSettings[GlobalSettingKeys.EnableProfilePicturesUpload] ],
-          [ { name: "Internet Link", value: "remote" }, true],
-          [ { name: "Luna Art", value: "static" }, true ]
+          [ { name: t("settings.account.pfp.type.gravatar"), value: "gravatar" }, settings.globalSettings[GlobalSettingKeys.EnableGravatar] ],
+          [ { name: t("settings.account.pfp.type.database"), value: "database" }, settings.globalSettings[GlobalSettingKeys.EnableProfilePicturesUpload] ],
+          [ { name: t("settings.account.pfp.type.remote"), value: "remote" }, true],
+          [ { name: t("settings.account.pfp.type.luna"), value: "static" }, true ]
         ] as [Option<string>, boolean][]).filter(x => x[1]).map(x => x[0])
       }
     />
   </div>
   <Image
     src={effectiveProfilePictureUrl}
-    alt="Profile Picture"
+    alt={t("settings.account.pfp.display")}
   />
 </Horizontal>
 {#if settings.userData.profile_picture_type === "database"}
   <FileUpload
     name="pfp_file"
-    placeholder="Profile Picture File"
+    placeholder={t("settings.account.pfp.file")}
     bind:files={profilePictureFiles}
     bind:fileId={profilePictureFileId}
     accept={"image/*"}
@@ -277,20 +278,20 @@
 {:else if settings.userData.profile_picture_type === "remote"}
   <TextInput
     name="pfp_link"
-    placeholder="Profile Picture Link"
+    placeholder={t("settings.account.pfp.link")}
     bind:value={profilePictureRemoteUrl}
   />
 {:else if settings.userData.profile_picture_type === "gravatar"}
   {#if !profilePictureGravatarIsDefault && settings.globalSettings[GlobalSettingKeys.EnableGravatar]}
     <ToggleInput
       name="pfp_gravatar_force_default"
-      description="Use Default Gravatar Profile Picture"
+      description={t("settings.account.pfp.gravatar.default")}
       bind:value={profilePictureGravatarForceDefault}
     />
   {/if}
 {:else if settings.userData.profile_picture_type === "static"}
-  Feature not yet available
+  {t("error.unavailable")}
 {/if}
 {#if settings.userData.id && settings.userSettings[UserSettingKeys.DebugMode]}
-  <TextInput value={settings.userData.id} name="id" placeholder="User ID" editable={false} />
+  <TextInput value={settings.userData.id} name="id" placeholder={t("user.id")} editable={false} />
 {/if}

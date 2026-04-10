@@ -10,6 +10,8 @@
   import { queueNotification } from "../../lib/client/notifications";
   import { ColorKeys } from "../../types/colors";
 
+  import { t } from "@sveltia/i18n";
+
   let passwordVisible: boolean = $state(false);
 
   let wrapper: HTMLDivElement | null = $state(null);
@@ -253,7 +255,7 @@
 </div>
 
 {#snippet copyButton()}
-  <IconButton alt="Copy">
+  <IconButton alt={t("button.copy")}>
     <Copy size={16} onclick={copy}/>
   </IconButton>
 {/snippet}

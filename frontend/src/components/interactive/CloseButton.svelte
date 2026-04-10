@@ -3,6 +3,8 @@
 
   import IconButton from "./IconButton.svelte";
 
+  import { t } from "@sveltia/i18n";
+
   interface Props {
     onClick: () => void;
   }
@@ -12,6 +14,6 @@
   }: Props = $props();
 </script>
 
-<IconButton onClick={onClick} alt="Close">
+<IconButton onClick={onClick} alt={t("button.close")}>
   <X/>
 </IconButton>

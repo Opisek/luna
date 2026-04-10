@@ -31,7 +31,8 @@
   import { getDatabaseFileIdFromUrl } from "../../lib/common/parsing";
   import OauthSettingsTab from "./settingModalTabs/OauthSettingsTab.svelte";
   import { getOauthClients } from "../../lib/client/data/oauth.svelte";
-  import { _ as t } from "@sveltia/i18n";
+  import { locales, t } from "@sveltia/i18n";
+  import { getDefaultLanguage, loadLanguage } from "$lib/common/i18n";
 
   interface Props {
     showModal: () => void;
@@ -89,35 +90,35 @@
   let showModalInternal: () => Promise<void> = $state(Promise.reject);
 
   // Settings categories
-  const categoriesAdmin: Option<string>[][] = [
+  const categoriesAdmin: Option<string>[][] = $derived([
     [
-      { name: t("settings.categories.account"), value: "account", icon: User },
-      { name: t("settings.categories.appearance"), value: "appearance", icon: Palette },
-      { name: t("settings.categories.developer"), value: "developer", icon: Code }
+      { name: t("settings.account.title"), value: "account", icon: User },
+      { name: t("settings.appearance.title"), value: "appearance", icon: Palette },
+      { name: t("settings.developer.title"), value: "developer", icon: Code }
     ],
     [
-      { name: t("settings.categories.users"), value: "users", icon: Users },
-      { name: t("settings.categories.themes"), value: "themes", icon: Palette },
-      { name: t("settings.categories.fonts"), value: "fonts", icon: CaseSensitive },
-      { name: t("settings.categories.oauth"), value: "oauth", icon: Lock },
-      { name: t("settings.categories.admin"), value: "admin", icon: Shield },
+      { name: t("settings.users.title"), value: "users", icon: Users },
+      { name: t("settings.themes.title"), value: "themes", icon: Palette },
+      { name: t("settings.fonts.title"), value: "fonts", icon: CaseSensitive },
+      { name: t("settings.oauth.title"), value: "oauth", icon: Lock },
+      { name: t("settings.admin.title"), value: "admin", icon: Shield },
     ],
     [
-      { name: t("settings.categories.danger"), value: "danger", icon: TriangleAlert, color: ColorKeys.Danger },
-      { name: t("settings.categories.logout"), value: "logout", icon: LogOut, color: ColorKeys.Danger },
+      { name: t("settings.danger.title"), value: "danger", icon: TriangleAlert, color: ColorKeys.Danger },
+      { name: t("settings.logout.title"), value: "logout", icon: LogOut, color: ColorKeys.Danger },
     ],
-  ]
-  const categories: Option<string>[][] = [
+  ]);
+  const categories: Option<string>[][] = $derived([
     [
-      { name: t("settigs.categories.account"), value: "account", icon: User },
-      { name: t("settigs.categories.appearance"), value: "appearance", icon: Palette },
-      { name: t("settigs.categories.developer"), value: "developer", icon: Code }
+      { name: t("settigs.account.title"), value: "account", icon: User },
+      { name: t("settigs.appearance.title"), value: "appearance", icon: Palette },
+      { name: t("settigs.developer.title"), value: "developer", icon: Code }
     ],
     [
-      { name: t("settings.categories.danger"), value: "danger", icon: TriangleAlert, color: ColorKeys.Danger },
-      { name: t("settings.categories.logout"), value: "logout", icon: LogOut, color: ColorKeys.Danger },
+      { name: t("settings.danger.title"), value: "danger", icon: TriangleAlert, color: ColorKeys.Danger },
+      { name: t("settings.logout.title"), value: "logout", icon: LogOut, color: ColorKeys.Danger },
     ],
-  ]
+  ]);
 
   let selectedCategory = $state("account");
   let previousCategory = $state("account");
@@ -134,6 +135,9 @@
     { name: "Atkinson Hyperlegible Next", value: "atkinson-hyperlegible-next" },
     { name: "Atkinson Hyperlegible Mono", value: "atkinson-hyperlegible-next" }
   ]);
+  let defaultLanguageName = $derived(t(`language.${await getDefaultLanguage()}`));
+  let defaultLanguageOption = $derived({ name: t("language.default", { values: { default: defaultLanguageName} }), value: "default" });
+  let languages = $derived<Option<string>[]>([defaultLanguageOption].concat(locales.map(x => ({ name: t(`language.${x}`), value: x}))));
 
   function formatInstalledFile(icon: any = null): (rawName: string) => Option<string> {
     return (rawName: string): Option<string> => {
@@ -150,7 +154,7 @@
       lightThemes = Object.keys(response.light).map(formatInstalledFile(Sun)).sort((a, b) => a.name.localeCompare(b.name));
       darkThemes = Object.keys(response.dark).map(formatInstalledFile(Moon)).sort((a, b) => a.name.localeCompare(b.name));
     }).catch((err) => {
-      queueNotification(ColorKeys.Danger, t("error.message.themes.fetch", { values: { msg: err }}));
+      queueNotification(ColorKeys.Danger, t("fonts.error.fetch", { values: { msg: err }}));
     });
   }
 
@@ -158,7 +162,7 @@
     fetchJson("/installed/fonts").then((response) => {
       fonts = Object.keys(response).map(formatInstalledFile()).sort((a, b) => a.name.localeCompare(b.name));
     }).catch((err) => {
-      queueNotification(ColorKeys.Danger, t("error.message.fonts.fetch", { values: { msg: err }}));
+      queueNotification(ColorKeys.Danger, t("fonts.error.fetch", { values: { msg: err }}));
     });
   }
 
@@ -185,6 +189,8 @@
     if (userDataSnapshot) settings.userData = await deepCopy(userDataSnapshot);
     if (userSettingsSnapshot) settings.userSettings = await deepCopy(userSettingsSnapshot);
     if (globalSettingsSnapshot) settings.globalSettings = await deepCopy(globalSettingsSnapshot);
+
+    await loadLanguage(settings.userSettings[UserSettingKeys.Language]);
 
     refetchProfilePicture();
   }
@@ -233,8 +239,8 @@
   async function deleteAccount(id: string = "self") {
     const ownAccount = id === "self" || id === users.currentUser;
     await showConfirmation(
-      t(`modal.confirmation.account.delete.${ownAccount ? "own" : "other"}`),
-      t(`modal.confirmation.data.delete.${ownAccount ? "own" : "other"}`)
+      `${ownAccount ? t("settings.account.delete.confirmation") : t("settings.users.delete.confirmation")}\n${t("confirmation.irreversible")}`,
+      ownAccount ? t("settings.account.delete.details") : t("settings.users.delete.details"),
     ).then(async () => {
       accountDeletionReauthenticationRequired = true;
       const password = await new Promise<string>(resolve => setTimeout(async () => resolve(await passwordPrompt().catch(() => "")), 0));
@@ -243,9 +249,9 @@
       const body = new FormData();
       body.append("password", password);
       await fetchResponse(`/api/users/${id}`, { method: "DELETE", body: body }).then(() => {
-        queueNotification(ColorKeys.Success, t(`success.account.delet.${ownAccount ? "own" : "other"}`));
+        queueNotification(ColorKeys.Success, ownAccount ? t("settings.account.delete.success") : t("settings.users.delete.success"));
       }).catch((err) => {
-        queueNotification(ColorKeys.Danger, t(`error.message.account.delete.${ownAccount ? "own" : "other"}`, { values: { msg: err.message}}));
+        queueNotification(ColorKeys.Danger, t(ownAccount ? "settings.account.delete.error" : "settings.users.delete.error", { values: { msg: err.message}}));
         throw err;
       });
       if (ownAccount) clearSession();
@@ -430,12 +436,12 @@
 </style>
 
 <Modal
-  title={"Settings"}
+  title={t("settings.title")}
   bind:showModal={showModalInternal}
   onModalHide={restoreSettings}
 >
   {#snippet topButtons()}
-    <IconButton onClick={forceRefresh} alt="Refresh">
+    <IconButton onClick={forceRefresh} alt={t("button.refresh")}>
       <span class="refreshButtonWrapper" class:spin={loaderAnimation} onanimationiteration={() => { loaderAnimation = false; }}>
         <RefreshCw/>
       </span>
@@ -444,10 +450,10 @@
 
   {#snippet buttons()}
     {#if showSaveButton}
-      <IconButton type="submit" color={ColorKeys.Success} enabled={submittable} onClick={async () => { saveSettings().catch(NoOp); }} alt="Save" canRenderAsButton={true}>
+      <IconButton type="submit" color={ColorKeys.Success} enabled={submittable} onClick={async () => { saveSettings().catch(NoOp); }} alt={t("button.save")} canRenderAsButton={true}>
         <Check/>
       </IconButton>
-      <IconButton color={ColorKeys.Danger} onClick={restoreSettings} alt="Cancel" canRenderAsButton={true}>
+      <IconButton color={ColorKeys.Danger} onClick={restoreSettings} alt={t("button.cancel")} canRenderAsButton={true}>
         <X/>
       </IconButton>
     {/if}
@@ -477,6 +483,7 @@
           lightThemes={lightThemes}
           darkThemes={darkThemes}
           fonts={fonts} 
+          languages={languages}
         />
       {:else if selectedCategory === "developer"}
         <DeveloperSettingsTab

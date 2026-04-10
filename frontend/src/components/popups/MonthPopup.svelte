@@ -12,6 +12,7 @@
   import { getSettings } from "../../lib/client/data/settings.svelte";
   import { UserSettingKeys } from "../../types/settings";
   import { ColorKeys } from "../../types/colors";
+  import { t } from "@sveltia/i18n";
 
   interface Props {
     date: Date;
@@ -158,7 +159,7 @@
 
 <Popup bind:showPopup={internalShow} bind:hidePopup={internalClose} tooltip={false}>
   <div class="topRow">
-    <IconButton onClick={prev} alt="Previous month" color={ColorKeys.Accent}>
+    <IconButton onClick={prev} alt={t("button.month.previous")} color={ColorKeys.Accent}>
       <ChevronLeft/>
     </IconButton>
     <button
@@ -173,7 +174,7 @@
         {decadeStart} - {decadeStart + 9}
       {/if}
     </button>
-    <IconButton onClick={next} alt="Next month" color={ColorKeys.Accent}>
+    <IconButton onClick={next} alt={t("button.month.next")} color={ColorKeys.Accent}>
       <ChevronRight/>
     </IconButton>
   </div>

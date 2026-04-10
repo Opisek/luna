@@ -10,6 +10,7 @@
   import { ColorKeys } from "../../types/colors";
   import { Check, X } from "lucide-svelte";
   import { NoOp } from "../../lib/client/placeholders";
+  import { t } from "@sveltia/i18n";
 
   interface Props {
     showModal: (initial: string | null) => Promise<string>;
@@ -228,7 +229,7 @@
   }
 </style>
 
-<Modal title="Pick Color"
+<Modal title={t("color.title")}
   bind:showModal={showModalInternal}
   bind:success
   bind:failure
@@ -258,7 +259,7 @@
     <ColorCircle color={currentColor} size="fill" shape="squircle"/>
     <TextInput
       bind:value={currentColor}
-      placeholder="Color"
+      placeholder={t("color.code")}
       name="color"
       editable={true}
       label={false}
@@ -268,17 +269,17 @@
     />
   </div>
   <div class="suggestions">
-    <IconButton onClick={() => setColor(null)} alt="Default color">
+    <IconButton onClick={() => setColor(null)} alt={t("color.preset.default")}>
       <ColorCircle color={null} size="medium"/>
     </IconButton>
     {#each recommendedColors as color, index}
-      <IconButton onClick={() => setColor(color)} alt={recommendedColorNames[index]}>
+      <IconButton onClick={() => setColor(color)} alt={t(`color.preset.${recommendedColorNames[index]}`)}>
         <ColorCircle color={color} size="medium"/>
       </IconButton>
     {/each}
   </div>
   {#snippet buttons()}
-      <IconButton onClick={() => success(currentColor)} color={ColorKeys.Success} alt="Confirm"><Check/></IconButton>
-      <IconButton onClick={failure} color={ColorKeys.Danger} alt="Cancel"><X/></IconButton>
+      <IconButton onClick={() => success(currentColor)} color={ColorKeys.Success} alt={t("button.confirm")}><Check/></IconButton>
+      <IconButton onClick={failure} color={ColorKeys.Danger} alt={t("button.cancel")}><X/></IconButton>
   {/snippet}
 </Modal>

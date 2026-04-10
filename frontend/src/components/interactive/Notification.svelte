@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from "@sveltia/i18n";
   import { ColorKeys } from "../../types/colors";
   import type { NotificationModel } from "../../types/notification";
 
@@ -163,7 +164,7 @@
         {#if viewDetails}
           {notification.details}
         {:else}
-          Hover to view details
+          {t("notification.hover")}
         {/if}
       </span>
     {/if}

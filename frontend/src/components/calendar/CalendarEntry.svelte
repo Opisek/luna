@@ -14,6 +14,7 @@
   import { queueNotification } from "../../lib/client/notifications";
   import { ColorKeys } from "../../types/colors";
   import { getRepository } from "../../lib/client/data/repository.svelte";
+  import { t } from "@sveltia/i18n";
 
   interface Props {
     calendar: CalendarModel;
@@ -107,7 +108,7 @@
     {/if}
     <VisibilityToggle bind:visible={calendarVisible} onClick={setVisible}/>
     {#if hasErrored}
-      <Tooltip error={true}>An error occurred trying to retrieve events from this calendar.</Tooltip>
+      <Tooltip error={true}>{t("calendar.error.events.tooltip")}</Tooltip>
     {/if}
   </span>
 </div>

@@ -10,7 +10,7 @@
 
   interface Props {
     settings: Settings;
-    showConfirmation: (message: string, confirmText?: string, cancelText?: string) => Promise<void>;
+    showConfirmation: (message: string, details?: string) => Promise<void>;
     refetchProfilePicture: () => void;
     snapshotSettings: () => void;
   }

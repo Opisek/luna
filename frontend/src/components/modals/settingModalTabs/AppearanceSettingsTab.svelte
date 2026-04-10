@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { locale } from "dayjs";
   import type { Settings } from "../../../lib/client/data/settings.svelte";
   import type { Option } from "../../../types/options";
   import { UserSettingKeys } from "../../../types/settings";
@@ -6,12 +7,15 @@
   import SliderInput from "../../forms/SliderInput.svelte";
   import ToggleInput from "../../forms/ToggleInput.svelte";
   import SectionDivider from "../../layout/SectionDivider.svelte";
+  import { locale as slocale, t, waitLocale } from "@sveltia/i18n";
+  import { loadLanguage } from "$lib/common/i18n";
 
   interface Props {
     settings: Settings;
     lightThemes: Option<string>[];
     darkThemes: Option<string>[];
     fonts: Option<string>[];
+    languages: Option<string>[];
   }
 
   let {
@@ -19,6 +23,7 @@
     lightThemes,
     darkThemes,
     fonts,
+    languages,
   }: Props = $props();
 </script>
 
@@ -60,16 +65,23 @@
   placeholder="First Day of Week"
   bind:value={settings.userSettings[UserSettingKeys.FirstDayOfWeek]}
   options={[
-    { name: "Monday", value: 1 },
-    { name: "Tuesday", value: 2 },
-    { name: "Wednesday", value: 3 },
-    { name: "Thursday", value: 4 },
-    { name: "Friday", value: 5 },
-    { name: "Saturday", value: 6 },
-    { name: "Sunday", value: 0 }
+    { name: t("weekdays.full.monday"), value: 1 },
+    { name: t("weekdays.full.tuesday"), value: 2 },
+    { name: t("weekdays.full.wednesday"), value: 3 },
+    { name: t("weekdays.full.thursday"), value: 4 },
+    { name: t("weekdays.full.friday"), value: 5 },
+    { name: t("weekdays.full.saturday"), value: 6 },
+    { name: t("weekdays.full.sunday"), value: 0 }
   ]}
 />
 <SectionDivider title={"Site Appearance"}/>
+<SelectInput
+  name={UserSettingKeys.Language}
+  placeholder="Language"
+  bind:value={settings.userSettings[UserSettingKeys.Language]}
+  options={languages}
+  click={(l) => { loadLanguage(l) }}
+/>
 <ToggleInput
   name={UserSettingKeys.AppearenceFrostedGlass}
   description="Frosted Glass Effect"

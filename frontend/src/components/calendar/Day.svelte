@@ -8,6 +8,7 @@
   import { queueNotification } from "$lib/client/notifications";
   import { NoOp } from "$lib/client/placeholders";
   import { ColorKeys } from "../../types/colors";
+  import { t } from "@sveltia/i18n";
 
   interface Props {
     date: Date;
@@ -36,7 +37,7 @@
   let showEventModal: ((initial?: EventModel, date?: Date) => Promise<EventModel>) = getContext("showEventModal");
   let createEventButtonClick = () => {
     showEventModal(undefined, date).catch((err) => {
-      if (err) queueNotification(ColorKeys.Danger, `Could not create event: ${err.message}`);
+      if (err) queueNotification(ColorKeys.Danger, t("event.error.create", { values: { msg: err.message}}));
     });
   };
 
@@ -170,7 +171,7 @@
         {date.getDate()}
       </span>
       <span class="add">
-        <IconButton onClick={createEventButtonClick} tabindex={-1} alt="Create Event">
+        <IconButton onClick={createEventButtonClick} tabindex={-1} alt={t("button.add.event")}>
           <PlusIcon size={13}/>
         </IconButton>
       </span>
@@ -215,9 +216,9 @@
   {#if events.length > maxEvents && actualMaxEvents >= 0}
     <button class="more" class:otherMonth={!isCurrentMonth} onclick={() => showMore(date, events)}>
       {#if actualMaxEvents == 0}
-       {events.length} events
+        {t("calendar.events.count.all", { values: { count: events.length }})}
       {:else}
-        and {events.length - actualMaxEvents} more
+        {t("calendar.events.count.more", { values: { count: events.length - actualMaxEvents }})}
       {/if}
     </button>
   {/if}

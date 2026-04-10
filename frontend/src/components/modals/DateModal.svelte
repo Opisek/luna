@@ -4,6 +4,7 @@
   import SmallCalendar from "../interactive/SmallCalendar.svelte";
 
   import { NoOp } from "$lib/client/placeholders";
+  import { t } from "@sveltia/i18n";
 
   interface Props {
     showModal: (initial: Date) => Promise<Date>;
@@ -30,7 +31,7 @@
   }
 </script>
 
-<Modal title="Pick Date" bind:showModal={showModalInternal} bind:success>
+<Modal title={t("date.title")} bind:showModal={showModalInternal} bind:success>
   <MonthSelection bind:date />
   <SmallCalendar bind:date onDayClick={dateSelected} />
 </Modal>

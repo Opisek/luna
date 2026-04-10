@@ -7,6 +7,8 @@
   import IconButton from "../interactive/IconButton.svelte";
   import RadioInput from "../forms/RadioInput.svelte";
 
+  import { t } from "@sveltia/i18n";
+
   interface Props {
     showModal: (edit: boolean) => Promise<"all" | "thisandfuture" | "this">;
   }
@@ -29,20 +31,20 @@
   }
 </script>
 
-<Modal title={`${editing ? "Editing" : "Deleting"} recurring event`} bind:showModal={showModalInternal} bind:success bind:failure>
+<Modal title={t(`event.recurrence.title.${editing ? "edit" : "delete"}`)} bind:showModal={showModalInternal} bind:success bind:failure>
   <RadioInput
     name="recurrence_affect"
     bind:value={chosen}
     options={[
-      { name: "This event", value: "this" },
-      { name: "This and future events", value: "thisandfuture" },
-      { name: "All events", value: "all" }
+      { name: t("event.recurrence.affect.this"), value: "this" },
+      { name: t("event.recurrence.affect.thisandfuture"), value: "thisandfuture" },
+      { name: t("event.recurrence.affect.all"), value: "all" }
     ]}
   />
   {#snippet buttons()}
-    <IconButton onClick={() => success(chosen || "this")} color={ColorKeys.Success} type="submit" alt="Confirm" canRenderAsButton={true} enabled={chosen != null}>
+    <IconButton onClick={() => success(chosen || "this")} color={ColorKeys.Success} type="submit" alt={t("button.confirm")} canRenderAsButton={true} enabled={chosen != null}>
       <Check/>
     </IconButton>
-    <IconButton onClick={failure} color={ColorKeys.Danger} alt="Cancel" canRenderAsButton={true}><X/></IconButton>
+    <IconButton onClick={failure} color={ColorKeys.Danger} alt={t("button.cancel")} canRenderAsButton={true}><X/></IconButton>
   {/snippet}
 </Modal>

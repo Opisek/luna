@@ -1,60 +1,39 @@
 branding:
   name: "Luna"
-  copyright: "Copyright © 2026 Kacper Darowski (Opisek)\nLicensed under TBD"
+  copyright: "Copyright © 2026 Kacper Darowski (Opisek)\Lizenziert unter TBD"
 
 language:
-  default: "Default ({$default})"
+  default: "Browserdefiniert ({$default})"
   en-US: "English"
   de-DE: "Deutsch"
   pl-PL: "polski"
 
 button:
-  settings: "Settings"
+  settings: "Einstellungen"
   add:
-    generic: "Add"
-    event: "Create Event"
-    calendar: "Create Calendar"
-    source: "Add Source"
+    generic: "Hinzufügen"
+    event: "Ereignis erstellen"
+    calendar: "Kalendar erstellen"
+    source: "Quelly hinzufügen"
   theme:
-    dark: "Toggle dark mode"
-    light: "Toggle light mode"
+    dark: "Dunkelmodus aktivieren"
+    light: "Hellmodus aktivieren"
   credits: "Credits"
-  refresh: "Refresh"
-  upload: "Upload"
-  download: "Download"
-  clear: "Clear"
-  submit: "Submit"
-  copy: "Copy"
-  close: "Close"
+  refresh: "Neuladen"
+  upload: "Hochladen"
+  download: "Herunterladen"
+  clear: "Löschen"
+  submit: "Abschicken"
+  copy: "Kopieren"
+  close: "Schließen"
   month:
-    previous: "Previous month"
-    next: "Next month"
-  hide: "Hide"
-  show: "Show"
-  confirm: "Confirm"
-  cancel: "Cancel"
-  reset: "Reset"
-  details: "Details"
-
-credits:
-  title: "Credits"
-  repository: "Luna Repository"
-  stack:
-    display: "Tech Stack"
-    subtitle: "Tech Stack and Languages"
-  frontend:
-    display: "Frontend"
-    subtitle: "Frontend Libraries"
-  backend:
-    display: "Backend"
-    subtitle: "Backend Libraries"
-  themes:
-    display: "Themes"
-    subtitle: "Theme Color Palettes"
-  fonts:
-    display: "Fonts"
-    subtitle: "Pre-installed Fonts"
-  source: "Source"
+    previous: "Nächster Monat"
+    next: "Vorheriger Monat"
+  hide: "Ausblenden"
+  show: "Einblenden"
+  confirm: "Bestätigen"
+  cancel: "Abbrechen"
+  reset: "Wiederherstellen"
 
 notification:
   hover: "Hover to view details"
@@ -121,10 +100,7 @@ navigation:
 error:
   code: "Error {$code}"
   generic: "An error occurred."
-  unknown: "Unknown error"
-  retry: "Please try again"
-  unavailable: "Feature not yet available"
-  unimplemented: "Not implemented"
+  unimplemented: "Feature not yet available"
   empty: "Nothing to show"
 
 themes:
@@ -147,67 +123,6 @@ globalsettings:
 
 user:
   id: "User ID"
-
-invite:
-  title:
-    view: "Registration Invite"
-    create: "Invite User"
-  confirm:
-    delete: "Are you sure you want to delete the registration invite?"
-  error:
-    create: "Could not create registration invite: {$msg}"
-    delete: "Could not delete registration invite: {$msg}"
-  qr: "QR Code"
-  code: "Invite Code"
-  link: "Invite Link"
-  id:
-    label: "Invite ID"
-    inline: "ID: {$id}"
-  date:
-    creation: "Creation Date"
-    expiry: "Expiry Date"
-  expiry:
-    display: "Invite Expiration"
-    presets:
-      1h: "1 Hour"
-      3h: "3 Hours"
-      1d: "1 Day"
-      3d: "3 Days"
-      7d: "7 Days"
-
-session:
-  title: 
-    view:
-      user: "Session details"
-      api: "API Token"
-    create:
-      api: "Create API Token"
-    edit:
-      api: "Edit API Token"
-  confirm:
-    delete:
-      user: "Are you sure you want to deauthorize this session?"
-      api: "Are you sure you want to delete API token {$name}?"
-  agent:
-    user: "User Agent"
-    api: "Name"
-  date:
-    creation: "Creation Date"
-    latest: "Latest Activity"
-  ip:
-    initial: "Initial IP Address"
-    latest: "Latest IP Address"
-  id: "Session ID"
-  permissions:
-    subtitle: "Permissions"
-  error:
-    permissions: "Could not fetch permissions for API token {$name}: {$msg}"
-    create: "Could not create API token {$name}: {$msg}"
-    clipboard: "Could not copy API token {$name} to clipboard: {$msg}"
-    edit: "Could not delete API token {$name}: {$msg}"
-    delete: "Could not delete API token {$name}: {$msg}"
-    password: "You must provide your password to create an API token."
-  clipboard: "API token copied to clipboard"
 
 file:
   display: "File"
@@ -242,46 +157,20 @@ auth:
     token: "Token"
   oauth:
     display: "OAuth 2.0"
+    client: "Authorization Provider"
     different: "Choose a different account"
     abort: "Authorization aborted"
-    success: "Logged into {$client} successfully"
     google:
       unconfigured: "The administrator of this Luna instance has not set up Google Calendar integration yet."
-    tokens:
-      title: "Choose account"
-      list: "Authorized Accounts"
-      id: "ID: {$id}"
-      use: "Use account"
-      exists: "You are already siged in with {$client}.\nYou can choose one of your existing accounts or authorize a new account."
-      new: "Sign into a different account"
-    client:
-      title:
-        create: "Register OAuth 2.0 Client"
-        edit: "Edit OAuth 2.0 Client"
-      display: "Authorization Provider"
-      extid: "Client ID"
-      secret: "Client Secret"
-      base: "Base URL"
-      scope: "Scope"
-      id:
-        label: "Internal Client ID"
-        inline: "ID: {$id}"
-      confirm:
-        delete: "Are you sure you want to delete the OAuth 2.0 client?"
-      error:
-        create: "Could not register OAuth 2.0 client {$name}: {$msg}"
-        edit: "Could not edit OAuth 2.0 client {$name}: {$msg}"
-        delete: "Could not delete OAuth 2.0 client {$name}: {$msg}"
-        details: "Could not get details for OAuth 2.0 client {$name}: {$msg}"
 
 source:
-  display: "Source"
-  id: "Source ID"
+  display: "Quelle"
+  id: "Quellen-ID"
   title:
-    view: "Source"
-    create: "Add source"
-    wizard: "Source wizard"
-    edit: "Edit source"
+    view: "Quelle"
+    create: "Quelle hinzufügen"
+    wizard: "Quelle hinzufügen"
+    edit: "Quelle bearbeiten"
   confirm:
     delete: "Are you sure you want to delete source {$name}?"
   error:
@@ -321,22 +210,23 @@ calendar:
       all: |
         .input {$count :integer}
         .match $count
-          0 {{No events}}
-          one {{{$count} event}}
-          * {{{$count} events}}
+          0 {{Keine Ereignisse}}
+          one {{{$count} Ereignis}}
+          * {{{$count} Ereignisse}}
       more: |
         .input {$count :integer}
         .match $count
-          * {{and {$count} more}}
+          1 {{und {$count} Weiteres}}
+          * {{und {$count} Weitere}}
 
 event:
-  display: "Event"
-  id: "Event ID"
+  display: "Ereignis"
+  id: "Ereignis-ID"
   title:
-    view: "Event"
-    create: "Create event"
-    edit: "Edit event"
-    copy: "Copy event"
+    view: "Ereignis"
+    create: "Ereignis erstellen"
+    edit: "Ereignis bearbeiten"
+    copy: "Ereignis kopieren"
   copy:
     instruction: "Select on which days the event should take place."
   confirm:
@@ -363,64 +253,64 @@ reachability:
   backend: "The backend server cannot be reached."
   frontend: "The backend server cannot be reached."
   compatibility: "The frontend server and the backend server are not compatible."
-  unknown: "Unknown network error"
+  unknown: "Unbekannter Netzwerkfehler"
 
 weekdays:
   full:
-    monday: "Monday"
-    tuesday: "Tuesday"
-    wednesday: "Wednesday"
-    thursday: "Thursday"
-    friday: "Friday"
-    saturday: "Saturday"
-    sunday: "Sunday"
+    monday: "Montag"
+    tuesday: "Dienstag"
+    wednesday: "Mittwoch"
+    thursday: "Donnerstag"
+    friday: "Freitag"
+    saturday: "Samstag"
+    sunday: "Sonntag"
   short:
-    monday: "Mon"
-    tuesday: "Tue"
-    wednesday: "Wed"
-    thursday: "Thu"
-    friday: "Fri"
-    saturday: "Sat"
-    sunday: "Sun"
+    monday: "Mo"
+    tuesday: "Di"
+    wednesday: "Mi"
+    thursday: "Do"
+    friday: "Fr"
+    saturday: "Sa"
+    sunday: "So"
 
 months:
   full:
-    january: "January"
-    february: "February"
-    march: "March"
+    january: "Januar"
+    february: "Februar"
+    march: "März"
     april: "April"
-    may: "May"
-    june: "June"
-    july: "July"
+    may: "Mai"
+    june: "Juni"
+    july: "Juli"
     august: "August"
     september: "September"
-    october: "October"
+    october: "Oktober"
     november: "November"
-    december: "December"
+    december: "Dezember"
   short:
     january: "Jan"
     february: "Feb"
-    march: "Mar"
+    march: "Mär"
     april: "Apr"
-    may: "May"
+    may: "Mai"
     june: "Jun"
     july: "Jul"
     august: "Aug"
     september: "Sep"
-    october: "Oct"
+    october: "Okt"
     november: "Nov"
-    december: "Dec"
+    december: "Dez"
 
 scope:
-  today: "Today"
-  day: "Day"
-  week: "Week"
-  month: "Month"
+  today: "Heute"
+  day: "Tag"
+  week: "Woche"
+  month: "Monat"
 
 settings:
-  title: "Settings"
+  title: "Einstellungen"
   account:
-    title: "Account"
+    title: "Konto"
     pfp:
       display: "Profile Picture"
       type:
@@ -444,30 +334,25 @@ settings:
       error: "Could not delete your account: {$msg}"
       success: "Successfully deleted your account."
   appearance:
-    title: "Appearance"
+    title: "Aussehen"
   developer:
-    title: "Developer"
+    title: "Entwickler"
   users:
-    title: "Users"
+    title: "Benutzer"
     delete:
       confirmation: "Are you sure you want to delete this account?"
       details: "All user data will be deleted."
       error: "Could not delete this account: {$msg}"
       success: "Successfully deleted the user's account."
   themes:
-    title: "Themes"
+    title: "Farbstile"
   fonts:
-    title: "Fonts"
+    title: "Schriftarten"
   oauth:
     title: "OAuth 2.0"
   admin:
-    title: "Administrative"
+    title: "Administrativ"
   danger:
-    title: "Danger Zone"
-    reset:
-      button: "Reset all my preferences"
-      confirmation: "Are you sure you want to reset all your preferences?"
-      details: "Your account will remain intact."
-    delete: "Delete my account"
+    title: "Gefahrszone"
   logout:
-    title: "Logout"
+    title: "Ausloggen"

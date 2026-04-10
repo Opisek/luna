@@ -5,7 +5,6 @@
   import { getDayName } from "$lib/common/humanization";
 
   import { getContext, setContext } from "svelte";
-  import { writable } from "svelte/store";
   import { getDayIndex, getWeekNumber, getWeekMonth, isSameDay } from "$lib/common/date";
   import { getSettings } from "$lib/client/data/settings.svelte";
   import { UserSettingKeys } from "../../types/settings";

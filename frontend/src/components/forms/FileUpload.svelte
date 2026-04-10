@@ -7,6 +7,7 @@
   import { Download, Upload, X } from "lucide-svelte";
   import { downloadFileToClient } from "../../lib/client/net";
   import { ColorKeys } from "../../types/colors";
+  import { t } from "@sveltia/i18n";
 
   let wrapper: HTMLDivElement | null = $state(null);
   let fileInput: HTMLInputElement | null = $state(null);
@@ -190,24 +191,24 @@
   {#if editable}
     {#if empty}
       <div class="buttons">
-        <IconButton onClick={select} color={ColorKeys.Inherit} alt="Upload">
+        <IconButton onClick={select} color={ColorKeys.Inherit} alt={t("button.upload")}>
             <!-- Upload, FileUp, MonitorUp, CloudUpload, HardDriveUpload -->
             <Upload size={16}/>
         </IconButton>
       </div>
     {:else}
       <div class="buttons">
-        <IconButton onClick={download} color={ColorKeys.Inherit} alt="Download">
+        <IconButton onClick={download} color={ColorKeys.Inherit} alt={t("button.download")}>
           <Download size={16}/>
         </IconButton>
-        <IconButton onClick={clear} color={ColorKeys.Danger} alt="Clear">
+        <IconButton onClick={clear} color={ColorKeys.Danger} alt={t("button.clear")}>
             <X size={16}/>
         </IconButton>
       </div>
     {/if}
   {:else}
     <div class="buttons">
-      <IconButton onClick={download} color={ColorKeys.Inherit} alt="Download">
+      <IconButton onClick={download} color={ColorKeys.Inherit} alt={t("button.download")}>
         <Download size={16}/>
       </IconButton>
     </div>
