@@ -162,6 +162,8 @@
             { name: "sha256", desc: "SHA256 implementation", license: "MIT", url: "https://github.com/cryptocoinjs/sha256", author: "JP Richardson"},
             { name: "svelte-adapter-bun", desc: "Svelte integration for bun web server", license: "MIT", url: "https://github.com/gornostay25/svelte-adapter-bun", author: "Volodymyr Palamar"},
             { name: "vite-plugin-svelte", desc: "Svelte integration for vite web server", license: "MIT", url: "https://github.com/sveltejs/vite-plugin-svelte", author: "Svelte contributors"},
+            { name: "Sveltia I18n", desc: "Internationalization library", license: "MIT", url: "https://github.com/sveltia/sveltia-i18n", author: "Sveltia"},
+            { name: "yaml", desc: "YAML format parsing", license: "ISC", url: "https://github.com/eemeli/yaml", author: "Eemeli Aro"},
           ]}
           id={item => item.url}
           template={creditTemplate}

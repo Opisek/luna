@@ -7,6 +7,8 @@
   import Horizontal from "../../components/layout/Horizontal.svelte";
   import SimplePage from "../../components/layout/SimplePage.svelte";
   import Title from "../../components/layout/Title.svelte";
+
+  import { _ as t } from "@sveltia/i18n";
 </script>
 
 <style lang="scss">
@@ -16,19 +18,19 @@
 <SimplePage>
   <Box>
     <Title>
-      Error {page.status}
+      {t("error.code", { values: { code: page.status }})}
     </Title>
 
     {#if page.error}
       {page.error.message}
     {:else}
-      An error occurred.
+      {t("error.message.generic")}
     {/if}
 
     <Horizontal position="right">
-      <Button href="/">Home</Button>
+      <Button href="/">{t("navigation.home")}</Button>
       {#if browser && window.history.length > 1}
-        <Button onClick={() => history.back()}>Go Back</Button>
+        <Button onClick={() => history.back()}>{t("navigation.back")}</Button>
       {/if}
     </Horizontal>
   </Box>

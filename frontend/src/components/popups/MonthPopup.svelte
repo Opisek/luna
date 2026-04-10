@@ -214,7 +214,7 @@
         onclick={(e) => clickMonth(e, i)}
         use:focusIndicator
       >
-        {getMonthName(i).substring(0, 3)}
+        {getMonthName(i, true)}
       </button>
     {/each}
   </div>

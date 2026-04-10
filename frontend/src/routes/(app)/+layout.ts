@@ -14,6 +14,10 @@ import { Theme } from "$lib/client/data/theme.svelte";
 import { Users } from "$lib/client/data/users.svelte";
 import { Settings } from "$lib/client/data/settings.svelte";
 import { OauthClients } from "$lib/client/data/oauth.svelte";
+import { browser } from "$app/environment";
+
+import "$lib/common/i18n";
+import { getLocaleFromNavigator, locale, locales, waitLocale } from "@sveltia/i18n";
 
 function getSingletons(version: string, preloadedSettings: { userData: any, userSettings: any, globalSettings: any } | null = null): {
   connectivity: Connectivity;
@@ -67,6 +71,9 @@ export const load: PageLoad = async (event: LoadEvent) => {
     version: version,
     singletons: getSingletons(version)
   }; 
+
+  if (browser) await locale.set(getLocaleFromNavigator() || "");
+  await waitLocale();
 
   const results = await Promise.all([
     fetchJsonFromEvent(event, "/api/users/self", {}, true),

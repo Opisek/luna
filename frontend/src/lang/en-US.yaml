@@ -1,0 +1,116 @@
+copyright: "Copyright © 2026 Kacper Darowski (Opisek)\nLicensed under TBD"
+
+navigation:
+  home: "Home"
+  back: "Go Back"
+
+error:
+  code: "Error {$code}"
+  message:
+    generic: "An error occurred."
+    themes:
+      fetch: "Failed to fetch themes: {$msg}"
+    fonts:
+      fetch: "Failed to fetch fonts: {$msg}"
+    account:
+      delete:
+        own: "Could not delete your account: {$msg}"
+        other: "Could not delete this account: {$msg}"
+    userdata:
+      save: "Failed to save user data: {$msg}"
+    usersettings:
+      save: "Failed to save user settings: {$msg}"
+    globalsettings:
+      save: "Failed to save global settings: {$msg}"
+
+success:
+  account:
+    delete:
+      own: "Successfully deleted your account."
+      other: "Successfully deleted the user's account."
+
+modal:
+  confirmation:
+    account:
+      delete:
+        own:
+          "Are you sure you want to delete your account?\nThis action is irreversible."
+        other:
+          "Are you sure you want to delete this account?\nThis action is irreversible."
+    data:
+      delete:
+        own:
+          "All your data will be deleted."
+        other:
+          "All user data will be deleted."
+
+reachability:
+  database: "The database cannot be reached."
+  backend: "The backend server cannot be reached."
+  frontend: "The backend server cannot be reached."
+  compatibility: "The frontend server and the backend server are not compatible."
+  unknown: "Unknown network error."
+
+calendar:
+  weekdays:
+    full:
+      monday: "Monday"
+      tuesday: "Tuesday"
+      wednesday: "Wednesday"
+      thursday: "Thursday"
+      friday: "Friday"
+      saturday: "Saturday"
+      sunday: "Sunday"
+    short:
+      monday: "Mon"
+      tuesday: "Tue"
+      wednesday: "Wed"
+      thursday: "Thu"
+      friday: "Fri"
+      saturday: "Sat"
+      sunday: "Sun"
+  months:
+    full:
+      january: "January"
+      february: "February"
+      march: "March"
+      april: "April"
+      may: "May"
+      june: "June"
+      july: "July"
+      august: "August"
+      september: "September"
+      october: "October"
+      november: "November"
+      december: "December"
+    short:
+      january: "Jan"
+      february: "Feb"
+      march: "Mar"
+      april: "Apr"
+      may: "May"
+      june: "Jun"
+      july: "Jul"
+      august: "Aug"
+      september: "Sep"
+      october: "Oct"
+      november: "Nov"
+      december: "Dec"
+  scope:
+    today: "Today"
+    day: "Day"
+    week: "Week"
+    month: "Month"
+
+settings:
+  categories:
+    account: "Account"
+    appearance: "Appearance"
+    developer: "Developer"
+    users: "Users"
+    themes: "Themes"
+    fonts: "Fonts"
+    oauth: "OAuth 2.0"
+    admin: "Administrative"
+    danger: "Danger Zone"
+    logout: "Logout"

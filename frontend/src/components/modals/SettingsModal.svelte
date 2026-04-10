@@ -33,6 +33,7 @@
   import { getDatabaseFileIdFromUrl } from "../../lib/common/parsing";
   import OauthSettingsTab from "./settingModalTabs/OauthSettingsTab.svelte";
   import { getOauthClients } from "../../lib/client/data/oauth.svelte";
+  import { _ as t } from "@sveltia/i18n";
 
   interface Props {
     showModal?: () => any;
@@ -99,31 +100,31 @@
   // Settings categories
   const categoriesAdmin: Option<string>[][] = [
     [
-      { name: "Account", value: "account", icon: User },
-      { name: "Appearance", value: "appearance", icon: Palette },
-      { name: "Developer", value: "developer", icon: Code }
+      { name: t("settings.categories.account"), value: "account", icon: User },
+      { name: t("settings.categories.appearance"), value: "appearance", icon: Palette },
+      { name: t("settings.categories.developer"), value: "developer", icon: Code }
     ],
     [
-      { name: "Users", value: "users", icon: Users },
-      { name: "Themes", value: "themes", icon: Palette },
-      { name: "Fonts", value: "fonts", icon: CaseSensitive },
-      { name: "OAuth 2.0", value: "oauth", icon: Lock },
-      { name: "Administrative", value: "admin", icon: Shield },
+      { name: t("settings.categories.users"), value: "users", icon: Users },
+      { name: t("settings.categories.themes"), value: "themes", icon: Palette },
+      { name: t("settings.categories.fonts"), value: "fonts", icon: CaseSensitive },
+      { name: t("settings.categories.oauth"), value: "oauth", icon: Lock },
+      { name: t("settings.categories.admin"), value: "admin", icon: Shield },
     ],
     [
-      { name: "Danger Zone", value: "danger", icon: TriangleAlert, color: ColorKeys.Danger },
-      { name: "Logout", value: "logout", icon: LogOut, color: ColorKeys.Danger },
+      { name: t("settings.categories.danger"), value: "danger", icon: TriangleAlert, color: ColorKeys.Danger },
+      { name: t("settings.categories.logout"), value: "logout", icon: LogOut, color: ColorKeys.Danger },
     ],
   ]
   const categories: Option<string>[][] = [
     [
-      { name: "Account", value: "account", icon: User },
-      { name: "Appearance", value: "appearance", icon: Palette },
-      { name: "Developer", value: "developer", icon: Code }
+      { name: t("settigs.categories.account"), value: "account", icon: User },
+      { name: t("settigs.categories.appearance"), value: "appearance", icon: Palette },
+      { name: t("settigs.categories.developer"), value: "developer", icon: Code }
     ],
     [
-      { name: "Danger Zone", value: "danger", icon: TriangleAlert, color: ColorKeys.Danger },
-      { name: "Logout", value: "logout", icon: LogOut, color: ColorKeys.Danger },
+      { name: t("settings.categories.danger"), value: "danger", icon: TriangleAlert, color: ColorKeys.Danger },
+      { name: t("settings.categories.logout"), value: "logout", icon: LogOut, color: ColorKeys.Danger },
     ],
   ]
 
@@ -158,7 +159,7 @@
       lightThemes = Object.keys(response.light).map(formatInstalledFile(Sun)).sort((a, b) => a.name.localeCompare(b.name));
       darkThemes = Object.keys(response.dark).map(formatInstalledFile(Moon)).sort((a, b) => a.name.localeCompare(b.name));
     }).catch((err) => {
-      queueNotification(ColorKeys.Danger, "Failed to fetch themes: " + err);
+      queueNotification(ColorKeys.Danger, t("error.message.themes.fetch", { values: { msg: err }}));
     });
   }
 
@@ -166,7 +167,7 @@
     fetchJson("/installed/fonts").then((response) => {
       fonts = Object.keys(response).map(formatInstalledFile()).sort((a, b) => a.name.localeCompare(b.name));
     }).catch((err) => {
-      queueNotification(ColorKeys.Danger, "Failed to fetch fonts: " + err);
+      queueNotification(ColorKeys.Danger, t("error.message.fonts.fetch", { values: { msg: err }}));
     });
   }
 
@@ -240,7 +241,7 @@
     
   function deleteAccount(id: string = "self") {
     const ownAccount = id === "self" || id === users.currentUser;
-    showConfirmation(`Are you sure you want to delete ${ownAccount ? "your" : "this"} account?\nThis action is irreversible.`, async () => {
+    showConfirmation(t(`modal.confirmation.account.delete.${ownAccount ? "own" : "other"}`), async () => {
       accountDeletionReauthenticationRequired = true;
       const password = await new Promise<string>(resolve => setTimeout(async () => resolve(await passwordPrompt().catch(() => "")), 0));
       accountDeletionReauthenticationRequired = false;
@@ -248,14 +249,14 @@
       const body = new FormData();
       body.append("password", password);
       await fetchResponse(`/api/users/${id}`, { method: "DELETE", body: body }).then(() => {
-        queueNotification(ColorKeys.Success, `Successfully deleted ${ownAccount ? "your" : "the user"} account.`);
+        queueNotification(ColorKeys.Success, t(`success.account.delet.${ownAccount ? "own" : "other"}`));
       }).catch((err) => {
-        queueNotification(ColorKeys.Danger, `Could not delete ${ownAccount ? "your" : "the user"} account: ${err.message}`);
+        queueNotification(ColorKeys.Danger, t(`error.message.account.delete.${ownAccount ? "own" : "other"}`, { values: { msg: err.message}}));
         throw err;
       });
       if (ownAccount) clearSession();
       else users.fetchAll();
-    }, `All ${ownAccount ? "your" : "user"} data will be deleted.`);
+    }, t(`modal.confirmation.data.delete.${ownAccount ? "own" : "other"}`));
   }
 
   let saving = $state(false);
@@ -316,7 +317,7 @@
         refetchProfilePicture();
         if (settings.userData.admin) users.fetchAll();
       }).catch((err) => {
-        queueNotification(ColorKeys.Danger, "Failed to save user data: " + err);
+        queueNotification(ColorKeys.Danger, t("error.message.userdata.save", { values: { msg: err.message }}));
         saving = false;
         throw err;
       });
@@ -338,7 +339,7 @@
       }).then(async () => {
         userSettingsSnapshot = await deepCopy(settings.userSettings);
       }).catch((err) => {
-        queueNotification(ColorKeys.Danger, "Failed to save user settings: " + err);
+        queueNotification(ColorKeys.Danger, t("error.message.usersettings.save", { values: { msg: err.message }}));
         saving = false;
         throw err;
       });
@@ -360,7 +361,7 @@
       }).then(async () => {
         globalSettingsSnapshot = await deepCopy(settings.globalSettings);
       }).catch((err) => {
-        queueNotification(ColorKeys.Danger, "Failed to save global settings: " + err);
+        queueNotification(ColorKeys.Danger, t("error.message.globalsettings.save", { values: { msg: err.message }}));
         saving = false;
         throw err;
       });

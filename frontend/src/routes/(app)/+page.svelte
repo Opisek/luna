@@ -36,6 +36,7 @@
   import { ColorKeys } from "../../types/colors";
   import { page } from "$app/state";
   import CreditsModal from "../../components/modals/CreditsModal.svelte";
+  import { _ as t } from "@sveltia/i18n";
 
   /* Singletons */
   const settings = getSettings();
@@ -313,8 +314,7 @@
   </Horizontal>
 
   <span class="copyright">
-    Copyright © 2026 Kacper Darowski (Opisek)<br>
-    Licensed under TBD 
+    {t("copyright")}
   </span>
 </aside>
 
@@ -325,15 +325,15 @@
       {#if connectivity.reachable != Reachability.Database}
         <span class="reachability">
           {#if connectivity.reachable == Reachability.Backend}
-            The database cannot be reached.
+            {t("reachability.database")}
           {:else if connectivity.reachable == Reachability.Frontend}
-            The backend server cannot be reached.
+            {t("reachability.backend")}
           {:else if connectivity.reachable == Reachability.None}
-            The frontend server cannot be reached.
+            {t("reachability.frontend")}
           {:else if connectivity.reachable == Reachability.Incompatible}
-            The frontend server and the backend server are not compatible.
+            {t("reachability.compatibility")}
           {:else}
-            Unknown network error
+            {t("reachability.unknown")}
           {/if}
           <WifiOff size={20}/>
         </span>
@@ -347,7 +347,7 @@
 
       {#if !todayInRange}
         <Button onClick={seeToday} compact={true}>
-          Today
+          {t("calendar.scope.today")}
         </Button>
       {/if}
 
