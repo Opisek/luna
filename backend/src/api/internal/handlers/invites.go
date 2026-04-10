@@ -50,7 +50,7 @@ func GetInviteQrCode(c *gin.Context) {
 	}
 
 	// Generate the invite link
-	inviteLink := fmt.Sprintf("%s/register?code=%s", u.Config.Env.PUBLIC_URL, invite.Code)
+	inviteLink := fmt.Sprintf("%s/register?code=%s", u.Config.Env.PUBLIC_URL.String(), invite.Code)
 
 	// Generate the QR code
 	qrCode, err := qrcode.Encode(inviteLink, qrcode.Medium, 256)

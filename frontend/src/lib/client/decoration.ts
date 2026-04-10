@@ -3,7 +3,7 @@ import { mount } from "svelte";
 import BarFocusIndicator from "../../components/decoration/focus/BarFocusIndicator.svelte";
 import Ripple from "../../components/decoration/Ripple.svelte"
 import UnderlineFocusIndicator from "../../components/decoration/focus/UnderlineFocusIndicator.svelte";
-import { isChildOfModal, isDescendentOf, parentModal } from "$lib/common/misc";
+import { isDescendentOf } from "../common/misc";
 
 export const addRipple = (e: MouseEvent, addToParent: boolean = true) => {
   if (!e.target) return;
@@ -14,19 +14,25 @@ export const addRipple = (e: MouseEvent, addToParent: boolean = true) => {
 }
 
 export const focusIndicator = (node: HTMLElement, settings: FocusIndicatorSettings = { type: "bar" }) => {
-  const mouseDown = () => {
+  let clicked = 0;
+  let outTimeout: ReturnType<typeof setTimeout> | null = null;
+
+  const click = () => {
     node.classList.add("clicked");
+    clicked = (new Date()).getTime();
   }
 
-  const focusOut = (e: FocusEvent) => {
-    const original = e.relatedTarget as HTMLElement;
-    const current = e.target as HTMLElement;
+  const focusIn = () => {
+    if (!outTimeout) return;
+    clearTimeout(outTimeout);
+    outTimeout = null;
+  }
 
-    if (!original) return;
-    if (node.parentElement?.contains(original as HTMLElement)) return; // Focus within the same element
-    if (current instanceof HTMLInputElement && isDescendentOf(original, current)) return; // for select buttons
-    if (isChildOfModal(original as HTMLElement) && parentModal(current as HTMLElement) != parentModal(original as HTMLElement) && (original instanceof HTMLButtonElement || original.ariaRoleDescription != null)) return; // Buttons that open modals
-    node.classList.remove("clicked");
+  const focusOut = () => {
+    if ((new Date()).getTime() - clicked < 100) return;
+    outTimeout = setTimeout(() => {
+      node.classList.remove("clicked");
+    }, 100);
   }
 
   switch (settings.type) {
@@ -41,13 +47,17 @@ export const focusIndicator = (node: HTMLElement, settings: FocusIndicatorSettin
   }
 
 
-  node.addEventListener("mousedown", mouseDown);
+  node.addEventListener("mousedown", click);
+  node.addEventListener("click", click);
   node.addEventListener("focusout", focusOut);
+  node.addEventListener("focusin", focusIn);
 
   return {
     destroy() {
-      node.removeEventListener("mousedown", mouseDown);
-      node.removeEventListener("focusout", focusOut);
+      node.addEventListener("mousedown", click);
+      node.removeEventListener("click", click);
+      node.addEventListener("focusout", focusOut);
+      node.addEventListener("focusin", focusIn);
     }
   }
 }

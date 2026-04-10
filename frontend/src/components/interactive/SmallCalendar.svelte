@@ -6,27 +6,30 @@
   import { getSettings } from "$lib/client/data/settings.svelte";
   import { setContext } from "svelte";
   import { svelteFlyInHorizontal, svelteFlyOutHorizontal } from "$lib/client/animations";
+  import { SvelteSet } from "svelte/reactivity";
+
+  const today = new Date();
 
   interface Props {
     date: Date;
     onDayClick?: (date: Date) => any;
     smaller?: boolean;
+    marked?: Set<string> | Map<string, any>;
   }
 
   let {
     date = $bindable(new Date()),
     onDayClick = NoOp,
     smaller = false,
+    marked = $bindable(new SvelteSet([new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate())).toISOString().substring(0, 10)])),
   }: Props = $props();
 
   const settings = getSettings();
 
-  let today = new Date();
-
   /* Date calculation */
   let [days, amountOfRows] = $derived.by(() => {
-    const firstMonthDay = new Date(date.getFullYear(), date.getMonth(), 1);
-    const lastMonthDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+    const firstMonthDay = new Date(Date.UTC(date.getFullYear(), date.getMonth(), 1));
+    const lastMonthDay = new Date(Date.UTC(date.getFullYear(), date.getMonth() + 1, 0));
     const firstDayOfWeek = getDayIndex(firstMonthDay);
 
     const amountOfRows = 
@@ -118,7 +121,7 @@
     color: colors.$foregroundSunday;
   }
 
-  button.day.today {
+  button.day.accent {
     background-color: colors.$backgroundAccent;
     color: colors.$foregroundAccent !important;
     --barFocusIndicatorColor: #{colors.$barFocusIndicatorColorAlt};
@@ -149,10 +152,11 @@
     out:svelteFlyOutHorizontal={{duration: animate ? 500 * settings.userSettings[UserSettingKeys.AnimationDuration] : 0}}
   >
     {#each days as day}
+      {@const dayId = day.toISOString().substring(0, 10)}
       <button
         class="day"
         class:sunday={day.getDay() == 0}
-        class:today={isSameDay(day, today)}
+        class:accent={marked.has(dayId)}
         class:otherMonth={day.getMonth() != currentDate.getMonth()}
         type="button"
         onclick={() => (onDayClick(day))}

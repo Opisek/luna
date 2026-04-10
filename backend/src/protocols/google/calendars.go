@@ -157,7 +157,7 @@ func (calendar *GoogleCalendar) GetEvents(start time.Time, end time.Time, q type
 	}
 
 	cancelledInstances := make(map[string][]*google.Event)
-	modifiedInstances := make(map[string][]*google.Event)
+	modifiedInstances := make(map[string][]*GoogleEvent)
 
 	result := make([]types.Event, len(res.Items))
 	eventCount := 0
@@ -177,20 +177,20 @@ func (calendar *GoogleCalendar) GetEvents(start time.Time, end time.Time, q type
 			continue
 		}
 
-		// We have to do the same thing for modified events, but that seems to be standard.
-		if event.RecurringEventId != "" {
-			modified, exists := modifiedInstances[event.RecurringEventId]
-			if !exists {
-				modified = []*google.Event{}
-			}
-			modified = append(modified, event)
-			modifiedInstances[event.RecurringEventId] = modified
-		}
-
 		converted, err := calendar.eventFromGoogle(event, q)
 		if err != nil {
 			return nil, err.
 				Append(errors.LvlBroad, "Could not get events")
+		}
+
+		// We have to do the same thing for modified events, but that seems to be standard.
+		if event.RecurringEventId != "" {
+			modified, exists := modifiedInstances[event.RecurringEventId]
+			if !exists {
+				modified = []*GoogleEvent{}
+			}
+			modified = append(modified, converted)
+			modifiedInstances[event.RecurringEventId] = modified
 		}
 
 		casted := (types.Event)(converted)
@@ -215,14 +215,15 @@ func (calendar *GoogleCalendar) GetEvents(start time.Time, end time.Time, q type
 		}
 		if modifications, exists := modifiedInstances[event.GetSettings().(*GoogleEventSettings).GoogleId]; exists {
 			for _, modification := range modifications {
-				modifiedTime, _, _, tr := modification.OriginalStartTime.ParseTimeDefinition()
+				modifiedTime, _, _, tr := modification.settings.rawEvent.OriginalStartTime.ParseTimeDefinition()
 				if tr != nil {
 					return nil, tr.
 						Append(errors.LvlWordy, "Could not parse modification time").
-						Append(errors.LvlDebug, "Could not parse event %v", modification.Id).
+						Append(errors.LvlDebug, "Could not parse event %v", modification.settings.rawEvent.Id).
 						AltStr(errors.LvlWordy, "Could not parse event")
 				}
-				event.GetDate().Recurrence().AddModifiedInstance(modifiedTime)
+				event.GetDate().Recurrence().MarkModification(modifiedTime)
+				modification.SupplyMasterEvent(event)
 			}
 		}
 	}
@@ -247,6 +248,8 @@ func (calendar *GoogleCalendar) GetEvent(settings types.EventSettings, q types.D
 		return nil, err.
 			Append(errors.LvlBroad, "Could not get event")
 	}
+
+	converted.settings.IsFirstRecurrence = googleSettings.IsFirstRecurrence
 
 	casted := (types.Event)(converted)
 
@@ -288,20 +291,13 @@ func (calendar *GoogleCalendar) AddEvent(name string, desc string, color *types.
 		}
 	}
 
-	var recurrence []string
-	if date.Recurrence().Repeats() {
-		recurrence = []string{date.Recurrence().Rule().String()}
-	} else {
-		recurrence = []string{}
-	}
-
 	event := google.Event{
 		Name:        name,
 		Description: desc,
 		ColorId:     colId,
-		Start:       start,
-		End:         end,
-		Recurrence:  recurrence,
+		Start:       &start,
+		End:         &end,
+		Recurrence:  date.Recurrence().Lines(),
 	}
 
 	url := google.ApiUrl().Subpage("calendars", calendar.settings.GoogleId, "events")
@@ -345,37 +341,33 @@ func (calendar *GoogleCalendar) EditEvent(originalEvent types.Event, name string
 
 	var start google.TimeDefinition
 	var end google.TimeDefinition
-	// TODO: timezones
 	if date.AllDay() {
 		start = google.TimeDefinition{
-			Date: date.Start().Format("2006-01-02"),
+			Date:     date.Start().Format("2006-01-02"),
+			TimeZone: date.Timezone().String(),
 		}
 		end = google.TimeDefinition{
-			Date: date.End().Format("2006-01-02"),
+			Date:     date.End().Format("2006-01-02"),
+			TimeZone: date.Timezone().String(),
 		}
 	} else {
 		start = google.TimeDefinition{
 			DateTime: date.Start().Local().Format(time.RFC3339),
+			TimeZone: date.Timezone().String(),
 		}
 		end = google.TimeDefinition{
 			DateTime: date.End().Local().Format(time.RFC3339),
+			TimeZone: date.Timezone().String(),
 		}
-	}
-
-	var recurrence []string
-	if date.Recurrence().Repeats() {
-		recurrence = []string{date.Recurrence().Rule().String()}
-	} else {
-		recurrence = []string{}
 	}
 
 	event := google.Event{
 		Name:        name,
 		Description: desc,
 		ColorId:     colId,
-		Start:       start,
-		End:         end,
-		Recurrence:  recurrence,
+		Start:       &start,
+		End:         &end,
+		Recurrence:  date.Recurrence().Lines(),
 	}
 
 	url := google.ApiUrl().Subpage("calendars", calendar.settings.GoogleId, "events", originalEvent.GetSettings().(*GoogleEventSettings).GoogleId)

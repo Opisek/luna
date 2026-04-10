@@ -21,9 +21,10 @@ import (
 )
 
 type exposedSource struct {
-	Id   types.ID `json:"id"`
-	Name string   `json:"name"`
-	Type string   `json:"type"`
+	Id              types.ID `json:"id"`
+	Name            string   `json:"name"`
+	Type            string   `json:"type"`
+	CanAddCalendars bool     `json:"can_add_calendars"`
 }
 
 type exposedDetailedSource struct {
@@ -60,9 +61,10 @@ func GetSources(c *gin.Context) {
 		u.Config.Cache.Cache(userId, source)
 
 		exposedSources[i] = exposedSource{
-			Id:   source.GetId(),
-			Name: source.GetName(),
-			Type: source.GetType(),
+			Id:              source.GetId(),
+			Name:            source.GetName(),
+			Type:            source.GetType(),
+			CanAddCalendars: source.CanAddCalendars(),
 		}
 	}
 

@@ -179,7 +179,7 @@ export class Repository {
   private getEventFormData(event: EventModel, changes: EventModelChanges = AllChangesEvent): FormData {
     const formData = new FormData();
     if (changes.name) formData.set("name", event.name);
-    if (changes.desc) formData.set("desc", event.desc);
+    if (changes.desc) formData.set("desc", event.desc || "");
     if (changes.date) {
       if (event.date.allDay) {
         const start = new Date(event.date.start.getTime() - (event.date.start.getTimezoneOffset() * 60000));
@@ -191,6 +191,11 @@ export class Repository {
         formData.set("date_end", event.date.end.toISOString());
       }
       formData.set("date_all_day", event.date.allDay ? "true" : "false");
+      if (event.date.recurrence) {
+        if (event.date.recurrence.RRULE) formData.set("date_rrule", event.date.recurrence.RRULE);
+        if (event.date.recurrence.RDATE) formData.set("date_rrule", event.date.recurrence.RDATE);
+        if (event.date.recurrence.EXDATE) formData.set("date_rrule", event.date.recurrence.EXDATE);
+      }
     }
     if (changes.color) {
       if (event.color && event.color !== "") {
@@ -889,7 +894,7 @@ export class Repository {
     this.saveCache();
   };
 
-  async editEvent(modifiedEvent: EventModel, changes: EventModelChanges, override: boolean): Promise<void> {
+  async editEvent(modifiedEvent: EventModel, changes: EventModelChanges, override: boolean, affectRecurrence: "this" | "thisandfuture" | "all" = "this"): Promise<void> {
     if (!browser) return;
 
     // update in database
@@ -902,7 +907,8 @@ export class Repository {
     const formData = this.getEventFormData(modifiedEvent, changes);
     formData.set("overridden", override ? "true" : "false");
 
-    await fetchResponse(`/api/events/${modifiedEvent.id}`, { method: "PATCH", body: formData }).catch((err) => { throw err; });
+    const url = `/api/events/${modifiedEvent.id}${affectRecurrence == "this" ? "" : `?affect=${affectRecurrence}`}`;
+    await fetchResponse(url, { method: "PATCH", body: formData }).catch((err) => { throw err; });
 
     // update in cache
     modifiedEvent.overridden = override;
@@ -932,11 +938,12 @@ export class Repository {
     this.saveCache();
   }
 
-  async deleteEvent(id: string): Promise<void> {
+  async deleteEvent(id: string, affectRecurrence: "this" | "thisandfuture" | "all" = "this"): Promise<void> {
     if (!browser) return;
 
     // remove from database
-    await fetchResponse(`/api/events/${id}`, { method: "DELETE" }).catch((err) => { throw err; });
+    const url = `/api/events/${id}${affectRecurrence == "this" ? "" : `?affect=${affectRecurrence}`}`;
+    await fetchResponse(url, { method: "DELETE" }).catch((err) => { throw err; });
 
     const event = this.eventsMap.get(id);
     if (!event) return;

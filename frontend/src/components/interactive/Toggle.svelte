@@ -6,7 +6,6 @@
     name: string;
     enabled?: boolean;
     onChange?: (value: boolean) => any;
-    toggle: (e: MouseEvent | KeyboardEvent) => void;
   }
 
   let {
@@ -14,10 +13,9 @@
     name,
     enabled = true,
     onChange = () => {},
-    toggle = $bindable(),
   }: Props = $props();
 
-  toggle = (e: MouseEvent | KeyboardEvent) => {
+  function toggle(e: MouseEvent | KeyboardEvent) {
     value = !value;
     onChange(value);
     e.stopPropagation();
@@ -103,10 +101,7 @@
   }
 
   input {
-    all: unset;
-    position: absolute;
-    left: 0;
-    top: 0;
+    display: none;
   }
 </style>
 
@@ -124,5 +119,5 @@
     class:check={value}
   >
   </div>
-  <input type="hidden" name={name} value={value}>
+  <input type="button" name={name} value={value}>
 </button>

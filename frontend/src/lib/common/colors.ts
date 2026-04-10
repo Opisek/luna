@@ -27,6 +27,7 @@ export const recommendedRGB: [number, number, number][] = [
   [225, 90, 151], // pink
 ];
 export const recommendedColors: string[] = recommendedRGB.map(serializeRGB);
+export const recommendedColorNames = ["Red", "Orange", "Yellow", "Green", "Blue", "Purple", "Pink"];
 
 export function isDark(rgb: number[]) {
   const brightness = Math.round(((rgb[0] * 299) +

@@ -19,8 +19,14 @@
 
   function mouseUp() {
     if (mouseLeft) return;
+    window.removeEventListener("mouseup", mouseUp);
+    window.removeEventListener("mouseout", mouseUp);
+    window.removeEventListener("blur", mouseUp);
     mouseLeft = true;
     if (!animationsEnabled) transitionEnd();
+    else setTimeout(() => {
+      if (!circle.checkVisibility()) circle.remove();
+    }, 10);
   }
 
   $effect(() => {
@@ -39,6 +45,7 @@
         transitionsFinished = animationsEnabled ? 0 : 1;
         window.addEventListener("mouseup", mouseUp, { once: true });
         window.addEventListener("mouseout", mouseUp, { once: true });
+        window.addEventListener("blur", mouseUp, { once: true });
       } else circle.remove();
     })(circle);
   });

@@ -176,8 +176,12 @@ func (event *CaldavEvent) Clone() types.Event {
 }
 
 func (event *CaldavEvent) SupplyMasterEvent(masterEvent types.Event) {
-	event.settings.RecurrenceId = common.CalculateRecurrenceId(event.eventDate.Start(), event.eventDate.AllDay())
+	event.settings.RecurrenceId = types.SerializeIcalTime(event.eventDate.Start(), event.eventDate.AllDay(), true)
 	event.settings.IsFirstRecurrence = masterEvent.GetDate().Start().Equal(*event.eventDate.Start())
+}
+
+func (event *CaldavEvent) IsRecurrenceInstance() bool {
+	return event.settings.RecurrenceId != ""
 }
 
 func (event *CaldavEvent) GetRecurrenceId() string {
@@ -185,9 +189,9 @@ func (event *CaldavEvent) GetRecurrenceId() string {
 }
 
 func (event *CaldavEvent) CanEdit() bool {
-	return !event.eventDate.Recurrence().Repeats()
+	return true
 }
 
 func (event *CaldavEvent) CanDelete() bool {
-	return !event.eventDate.Recurrence().Repeats()
+	return true
 }

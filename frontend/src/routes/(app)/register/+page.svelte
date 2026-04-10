@@ -1,6 +1,4 @@
 <script lang="ts">
-  import type { ActionData } from './$types';
-
   import Form from '../../../components/forms/Form.svelte';
   import Link from '../../../components/forms/Link.svelte';
   import SimplePage from '../../../components/layout/SimplePage.svelte';
@@ -20,14 +18,12 @@
   import type { ActionResult } from '@sveltejs/kit';
 
   interface PageProps {
-    form: ActionData;
     data: {
       registrationEnabled: boolean;
     }
   }
 
   let {
-    form = $bindable(),
     data,
   }: PageProps = $props();
 

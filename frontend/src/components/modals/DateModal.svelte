@@ -6,40 +6,31 @@
   import { NoOp } from "$lib/client/placeholders";
 
   interface Props {
-    date: Date;
-    onChange?: (date: Date) => void;
-    showModal?: () => any;
-    hideModal?: () => any;
+    showModal: (initial: Date) => Promise<Date>;
   }
 
   let {
-    date = $bindable(new Date()),
-    onChange = NoOp,
     showModal = $bindable(),
-    hideModal = $bindable()
   }: Props = $props();
 
-  let showModalInternal: () => any = $state(NoOp);
-  let hideModalInternal: () => any = $state(NoOp);
+  let showModalInternal: () => Promise<Date> = $state(Promise.reject);
+  let success: (result: Date) => void = $state(NoOp);
 
-  showModal = () => {
-    showModalInternal();
-  };
+  let date = $state(new Date());
 
-  hideModal = () => {
-    hideModalInternal();
+  showModal = (initial: Date) => {
+    date = new Date(initial); 
+    return showModalInternal();
   };
 
   function dateSelected(selectedDate: Date) {
     // keep the time of day the same:
     selectedDate.setHours(date.getHours(), date.getMinutes(), date.getSeconds(), date.getMilliseconds());
-    date = selectedDate;
-    hideModalInternal();
-    onChange(date);
+    success(selectedDate);
   }
 </script>
 
-<Modal title="Pick Date" bind:showModal={showModalInternal} bind:hideModal={hideModalInternal}>
+<Modal title="Pick Date" bind:showModal={showModalInternal} bind:success>
   <MonthSelection bind:date />
   <SmallCalendar bind:date onDayClick={dateSelected} />
 </Modal>

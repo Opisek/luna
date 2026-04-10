@@ -86,15 +86,15 @@
   {/if}
   <button onclick={showPopup} type="button" use:focusIndicator={{ type: "underline" }}>
     {`${getMonthName(date.getMonth())} ${date.getFullYear()}`}
+    <MonthPopup bind:showPopup bind:date={date} onSelect={onSelect}/>
   </button>
-  <MonthPopup bind:showPopup bind:date={date} onSelect={onSelect}/>
 </div>
 
 {#snippet buttons(prev: () => void, next: () => void)}
-  <IconButton click={prev}>
+  <IconButton onClick={prev} alt="Previous month">
     <LeftIcon/>
   </IconButton>
-  <IconButton click={next}>
+  <IconButton onClick={next} alt="Next month">
     <RightIcon/>
   </IconButton>
 {/snippet}

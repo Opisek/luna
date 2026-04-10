@@ -6,7 +6,7 @@
   import SelectInput from "../forms/SelectInput.svelte";
   import TextInput from "../forms/TextInput.svelte";
 
-  import { EmptyEvent, NoChangesEvent, NoOp } from "$lib/client/placeholders";
+  import { EmptyEvent, NoChangesEvent } from "$lib/client/placeholders";
   import { deepCopy, deepEquality } from "$lib/common/misc";
   import { getRepository } from "$lib/client/data/repository.svelte";
   import { isSameDay } from "$lib/common/date";
@@ -15,22 +15,37 @@
   import { getSettings } from "$lib/client/data/settings.svelte";
   import { UserSettingKeys } from "../../types/settings";
   import { ColorKeys } from "../../types/colors";
+  import Horizontal from "../layout/Horizontal.svelte";
+  import EventCopyModal from "./EventCopyModal.svelte";
+  import IconButton from "../interactive/IconButton.svelte";
+  import { Copy } from "lucide-svelte";
+  import { RRule } from "rrule";
+  import { parseTimestampList } from "../../lib/common/ical";
+  import { SvelteSet } from "svelte/reactivity";
+  import AffectedRecurrencesModal from "./AffectedRecurrencesModal.svelte";
 
   interface Props {
-    showCreateModal?: (date: Date) => Promise<EventModel>;
-    showModal?: (event: EventModel) => Promise<EventModel>;
+    showModal?: (initial?: EventModel, date?: Date) => Promise<EventModel>;
   }
 
   let {
-    showCreateModal = $bindable(),
     showModal = $bindable(),
   }: Props = $props();
 
   const settings = getSettings();
   const repository = getRepository();
 
+  let showModalInternal: (initial?: EventModel, edit?: boolean) => Promise<EventModel> = $state(Promise.reject);
+  let showCopyModal: (event: EventModel) => Promise<EventModel> = $state(Promise.reject);
+  let selectAffectedRecurrences: (edit: boolean) => Promise<"this" | "thisandfuture" | "all"> = $state(Promise.reject);
+  let editMode: boolean = $state(false);
+
   let event: EventModel = $state(EmptyEvent);
   let originalEvent: EventModel = $state(EmptyEvent);
+  let eventRepeats = $state(false);
+  let eventRecurrenceRrule = $state(new RRule());
+  let eventRecurrenceRdate = $state(new SvelteSet());
+  let eventRecurrenceExdate = $state(new SvelteSet());
 
   let eventSourceType = $derived.by(() => {
     const calendar = repository.calendars.find(x => x.id === event.calendar);
@@ -42,84 +57,72 @@
     return source.type;
   });
 
-  let promiseResolve: (value: EventModel | PromiseLike<EventModel>) => void = $state(NoOp);
-  let promiseReject: (reason?: any) => void = $state(NoOp);
+  showModal = async (initial?: EventModel, date?: Date): Promise<EventModel> => {
+    if (!initial) {
+      const start = new Date(date || new Date());
+      start.setHours(12, 0, 0, 0);
 
-  showCreateModal = async (date: Date) => {
-    promiseReject();
+      const end = new Date(date || new Date());
+      end.setHours(13, 0, 0, 0);
 
-    editMode = false;
+      event = {
+        id: "",
+        calendar: "",
+        name: "",
+        desc: "",
+        color: "",
+        date: {
+          start: start,
+          end: end,
+          allDay: false,
+          recurrence: undefined,
+        },
+        overridden: false,
+        can_edit: true,
+        can_delete: true,
+      };
 
-    const start = new Date(date);
-    start.setHours(12, 0, 0, 0);
+      eventRepeats = false;
+      //eventRecurrenceObject = null;
+    } else {
+      event = {
+        id: initial.id,
+        calendar: initial.calendar,
+        name: initial.name,
+        desc: initial.desc,
+        color: initial.color,
+        date: {
+          start: new Date(initial.date.start),
+          end: new Date(initial.date.end),
+          allDay: initial.date.allDay,
+          recurrence: await deepCopy(initial.date.recurrence),
+        },
+        overridden: initial.overridden,
+        can_edit: initial.can_edit,
+        can_delete: initial.can_delete,
+      }
+      if (event.date.allDay && event.date.end.getTime() !== event.date.start.getTime() && event.date.end.getHours() === 0 && event.date.end.getMinutes() === 0 && event.date.end.getSeconds() === 0 && event.date.end.getMilliseconds() === 0) {
+        event.date.end.setDate(event.date.end.getDate() - 1);
+      }
 
-    const end = new Date(date);
-    end.setHours(13, 0, 0, 0);
+      originalEvent = await deepCopy(initial);
 
-    event = {
-      id: "",
-      calendar: "",
-      name: "",
-      desc: "",
-      color: "",
-      date: {
-        start: start,
-        end: end,
-        allDay: false,
-        recurrence: false,
-      },
-      overridden: false,
-      can_edit: true,
-      can_delete: true,
-    };
+      eventRepeats = event.date.recurrence != undefined;
+      if (event.date.recurrence) {
+        if (event.date.recurrence.RRULE)
+          eventRecurrenceRrule = RRule.fromString(event.date.recurrence.RRULE);
 
-    setTimeout(showCreateModalInternal, 0);
+        if (event.date.recurrence.RDATE)
+          eventRecurrenceRdate = new SvelteSet(parseTimestampList(event.date.recurrence.RDATE));
 
-    return new Promise((resolve, reject) => {
-      promiseResolve = resolve;
-      promiseReject = reject;
-    });
-  }
-
-  showModal = async (original: EventModel): Promise<EventModel> => {
-    promiseReject();
-
-    editMode = false;
-
-    event = {
-      id: original.id,
-      calendar: original.calendar,
-      name: original.name,
-      desc: original.desc,
-      color: original.color,
-      date: {
-        start: new Date(original.date.start),
-        end: new Date(original.date.end),
-        allDay: original.date.allDay,
-        recurrence: await deepCopy(original.date.recurrence),
-      },
-      overridden: original.overridden,
-      can_edit: original.can_edit,
-      can_delete: original.can_delete,
+        if (event.date.recurrence.EXDATE)
+          eventRecurrenceExdate = new SvelteSet(parseTimestampList(event.date.recurrence.EXDATE));
+      }
     }
-    if (event.date.allDay && event.date.end.getTime() !== event.date.start.getTime() && event.date.end.getHours() === 0 && event.date.end.getMinutes() === 0 && event.date.end.getSeconds() === 0 && event.date.end.getMilliseconds() === 0) {
-      event.date.end.setDate(event.date.end.getDate() - 1);
-    }
 
-    originalEvent = await deepCopy(original);
-
-    setTimeout(showModalInternal, 0);
-
-    return new Promise((resolve, reject) => {
-      promiseResolve = resolve;
-      promiseReject = reject;
-    });
+    return showModalInternal(event);
   };
 
-  let showCreateModalInternal: () => boolean = $state(() => false);
-  let showModalInternal: () => boolean = $state(() => false);
-
-  let editMode: boolean = $state(false);
   let title: string = $derived((event && event.id) ? (editMode ? "Edit event" : "Event") : "Create event");
   let showEndDate: boolean = $derived(editMode || (event && (!event.date.allDay || !isSameDay(event.date.start, event.date.end))));
 
@@ -130,21 +133,22 @@
   );
 
   const onDelete = async () => {
-    await getRepository().deleteEvent(event.id).catch(err => {
+    const affect = originalEvent.date.recurrence != undefined ? await selectAffectedRecurrences(false).catch(() => { throw new Error("Cancelled"); }) : "this";
+
+    return await getRepository().deleteEvent(event.id, affect).then(() => event).catch(err => {
       throw new Error(`Could not delete event ${event.name}: ${err.message}`);
     });
-    promiseReject();
   };
   const onEdit = async () => {
+    const affect = originalEvent.date.recurrence != undefined ? await selectAffectedRecurrences(true).catch(() => { throw new Error("Cancelled"); }) : "this";
+
     if (event.date.allDay) {
       event.date.end.setDate(event.date.end.getDate() + 1);
     }
     if (event.id === "") {
-      await getRepository().createEvent(event).catch(err => {
-        promiseReject();
+      return await getRepository().createEvent(event).then(() => event).catch(err => {
         throw new Error(`Could not create event ${event.name}: ${err.message}`);
       });
-      promiseResolve(event);
     } else if (event.calendar == originalEvent.calendar) {
       const changes = {
         name: event.name != originalEvent.name,
@@ -152,17 +156,13 @@
         color: event.color != originalEvent.color,
         date: !deepEquality(event.date, originalEvent.date)
       };
-      await getRepository().editEvent(event, changes, eventSourceType === "ical").catch(err => {
-        promiseReject();
+      return await getRepository().editEvent(event, changes, eventSourceType === "ical", affect).then(() => event).catch(err => {
         throw new Error(`Could not edit event ${event.name}: ${err.message}`);
       });
-      promiseResolve(event);
     } else {
-      await getRepository().moveEvent(event).catch(err => {
-        promiseReject();
+      return await getRepository().moveEvent(event).then(() => event).catch(err => {
         throw new Error(`Could not move event ${event.name}: ${err.message}`);
       });
-      promiseResolve(event);
     }
   };
   const resetOverrides = async () => {
@@ -204,19 +204,25 @@
     }
   }
   
+  const copyEvent = async () => {
+    await showCopyModal(originalEvent).then((newEvent) => {
+      console.log(originalEvent);
+      console.log(newEvent);
+    }).catch(() => {
+      console.log("aborted copy")
+    });
+  }
 </script>
 
 <EditableModal
   title={title}
   deleteConfirmation={`Are you sure you want to delete event "${event ? event.name : ""}"?`}
   bind:editMode={editMode}
-  bind:showCreateModal={showCreateModalInternal}
   bind:showModal={showModalInternal}
   onDelete={onDelete}
   onEdit={onEdit}
-  onCancel={promiseReject}
-  deletable={event?.can_edit}
-  editable={event?.can_delete}
+  deletable={event?.can_delete}
+  editable={event?.can_edit}
   submittable={event.calendar !== "" && event.name !== "" && (event.date.start.getTime() < event.date.end.getTime() || (event.date.start.getTime() <= event.date.end.getTime() && event.date.allDay))}
 >
   {#if event != EmptyEvent}
@@ -229,19 +235,46 @@
       <TextInput bind:value={event.desc} name="desc" placeholder="Description" multiline={true} editable={editMode} />
     {/if}
     {#if editMode}
-        <ToggleInput bind:value={event.date.allDay} name="all_day" description="All Day"/>
+      <ToggleInput bind:value={event.date.allDay} name="all_day" description="All Day"/>
     {/if}
-    <DateTimeInput bind:value={event.date.start} name="date_start" placeholder={showEndDate ? "Start" : "Date"} editable={editMode} allDay={event.date.allDay} onChange={changeStart}/>
-    {#if showEndDate}
-      <DateTimeInput bind:value={event.date.end} name="date_end" placeholder="End" editable={editMode} allDay={event.date.allDay} onChange={changeEnd}/>
-    {/if}
+    <Horizontal position="left">
+      <DateTimeInput bind:value={event.date.start} name="date_start" placeholder={showEndDate ? "Start" : "Date"} editable={editMode} allDay={event.date.allDay} onChange={changeStart} wrap={true}/>
+      {#if showEndDate}
+        <DateTimeInput bind:value={event.date.end} name="date_end" placeholder="End" editable={editMode} allDay={event.date.allDay} onChange={changeEnd} wrap={true}/>
+      {/if}
+    </Horizontal>
     {#if event.id && settings.userSettings[UserSettingKeys.DebugMode]}
       <TextInput value={event.id} name="id" placeholder="Event ID" editable={false} />
     {/if}
+    {#if editMode}
+      <ToggleInput bind:value={eventRepeats} name="repeats" description="Repeats"/>
+    {/if}
+    {#if eventRepeats}
+      <!--
+      {#if editMode}
+        <SelectInput bind:value={event.date.recurrence} name="recurrence_freq" placeholder="Frequency" showLabel={true} options={[
+          { value: "daily", name: "Daily" },
+          { value: "weekly", name: "Weekly" },
+          { value: "monthly", name: "Monthly" },
+          { value: "yearly", name: "Yearly" },
+        ]} editable={editMode} />
+      {:else}
+        Repeats xyz times or something
+      {/if}
+      -->
+    {/if}
   {/if}
   {#snippet extraButtonsLeft()}
-    {#if event != EmptyEvent && !editMode && event.overridden}
-      <Button color={ColorKeys.Accent} onClick={resetOverrides}>Reset</Button>
+    {#if !editMode}
+      {#if event != EmptyEvent && event.overridden}
+        <Button color={ColorKeys.Accent} onClick={resetOverrides}>Reset</Button>
+      {/if}
+      <IconButton onClick={copyEvent} alt="Copy" canRenderAsButton={true}>
+        <Copy/>
+      </IconButton>
     {/if}
   {/snippet}
 </EditableModal>
+
+<EventCopyModal bind:copy={showCopyModal}/>
+<AffectedRecurrencesModal bind:showModal={selectAffectedRecurrences}/>

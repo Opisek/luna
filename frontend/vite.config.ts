@@ -5,5 +5,8 @@ export default defineConfig({
 	plugins: [sveltekit()],
 	server: {
 		port: 8080
+	},
+	optimizeDeps: {
+		include: ["rrule"]
 	}
 });

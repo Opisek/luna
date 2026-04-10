@@ -1,13 +1,13 @@
 <script lang="ts">
-  import Button from "../interactive/Button.svelte";
   import Horizontal from "../layout/Horizontal.svelte";
-  import Loader from "../decoration/Loader.svelte";
   import Title from "../layout/Title.svelte";
   import type { Snippet } from "svelte";
   import { ColorKeys } from "../../types/colors";
   import { enhance } from "$app/forms";
   import type { ActionResult } from "@sveltejs/kit";
   import { NoOp } from "../../lib/client/placeholders";
+  import IconButton from "../interactive/IconButton.svelte";
+  import { Send } from "lucide-svelte";
 
   interface Props {
     title: string;
@@ -23,18 +23,25 @@
     children,
   }: Props = $props();
 
-  let loading = $state(false);
+  let registerButtonPromise: (promise: Promise<any>) => void = $state(NoOp);
+  let promiseResult = $state(NoOp);
 
   function onSubmit(e: SubmitEvent) {
-    if (!submittable) {
+    if (submittable) {
+      registerButtonPromise(new Promise<void>(res => {
+        promiseResult = () => {
+          promiseResult = NoOp;
+          res();
+        }
+      }));
+    } else {
       e.preventDefault();
       return; // TODO: add some user feedback when a form fails to submit
     }
-    loading = true;
   }
 
   function onResult({ result, update }: { result: ActionResult; update: () => void }) {
-    loading = false;
+    promiseResult();
     callback(result);
     update();
   }
@@ -64,12 +71,8 @@
   <Title>{title}</Title>
   {@render children?.()}
   <Horizontal position="right">
-    <Button type="submit" color={ColorKeys.Success} enabled={submittable}>
-      {#if loading}
-        <Loader/>
-      {:else}
-        Submit
-      {/if}
-    </Button>
+    <IconButton type="submit" bind:externalLoading={registerButtonPromise} color={ColorKeys.Success} enabled={submittable} alt="Submit" canRenderAsButton={true}>
+      <Send/>
+    </IconButton>
   </Horizontal>
 </form>

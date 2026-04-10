@@ -19,6 +19,8 @@
   import { sleep } from "../../lib/common/misc";
   import OauthTokensModal from "./OauthTokensModal.svelte";
   import Spinner from "../decoration/Spinner.svelte";
+  import IconButton from "../interactive/IconButton.svelte";
+  import { Check, X } from "lucide-svelte";
 
   interface Props {
     showModal?: () => Promise<SourceModel>;
@@ -30,9 +32,10 @@
 
   const oauthClients = getOauthClients();
 
-  let showNewSourceModal: () => Promise<SourceModel> = getContext("showNewSourceModal");
-  let showModalInternal = $state(NoOp)
-  let hideModalInternal = $state(NoOp)
+  let showSourceModal: () => Promise<SourceModel> = getContext("showSourceModal");
+  let showModalInternal: () => Promise<SourceModel> = $state(Promise.reject);
+  let success: (result: SourceModel) => void = $state(NoOp);
+  let failure: () => void = $state(NoOp);
 
   let urlValid: Validity = $state(valid);
   let fileValid: Validity = $state(valid);
@@ -69,8 +72,6 @@
 
   showModal = async () => {
     oauthClients.fetch();
-
-    awaitingEdit = false;
 
     name = "";
     inputType = "link";
@@ -115,13 +116,12 @@
   });
 
   function advanced() {
-    showNewSourceModal().then((source) => {
-      saveInternal(source);
+    showSourceModal().then((source) => {
+      success(source);
     }).catch(NoOp);
   }
 
-  let awaitingEdit = $state(false);
-  function save() {
+  async function save() {
     const source: SourceModel = {
       id: "",
       name: name,
@@ -141,22 +141,11 @@
       source.settings.file = files;
     }
 
-    awaitingEdit = true;
-    getRepository().createSource(source).then(() => {
-      saveInternal(source);
+    return getRepository().createSource(source).then(() => {
+      success(source);
     }).catch(err => {
       queueNotification(ColorKeys.Danger, `Could not create source ${source.name}: ${err.message}`);
-    }).finally(() => {
-      awaitingEdit = false;
     });
-  }
-  async function saveInternal(source: SourceModel) {
-    promiseResolve(source);
-    hideModalInternal();
-  }
-  function cancel() {
-    promiseReject();
-    hideModalInternal();
   }
 
   let cachedChecks = $state(new Map<string, Validity>());
@@ -288,8 +277,12 @@
 <Modal
   title="Source wizard"
   bind:showModal={showModalInternal}
-  bind:hideModal={hideModalInternal}
-  onModalHide={abortOauthAuthorization}
+  bind:success
+  bind:failure
+  onModalHide={() => {
+    promiseReject();
+    abortOauthAuthorization();
+  }}
 >
   <TextInput bind:value={name} name="name" placeholder="Name"/>
   <SelectButtons bind:value={inputType} name="ical_location" placeholder={"What do you want to add?"} options={[
@@ -371,14 +364,10 @@
     <Link onClick={advanced}>Click to enter advanced mode</Link>
   </Horizontal>
   {#snippet buttons()}
-    <Button onClick={save} color={ColorKeys.Success} enabled={submittable} type="submit">
-      {#if awaitingEdit}
-        <Loader/>
-      {:else}
-        Save
-      {/if}
-    </Button>
-    <Button onClick={cancel} color={ColorKeys.Danger}>Cancel</Button>
+    <IconButton onClick={save} color={ColorKeys.Success} enabled={submittable} type="submit" alt="Save" canRenderAsButton={true}>
+      <Check/>
+    </IconButton>
+    <IconButton onClick={failure} color={ColorKeys.Danger} alt="Cancel" canRenderAsButton={true}><X/></IconButton>
   {/snippet}
 </Modal>
 

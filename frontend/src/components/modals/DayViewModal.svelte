@@ -2,27 +2,24 @@
   import Event from "../calendar/Event.svelte";
   import Modal from "./Modal.svelte";
 
-  import { NoOp } from "$lib/client/placeholders";
   import { setContext } from "svelte";
 
   interface Props {
-    showModal?: (date: Date, events: (EventModel | null)[]) => any;
-    hideModal?: () => any;
+    showModal?: (date: Date, events: (EventModel | null)[]) => Promise<void>;
   }
 
   let {
     showModal = $bindable(),
-    hideModal = $bindable(NoOp),
   }: Props = $props();
 
   let date = $state(new Date());
   let events: (EventModel | null)[] = $state([]);
 
-  let showModalInternal = $state(NoOp);
+  let showModalInternal: () => Promise<void> = $state(Promise.reject);
   showModal = (_date: Date, _events: (EventModel | null)[]) => {
     date = _date;
     events = _events;
-    showModalInternal();
+    return showModalInternal();
   };
 
   let currentlyClickedEvent = $state<EventModel | null>(null);
@@ -42,7 +39,7 @@
   }
 </style>
 
-<Modal title={date.toDateString()} bind:showModal={showModalInternal} bind:hideModal={hideModal}>
+<Modal title={date.toDateString()} bind:showModal={showModalInternal}>
   {#if events.length === 0}
     No events
   {:else}

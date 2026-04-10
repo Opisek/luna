@@ -28,58 +28,43 @@
   const settings = getSettings();
   const oauthClients = getOauthClients();
 
-  let promiseResolve: (value: string | PromiseLike<string>) => void = $state(NoOp);
-  let promiseReject: (reason?: any) => void = $state(NoOp);
-
-  let showModalInternal: () => any = $state(NoOp);
+  let showModalInternal: () => Promise<string> = $state(Promise.reject);
+  let success: (result: string) => void = $state(NoOp);
+  let failure: () => void = $state(NoOp);
+  let externalAuthPromiseResolve: (result: string) => void = $state(NoOp);
+  let externalAuthPromiseReject: () => void = $state(NoOp);
 
   let selectedClientId = $state("");
   let selectedClient: OauthClientModel | null = $derived(oauthClients.clients.find(client => client.id === selectedClientId) ?? null);
   let oauthRequestId = $state("");
-  let extAuthPending = $state(false);
-  let rejectOnFail = $state(false);
 
   authorize = async (clientId: string): Promise<string> => {
-    promiseReject();
-
     await oauthClients.fetch();
     await oauthClients.fetchTokens();
 
     selectedClientId = clientId;
 
     if ((oauthClients.clientTokens.get(selectedClientId) || []).length == 0) {
-      rejectOnFail = true
-      authorizeWithExternalProvider();
+      return authorizeWithExternalProvider().finally(() => {
+        window.removeEventListener("storage", oauthAuthorizationResponseListener);
+      })
     } else {
-      rejectOnFail = false;
-      setTimeout(showModalInternal(), 0);
+      return showModalInternal().finally(() => {
+        window.removeEventListener("storage", oauthAuthorizationResponseListener);
+      })
     }
-
-    return new Promise((resolve, reject) => {
-      promiseResolve = ((res) => {
-        window.removeEventListener("storage", oauthAuthorizationResponseListener);
-        resolve(res);
-      });
-      promiseReject = ((err) => {
-        window.removeEventListener("storage", oauthAuthorizationResponseListener);
-        reject(err);
-      });
-    })
   };
 
   abort = () => {
-    promiseReject();
+    externalAuthPromiseReject();
   };
 
   async function authorizeWithExternalProvider() {
-    if (extAuthPending) return;
-    extAuthPending = true;
-
-    const json = await fetchJson(`/api/oauth/authorization/${selectedClientId}`, { method: "PUT" }).catch((err) => {
-      extAuthPending = false;
+    const json = await fetchJson(`/api/oauth/authorization/${selectedClientId}`, { method: "PUT" }).catch((err: Error) => {
+      if (err.message.includes("Service unavailable")) err.message = "Please try again";
       queueNotification(ColorKeys.Danger, err.message)
     });
-    if (!json || !json.url || !json.request?.request_id) return;
+    if (!json || !json.url || !json.request?.request_id) return Promise.reject();
 
     oauthRequestId = json.request.request_id;
     localStorage.setItem(`oauth/${oauthRequestId}/expiry`, json.request.expires_at);
@@ -87,8 +72,13 @@
     window.addEventListener("storage", oauthAuthorizationResponseListener);
 
     window.open(json.url, "_blank")?.focus();
-  }
 
+    externalAuthPromiseReject();
+    return new Promise<string>((resolve, reject) => {
+      externalAuthPromiseResolve = resolve;
+      externalAuthPromiseReject = reject;
+    });
+  }
   async function oauthAuthorizationResponseListener() {
     const rawResponse = localStorage.getItem(`oauth/${oauthRequestId}/response`);
   
@@ -103,8 +93,6 @@
     localStorage.removeItem(`oauth/${oauthRequestId}/response`);
     localStorage.removeItem(`oauth/${oauthRequestId}/expiry`);
 
-    extAuthPending = false;
-
     if (response?.status === "ok") {
       if (response.warnings) {
         for (const warning of response.warnings) {
@@ -113,12 +101,13 @@
       }
       else queueNotification(ColorKeys.Success, `Logged into ${selectedClient?.name} successfully`);
       await oauthClients.fetchTokens();
-      promiseResolve(response.token);
+      externalAuthPromiseResolve(response.token);
+    } else if ((response?.error as string || "").toLowerCase().includes("service unavailable")) {
+      queueNotification(ColorKeys.Warning, "Please try again");
+      externalAuthPromiseReject();
     } else {
       queueNotification(ColorKeys.Danger, response?.error || "Unknown error");
-      if (rejectOnFail) {
-        promiseReject();
-      }
+      externalAuthPromiseReject();
     }
   }
 </script>
@@ -175,11 +164,9 @@
 <Modal
   title={"Choose account"}
   bind:showModal={showModalInternal}
-  onModalHide={() => {
-    promiseReject();
-  }}
+  bind:success
+  bind:failure
 >
-
   <Paragraph>
     You are already signed in with {selectedClient?.name}.<br>
     You can choose one of your existing accounts or authorize a new account.
@@ -192,12 +179,8 @@
     template={tokensTemplate}
   />
 
-  <Button color={ColorKeys.Accent} onClick={authorizeWithExternalProvider} enabled={!extAuthPending}>
-    {#if extAuthPending}
-      <Spinner/>
-    {:else}
-      Sign into a different account
-    {/if}
+  <Button color={ColorKeys.Accent} onClick={async () => authorizeWithExternalProvider().then(res => success(res)).catch(NoOp)}>
+    Sign into a different account
   </Button>
 </Modal>
 
@@ -208,7 +191,7 @@
     </span>
 
     <div class="buttons">
-      <IconButton click={() => promiseResolve(tokens.id)}>
+      <IconButton onClick={() => success(tokens.id)} alt="Use account">
         <Check size={20}/>
       </IconButton>
     </div>

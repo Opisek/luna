@@ -1,43 +1,81 @@
 <script lang="ts">
   import type { Snippet } from "svelte";
 
-  import { NoOp } from "$lib/client/placeholders";
-  import Tooltip from "./Tooltip.svelte";
+  import { AsyncNoOp, NoOp } from "$lib/client/placeholders";
+  import { ColorKeys } from "../../types/colors";
+  import Button from "./Button.svelte";
+  import { getSettings } from "../../lib/client/data/settings.svelte";
+  import { UserSettingKeys } from "../../types/settings";
+  import Spinner from "../decoration/Spinner.svelte";
+  import Popup from "../popups/Popup.svelte";
 
   interface Props {
+    alt: string;
     up?: () => void;
     down?: () => void;
-    click?: () => void;
+    onClick?: () => any;
+    externalLoading?: (promise: Promise<any>) => void;
     visible?: boolean;
-    info?: string;
     style?: string;
     tabindex?: number;
     href?: string;
+    type?: "button" | "submit";
+    enabled?: boolean;
+    color?: ColorKeys;
+    canRenderAsButton?: boolean;
     children?: Snippet;
   }
 
   let {
+    alt,
     up = NoOp,
     down = NoOp,
-    click = NoOp,
+    onClick = NoOp,
+    externalLoading = $bindable(),
     visible = true,
-    info = "",
     style = "",
     tabindex = 0,
     href = "",
+    type = "button",
+    enabled = true,
+    color = ColorKeys.Neutral,
+    canRenderAsButton = false,
     children
   }: Props = $props();
 
-  // svelte-ignore non_reactive_update
-  // isLink is set once and never changed
-  let button = $state<HTMLElement | null>(null);
+  const settings = getSettings();
 
-  function clickInternal(e: MouseEvent) {
+  let button = $state<HTMLElement | undefined>();
+
+  let showPopover = $state(AsyncNoOp);
+  let hidePopover = $state(NoOp);
+
+  let loading = $state(false);
+  async function clickInternal(e: MouseEvent) {
     e.stopPropagation();
-    click();
+    if (loading) return;
+    const result = onClick();
+    if (!(result instanceof Promise)) return;
+    loading = true;
+    hidePopover();
+    await result.catch(NoOp);
+    loading = false;
+  }
+  externalLoading = async promise => {
+    if (loading) return;
+    loading = true;
+    hidePopover();
+    await promise.catch(NoOp);
+    loading = false;
   }
 
+  function enterInternal() {
+    if (!button) return;
+    if (loading) return;
+    showPopover();
+  }
   function leaveInternal() {
+    hidePopover();
     if (!button) return;
     button.blur();
     up();
@@ -65,53 +103,120 @@
     transition: all animations.$cubic animations.$animationSpeed;
   }
 
-  button.hidden, a.hidden {
+  button.hidden, a.hidden, .loading > :global(:first-child) {
     visibility: hidden;
   }
 
-  div.circle {
-    position: absolute;
-    background-color: colors.$backgroundSecondary;
-    z-index: -1;
-    border-radius: 50%;
-    left: 50%;
-    top: 50%;
-    width: 0%;
-    height: 0%;
-    transition: all animations.$cubic animations.$animationSpeed;
-    pointer-events: none;
+  button,
+  a {
+    &::before {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      left: 50%;
+      top: 50%;
+      width: 0%;
+      height: 0%;
+      transition: all animations.$cubic animations.$animationSpeed;
+      pointer-events: none;
+      z-index: -1;
+    }
   }
 
-  button:hover div.circle, button:focus div.circle, a:hover div.circle, a:focus div.circle {
-    left: 0;
-    top: 0;
+  button:hover,
+  button:focus,
+  button.loading,
+  a:hover,
+  a:focus {
+    &::before {
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  button:active:not(.loading),
+  a:active {
+    &::before {
+      width: 125%;
+      height: 125%;
+      left: -12.5%;
+      top: -12.5%;
+    }
+  }
+
+  button:hover,
+  button:focus,
+  button.loading,
+  a:hover,
+  a:focus {
+    &.neutral {
+      color: colors.$foregroundSecondary;
+      &::before {
+        background-color: colors.$backgroundSecondary;
+      }
+    } 
+    &.success {
+      color: colors.$foregroundSuccess;
+      &::before {
+        background-color: colors.$backgroundSuccess;
+      }
+    } 
+    &.accent {
+      color: colors.$foregroundAccent;
+      &::before {
+        background-color: colors.$backgroundAccent;
+      }
+    } 
+    &.warning {
+      color: colors.$foregroundWarning;
+      &::before {
+        background-color: colors.$backgroundWarning;
+      }
+    } 
+    &.danger {
+      color: colors.$foregroundFailure;
+      &::before {
+        background-color: colors.$backgroundFailure;
+      }
+    } 
+    &.inherit {
+      color: inherit;
+      &::before {
+        background-color: inherit;
+      }
+    } 
+  }
+
+  .disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  .loading > :global(.spinner) {
+    position: absolute;
     width: 100%;
     height: 100%;
-  }
-
-  button:active div.circle, a:active div.circle {
-    width: 125%;
-    height: 125%;
-    left: -12.5%;
-    top: -12.5%;
-  }
-
-  button:hover, button:focus, a:hover, a:focus {
-    color: colors.$foregroundSecondary;
+    left: 0;
+    top: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 </style>
 
-{#if info == ""}
-  {@render buttonSnippet()}
+{#if canRenderAsButton && settings.userSettings[UserSettingKeys.UseTextButtons]}
+  <Button
+     onClick={onClick}
+     bind:externalLoading
+     color={color}
+     type={type}
+     enabled={enabled}
+     href={href}
+  >{alt}</Button>
 {:else}
-  <Tooltip
-    icon={buttonSnippet} 
-    inheritColor={true}
-    tight={true}
-    pointerCursor={true}
-  >
-    {info}
-  </Tooltip>
+  {@render buttonSnippet()}
 {/if}
 
 {#snippet buttonSnippet()}
@@ -119,11 +224,18 @@
     <a
       bind:this={button}
       class:hidden={!visible}
-      href={href}
+      href={enabled ? href : "#"}
       style={style}
       tabindex="{tabindex}"
+      type={type}
+      class:disabled={!enabled}
+      class:success={color == ColorKeys.Success}
+      class:accent={color == ColorKeys.Accent}
+      class:warning={color == ColorKeys.Warning}
+      class:danger={color == ColorKeys.Danger}
+      class:neutral={color == ColorKeys.Neutral}
+      class:inherit={color == ColorKeys.Inherit}
     >
-      <div class="circle"></div>
       {@render children?.()}
     </a>
   {:else}
@@ -132,14 +244,32 @@
       onclick={clickInternal}
       onmousedown={down}
       onmouseleave={leaveInternal}
+      onmouseenter={enterInternal}
       onmouseup={upInternal}
       class:hidden={!visible}
-      type="button"
+      type={type}
       style={style}
       tabindex="{tabindex}"
+      class:disabled={!enabled}
+      class:success={color == ColorKeys.Success}
+      class:accent={color == ColorKeys.Accent}
+      class:warning={color == ColorKeys.Warning}
+      class:danger={color == ColorKeys.Danger}
+      class:neutral={color == ColorKeys.Neutral}
+      class:inherit={color == ColorKeys.Inherit}
+      disabled={!enabled}
+      class:loading
+      aria-label={alt}
     >
-      <div class="circle"></div>
       {@render children?.()}
+      {#if loading}
+        <Spinner/>
+      {/if}
+      {#if alt != ""}
+        <Popup bind:showPopup={showPopover} bind:hidePopup={hidePopover} delayed={true}>
+          {alt}
+        </Popup>
+      {/if}
     </button>
   {/if}
 {/snippet}

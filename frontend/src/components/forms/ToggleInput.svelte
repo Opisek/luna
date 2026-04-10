@@ -21,8 +21,6 @@
     editable = true,
     onChange = NoOp,
   }: Props = $props();
-
-  let click: (e: MouseEvent | KeyboardEvent) => void = $state(() => {});
 </script>
 
 <style lang="scss">
@@ -51,7 +49,6 @@
 
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <div
-  onclick={click}
   role="checkbox"
   tabindex="-1"
   aria-checked={value}
@@ -61,7 +58,6 @@
     name={name}
     onChange={onChange}
     enabled={editable}
-    bind:toggle={click}
   />
   <label for={name}>
     {description}

@@ -2,8 +2,8 @@ package api
 
 import (
 	"fmt"
-	middleware "luna-backend/api/internal"
 	"luna-backend/api/internal/handlers"
+	"luna-backend/api/internal/middleware"
 	"luna-backend/api/internal/util"
 	"luna-backend/config"
 	"luna-backend/db"

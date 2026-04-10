@@ -1,15 +1,15 @@
-<script lang="ts">
+<script lang="ts" generics="T extends { id: string }">
   import type { Snippet } from "svelte";
 
-  import Loader from "../decoration/Loader.svelte";
-  import Button from "../interactive/Button.svelte";
   import ConfirmationModal from "./ConfirmationModal.svelte";
   import Modal from "./Modal.svelte";
 
-  import { NoOp } from "../../lib/client/placeholders";
+  import { AsyncNoOp, NoOp } from "../../lib/client/placeholders";
   import { queueNotification } from "$lib/client/notifications";
 
   import { ColorKeys } from "../../types/colors";
+  import IconButton from "../interactive/IconButton.svelte";
+  import { Check, Pencil, Trash2, X } from "lucide-svelte";
  
   interface Props {
     title: string;
@@ -18,13 +18,14 @@
     editable?: boolean;
     deletable?: boolean;
     submittable?: boolean;
-    onEdit: () => Promise<void>;
-    onDelete: () => Promise<void>;
-    onCancel?: () => any;
-    showCreateModal?: () => any;
-    showEditModal?: () => any;
-    showModal?: () => any;
-    hideModal?: () => any;
+
+    onEdit: () => Promise<T>;
+    onDelete: () => Promise<T>;
+
+    showModal?: (initial?: T, edit?: boolean) => Promise<T>;
+    success?: (result: T) => void;
+    failure?: (reason?: string | Error) => void;
+
     onModalHide?: () => any;
     children?: Snippet;
     extraButtonsTop?: Snippet;
@@ -41,11 +42,9 @@
     submittable = true,
     onEdit,
     onDelete,
-    onCancel,
-    showCreateModal = $bindable(),
-    showEditModal = $bindable(),
     showModal = $bindable(),
-    hideModal = $bindable(NoOp),
+    success = $bindable(NoOp),
+    failure = $bindable(NoOp),
     onModalHide = $bindable(NoOp),
     children,
     extraButtonsTop,
@@ -55,62 +54,39 @@
 
   let creating = false;
 
-  let showModalInternal: () => any = $state(NoOp);
-  let hideModalInternal: () => any = $state(NoOp);
-  let showDeleteModal: () => any = $state(NoOp);
-  let resetFocus: () => any = $state(NoOp);
+  let showModalInternal: () => Promise<T> = $state(Promise.reject);
 
-  showCreateModal = () => {
-    creating = true;
-    editMode = true;
-    showModalInternal();
-  };
-  showEditModal = () => {
-    creating = false;
-    editMode = true;
-    showModalInternal();
-  };
-  showModal = () => {
-    creating = false;
-    editMode = false;
-    showModalInternal();
-  };
-  hideModal = () => {
-    onCancel?.();
-    hideModalInternal();
+  let showDeleteModal: () => Promise<void> = $state(AsyncNoOp);
+
+  showModal = (initial?: T, edit?: boolean) => {
+    creating = !initial || initial.id === "";
+    editMode = edit || creating;
+    return showModalInternal();
   };
 
   function startEditMode() {
-    resetFocus();
     editMode = true;
   }
 
   function cancelEdit() {
-    resetFocus();
     editMode = false;
-    if (creating) {
-      hideModal();
-    }
+    if (creating) failure();
   }
 
-  let awaitingEdit = $state(false);
-  function saveEdit() {
-    awaitingEdit = true;
-    onEdit().then(() => {
+  async function saveEdit() {
+    return onEdit().then((result) => {
       editMode = false;
       queueNotification(ColorKeys.Success, "Saved successfully")
-      hideModal()
+      success(result);
     }).catch((err) => {
       queueNotification(ColorKeys.Danger, err)
-    }).finally(() => {
-      awaitingEdit = false;
     });
   }
 
   const confirmDelete = async () => {
-    await onDelete().then(() => {
+    return onDelete().then((result) => {
       queueNotification(ColorKeys.Success, "Deleted successfully")
-      hideModal();
+      success(result);
     }).catch((err) => {
       queueNotification(ColorKeys.Danger, err)
     });
@@ -120,42 +96,35 @@
 <Modal
   title={title}
   bind:showModal={showModalInternal}
-  bind:hideModal={hideModalInternal}
-  onModalHide={() => {editMode = false; onModalHide();}}
-  bind:resetFocus
+  bind:success
+  bind:failure
   topButtons={extraButtonsTop}
 >
 {@render children?.()}
 {#snippet buttons()}
     {@render extraButtonsLeft?.()}
     {#if editMode}
-      <Button onClick={saveEdit} color={ColorKeys.Success} enabled={submittable} type="submit">
-        {#if awaitingEdit}
-          <Loader/>
-        {:else}
-          Save
-        {/if}
-      </Button>
-      <Button onClick={cancelEdit} color={ColorKeys.Danger}>Cancel</Button>
+      <IconButton onClick={saveEdit} color={ColorKeys.Success} enabled={submittable} type="submit" alt="Save" canRenderAsButton={true}>
+        <Check/>
+      </IconButton>
+      <IconButton onClick={cancelEdit} color={ColorKeys.Danger} alt="Cancel" canRenderAsButton={true}><X/></IconButton>
     {:else}
       {#if editable}
-        <Button onClick={startEditMode} color={ColorKeys.Accent}>Edit</Button>
+        <IconButton onClick={startEditMode} alt="Edit" canRenderAsButton={true}>
+          <Pencil/>
+        </IconButton>
       {/if}
       {#if deletable}
-        <Button onClick={showDeleteModal} color={ColorKeys.Danger}>Delete</Button>
-      {/if}
-      {#if !editable && !deletable}
-        <Button onClick={hideModal}>Close</Button>
+        <IconButton onClick={() => showDeleteModal().then(confirmDelete).catch(NoOp)} color={ColorKeys.Danger} alt="Delete" canRenderAsButton={true}>
+          <Trash2/>
+        </IconButton>
       {/if}
     {/if}
     {@render extraButtonsRight?.()}
   {/snippet}
 </Modal>
 
-<ConfirmationModal
-  bind:showModal={showDeleteModal}
-  confirmCallback={confirmDelete}
->
+<ConfirmationModal bind:showModal={showDeleteModal}>
   {deleteConfirmation}
   <br>
   This action is irreversible.

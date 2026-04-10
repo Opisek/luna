@@ -18,7 +18,8 @@ export const actions = {
       };
     }
 
-    const res = await apiProxy(request, getClientAddress, "register", { method: "POST", body: formData }, false);
+    const res = await apiProxy(request, getClientAddress, "register", { method: "POST", body: formData }, false).catch(() => null);
+    if (!res) return fail(500, { error: "The backend server cannot be reached." });
 
     if (res.ok) {
       const body = await res.json();

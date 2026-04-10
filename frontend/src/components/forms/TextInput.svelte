@@ -253,7 +253,7 @@
 </div>
 
 {#snippet copyButton()}
-  <IconButton>
+  <IconButton alt="Copy">
     <Copy size={16} onclick={copy}/>
   </IconButton>
 {/snippet}

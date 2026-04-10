@@ -1,13 +1,11 @@
 <script lang="ts">
-  import { CaseSensitive, Code, Lock, LogOut, Moon, Palette, RefreshCw, Shield, Sun, TriangleAlert, User, Users } from "lucide-svelte";
+  import { CaseSensitive, Check, Code, Lock, LogOut, Moon, Palette, RefreshCw, Shield, Sun, TriangleAlert, User, Users, X } from "lucide-svelte";
   import { AsyncNoOp, NoOp } from "../../lib/client/placeholders";
   import ButtonList from "../forms/ButtonList.svelte";
   import Modal from "./Modal.svelte";
   import { GlobalSettingKeys, UserSettingKeys, type GlobalSettings, type UserData, type UserSettings } from "../../types/settings";
   import { getSettings } from "../../lib/client/data/settings.svelte";
   import { deepCopy, deepEquality } from "$lib/common/misc";
-  import Button from "../interactive/Button.svelte";
-  import Loader from "../decoration/Loader.svelte";
   import { fetchJson, fetchResponse } from "$lib/client/net";
   import { queueNotification } from "$lib/client/notifications";
   import { ColorKeys } from "../../types/colors";
@@ -36,13 +34,11 @@
   import { _ as t } from "@sveltia/i18n";
 
   interface Props {
-    showModal?: () => any;
-    hideModal?: () => any;
+    showModal: () => void;
   }
 
   let {
     showModal = $bindable(),
-    hideModal = $bindable(NoOp),
   }: Props = $props();
 
   // Global data structures
@@ -90,12 +86,7 @@
     showModalInternal();
   };
 
-  hideModal = () => {
-    hideModalInternal();
-  };
-
-  let showModalInternal = $state(NoOp);
-  let hideModalInternal = $state(NoOp);
+  let showModalInternal: () => Promise<void> = $state(Promise.reject);
 
   // Settings categories
   const categoriesAdmin: Option<string>[][] = [
@@ -239,9 +230,12 @@
   // Account Settings
   let passwordPrompt = $state<() => Promise<string>>(() => Promise.reject(""));
     
-  function deleteAccount(id: string = "self") {
+  async function deleteAccount(id: string = "self") {
     const ownAccount = id === "self" || id === users.currentUser;
-    showConfirmation(t(`modal.confirmation.account.delete.${ownAccount ? "own" : "other"}`), async () => {
+    await showConfirmation(
+      t(`modal.confirmation.account.delete.${ownAccount ? "own" : "other"}`),
+      t(`modal.confirmation.data.delete.${ownAccount ? "own" : "other"}`)
+    ).then(async () => {
       accountDeletionReauthenticationRequired = true;
       const password = await new Promise<string>(resolve => setTimeout(async () => resolve(await passwordPrompt().catch(() => "")), 0));
       accountDeletionReauthenticationRequired = false;
@@ -256,7 +250,7 @@
       });
       if (ownAccount) clearSession();
       else users.fetchAll();
-    }, t(`modal.confirmation.data.delete.${ownAccount ? "own" : "other"}`));
+    }).catch(NoOp);
   }
 
   let saving = $state(false);
@@ -377,20 +371,15 @@
   });
 
   // Dialogs
-  let editApiToken = $state<(session: Session, editable: boolean) => Promise<Session>>(Promise.reject);
-  let createApiToken = $state<() => Promise<Session>>(Promise.reject);
+  let showSessionModal: (initial?: Session, edit?: boolean) => Promise<Session> = $state(Promise.reject);
 
-  let internalShowConfirmation = $state(NoOp);
-  let confirmationCallback = $state(AsyncNoOp);
-  let cancellationCallback = $state(AsyncNoOp);
+  let internalShowConfirmation: () => Promise<void> = $state(Promise.reject);
   let confirmationMessage = $state("");
   let confirmationDetails = $state("");
-  function showConfirmation(message: string, callback: () => Promise<void>, details: string = "", cancel: () => Promise<void> = AsyncNoOp) {
+  function showConfirmation(message: string, details: string = "") {
     confirmationMessage = message;
     confirmationDetails = details;
-    confirmationCallback = callback;
-    cancellationCallback = cancel;
-    internalShowConfirmation();
+    return internalShowConfirmation();
   }
 </script>
 
@@ -443,11 +432,10 @@
 <Modal
   title={"Settings"}
   bind:showModal={showModalInternal}
-  bind:hideModal={hideModalInternal}
   onModalHide={restoreSettings}
 >
   {#snippet topButtons()}
-    <IconButton click={forceRefresh}>
+    <IconButton onClick={forceRefresh} alt="Refresh">
       <span class="refreshButtonWrapper" class:spin={loaderAnimation} onanimationiteration={() => { loaderAnimation = false; }}>
         <RefreshCw/>
       </span>
@@ -456,16 +444,12 @@
 
   {#snippet buttons()}
     {#if showSaveButton}
-      <Button type="submit" color={ColorKeys.Success} enabled={submittable} onClick={() => { saveSettings().catch(NoOp); }}>
-        {#if saving}
-          <Loader/>
-        {:else}
-          Save
-        {/if}
-      </Button>
-      <Button color={ColorKeys.Danger} onClick={restoreSettings}>Cancel</Button>
-    {:else}
-      <Button onClick={hideModalInternal}>Close</Button>
+      <IconButton type="submit" color={ColorKeys.Success} enabled={submittable} onClick={async () => { saveSettings().catch(NoOp); }} alt="Save" canRenderAsButton={true}>
+        <Check/>
+      </IconButton>
+      <IconButton color={ColorKeys.Danger} onClick={restoreSettings} alt="Cancel" canRenderAsButton={true}>
+        <X/>
+      </IconButton>
     {/if}
   {/snippet}
 
@@ -499,8 +483,7 @@
           settings={settings} 
           sessions={sessions}
           today={today}
-          editApiToken={editApiToken}
-          createApiToken={createApiToken}
+          showSessionModal={showSessionModal}
         />
       {:else if selectedCategory === "users"}
         <UsersSettingsTab
@@ -536,7 +519,7 @@
           settings={settings} 
           sessions={sessions}
           today={today}
-          editApiToken={editApiToken}
+          editApiToken={showSessionModal}
           showConfirmation={showConfirmation} 
         />
       {:else if selectedCategory === "themes"}
@@ -558,19 +541,14 @@
 </Modal>
 
 <SessionModal
-  bind:showModal={editApiToken}
-  bind:showCreateModal={createApiToken}
+  bind:showModal={showSessionModal}
 />
 
 {#if submittable && reauthenticationRequired}
   <PasswordPromptModal bind:prompt={passwordPrompt}/>
 {/if}
 
-<ConfirmationModal
-  bind:showModal={internalShowConfirmation}
-  confirmCallback={confirmationCallback}
-  cancelCallback={cancellationCallback} 
->
+<ConfirmationModal bind:showModal={internalShowConfirmation}>
   <span class="confirmation">
     {confirmationMessage}
     {#if confirmationDetails != ""}

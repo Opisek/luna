@@ -1,6 +1,4 @@
 <script lang="ts">
-  import type { ActionData } from './$types';
-
   import Form from '../../../components/forms/Form.svelte';
   import Link from '../../../components/forms/Link.svelte';
   import SimplePage from '../../../components/layout/SimplePage.svelte';
@@ -15,12 +13,6 @@
   import { queueNotification } from '$lib/client/notifications';
   import { browser } from '$app/environment';
   import type { ActionResult } from '@sveltejs/kit';
-
-  interface Props {
-    form: ActionData;
-  }
-
-  let { form = $bindable() }: Props = $props();
 
   afterNavigate(() => {
     if (browser) localStorage.clear();

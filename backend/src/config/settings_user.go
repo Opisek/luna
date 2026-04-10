@@ -22,6 +22,7 @@ const (
 	KeyDynamicCalendarRows          = "dynamic_calendar_rows"
 	KeyDynamicSmallCalendarRows     = "dynamic_small_calendar_rows"
 	KeyDisplayRoundedCorners        = "display_rounded_corners"
+	KeyUseTextButtons               = "use_text_buttons"
 	KeyUiScaling                    = "ui_scaling"
 	KeyAnimateCalendarSwipe         = "animate_calendar_swipe"
 	KeyAnimateSmallCalendarSwipe    = "animate_small_calendar_swipe"
@@ -46,6 +47,7 @@ func AllDefaultUserSettings() []SettingsEntry {
 		&DynamicCalendarRows{},
 		&DynamicSmallCalendarRows{},
 		&DisplayRoundedCorners{},
+		&UseTextButtons{},
 		&UiScaling{},
 		&AnimateCalendarSwipe{},
 		&AnimateSmallCalendarSwipe{},
@@ -90,6 +92,8 @@ func GetMatchingUserSettingStruct(key string) (SettingsEntry, *errors.ErrorTrace
 	case KeyDynamicSmallCalendarRows:
 		return &DynamicSmallCalendarRows{}, nil
 	case KeyDisplayRoundedCorners:
+		return &DisplayRoundedCorners{}, nil
+	case KeyUseTextButtons:
 		return &DisplayRoundedCorners{}, nil
 	case KeyUiScaling:
 		return &UiScaling{}, nil
@@ -419,6 +423,26 @@ func (entry *DisplayRoundedCorners) MarshalJSON() ([]byte, error) {
 	return common.MarshalBool(entry.Enabled), nil
 }
 func (entry *DisplayRoundedCorners) UnmarshalJSON(data []byte) (err error) {
+	entry.Enabled, err = common.UnmarshalBool(data)
+	return err
+}
+
+// Whether to use text buttons instead of icons wherever possible
+// Should default to false
+type UseTextButtons struct {
+	Enabled bool `json:"value"`
+}
+
+func (entry *UseTextButtons) Key() string {
+	return KeyUseTextButtons
+}
+func (entry *UseTextButtons) Default() {
+	entry.Enabled = false
+}
+func (entry *UseTextButtons) MarshalJSON() ([]byte, error) {
+	return common.MarshalBool(entry.Enabled), nil
+}
+func (entry *UseTextButtons) UnmarshalJSON(data []byte) (err error) {
 	entry.Enabled, err = common.UnmarshalBool(data)
 	return err
 }

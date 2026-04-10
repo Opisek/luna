@@ -6,7 +6,7 @@ import (
 )
 
 type Session struct {
-	SessionId        ID                `json:"session_id" db:"sessionid"`
+	SessionId        ID                `json:"id" db:"sessionid"`
 	UserId           ID                `json:"user_id" db:"userid"`
 	CreatedAt        time.Time         `json:"created_at" db:"created_at"`
 	LastSeen         time.Time         `json:"last_seen" db:"last_seen"`

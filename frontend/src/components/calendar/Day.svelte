@@ -33,9 +33,9 @@
     showMore = NoOp,
   }: Props = $props();
 
-  let showCreateEventModal: ((date: Date) => Promise<EventModel>) = getContext("showNewEventModal");
+  let showEventModal: ((initial?: EventModel, date?: Date) => Promise<EventModel>) = getContext("showEventModal");
   let createEventButtonClick = () => {
-    showCreateEventModal(date).catch((err) => {
+    showEventModal(undefined, date).catch((err) => {
       if (err) queueNotification(ColorKeys.Danger, `Could not create event: ${err.message}`);
     });
   };
@@ -170,7 +170,7 @@
         {date.getDate()}
       </span>
       <span class="add">
-        <IconButton click={createEventButtonClick} tabindex={-1}>
+        <IconButton onClick={createEventButtonClick} tabindex={-1} alt="Create Event">
           <PlusIcon size={13}/>
         </IconButton>
       </span>

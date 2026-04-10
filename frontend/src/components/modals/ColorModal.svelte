@@ -1,39 +1,37 @@
 <script lang="ts">
   import { browser } from "$app/environment";
 
-  import Button from "../interactive/Button.svelte";
   import ColorCircle from "../misc/ColorCircle.svelte";
   import IconButton from "../interactive/IconButton.svelte";
   import Modal from "./Modal.svelte";
   import TextInput from "../forms/TextInput.svelte";
 
-  import { HSLtoRGB, isValidColor, parseRGB, recommendedColors, RGBtoHSL, serializeRGB } from "$lib/common/colors";
-  import { NoOp } from "$lib/client/placeholders";
+  import { HSLtoRGB, isValidColor, parseRGB, recommendedColorNames, recommendedColors, RGBtoHSL, serializeRGB } from "$lib/common/colors";
   import { ColorKeys } from "../../types/colors";
+  import { Check, X } from "lucide-svelte";
+  import { NoOp } from "../../lib/client/placeholders";
 
   interface Props {
-    color: string | null;
-    showModal?: () => any;
-    hideModal?: () => any;
+    showModal: (initial: string | null) => Promise<string>;
   }
 
   let {
-    color = $bindable(),
     showModal = $bindable(),
-    hideModal = $bindable(NoOp),
   }: Props = $props();
 
   let picker: HTMLElement;
   let hue: HTMLElement;
 
+  let initialColor: string = $state("#000000");
   let currentColor: string = $state("#000000");
   let currentHSL: [number, number, number] = $state([0, 100, 50]);
 
   let pickerActive = false;
   let hueActive = false;
 
-  let showModalInternal: () => any = $state(NoOp);
-  let hideModalInternal: () => any = $state(NoOp);
+  let showModalInternal: () => Promise<string> = $state(Promise.reject);
+  let success: (color: string) =>  void = $state(NoOp);
+  let failure: () => void = $state(NoOp);
 
   function mouseUp(e: MouseEvent) {
     if (pickerActive) pickerUp(e);
@@ -45,10 +43,11 @@
     hueMove(e);
   }
 
-  showModal = () => {
+  showModal = (initial: string | null) => {
     pickerActive = false;
     hueActive = false;
-    currentColor = (color || "").toUpperCase();
+    currentColor = (initial || "").toUpperCase();
+    initialColor = currentColor;
     setHSLFromColor();
 
     if (browser) {
@@ -56,10 +55,10 @@
       window.addEventListener("mousemove", mouseMove);
     }
 
-    setTimeout(showModalInternal, 0);
+    return showModalInternal();
   };
 
-  hideModal = () => {
+  function onModalHide() {
     pickerActive = false;
     hueActive = false;
 
@@ -67,8 +66,6 @@
       window.removeEventListener("mouseup", mouseUp);
       window.removeEventListener("mousemove", mouseMove);
     }
-
-    hideModalInternal();
   }
 
   function setHSLFromColor() {
@@ -85,27 +82,14 @@
     currentColor = serializeRGB(HSLtoRGB(currentHSL));
   }
 
-  function confirm() {
-    color = currentColor;
-    hideModal();
-  }
-
-  function cancel() {
-    hideModal();
-  }
-
   function validateColor() {
     if (!currentColor.startsWith("#")) {
       currentColor = "#" + currentColor;
     }
     if (!isValidColor(currentColor)) {
-      if (currentColor == "#") {
-        currentColor = "";
-      } else {
-        currentColor = color || "";
-      }
+      if (currentColor == "#") currentColor = "";
+      else currentColor = initialColor;
     } else {
-      // @ts-ignore currentColor cant't be null due to isValidColor check
       currentColor = currentColor.toUpperCase();
       currentHSL = RGBtoHSL(parseRGB(currentColor));
     }
@@ -244,7 +228,12 @@
   }
 </style>
 
-<Modal title="Pick Color" bind:showModal={showModalInternal} bind:hideModal={hideModalInternal} onModalSubmit={confirm}>
+<Modal title="Pick Color"
+  bind:showModal={showModalInternal}
+  bind:success
+  bind:failure
+  onModalHide={onModalHide}
+  onModalSubmit={() => success(currentColor)}>
   <div class="grid">
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div class="pickerBackground">
@@ -279,17 +268,17 @@
     />
   </div>
   <div class="suggestions">
-    <IconButton click={() => setColor(null)}>
+    <IconButton onClick={() => setColor(null)} alt="Default color">
       <ColorCircle color={null} size="medium"/>
     </IconButton>
-    {#each recommendedColors as color}
-      <IconButton click={() => setColor(color)}>
+    {#each recommendedColors as color, index}
+      <IconButton onClick={() => setColor(color)} alt={recommendedColorNames[index]}>
         <ColorCircle color={color} size="medium"/>
       </IconButton>
     {/each}
   </div>
   {#snippet buttons()}
-      <Button onClick={confirm} color={ColorKeys.Success}>Confirm</Button>
-      <Button onClick={cancel} color={ColorKeys.Danger}>Cancel</Button>
+      <IconButton onClick={() => success(currentColor)} color={ColorKeys.Success} alt="Confirm"><Check/></IconButton>
+      <IconButton onClick={failure} color={ColorKeys.Danger} alt="Cancel"><X/></IconButton>
   {/snippet}
 </Modal>

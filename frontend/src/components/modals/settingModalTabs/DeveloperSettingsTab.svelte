@@ -15,16 +15,14 @@
     settings: Settings;
     sessions: ActiveSessions;
     today: Date;
-    editApiToken: (session: Session, editable: boolean) => Promise<Session>;
-    createApiToken: () => Promise<Session>;
+    showSessionModal: (initial?: Session, edit?: boolean) => Promise<Session>;
   }
 
   let {
     settings,
     sessions,
     today,
-    editApiToken,
-    createApiToken,
+    showSessionModal,
   }: Props = $props();
 
   function deauthorizeSession(id: string) {
@@ -95,7 +93,7 @@
   bind:value={settings.userSettings[UserSettingKeys.DebugMode]}
 />
 
-<Button color={ColorKeys.Accent} onClick={() => createApiToken().catch(err => { if (err) queueNotification(ColorKeys.Danger, err.message); } )}>Create an API token</Button>
+<Button color={ColorKeys.Accent} onClick={() => showSessionModal().catch(err => { if (err) queueNotification(ColorKeys.Danger, err.message); } )}>Create an API token</Button>
 
 <svelte:boundary>
   {@const apiSessions = sessions.activeSessions.filter(x => x.is_api)}
@@ -103,7 +101,7 @@
     <List
       label="API Tokens"
       items={apiSessions}
-      id={item => item.session_id}
+      id={item => item.id}
       template={sessionTemplate}
     />
   {/if}
@@ -113,7 +111,7 @@
 {#snippet sessionTemplate(s: Session)}
   {@const userAgent=UAParser(s.is_api ? "" : s.user_agent)}
   {@const deviceName=`${userAgent.os.name || ""} ${userAgent.browser.name || ""}`.trim()}
-  {@const isActive=s.session_id === sessions.currentSession}
+  {@const isActive=s.id === sessions.currentSession}
 
   <div class="session" class:active={isActive} class:showId={settings.userSettings[UserSettingKeys.DebugMode]}>
     <div class="device">
@@ -162,20 +160,16 @@
     </span>
 
     <div class="buttons">
-      <IconButton click={() => editApiToken(s, s.is_api)}>
-        {#if s.is_api}
-          <Pencil size={20}/>
-        {:else}
-          <Info size={20}/>
-        {/if}
+      <IconButton onClick={async () => showSessionModal(s, s.is_api)} color={ColorKeys.Accent} alt="Edit">
+        <Pencil size={20}/>
       </IconButton>
-      <IconButton click={() => deauthorizeSession(s.session_id)}>
+      <IconButton onClick={async () => deauthorizeSession(s.id)} color={ColorKeys.Danger} alt="Deauthorize">
         <LogOut size={20}/>
       </IconButton>
     </div>
 
     <span class="id">
-      ID: {s.session_id}
+      ID: {s.id}
     </span>
   </div>
 {/snippet}

@@ -14,14 +14,14 @@
   import Horizontal from "../layout/Horizontal.svelte";
   
   interface Props {
-    showCreateModal?: () => Promise<RegistrationInvite>;
-    showModal?: (session: RegistrationInvite, editable: boolean) => Promise<RegistrationInvite>;
+    showModal: (initial?: RegistrationInvite, edit?: boolean) => Promise<RegistrationInvite>;
   }
 
   let {
-    showCreateModal = $bindable(),
     showModal = $bindable(),
   }: Props = $props();
+
+  let showModalInternal: (initial?: RegistrationInvite, edit?: boolean) => Promise<RegistrationInvite> = $state(Promise.reject);
 
   const settings = getSettings();
   const invites = getRegistrationInvites();
@@ -29,61 +29,31 @@
   let invite: RegistrationInvite = $state(EmptyRegistrationInvite);
   let originalInvite: RegistrationInvite = $state(EmptyRegistrationInvite);
 
-  let promiseResolve: (value: RegistrationInvite | PromiseLike<RegistrationInvite>) => void = $state(NoOp);
-  let promiseReject: (reason?: any) => void = $state(NoOp);
-
-  showModal = async (original: RegistrationInvite, edit: boolean = false): Promise<RegistrationInvite> => {
-    promiseReject();
-
-    editMode = edit;
-    invite = await deepCopy(original);
-    originalInvite = await deepCopy(original);
-
-    if (editMode) setTimeout(showCreateModalInternal(), 0);
-    else setTimeout(showModalInternal(), 0);
-
-    // TODO: what if we only show but the modal and the close? memory leak?
-    return new Promise((resolve, reject) => {
-      promiseResolve = ((res) => {
-        invite = EmptyRegistrationInvite;
-        resolve(res);
-      });
-      promiseReject = ((err) => {
-        invite = EmptyRegistrationInvite;
-        reject(err);
-      });
-    })
+  showModal = async (initial?: RegistrationInvite, edit?: boolean): Promise<RegistrationInvite> => {
+    if (!initial) initial = EmptyRegistrationInvite;
+    invite = await deepCopy(initial);
+    originalInvite = await deepCopy(initial);
+    return showModalInternal(initial, edit);
   };
-  showCreateModal = () => {
-    return showModal(EmptyRegistrationInvite, true);
-  }
-
-  let showCreateModalInternal: () => any = $state(NoOp);
-  let showModalInternal: () => any = $state(NoOp);
 
   let editMode: boolean = $state(false);
-  let title: string = $derived(invite.invite_id ? "Registration Invite" : "Invite User");
+  let title: string = $derived(invite.id? "Registration Invite" : "Invite User");
 
   const onDelete = async () => {
-    await invites.revokeInvite(invite.invite_id).catch(err => {
+    return invites.revokeInvite(invite.id).then(() => invite).catch(err => {
       throw new Error(`Could not delete registration invite: ${err.message}`);
     });
-
-    promiseResolve(originalInvite);
   };
   const onEdit = async () => {
-    if (invite.invite_id === "") {
-      const newInvite = await invites.createInvite(duration).catch(err => {
+    if (invite.id === "") {
+      return invites.createInvite(duration).then((newInvite) => {
+        setTimeout(() => {
+          showModal(newInvite, false);
+        }, 50);
+        return newInvite;
+      }).catch(err => {
         throw new Error(`Could not create registration invite: ${err.message}`);
       });
-
-      editMode = false;
-
-      promiseResolve(newInvite);
-
-      setTimeout(() => {
-        showModal(newInvite, false);
-      }, 50);
     } else {
       throw new Error("Not implemented");
     }
@@ -99,16 +69,14 @@
   title={title}
   deleteConfirmation={`Are you sure you want to delete the registration invite?`}
   bind:editMode={editMode}
-  bind:showCreateModal={showCreateModalInternal}
   bind:showModal={showModalInternal}
   onDelete={onDelete}
   onEdit={onEdit}
-  onCancel={promiseReject}
   editable={editMode}
   deletable={true}
   submittable={true}
 >
-  {#if invite.invite_id == ""}
+  {#if invite.id == ""}
     <SelectInput
       bind:value={duration}
       name="duration"
@@ -125,7 +93,7 @@
 
     <Horizontal position="center">
       <Image
-          src={`/api/invites/${invite.invite_id}/qr`}
+          src={`/api/invites/${invite.id}/qr`}
           alt="QR Code"
           large={true}
       />
@@ -133,7 +101,7 @@
 
     <TextInput
       value={inviteCode}
-      name="invite_id"
+      name="id"
       placeholder="Invite Code"
       editable={false}
       displayCopyButton={true}
@@ -152,7 +120,7 @@
     <DateTimeInput value={invite.expires_at} allDay={false} placeholder="Expiry Date" name="expires_at" editable={false}/>
 
     {#if settings.userSettings[UserSettingKeys.DebugMode]}
-      <TextInput value={invite.invite_id} name="id" placeholder="Invite ID" editable={false} />
+      <TextInput value={invite.id} name="id" placeholder="Invite ID" editable={false} />
     {/if}
   {/if}
 </EditableModal>

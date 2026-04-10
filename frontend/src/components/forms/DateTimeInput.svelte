@@ -12,6 +12,7 @@
     placeholder: string;
     name: string;
     editable: boolean;
+    wrap?: boolean;
     onChange?: (value: Date) => void;
   }
 
@@ -21,31 +22,38 @@
     placeholder,
     name,
     editable,
+    wrap = false,
     onChange = NoOp
   }: Props = $props();
 
-  let dateButton: HTMLButtonElement;
+  let dateButton: HTMLButtonElement | null = $state(null);
   let timeButton: HTMLButtonElement | null = $state(null);
 
-  let showDateModal = $state(NoOp);
-  let showTimeModal = $state(NoOp);
+  let showDateModal: (initial: Date) => Promise<Date> = $state(Promise.reject);
+  let showTimeModal: (initial: Date) => Promise<Date> = $state(Promise.reject);
 
-  function dateClick(e: MouseEvent | KeyboardEvent) {
-    if (editable) {
-      showDateModal();
-      if (e.detail !== 0) {
+  async function dateClick(e: MouseEvent | KeyboardEvent) {
+    if (!editable) return;
+    await showDateModal(value).then((result) => {
+      value = result;
+      onChange(result);
+    }).catch(NoOp).finally(() => {
+      if (dateButton && e.detail !== 0) {
         dateButton.blur();
       }
-    }
+    });
   }
 
-  function timeClick(e: MouseEvent | KeyboardEvent) {
-    if (editable) {
-      showTimeModal();
-      if (e.detail !== 0 && timeButton) {
+  async function timeClick(e: MouseEvent | KeyboardEvent) {
+    if (!editable) return;
+    await showTimeModal(value).then((result) => {
+      value = result;
+      onChange(result);
+    }).catch(NoOp).finally(() => {
+      if (timeButton && e.detail !== 0) {
         timeButton.blur();
       }
-    }
+    });
   }
 </script>
 
@@ -63,7 +71,7 @@
     margin: dimensions.$gapSmall;
   }
 
-  div.editable {
+  div.row.editable {
     margin: 0;
   }
 
@@ -78,37 +86,53 @@
     overflow: hidden;
   }
 
-  div.editable button {
+  div.row.editable button {
     color: colors.$foregroundSecondary;
     background: colors.$backgroundSecondary;
     cursor: pointer;
     margin: 0;
   }
+
+  div.wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: dimensions.$gapMiddle;
+  }
 </style>
 
-<Label name={name}>{placeholder}</Label>
-<div class="row" class:editable={editable}>
-  <button
-    bind:this={dateButton}
-    onclick={dateClick}
-    type="button"
-    tabindex={editable ? 0 : -1}
-    use:focusIndicator
-  >
-    {value.toLocaleDateString()}
-  </button>
-  {#if !allDay}
+{#if wrap}
+  <div class="wrapper">
+    {@render inputSnippet()}
+  </div>
+{:else}
+  {@render inputSnippet()}
+{/if}
+
+{#snippet inputSnippet()}
+  <Label name={name}>{placeholder}</Label>
+  <div class="row" class:editable={editable}>
     <button
-      bind:this={timeButton}
-      onclick={timeClick}
+      bind:this={dateButton}
+      onclick={dateClick}
       type="button"
       tabindex={editable ? 0 : -1}
       use:focusIndicator
     >
-      {value.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"})}
+      {value.toLocaleDateString()}
     </button>
-  {/if}
-</div>
+    {#if !allDay}
+      <button
+        bind:this={timeButton}
+        onclick={timeClick}
+        type="button"
+        tabindex={editable ? 0 : -1}
+        use:focusIndicator
+      >
+        {value.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"})}
+      </button>
+    {/if}
+  </div>
+{/snippet}
 
-<DateModal bind:date={value} bind:showModal={showDateModal} onChange={onChange}/>
-<TimeModal bind:date={value} bind:showModal={showTimeModal} onChange={onChange}/>
+<DateModal bind:showModal={showDateModal}/>
+<TimeModal bind:showModal={showTimeModal}/>

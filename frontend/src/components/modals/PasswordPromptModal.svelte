@@ -18,45 +18,33 @@
   let password = $state("");
   let passwordValidity = $state(valid);
 
-  let showModalInternal = $state(NoOp);
-  let hideModalInternal = $state(NoOp);
-
-  let resolvePromise = $state<(password: string) => Promise<any>>(Promise.reject);
-  let rejectPromise = $state(NoOp);
+  let showModalInternal: () => Promise<string> = $state(Promise.reject);
+  let success: (password: string) => void = $state(NoOp);
+  let failure: () => void = $state(NoOp);
 
   showModal = async () => {
     password = "";
     passwordValidity = valid;
-
-    showModalInternal();
-
-    return new Promise((resolve, reject) => {
-      resolvePromise = (async (password) => {
-        resolve(password);
-        resolvePromise = Promise.reject;
-      })
-
-      rejectPromise = (() => {
-        reject("No password provided");
-        rejectPromise = NoOp;
-      })
-    })
+    return showModalInternal();
   };
 
   function confirm() {
-    resolvePromise($state.snapshot(password));
+    success($state.snapshot(password));
     password = "";
-    hideModalInternal();
   }
 
   function cancel() {
-    rejectPromise();
+    failure();
     password = "";
-    hideModalInternal();
   }
 </script>
 
-<Modal title="Authentication" bind:showModal={showModalInternal} bind:hideModal={hideModalInternal} onModalHide={rejectPromise}>
+<Modal
+  title="Authentication"
+  bind:showModal={showModalInternal}
+  bind:success
+  bind:failure
+>
   To do this action, you must authenticate yourself with your password.
 
   <TextInput

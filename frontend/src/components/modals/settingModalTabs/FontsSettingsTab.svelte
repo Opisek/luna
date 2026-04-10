@@ -13,7 +13,7 @@
   interface Props {
     fonts: Option<string>[];
     fetchFonts: () => void;
-    showConfirmation: (message: string, onConfirm: () => Promise<void>, confirmText?: string, onCancel?: () => Promise<void>, cancelText?: string) => void;
+    showConfirmation: (message: string, confirmText?: string, cancelText?: string) => Promise<void>;
   }
 
   let {
@@ -39,12 +39,8 @@
     const fontFiles = fonts.map(x => x.value.split("/").pop() + ".ttf");
 
     if (fontFiles.includes(fontFile[0].name)) {
-      if (!(await new Promise<boolean>((resolve) => {
-        showConfirmation(
-          "A font with the same file name already exists.\nContinuing will overwrite that font.\nAre you sure you want to proceed?",
-          async () => {resolve(true)}, "", async () => {resolve(false)}
-        );
-      }))) {
+      const confirmed = await showConfirmation("A font with the same file name already exists.\nContinuing will overwrite that font.\nAre you sure you want to proceed?").then(() => true).catch(() => false);
+      if (!confirmed) {
         uploadingFontFile = false;
         return;
       }
@@ -68,12 +64,8 @@
   }
 
   async function deleteFont(font: string, name: string) {
-    if (!(await new Promise<boolean>((resolve) => {
-      showConfirmation(
-        `Are you sure you want to uninstall the font "${name}"?\nThis action is irreversible.`,
-        async () => {resolve(true)}, "", async () => {resolve(false)}
-      );
-    }))) return;
+    const confirmed = await showConfirmation(`Are you sure you want to uninstall the theme "${name}"?\nThis action is irreversible.`).then(() => true).catch(() => false);
+    if (!confirmed) return;
 
     await fetchResponse(`/installed/fonts/${font}`, {
       method: "DELETE",
@@ -163,10 +155,10 @@
     </span>
 
     <div class="buttons">
-      <IconButton click={() => { downloadFileToClient(`/fonts/${font.value}.ttf`); }}>
+      <IconButton onClick={() => { downloadFileToClient(`/fonts/${font.value}.ttf`); }} color={ColorKeys.Accent} alt="Download">
         <Download size={20}/>
       </IconButton>
-      <IconButton click={() => { deleteFont(font.value, font.name); }}>
+      <IconButton onClick={async () => deleteFont(font.value, font.name)} color={ColorKeys.Danger} alt="Delete">
         <Trash2 size={20}/>
       </IconButton>
     </div>

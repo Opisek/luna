@@ -49,17 +49,17 @@ func (timeDef *TimeDefinition) String() string {
 }
 
 type Event struct {
-	Id                string         `json:"id,omitempty"`
-	Name              string         `json:"summary"`
-	Description       string         `json:"description,omitempty"`
-	ColorId           string         `json:"colorId,omitempty"`
-	Start             TimeDefinition `json:"start"`
-	End               TimeDefinition `json:"end"`
-	Recurrence        []string       `json:"recurrence,omitempty"`
-	IcalUid           string         `json:"icalUid,omitempty"`
-	RecurringEventId  string         `json:"recurringEventId,omitempty"`
-	Status            string         `json:"status,omitempty"`
-	OriginalStartTime TimeDefinition `json:"originalStartTime,omitempty"`
+	Id                string          `json:"id,omitempty"`
+	Name              string          `json:"summary"`
+	Description       string          `json:"description,omitempty"`
+	ColorId           string          `json:"colorId,omitempty"`
+	Start             *TimeDefinition `json:"start"`
+	End               *TimeDefinition `json:"end"`
+	Recurrence        []string        `json:"recurrence,omitempty"`
+	IcalUid           string          `json:"icalUid,omitempty"`
+	RecurringEventId  string          `json:"recurringEventId,omitempty"`
+	Status            string          `json:"status,omitempty"`
+	OriginalStartTime *TimeDefinition `json:"originalStartTime,omitempty"`
 }
 
 func (timeDefinition *TimeDefinition) ParseTimeDefinition() (*time.Time, *time.Location, bool, *errors.ErrorTrace) {

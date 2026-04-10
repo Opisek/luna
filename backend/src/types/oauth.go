@@ -10,6 +10,7 @@ type OauthClient struct {
 	BaseUrl          *Url   `json:"base_url" db:"base_url" encrypted:"false"`
 	AuthorizationUrl *Url   `json:"-" db:"" encrypted:"false"`
 	TokenUrl         *Url   `json:"-" db:"" encrypted:"false"`
+	RevocationUrl    *Url   `json:"-" db:"" encrypted:"false"`
 	UserinfoUrl      *Url   `json:"-" db:"" encrypted:"false"`
 	Scope            string `json:"scope" db:"scope" encrypted:"false"`
 }

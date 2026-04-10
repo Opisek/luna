@@ -5,41 +5,40 @@
   import IconButton from "../interactive/IconButton.svelte";
   import Popup from "./Popup.svelte";
 
-  import { NoOp } from '$lib/client/placeholders';
+  import { AsyncNoOp, NoOp } from '$lib/client/placeholders';
   import { focusIndicator } from "$lib/client/decoration";
   import { getMonthName } from "$lib/common/humanization";
   import { svelteFlyInHorizontal, svelteFlyOutHorizontal } from "$lib/client/animations";
   import { getSettings } from "../../lib/client/data/settings.svelte";
   import { UserSettingKeys } from "../../types/settings";
+  import { ColorKeys } from "../../types/colors";
 
   interface Props {
     date: Date;
-    showPopup?: () => any;
-    hidePopup?: () => any;
+    showPopup?: () => Promise<void>;
+    hidePopup?: () => void;
     onSelect?: (date: Date) => void;
   }
 
   let {
     date = $bindable(new Date()),
-    showPopup = $bindable(NoOp),
+    showPopup = $bindable(AsyncNoOp),
     hidePopup = $bindable(NoOp),
     onSelect = NoOp,
   }: Props = $props();
 
   const settings = getSettings();
 
-  let popupVisible: boolean = $state(false);
   let selectingMonth: boolean = $state(true);
 
-  let internalShow: () => void = $state(NoOp);
+  let internalShow: () => Promise<void> = $state(AsyncNoOp);
   let internalClose: () => void = $state(NoOp);
 
   /* Popup */
   showPopup = () => {
-    if (popupVisible) return;
     selectedYear = date.getFullYear();
     selectingMonth = true;
-    setTimeout(internalShow, 0);
+    return internalShow();
   }
 
   hidePopup = () => {
@@ -157,9 +156,9 @@
   }
 </style>
 
-<Popup bind:showPopup={internalShow} bind:hidePopup={internalClose} bind:visible={popupVisible}>
+<Popup bind:showPopup={internalShow} bind:hidePopup={internalClose} tooltip={false}>
   <div class="topRow">
-    <IconButton click={prev}>
+    <IconButton onClick={prev} alt="Previous month" color={ColorKeys.Accent}>
       <ChevronLeft/>
     </IconButton>
     <button
@@ -174,7 +173,7 @@
         {decadeStart} - {decadeStart + 9}
       {/if}
     </button>
-    <IconButton click={next}>
+    <IconButton onClick={next} alt="Next month" color={ColorKeys.Accent}>
       <ChevronRight/>
     </IconButton>
   </div>

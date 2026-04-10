@@ -81,15 +81,15 @@ export class ActiveSessions {
     body.append("permissions", JSON.stringify(session.permissions));
     body.append("password", password);
 
-    const token = (await fetchJson(`/api/sessions/${session.session_id}`, { method: "PATCH", body: body })).token;
+    const token = (await fetchJson(`/api/sessions/${session.id}`, { method: "PATCH", body: body })).token;
     await this.fetch();
 
-    return this.activeSessions.filter(x => x.session_id === session.session_id)[0]
+    return this.activeSessions.filter(x => x.id === session.id)[0]
   }
 
   public async deauthorizeSession(id: string) {
     return fetchResponse(`/api/sessions/${id}`, { method: "DELETE" }).then(() => {
-      this.activeSessions = this.activeSessions.filter(x => x.session_id != id);
+      this.activeSessions = this.activeSessions.filter(x => x.id != id);
     });
   }
 

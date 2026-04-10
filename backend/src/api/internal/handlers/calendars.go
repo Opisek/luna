@@ -15,7 +15,7 @@ type exposedCalendar struct {
 	Id           types.ID     `json:"id"`
 	Source       types.ID     `json:"source"`
 	Name         string       `json:"name"`
-	Desc         string       `json:"desc"`
+	Desc         string       `json:"desc,omitempty"`
 	Color        *types.Color `json:"color"`
 	Overridden   bool         `json:"overridden"`
 	CanEdit      bool         `json:"can_edit"` // TODO: might exclude from here and add to "detailed" view instead
