@@ -96,7 +96,7 @@ func GetMatchingUserSettingStruct(key string) (SettingsEntry, *errors.ErrorTrace
 	case KeyDisplayRoundedCorners:
 		return &DisplayRoundedCorners{}, nil
 	case KeyUseTextButtons:
-		return &DisplayRoundedCorners{}, nil
+		return &UseTextButtons{}, nil
 	case KeyUiScaling:
 		return &UiScaling{}, nil
 	case KeyAnimateCalendarSwipe:

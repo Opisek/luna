@@ -111,7 +111,9 @@
 
   function copy() {
     navigator.clipboard.writeText(value || "").then(() => {
-      queueNotification(ColorKeys.Success, "Copied to clipboard");
+      queueNotification(ColorKeys.Success, t("notification.success.clipboard"));
+    }).catch(() => {
+      queueNotification(ColorKeys.Danger, t("notification.error.clipboard"));
     });
   }
 </script>

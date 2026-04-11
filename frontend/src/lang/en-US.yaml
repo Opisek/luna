@@ -26,6 +26,7 @@ button:
   download: "Download"
   clear: "Clear"
   submit: "Submit"
+  save: "Save"
   copy: "Copy"
   close: "Close"
   month:
@@ -63,13 +64,16 @@ notification:
   success:
     save: "Saved successfully"
     delete: "Deleted successfully"
+    clipboard: "Copied to clipboard"
+  error:
+    clipboard: "Could not copy to clipboard"
 
 confirmation:
   title: "Confirmation"
   irreversible: "This action is irreversible."
   password:
     title: "Authentication"
-    prompty: "To perform this action, you must authenticate yourself with your password."
+    prompt: "To perform this action, you must authenticate yourself with your password."
   
 login:
   title:
@@ -122,11 +126,6 @@ color:
     purple: "Purple"
     pink: "Pink"
 
-primitives:
-  source: "Source"
-  calendar: "Calendar"
-  event: "Event"
-
 nav:
   home: "Home"
   back: "Go Back"
@@ -141,27 +140,20 @@ error:
   unimplemented: "Not implemented"
   empty: "Nothing to show"
 
-themes:
-  error:
-    fetch: "Failed to fetch themes: {$msg}"
-fonts:
-  error:
-    fetch: "Failed to fetch fonts: {$msg}"
-
 user:
   username: "Username"
   email: "E-Mail Address"
   id:
     display: "User ID"
     inline: "ID: {$id}"
-  creation: "Created on {$date :date length=short} at {$date :time precision=minute}"
+  creation: "Registered on {$date :date length=short} at {$date :time precision=minute}"
   action:
     enable: "Enable account"
     disable: "Disable account"
   status:
     admin: "Administrator"
     disabled: "Account disabled"
-    verified: "Verified e-Mail address"
+    verified: "Verified E-Mail address"
   pfp:
     alt: "Profile picture of user {$name}"
 
@@ -187,14 +179,15 @@ invite:
     expiry:
       display: "Expiry Date"
       today: |
+        .input {$date}
         .input {$hours :integer}
         .input {$minutes :integer}
-      
+
         .match $hours $minutes
-          0 1 {{{$minutes} minute left}}
-          0 * {{{$minutes} minutes left}}
-          1 * {{{$hours} hour left}}
-          * * {{{$hours} hours left}}
+          0 1 {{Expires at {$date :time precision=minute} ({$minutes} minute left)}}
+          0 * {{Expires at {$date :time precision=minute} ({$minutes} minutes left)}}
+          1 * {{Expires at {$date :time precision=minute} ({$hours} hour left)}}
+          * * {{Expires at {$date :time precision=minute} ({$hours} hours left)}}
       elsewhen: "Expires on {$date :date length=short} at {$date :time precision=minute}"
   expiry:
     display: "Invite Expiration"
@@ -219,14 +212,14 @@ session:
       user: "Are you sure you want to deauthorize this session?"
       api: "Are you sure you want to delete API token {$name}?"
   agent:
-    user: "User Agent"
+    user: "User agent"
     api: "Name"
   date:
-    creation: "Creation Date"
-    latest: "Latest Activity"
+    creation: "Creation date"
+    latest: "Latest activity"
   ip:
-    initial: "Initial IP Address"
-    latest: "Latest IP Address"
+    initial: "Initial IP address"
+    latest: "Latest IP address"
   id:
     display: "Session ID"
     inline: "ID: {:id}"
@@ -236,7 +229,7 @@ session:
     permissions: "Could not fetch permissions for API token {$name}: {$msg}"
     create: "Could not create API token {$name}: {$msg}"
     clipboard: "Could not copy API token {$name} to clipboard: {$msg}"
-    edit: "Could not delete API token {$name}: {$msg}"
+    edit: "Could not edit API token {$name}: {$msg}"
     delete: "Could not delete API token {$name}: {$msg}"
     password: "You must provide your password to create an API token."
   clipboard: "API token copied to clipboard"
@@ -246,8 +239,8 @@ session:
     lan: "Local network"
     unknown: "Unknown location"
   active:
-    today: "Last active {$date :time precision=second}"
-    elsewhen: "Last active {$date :date length=short} at {$date :time precision=second}"
+    today: "Last active at {$date :time precision=second}"
+    elsewhen: "Last active on {$date :date length=short} at {$date :time precision=second}"
 
 file:
   display: "File"
@@ -262,17 +255,20 @@ caldav:
 ical:
   display: "iCal"
   location:
-    remote: "Internet Link"
-    database: "Upload File"
-    local: "Server Filepath"
+    remote: "Internet link"
+    database: "Upload file"
+    local: "Server filepath"
   url: "iCal URL"
   file: "iCal File"
   path: "iCal Path"
 
+google:
+  display: "Google Calendar"
+
 auth:
   type: "Authentication Type"
   none:
-    dislapy: "none"
+    display: "None"
   basic:
     display: "Password"
     username: "Username"
@@ -289,7 +285,7 @@ auth:
       unconfigured: "The administrator of this Luna instance has not set up Google Calendar integration yet."
     tokens:
       title: "Choose account"
-      list: "Authorized Accounts"
+      list: "Authorized accounts"
       id: "ID: {$id}"
       use: "Use account"
       exists: "You are already siged in with {$client}.\nYou can choose one of your existing accounts or authorize a new account."
@@ -319,9 +315,9 @@ source:
   id: "Source ID"
   title:
     view: "Source"
-    create: "Add source"
-    wizard: "Source wizard"
-    edit: "Edit source"
+    create: "Add Source"
+    wizard: "Source Wizard"
+    edit: "Edit Source"
   confirm:
     delete: "Are you sure you want to delete source {$name}?"
   error:
@@ -344,8 +340,8 @@ calendar:
   id: "Calendar ID"
   title:
     view: "Calendar"
-    create: "Create calendar"
-    edit: "Edit calendar"
+    create: "Create Calendar"
+    edit: "Edit Calendar"
   confirm:
     delete: "Are you sure you want to delete calendar {$name}?"
   error:
@@ -374,9 +370,9 @@ event:
   id: "Event ID"
   title:
     view: "Event"
-    create: "Create event"
-    edit: "Edit event"
-    copy: "Copy event"
+    create: "Create Event"
+    edit: "Edit Event"
+    copy: "Copy Event"
   copy:
     instruction: "Select on which days the event should take place."
   confirm:
@@ -465,14 +461,14 @@ settings:
       display: "Profile Picture"
       type:
         gravatar: "Gravatar"
-        database: "Upload File"
-        remote: "Internet Link"
-        luna: "Luna Art"
-      file: "Profile Picture File"
-      link: "Profile Picture Link"
+        database: "Upload file"
+        remote: "Internet link"
+        luna: "Luna art"
+      file: "Profile picture file"
+      link: "Profile picture link"
       gravatar:
-        default: "Use Default Gravatar Profile Picture"
-    searchable: "Allow Other Users To Find Me"
+        default: "Use default gravatar profile picture"
+    searchable: "Allow other users to find me"
     password:
       new: "New Password"
       confirm: "Confirm New Password"
@@ -537,8 +533,8 @@ settings:
       enable: "Are you sure you want to enable this account?\nThe user will be able log in again."
       disable: "Are you sure you want to disable this account?\nThe user will no longer be able to log in."
     info:
-      preserve: "The user's account will remain intact"
-      delete: "All user data will be deleted"
+      preserve: "The user's account will remain intact."
+      delete: "All user data will be deleted."
     success:
       delete: "Successfully deleted the user's account."
     error:
@@ -557,7 +553,7 @@ settings:
     error:
       install: "Failed to install theme: {$msg}"
       uninstall: "Failed to uninstall theme: {$msg}"
-      file: "Missing or corrupted font theme"
+      file: "Missing or corrupted theme file"
     confirm:
       uninstall: "Are you sure you want to uninstall the theme {$name}?"
       overwrite: "A theme with the same file name already exists.\nContinuing will overwrite that the.\nAre you sure you want to proceed?"
@@ -594,7 +590,7 @@ settings:
     pfp:
       gravatar:
         display: "Enable Gravatar profile pictures"
-        info: "Gravatar is a third party service that lets users set their profile picture once and have it associated with their e-mail address.  This is accomplished by querying said server with an MD5 hash of the user's e-mail address. This can be seen as a privacy concern, as it allows Gravatar to track users across different services. If you would prefer not to use Gravatar profile pictures, you can disable them here. This setting disables the use of Gravatar site-wide."
+        info: "Gravatar is a third party service that lets users set their profile picture once and have it associated with their e-mail address. This is accomplished by querying said server with an MD5 hash of the user's e-mail address. This can be seen as a privacy concern, as it allows Gravatar to track users across different services. If you would prefer not to use Gravatar profile pictures, you can disable them here. This setting disables the use of Gravatar site-wide."
       cache:
         display: "Cache profile pictures"
         info: "Whether profile pictures from remote websites (including Gravatar) should be cached locally. Caching profile pictures can improve performance and privacy, but it introduces the risk of hosting illicit content if a malicious user uses it as their profile picture. The same risk exists if users upload profile pictures directly."
@@ -660,7 +656,7 @@ validation:
     multiple: "Too many files selected"
     null: "File is null"
     size: "File must not be larger than {$size}."
-    type: "File must be of type {$type}"
+    type: "File must be of type \"{$type}\""
     invalid: "Invalid file format"
   auth:
     unknown: "Unsupported authentication type"

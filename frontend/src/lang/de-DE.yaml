@@ -1,6 +1,6 @@
 branding:
   name: "Luna"
-  copyright: "Copyright © 2026 Kacper Darowski (Opisek)\Lizenziert unter TBD"
+  copyright: "Copyright © 2026 Kacper Darowski (Opisek)\nLizenziert unter TBD"
 
 language:
   default: "Browsereinstellung ({$default})"
@@ -11,7 +11,7 @@ button:
     generic: "Hinzufügen"
     event: "Ereignis erstellen"
     calendar: "Kalendar erstellen"
-    source: "Quelly hinzufügen"
+    source: "Quelle hinzufügen"
   theme:
     dark: "Dunkelmodus aktivieren"
     light: "Hellmodus aktivieren"
@@ -21,6 +21,7 @@ button:
   download: "Herunterladen"
   clear: "Löschen"
   submit: "Abschicken"
+  save: "Speichern"
   copy: "Kopieren"
   close: "Schließen"
   month:
@@ -30,16 +31,372 @@ button:
   show: "Einblenden"
   confirm: "Bestätigen"
   cancel: "Abbrechen"
-  reset: "Wiederherstellen"
+  reset: "Zurücksetzen"
+  details: "Details"
+
+credits:
+  title: "Credits"
+  repository: "Luna Repository"
+  stack:
+    display: "Tech Stack"
+    subtitle: "Tech Stack und Sprachen"
+  frontend:
+    display: "Frontend"
+    subtitle: "Frontend Bibliotheken"
+  backend:
+    display: "Backend"
+    subtitle: "Backend Bibliotheken"
+  themes:
+    display: "Farbstire"
+    subtitle: "Farbpaletten"
+  fonts:
+    display: "Schriftarten"
+    subtitle: "Vorinstallierte Schriftarten"
+  source: "Quelle"
+
+notification:
+  hover: "Details anzeigen"
+  success:
+    save: "Erfolgreich gespeichert"
+    delete: "Erfolgreich gelöscht"
+    clipboard: "In die Zwischenablage kopiert"
+  error:
+    clipboard: "Der Text konnte nicht in die Zwischenablage kopiert werden."
+
+
+confirmation:
+  title: "Bestätigung"
+  irreversible: "Dieser Vorgang ist nicht umkehrbar."
+  password:
+    title: "Authentifikation"
+    prompt: "Um diesen Vorgang durchzufüren, müssen Sie sich erneutit Ihrem Passwort erneut authentisieren."
+
+login:
+  title:
+    login: "Anmeldeng"
+    register: "Konto Erstellen"
+  password: "Passwort"
+  repeat: "Passwort Wiederholen"
+  invite: "Einladungscode"
+  remember: "Angemeldet bleiben"
+  link:
+    login: "Sie haben bereits ein Account?"
+    register: "Sie haben noch kein Account?"
+    recover: "Passwort vergessen?"
+  closed: "Um ein Konto anzulegen, benötigen Sie einen Einladungscode.\nSetzen Sie sicht mit dem Administrator in Kontakt, falls sie keinen Code haben."
+
+form:
+  desc: "Beschreibung"
+  name: "Name"
+  wizard:
+    location: "Auf welche Weise möchten Sie Ihre Kalendar importieren?"
+  advanced: "Fortgeschrittener Modus"
+
+recurrence:
+  repeats: "Wiederkehrend"
+
+date:
+  title: "Datum Wählen"
+  allDay: "Ganztägig"
+  start: "Beginn"
+  end: "Ende"
+  date: "Datum"
+
+time:
+  title: "Zeit Wählen"
+  am: "Vormittag"
+  pm: "Nachmittag"
+  ampm: "Vormittag/Nachmittag"
+
+color:
+  display: "Farbe"
+  code: "Farbcode"
+  title: "Farbe Wählen"
+  preset:
+    default: "Automatisch"
+    red: "Rot"
+    orange: "Orange"
+    yellow: "Gelb"
+    green: "Grün"
+    blue: "Blau"
+    purple: "Lila"
+    pink: "Rosa"
+
+nav:
+  home: "Hauptseite"
+  back: "Zurück"
+  continue: "Fortsetzen"
+
+error:
+  code: "Fehler {$code}"
+  generic: "Ein Fehler ist aufgetreten."
+  unknown: "Unbekannter Fehler"
+  retry: "Versuchen Sie bitte erneut"
+  unavailable: "Funktion noch nicht verfügbar"
+  unimplemented: "Nicht implementiert"
+  empty: "Nichts zum Anzeigen"
+
+user:
+  username: "Benutzername"
+  email: "E-Mail Adresse"
+  id:
+    display: "Benutzer-ID"
+    inline: "ID: {$id}"
+  creation: "Registriert am {$date :date length=short} um {$date :time precision=minute}"
+  action:
+    enable: "Konto aktivieren"
+    disable: "Konto deaktivieren"
+  status:
+    admin: "Administrator"
+    disabled: "Konto deaktiviert"
+    verified: "Verifizierte E-Mail Adresse"
+  pfp:
+    alt: "Profilbild vom Nutzer {$name}"
+
+invite:
+  title:
+    view: "Registriereinladung"
+    create: "Benutzer einladen"
+  confirm:
+    delete: "Möchten Sie wirklich diese Einladung löschen?"
+  error:
+    create: "Einladung konnte nicht erstellt werden: {$msg}"
+    delete: "Einladung konnte nicht gelöscht werden: {$msg}"
+  qr: "QR Code"
+  code: "Einladungscode"
+  link: "Einladungscode"
+  id:
+    label: "Einladungs-ID"
+    inline: "ID: {$id}"
+  date:
+    creation:
+      display: "Erstellungsdatum"
+      inline: "Erstellt am {$date :date length=short} um {$date :time precision=minute} von {$name}"
+    expiry:
+      display: "Ablaufdatum"
+      today: |
+        .input {$date}
+        .input {$hours :integer}
+        .input {$minutes :integer}
+      
+        .match $hours $minutes
+          0 1 {{Läuft um {$date :time precision=minute} ab (noch {$minutes} Minute übrig)}}
+          0 * {{Läuft um {$date :time precision=minute} ab (noch {$minutes} Minuten übrig)}}
+          1 * {{Läuft um {$date :time precision=minute} ab (noch {$hours} Stunde übrig)}}
+          * * {{Läuft um {$date :time precision=minute} ab (noch {$hours} Stunden übrig)}}
+      elsewhen: "Läuft am {$date :date length=short} um {$date :time precision=minute} ab"
+  expiry:
+    display: "Ablauf"
+    preset:
+      1h: "1 Stunde"
+      3h: "3 Stunden"
+      1d: "1 Tag"
+      3d: "3 Tage"
+      7d: "7 Tage"
+
+session:
+  title: 
+    view:
+      user: "Session Details"
+      api: "API Token"
+    create:
+      api: "API Token Erstellen"
+    edit:
+      api: "API Token Bearbeiten"
+  confirm:
+    delete:
+      user: "Möchten Sie diese Session wirklich ausloggen?"
+      api: "Möchten Sie den API Token {$name} wirklich löschen?"
+  agent:
+    user: "Nutzeragent"
+    api: "Name"
+  date:
+    creation: "Erstelldatum"
+    latest: "Letzte Aktivität"
+  ip:
+    initial: "Initiale IP Adresse"
+    latest: "Letzte IP Adresse"
+  id:
+    display: "Session-ID"
+    inline: "ID: {:id}"
+  permissions:
+    subtitle: "Berechtigungen"
+  error:
+    permissions: "Die Berechtigungen des API tokens {$name} konten nicht abgerufen werden: {$msg}"
+    create: "Das API Token {$name} konnte nicht erstellt werden: {$msg}"
+    clipboard: "Das API Token {$name} konnte nicht in die Zwischenablage kopiert werden: {$msg}"
+    edit: "Das API Token {$name} konnte nicht bearbeitet werden: {$msg}"
+    delete: "Das API Token {$name} konnte nicht gelöscht werden: {$msg}"
+    password: "Um ein API Token zu erstellen, müssen Sie Ihr Passwort eingeben."
+  clipboard: "Das API Token wurde in die Zwischenablage kopiert"
+  current: "Jetzige Session"
+  location:
+    host: "Lokaler Rechner"
+    lan: "Lokales Netzwerk"
+    unknown: "Unbekanntes Ort"
+  active:
+    today: "Zuletzt aktiv am {$date :time precision=second}"
+    elsewhen: "Zuletzt aktiv am {$date :date length=short} um {$date :time precision=second}"
+
+file:
+  display: "Datei"
+  id: "Datei-ID"
+  error:
+    fetch: "Datei konnte nicht abgerufen werden: {$msg}"
+
+caldav:
+  display: "CalDav"
+  url: "CalDav URL"
+
+ical:
+  display: "iCal"
+  location:
+    remote: "Internetlink"
+    database: "Datei hochladen"
+    local: "Serverpfad"
+  url: "iCal-Link"
+  file: "iCal-Datei"
+  path: "iCal-Pfad"
+
+google:
+  display: "Google Kalendar"
+
+auth:
+  type: "Authentifikationstyp"
+  none:
+    display: "Keins"
+  basic:
+    display: "Passwort"
+    username: "Benutzername"
+    password: "Passwort"
+  bearer:
+    display: "Token"
+    token: "Token"
+  oauth:
+    display: "OAuth 2.0"
+    different: "Anderes Konto wählen"
+    abort: "Authentisierung fehlgeschlagen"
+    success: "Erfolgreich mit {$client} eingeloggt"
+    google:
+      unconfigured: "Der Administrator dieser Luna-Instanz hat noch keine Google Klaendar Integration hergerichtet."
+    tokens:
+      title: "Konto wählen"
+      list: "Authorisierte Kontos"
+      id: "ID: {$id}"
+      use: "Konto wählen"
+      exists: "Sie sind bereits mit {$client} eingelogt.\nSie können ein existierendes Konto wählen oder sich mit einem Anderen anmelden."
+      new: "Mit einem anderen Konto anmelden"
+    client:
+      title:
+        create: "Registrierte OAuth 2.0 Clients"
+        edit: "OAuth 2.0 Client Bearbeiten"
+      display: "Authorisierungsprovider"
+      extid: "Client-ID"
+      secret: "Client-Geheimnis"
+      base: "Basis-URL"
+      scope: "Umfang"
+      id:
+        label: "Interne Client-ID"
+        inline: "ID: {$id}"
+      confirm:
+        delete: "Möchten sie diesen OAuth 2.0 Client wirklich löschen?"
+      error:
+        create: "Der OAuth 2.0 Client {$name} konnte nicht erstellt werden: {$msg}"
+        edit: "Der OAuth 2.0 Client {$name} konnte nicht bearbeitet werden: {$msg}"
+        delete: "Der OAuth 2.0 Client {$name} konnte nicht gelöscht werden: {$msg}"
+        details: "Der OAuth 2.0 Client {$name} konnte nicht abgerufen werden: {$msg}"
+
+source:
+  display: "Quelle"
+  id: "Quellen-ID"
+  title:
+    view: "Quelle"
+    create: "Quelle Hinzufügen"
+    wizard: "Quelle Hinzufügen"
+    edit: "Quelle Bearbeiten"
+  confirm:
+    delete: "Möchten Sie die Quelle {$name} wirklich löschen?"
+  error:
+    create: "Die Quelle {$name} konnte nicht erstellt werden: {$msg}"
+    edit: "Die Quelle {$name} konnte nicht bearbeitet werden: {$msg}"
+    delete: "Die Quelle {$name} konnte nicht gelöscht werden: {$msg}"
+    details: "Die Quelle {$name} konnte nicht abgerufen werden: {$msg}"
+    url:
+      empty: "Ein Link ist erforderlich."
+      credentials:
+        empty: "Für diesen Link sind Anmeldedaten erforderlich."
+        incorrect: "Die bereitgestellten Anmeldedaten sind nicht korrekt."
+      calendars: "Es konnten keine Kalendar gefunden werden. Ist der Link korrekt?"
+    calendars:
+      find: "Es konnten keine Kalendar gefunden werden: {$msg}"
+      tooltip: "Ein Fehler ist aufgetreten beim Abrufen von Kalendar."
+
+calendar:
+  display: "Kalendar"
+  id: "Kalendar-ID"
+  title:
+    view: "Kalendar"
+    create: "Kalendar Erstellen"
+    edit: "Kalender Bearbeiten"
+  confirm:
+    delete: "Möchten sie den Kalendar {$name} wirklich löschen?"
+  error:
+    create: "Der Kalendar {$name} konnte nicht erstellt werden: {$msg}"
+    edit: "Der Kalendar {$name} konnte nicht bearbeitet werden: {$msg}"
+    delete: "Der Kalendar {$name} konnte nicht gelöscht werden: {$msg}"
+    move: "Der Kalendar {$name} konnte nicht bewegt werden: {$msg}"
+    reset: "Der Kalendar {$name} konnte nicht zurückgesetzt werden: {$msg}"
+    events:
+      tooltip: "Ein Fehler ist aufgetreten beim Abrufen von Ereignissen."
+  events:
+    count:
+      all: |
+        .input {$count :integer}
+        .match $count
+          0 {{Keine Ereignisse}}
+          1 {{{$count} Ereignis}}
+          * {{{$count} Ereignisse}}
+      more: |
+        .input {$count :integer}
+        .match $count
+          1 {{und {$count} Weiteres}}
+          * {{und {$count} Weitere}}
 
 event:
   display: "Ereignis"
   id: "Ereignis-ID"
   title:
     view: "Ereignis"
-    create: "Ereignis erstellen"
-    edit: "Ereignis bearbeiten"
-    copy: "Ereignis kopieren"
+    create: "Ereignis Erstellen"
+    edit: "Ereignis Bearbeiten"
+    copy: "Ereignis Kopieren"
+  copy:
+    instruction: "Wählen Sie aus, an welchen Tagen das Ereignis stattfinden soll."
+  confirm:
+    delete: "Möchten Sie das Ereignis {$name} wirklich löschen?"
+  error:
+    create: "Das Ereignis {$name} konnte nicht erstellt werden: {$msg}"
+    edit: "Das Ereignis {$name} konnte nicht bearbeitet werden: {$msg}"
+    delete: "Das Ereignis {$name} konnte nicht gelöscht werden: {$msg}"
+    move: "Das Ereignis {$name} konnte nicht bewegt werden: {$msg}"
+    reset: "Das Ereignis {$name} konnte nicht zurückgesetzt werden: {$msg}"
+    copy: "Das Ereignis {$name} konnte nicht kopiert werden: {$msg}"
+  recurrence:
+    affect:
+      this: "Dieses Ereignis"
+      thisandfuture: "Dieses und künftige Ereignisse"
+      all: "Alle Ereignisse der Serie"
+    edit:
+      title: "Bearbeiten eines wiederkehrenden Ereignisses"
+    delete:
+      title: "Löschen eines wiederkehrenden Ereignisses"
+
+reachability:
+  database: "Die Datenbank konnte nicht erreicht werden."
+  backend: "Der Backend-Server konnte nicht erreicht werden."
+  frontend: "Der Frontend-Server konnte nicht erreicht werden."
+  compatibility: "Die Frontend-Server und Backend-Server sind nicht kompatibel."
+  unknown: "Unbekannter Netzwerkfehler"
 
 weekdays:
   full:
@@ -97,21 +454,244 @@ settings:
   title: "Einstellungen"
   account:
     title: "Konto"
+    pfp:
+      display: "Profilbild"
+      type:
+        gravatar: "Gravatar"
+        database: "Datei hochladen"
+        remote: "Internet Link"
+        luna: "Luna"
+      file: "Profilbild-Datei"
+      link: "Profilbild-Link"
+      gravatar:
+        default: "Standard-Gravatarbild verwenden"
+    searchable: "Erlaube, dass andere Benutzer mich finden können"
+    password:
+      new: "Neues Password"
+      confirm: "Neues Password wiederholen"
+    delete:
+      confirm: "Möchten Sie Ihr Konto wirklich löschen?"
+      details: "Alle Ihre Daten werden unwiderruflich gelöscht."
+      error: "Ihr Konto konnte nicht gelöscht werden: {$msg}"
+      success: "Konto erfolgreich gelöscht."
   appearance:
     title: "Aussehen"
+    calendar:
+      subtitle: "Kalendaraussehen"
+      fill:
+        allDay: "Ganztägige Ereignisse ausfüllen"
+        nonAllDay: "Nicht-ganztägige Ereignisse ausfüllen"
+      small: "Kleinen Kalendar anzeigen"
+      dynamic:
+        main: "Dynamische Spaltenanzahl im Kalendar"
+        small: "Dynamische Spaltenanzahl im kleinen Kalendar"
+      week:
+        numbers: "Wochennummer anzeigen"
+        first: "Erster Wochentag"
+    site:
+      subtitle: "Seitenaussehen"
+      language: "Sprache"
+      frosted: "Durchscheinende Fenster"
+      rounded: "Abgerundete Ecken"
+      buttons: "Verwende Textknöpfe"
+      scaling: "Skalierung"
+      theme:
+        light: "Farbstil im Hellmodus"
+        dark: "Farbstil im Dunkelmodus"
+        sync: "Hell- und Dunkelmodus mit Betriebssystem synchronisieren"
+      font:
+        text: "Normale Schriftart"
+        mono: "Dicktengleiche Schriftart"
+    animations:
+      subtitle: "Animationen"
+      duration:
+        display: "Animationsdauer"
+        info: "Um Animationen zu deaktivieren, setzen Sie die Dauer auf 0%."
+      calendar:
+        main: "Kalender animieren"
+        small: "Kleinen Kalendar animieren"
+      month: "Monatsauswahl animieren"
   developer:
     title: "Entwickler"
+    deauthorize: "Authorisierung entnehmen"
+    ids: "IDs anzeigen"
+    api: "API Tokens"
   users:
     title: "Benutzer"
+    list:
+      users: "Registrierte Benutzer"
+      invites: "Ausstehende Einladungen"
+    action:
+      invite:
+        new: "Benutzer einladen"
+        delete: "Alle Einladungen löschen"
+    confirm:
+      delete: "Möchten Sie dieses Konto wirklich löschen?"
+      enable: "Möchten Sie dieses Konto wirklich aktivieren?\nDer Benutzer wird sich nicht mehr anmelden können."
+      disable: "Möchten Sie dieses Konto wirklich deaktivieren?\nDer Benutzer wird sich wieder anmelden können."
+    info:
+      preserve: "Die Nutzerdaten bleiben erhalten."
+      delete: "Alle Nutzerdaten werden unwiderruflich gelöscht."
+    success:
+      delete: "Benutzerkonto erfolgreich gelöscht"
+    error:
+      enable: "Das Konto konnte nicht aktiviert werden: {$msg}"
+      disable: "Das Konto konnte nicht deaktiviert werden: {$msg}"
+      delete: "Das Konto konnte nicht gelöscht werden: {$msg}"
   themes:
     title: "Farbstile"
+    list: "Installierte Farbstile"
+    current: "Wenn Sie Ihr Farbstil ändern möchten, gehen Sie in die \"Aussehen\" Kategorie."
+    new: "Farbstil installieren"
+    upload: "Farbstil hochladen"
+    success:
+      install: "Farbstil erfolgreich installiert"
+      uninstall: "Farbstil erfolgreich gelöscht"
+    error:
+      install: "Der Farbstil konnte nicht installiert werden: {$msg}"
+      uninstall: "Der Farbstil konnte nicht gelöscht werden: {$msg}"
+      file: "Fehlende oder korrumpierte Farbstil-Datei"
+    confirm:
+      uninstall: "Möchten Sie den Farbstil {$name} wirklich löschen?"
+      overwrite: "Ein Farbstil mit demselben Namen ist bereits installiert.\nFalls Sie fortfahren, wird der Farbstil überschrieben.\nMöchten Sie fortfahren?"
   fonts:
     title: "Schriftarten"
+    list: "Installierte Schriftarten"
+    current: "Wenn Sie Ihre Schriftart ändern möchten, gehen Sie in die \"Aussehen\" Kategorie."
+    new: "Schriftart installieren"
+    upload: "Schriftart hochladen"
+    success:
+      install: "Schriftart erfolgreich installiert"
+      uninstall: "Schriftart erfolgreich gelöscht"
+    error:
+      install: "Die Schriftart konnte nicht installiert werden: {$msg}"
+      uninstall: "Die Schriftart konnte nicht gelöscht werden: {$msg}"
+      file: "Fehlende oder korrumpierte Schriftart-Datei"
+    confirm:
+      uninstall: "Möchten Sie die Schriftart {$name} wirklich löschen?"
+      overwrite: "Eine Schriftart mit demselben Namen ist bereits installiert.\nFalls Sie fortfahren, wird die Schriftart überschrieben.\nMöchten Sie fortfahren?"
   oauth:
     title: "OAuth 2.0"
+    new: "Neuen OAuth 2.0 Client registrieren"
+    list: "Registrierte OAuth 2.0 Clients"
   admin:
     title: "Administrativ"
+    confirm:
+      reset: "Sind Sie sicher, dass Sie alle globalen Einstellungen zurücksetzen möchten?"
+    registration:
+      display: "Registrierung aktivieren"
+      info: "Falls aktiv, kann jede*r ein Konto erstellen.\nFalls Sie nur ein Paar Leute einladen möchten, gehen Sie in die \"Benutzer\" Kategorie."
+    geolocation:
+      display: "Standort von IP-Adressen ermitteln"
+      info: "Falls aktiv, wird der ungefähre Standort von Benutzersessionen in den Einstellungen des jeweiligen Nutzers ermittelt. Dank dieser Funktion können Benutzer leichter feststellen, ob ein Angreifer Zugang zu ihrem Konte erlangen hat. Da die Standortermittlung ein Service eines Dritten verwendet, ist diese Funktionalität mit Privatheitsbedenken verbunden. Falls Sie diese Gefahr nicht eingehen möchten, können Sie diese Funktionalität hier deaktivieren. Es sei angemerkt, dass die IP Adressen selbst dennoch in der Datenbank zwecks Sicherheit gespeichert werden, allerdings außerhalb der hiermit gesteuerten Funktoanalität an keine Dritten weitergegeben werden."
+    pfp:
+      gravatar:
+        display: "Gravatar-Profilbilder aktivieren"
+        info: "Gravatar ist ein Service von Dritten, mit dem Benutzer Ihre Profilbilder nur einmalig für Ihre E-Mail Adresse setzen müssen. Dies geschieht durch eine Anfrage an Gravatar-Server mit einem MD5-Hashwert der E-Mail Adresse. Dies kann als eine Gefahr für die Privatsphäre angesehen werden, da Gravat somit die Nutzer über verschiedene Seiten hinweg tracken könnte. Falls Sie diese Gefahr nicht engehen möchten, können Sie hier Gravatar-Profibilder für alle Nutzer deaktivieren."
+      cache:
+        display: "Profilbilder cachen"
+        info: "Falls aktiv, werden Profilbbilder von anderen Websites (inklusive Gravatar) auf dem Server lokal abgespeichert. Dies erhöht die Performanz und Privatheit, kann aber dazu führen, dass auf Ihrem Server illegale Bilder gehostet werden, falls ein böswilliger Nutzer ein solches Profilbild einstellt. Dieselbe Gefahr besteht, wenn Nutzer Ihre Profilbilder direkt hochladen können."
+      upload:
+        display: "Hochladen von eigenen Profilbildern"
+        info: "Falls aktiv, können Benutzer ihre eigene Profilbilder hochladenr. Es besteht die Gefahr, dass auf ihrem Server illegale Bilder gehostet werden, falls ein böswilliger Nutzer ein solches Bild hochlädt. Dieselbe Gefahr besteht, wenn Profilbilder von anderen Websites gecached werden."
+    verbosity:
+      display: "Detailliertheit von Fehlermeldungen"
+      info: "Dies bestimmt wie detailliert die Fehlermeldungen sind.\nDiese Einstellungen ist für alle Nutzer gültig.\nDie \"Debug\" Stufe sollte nie außerhalb von Entwicklung verwendet werden."
+      lvl:
+        broad: "Grob"
+        plain: "Normal"
+        wordy: "Detailliert"
+        debug: "Debug"
+    reset: "Alle globalen Einstellungen zurücksetzen"
   danger:
     title: "Gefahrszone"
+    reset:
+      button: "Alle Präferenzen zurücksetzen"
+      confirmation: "Sind Sie sicher, dass Sie alle ihre Präferenzen zurücksetzen möchten?"
+      details: "Ihre Nutzerdaten bleiben erhalten."
+    delete: "Konto löschen"
   logout:
-    title: "Ausloggen"
+    title: "Abmelden"
+    button:
+      current: "Jetzt abmelden"
+      all: "Auf allen Geräten abmelden"
+      single: "Abmelden"
+    confirm:
+      current: "Möchten Sie sich wirklich abmelden?"
+      all:
+        display: "Sind Sie sicher, dass Sie sich auf allen Geräten abmelden möchten?"
+        info: "Ihre API tokens bleiben valide.\nUm diese zu löschen, gehen Sie in din \"Entwickler\" Kategorie."
+    sessions:
+      display: "Aktive Geräte"
+      info: "Um Ihre API Tokens zu sehen, gehen Sie in die \"Entwickler\" Kategorie."
+  error:
+    save:
+      global: "Die globalen Einstellungen konnten nicht gespeichert werden: {$msg}"
+      preferences: "Die Nutzerpräferenzen konnten nicht gespeichert werden: {$msg}"
+      profile: "Die Kontodaten konnten nicht gespeichert werden: {$msg}"
+
+validation:
+  username:
+    short: "Der Nutzername muss mindestens {$len :integer} Buchstaben lang sein."
+    long: "Der Nutzername darf höchstens {$len :integer} Buchstaben lang sein."
+    characters: "Der Nutzername darf nur aus Buchstaben und Zahlen bestehen."
+  password:
+    short: "Das Password muss mindestens {$len :integer} Buchstaben lang sein."
+    long: "Das Password darf höchstens {$len :integer} Buchstaben lang sein."
+    match: "The passwords do not match."
+  url:
+    proto: "Der Link musst mit \"http://\" oder \"https://\" beginnen."
+    invalid: "Der Link ist nicht valide."
+  email:
+    invalid: "Die E-Mail Adresse ist nicht valide."
+  path:
+    empty: "Der Pfad darf nicht leer sein."
+  invite:
+    invalid: "Der Einladungscode ist nicht valide."
+  file:
+    empty: "Es wurden keine Datei ausgewählt."
+    multiple: "Es wurden zu viele Dateien ausgewählt."
+    null: "Die Datei ist null."
+    size: "Die Datei darf nicht mehr als {$size} in Größe betragen."
+    type: "Die Datei muss vom Typ \"{$type}\" sein."
+    invalid: "Invalides Dateiformat"
+  auth:
+    unknown: "Nicht unterstütztes Authentifizierungsverfahren"
+  source:
+    unknown: "Nicht unterstützter Quellentyp"
+    location:
+      unknown: "Nicht unterstützter iCal Dateiursprung"
+
+  repository:
+    error:
+      event:
+        fetch: "Es konnten keine Ereignisse aus {$name} abgerufen werden: {$msg}"
+      calendar:
+        fetch: "Es konnten keine Kalendar aus {$name} abgerufen werden: {$msg}"
+      reorder:
+        source: "Die Quellen konnten nicht umsortiert werden"
+        calendar: "Die Kalendar konnten nicht umsortiert werden"
+    info:
+      hidden: "Das Ereignis {$name} wurde zu einem verborgenen Kalendar hinzugefügt."
+
+perms:
+  read_events: "Ereignisse lesen"
+  add_events: "Ereignesse erstellen"
+  edit_events: "Ereignisse bearbeiten"
+  delete_events: "Ereignisse löschen"
+  read_calendars: "Kalendar lesen"
+  add_calendars: "Kalendar erstellen"
+  edit_calendars: "Kalendar bearbeiten"
+  delete_calendars: "Kalendar löschen"
+  read_sources: "Quellen lesen"
+  add_sources: "Quellen hinzufügen"
+  edit_sources: "Quellen bearbeiten"
+  delete_sources: "Quellen löschen"
+  manage_invites: "Registriereinladungen verwalten"
+  manage_users: "Nutzer verwalten"
+  manage_oauth_clients: "OAuth 2.0 Clients verwalten"
+  manage_global_settings: "Globale Einstellungen verwalten"
+  manage_user_settings: "Nutzerpräferenzen verwalten"
+  manage_sessions: "Nutzersessionen verwalten"
+  manage_resources: "Schriftarten und Farbstile verwalten"
+  administrative: "Administrativ"
