@@ -490,7 +490,7 @@ settings:
         small: "Dynamic small calendar row count"
       week:
         numbers: "Display week numbers"
-        first: "First day of week"
+        first: "First day of the week"
     site:
       subtitle: "Site appearance"
       language: "Language"
@@ -518,7 +518,9 @@ settings:
     title: "Developer"
     deauthorize: "Deauthorize"
     ids: "Display IDs"
-    api: "API Tokens"
+    api:
+      list: "API tokens"
+      new: "Create an API token"
   users:
     title: "Users"
     list:
