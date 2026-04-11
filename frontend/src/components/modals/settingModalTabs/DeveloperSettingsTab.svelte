@@ -94,13 +94,13 @@
   bind:value={settings.userSettings[UserSettingKeys.DebugMode]}
 />
 
-<Button color={ColorKeys.Accent} onClick={() => showSessionModal().catch(err => { if (err) queueNotification(ColorKeys.Danger, err.message); } )}>Create an API token</Button>
+<Button color={ColorKeys.Accent} onClick={() => showSessionModal().catch(err => { if (err) queueNotification(ColorKeys.Danger, err.message); } )}>{t("settings.dev.api.new")}</Button>
 
 <svelte:boundary>
   {@const apiSessions = sessions.activeSessions.filter(x => x.is_api)}
   {#if apiSessions.length !== 0}
     <List
-      label={t("settings.dev.api")}
+      label={t("settings.dev.api.list")}
       items={apiSessions}
       id={item => item.id}
       template={sessionTemplate}

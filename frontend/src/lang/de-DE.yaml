@@ -511,11 +511,13 @@ settings:
         main: "Kalender animieren"
         small: "Kleinen Kalendar animieren"
       month: "Monatsauswahl animieren"
-  developer:
+  dev:
     title: "Entwickler"
     deauthorize: "Authorisierung entnehmen"
     ids: "IDs anzeigen"
-    api: "API Tokens"
+    api:
+      list: "API Tokens"
+      new: "API Token erstellen"
   users:
     title: "Benutzer"
     list:
