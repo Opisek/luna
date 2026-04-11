@@ -7,6 +7,7 @@
   import { t } from "@sveltia/i18n";
 
   interface Props {
+    anchor?: HTMLElement | undefined;
     showPopup?: () => Promise<void>;
     hidePopup?: () => void;
     addSource: () => Promise<SourceModel>;
@@ -15,6 +16,7 @@
   }
 
   let {
+    anchor = undefined,
     showPopup = $bindable(AsyncNoOp),
     hidePopup = $bindable(NoOp),
     addSource,
@@ -53,7 +55,7 @@
   }
 </script>
 
-<Popup bind:showPopup={internalShow} bind:hidePopup={internalClose} tooltip={false}>
+<Popup bind:showPopup={internalShow} bind:hidePopup={internalClose} tooltip={false} anchor={anchor}>
   <Button onClick={onAddSourceButtonClick}>{t("button.add.source")}</Button>
   {#if canAddCalendars}
     <Button onClick={onAddCalendarButtonClick}>{t("button.add.calendar")}</Button>

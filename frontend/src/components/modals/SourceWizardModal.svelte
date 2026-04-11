@@ -68,9 +68,6 @@
   let performOauthAuhorization: (clientId: string) => Promise<string> = $state(async () => "");
   let abortOauthAuthorization: () => void = $state(NoOp);
 
-  let promiseResolve: (value: SourceModel) => void = $state(NoOp);
-  let promiseReject: (reason?: any) => void = $state(NoOp);
-
   showModal = async () => {
     oauthClients.fetch();
 
@@ -97,12 +94,7 @@
     }
     lastUrlValidity = valid;
 
-    showModalInternal();
-
-    return new Promise((resolve, reject) => {
-      promiseResolve = resolve;
-      promiseReject = reject;
-    });
+    return showModalInternal();
   }
 
   let submittable = $derived.by(() => {
@@ -281,7 +273,6 @@
   bind:success
   bind:failure
   onModalHide={() => {
-    promiseReject();
     abortOauthAuthorization();
   }}
 >

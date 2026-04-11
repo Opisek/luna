@@ -23,6 +23,7 @@
     enabled?: boolean;
     color?: ColorKeys;
     canRenderAsButton?: boolean;
+    button?: HTMLElement | undefined;
     children?: Snippet;
   }
 
@@ -40,12 +41,11 @@
     enabled = true,
     color = ColorKeys.Neutral,
     canRenderAsButton = false,
+    button = $bindable(),
     children
   }: Props = $props();
 
   const settings = getSettings();
-
-  let button = $state<HTMLElement | undefined>();
 
   let showPopover = $state(AsyncNoOp);
   let hidePopover = $state(NoOp);
@@ -210,16 +210,13 @@
   <Button
      onClick={onClick}
      bind:externalLoading
+     bind:element={button}
      color={color}
      type={type}
      enabled={enabled}
      href={href}
   >{alt}</Button>
 {:else}
-  {@render buttonSnippet()}
-{/if}
-
-{#snippet buttonSnippet()}
   {#if href !== ""}
     <a
       bind:this={button}
@@ -265,11 +262,11 @@
       {#if loading}
         <Spinner/>
       {/if}
-      {#if alt != ""}
-        <Popup bind:showPopup={showPopover} bind:hidePopup={hidePopover} delayed={true}>
-          {alt}
-        </Popup>
-      {/if}
     </button>
+    {#if alt != ""}
+      <Popup bind:showPopup={showPopover} bind:hidePopup={hidePopover} delayed={true} anchor={button}>
+        {alt}
+      </Popup>
+    {/if}
   {/if}
-{/snippet}
+{/if}

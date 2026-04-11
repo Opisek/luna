@@ -16,6 +16,7 @@
 
   interface Props {
     date: Date;
+    anchor?: HTMLElement | undefined;
     showPopup?: () => Promise<void>;
     hidePopup?: () => void;
     onSelect?: (date: Date) => void;
@@ -23,6 +24,7 @@
 
   let {
     date = $bindable(new Date()),
+    anchor = undefined,
     showPopup = $bindable(AsyncNoOp),
     hidePopup = $bindable(NoOp),
     onSelect = NoOp,
@@ -157,7 +159,7 @@
   }
 </style>
 
-<Popup bind:showPopup={internalShow} bind:hidePopup={internalClose} tooltip={false}>
+<Popup bind:showPopup={internalShow} bind:hidePopup={internalClose} tooltip={false} anchor={anchor}>
   <div class="topRow">
     <IconButton onClick={prev} alt={t("button.month.previous")} color={ColorKeys.Accent}>
       <ChevronLeft/>

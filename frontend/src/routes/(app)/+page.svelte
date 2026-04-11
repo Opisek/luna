@@ -15,7 +15,7 @@
   import SourceModal from "../../components/modals/SourceModal.svelte";
   import Title from "../../components/layout/Title.svelte";
 
-  import { afterNavigate, beforeNavigate } from "$app/navigation";
+  import { afterNavigate, beforeNavigate, replaceState } from "$app/navigation";
   import { browser } from "$app/environment";
 
   import SmallCalendar from "../../components/interactive/SmallCalendar.svelte";
@@ -69,7 +69,7 @@
     url.searchParams.set("view", view);
     url.searchParams.set("date", date.toISOString().split("T")[0]);
 
-    history.replaceState(history.state, '', url);
+    replaceState(url, page.state);
   })
 
   function getVisibleRange(date: Date, view: "month" | "week" | "day"): { start: Date, end: Date } {
@@ -193,6 +193,8 @@
   let showCreditsModal: () => any = $state(NoOp);
 
   let showCreatePopup: () => any = $state(NoOp);
+
+  let addButton: HTMLElement | undefined = $state();
 </script>
 
 <style lang="scss">
@@ -302,15 +304,16 @@
     <IconButton onClick={showSettingsModal} alt={t("button.settings")}>
       <Settings/>
     </IconButton>
-    <IconButton onClick={showCreatePopup} alt={t("button.add.generic")}>
+    <IconButton bind:button={addButton} onClick={() => showCreatePopup().catch(NoOp)} alt={t("button.add.generic")}>
       <PlusIcon/>
-      <CreatePopup
-        bind:showPopup={showCreatePopup}
-        addSource={showSourceWizardModal}
-        addCalendar={showCalendarModal}
-        addEvent={showEventModal}
-      />
     </IconButton>
+    <CreatePopup
+      bind:showPopup={showCreatePopup}
+      anchor={addButton}
+      addSource={showSourceWizardModal}
+      addCalendar={showCalendarModal}
+      addEvent={showEventModal}
+    />
     <IconButton onClick={showCreditsModal} alt={t("button.credits")}>
       <Copyleft/>
     </IconButton>

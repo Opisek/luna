@@ -135,7 +135,7 @@
     { name: "Atkinson Hyperlegible Next", value: "atkinson-hyperlegible-next" },
     { name: "Atkinson Hyperlegible Mono", value: "atkinson-hyperlegible-next" }
   ]);
-  let defaultLanguageName = $derived(t(`language.${await getDefaultLanguage()}`));
+  let defaultLanguageName = t(`language.${await getDefaultLanguage()}`);
   let defaultLanguageOption = $derived({ name: t("language.default", { values: { default: defaultLanguageName} }), value: "default" });
   let languages = $derived<Option<string>[]>([defaultLanguageOption].concat(locales.map(x => ({ name: t(`language.${x}`), value: x}))));
 
@@ -361,7 +361,7 @@
       }).then(async () => {
         globalSettingsSnapshot = await deepCopy(settings.globalSettings);
       }).catch((err) => {
-        queueNotification(ColorKeys.Danger, t("error.message.globalsettings.save", { values: { msg: err.message }}));
+        queueNotification(ColorKeys.Danger, t("settings.error.save.global", { values: { msg: err.message }}));
         saving = false;
         throw err;
       });
