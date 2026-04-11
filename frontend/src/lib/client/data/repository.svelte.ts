@@ -8,6 +8,7 @@ import { queueNotification } from "../notifications";
 
 import { parallel } from "$lib/common/misc";
 import type { Metadata } from "./metadata.svelte";
+import { t } from "@sveltia/i18n";
 
 
 export class Repository {
@@ -136,13 +137,13 @@ export class Repository {
               formData.set("path", source.settings.path);
               break;
             default:
-              throw new Error("Unsupported iCal file location");
+              throw new Error(t("validation.source.location.unknown"));
           }
           break;
         case "google":
           break;
         default:
-          throw new Error("Unsupported source type");
+          throw new Error(t("validation.source.unknown"));
       }
     }
     if (changes.auth) {
@@ -162,7 +163,7 @@ export class Repository {
           formData.set("auth_tokens", source.auth.tokens_id);
           break;
         default:
-          throw new Error("Unsupported auth type");
+          throw new Error(t("validation.auth.unknown"));
       }
     }
     return formData;
@@ -368,19 +369,19 @@ export class Repository {
     this.getCalendars(newSource.id).then(async (cals) => {
       this.compileCalendars();
       const [_, errors] = await parallel(cals.map((cal) => this.getEventsFromCalendar(cal.id, this.eventsRangeStart, this.eventsRangeEnd))).catch((err) => {
-        throw new Error(`Failed to fetch events from ${newSource.name}: ${(err.cause || err).message}`, { cause: err.cause || err });
+        throw new Error(`${newSource.name}: ${(err.cause || err).message}`, { cause: err.cause || err });
       });
       errors.forEach((err) => {
         queueNotification(
           ColorKeys.Danger,
-          `Failed to fetch events from ${cals[err[0]].name}: ${err[1].message}`
+          t("repository.error.event.fetch", { values: { name: cals[err[0]].name, msg: err[1].message } })
         );
       });
       this.compileEvents(this.eventsRangeStart, this.eventsRangeEnd);
     }).catch((err) => {
       queueNotification(
         ColorKeys.Danger,
-        `Failed to fetch calendars from ${newSource.name}: ${err.message}`
+        t("repository.error.calendar.fetch", { values: { name: newSource.name, msg: err.message } })
       );
     });
 
@@ -408,19 +409,19 @@ export class Repository {
       this.getCalendars(modifiedSource.id, true).then(async (cals) => {
         this.compileCalendars();
         const [_, errors] = await parallel(cals.map((cal) => this.getEventsFromCalendar(cal.id, this.eventsRangeStart, this.eventsRangeEnd))).catch((err) => {
-          throw new Error(`Failed to fetch events from ${modifiedSource.name}: ${(err.cause || err).message}`, { cause: err.cause || err });
+          throw new Error(`${(err.cause || err).message}`, { cause: err.cause || err });
         });
         errors.forEach((err) => {
           queueNotification(
             ColorKeys.Danger,
-            `Failed to fetch events from ${cals[err[0]].name}: ${err[1].message}`
+            t("repository.error.event.fetch", { values: { name: cals[err[0]].name, msg: err[1].message } })
           );
         });
         this.compileEvents(this.eventsRangeStart, this.eventsRangeEnd);
       }).catch((err) => {
         queueNotification(
           ColorKeys.Danger,
-          `Failed to fetch calendars from ${modifiedSource.name}: ${err.message}`
+          t("repository.error.calendar.fetch", { values: { name: modifiedSource.name, msg: err.message } })
         );
       });
     }
@@ -433,7 +434,7 @@ export class Repository {
 
     const sources = this.sourcesCache.value || [];
     const previousIndex = sources.findIndex(x => x.id == movedSource.id);
-    if (previousIndex == -1) throw new Error("Could not move cached source");
+    if (previousIndex == -1) throw new Error(t("repository.error.reorder.source"));
     if (previousIndex == newIndex) return;
 
     let formData = new FormData();
@@ -483,13 +484,13 @@ export class Repository {
     const allSources = await this.getSources(forceRefresh);
 
     const [calendars, errors] = await parallel(allSources.map((source) => this.getCalendars(source.id, forceRefresh))).catch((err) => {
-      throw new Error(`Failed to fetch calendars: ${(err.cause || err).message}`, { cause: err.cause || err });
+      throw new Error(`${(err.cause || err).message}`, { cause: err.cause || err });
     });
 
     errors.forEach((err) => {
       queueNotification(
         ColorKeys.Danger,
-        `Failed to fetch calendars from ${allSources[err[0]].name}: ${err[1].message}`
+        t("repository.error.calendar.fetch", { values: { name: allSources[err[0]].name, msg: err[1].message } })
       );
     });
 
@@ -599,7 +600,7 @@ export class Repository {
 
     const calendars = this.calendarsCache.get(movedCalendar.source)?.value || [];
     const previousIndex = calendars.findIndex(x => x == movedCalendar.id);
-    if (previousIndex == -1) throw new Error("Could not move cached calendar");
+    if (previousIndex == -1) throw new Error(t("repository.error.reorder.calendar"));
     if (previousIndex == newIndex) return;
 
     let formData = new FormData();
@@ -644,7 +645,7 @@ export class Repository {
   }
 
   async moveCalendar(calendar: CalendarModel): Promise<void> {
-    throw new Error("Not implemented");
+    throw new Error(t("error.unimplemented"));
 
     //if (!browser) return;
 
@@ -716,12 +717,12 @@ export class Repository {
     this.compileEvents(this.eventsRangeStart, this.eventsRangeEnd);
     const allSources = await this.getSources(forceRefresh).catch((err) => { throw err; });
     const [events, errors] = await parallel(allSources.map((source) => this.getEventsFromSource(source.id, this.previousMonth(this.eventsRangeStart), this.nextMonth(this.eventsRangeEnd), forceRefresh))).catch((err) => {
-      throw new Error(`Failed to fetch events: ${(err.cause || err).message}`, { cause: err.cause || err });
+      throw new Error(`${(err.cause || err).message}`, { cause: err.cause || err });
     });
     errors.forEach((err) => {
       queueNotification(
         ColorKeys.Danger,
-        `Failed to fetch events from ${allSources[err[0]].name}: ${err[1].message}`
+        t("repository.error.event.fetch", { values: { name: allSources[err[0]].name, msg: err[1].message } })
       );
     });
     return events.flat();
@@ -745,12 +746,12 @@ export class Repository {
     let cals = await this.getCalendars(source, forceRefresh).catch((err) => { throw err; });
     cals = cals.filter(x => !this.metadata.hiddenCalendars.has(x.id)); // only fetch events from visible calendars
     const [events, errors] = await parallel(cals.map((calendar) => this.getEventsFromCalendar(calendar.id, startMonth, endMonth, forceRefresh))).catch((err) => {
-      throw new Error(`Failed to fetch events: ${(err.cause || err).message}`, { cause: err.cause || err });
+      throw new Error(`${(err.cause || err).message}`, { cause: err.cause || err });
     })
     errors.forEach((err) => {
       queueNotification(
         ColorKeys.Danger,
-        `Failed to fetch events from ${cals[err[0]].name}: ${err[1].message}`
+        t("repository.error.event.fetch", { values: { name: cals[err[0]].name, msg: err[1].message } })
       );
     });
     return events.flat();
@@ -855,7 +856,7 @@ export class Repository {
       const calendarName = this.calendarsMap.get(this.calendarsCache.get(calendar)?.value?.find((cal) => cal === calendar) || "")?.name;
       queueNotification(
         ColorKeys.Danger,
-        `Failed to fetch events from calendar${calendarName ? " " + calendarName : ""}: ${err.message}`
+        t("repository.error.event.fetch", { values: { name: calendarName, msg: err.message } })
       );
     });
   }
@@ -887,7 +888,7 @@ export class Repository {
     if (isHidden) {
       queueNotification(
         ColorKeys.Accent,
-        `Event ${newEvent.name} was added to a hidden calendar.`
+        t("repository.info.hidden", { values: { name: newEvent.name } })
       );
     }
 

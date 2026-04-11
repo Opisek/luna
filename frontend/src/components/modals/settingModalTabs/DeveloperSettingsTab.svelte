@@ -10,6 +10,7 @@
   import { Bot, Gamepad2, Info, Laptop, LogOut, Microchip, Pencil, RectangleGoggles, Smartphone, Tablet, TvMinimal, Watch } from "lucide-svelte";
   import IconButton from "../../interactive/IconButton.svelte";
   import { queueNotification } from "../../../lib/client/notifications";
+  import { t } from "@sveltia/i18n";
 
   interface Props {
     settings: Settings;
@@ -89,7 +90,7 @@
 
 <ToggleInput
   name={UserSettingKeys.DebugMode}
-  description="Display IDs"
+  description={t("settings.dev.ids")}
   bind:value={settings.userSettings[UserSettingKeys.DebugMode]}
 />
 
@@ -99,7 +100,7 @@
   {@const apiSessions = sessions.activeSessions.filter(x => x.is_api)}
   {#if apiSessions.length !== 0}
     <List
-      label="API Tokens"
+      label={t("settings.dev.api")}
       items={apiSessions}
       id={item => item.id}
       template={sessionTemplate}
@@ -151,25 +152,25 @@
       {s.location}
       •
       {#if isActive}
-        Current session
+        {t("session.current")}
       {:else if today.getDate() == s.last_seen.getDate() && today.getMonth() == s.last_seen.getMonth() && today.getFullYear() == s.last_seen.getFullYear()}
-        Last active {s.last_seen.toLocaleTimeString()}
+        {t("session.active.today", { values: { date: s.last_seen } })}
       {:else}
-        Last active {s.last_seen.toLocaleDateString()} {s.last_seen.toLocaleTimeString()}
+        {t("session.active.elsewhen", { values: { date: s.last_seen } })}
       {/if}
     </span>
 
     <div class="buttons">
-      <IconButton onClick={async () => showSessionModal(s, s.is_api)} color={ColorKeys.Accent} alt="Edit">
+      <IconButton onClick={async () => showSessionModal(s, s.is_api)} color={ColorKeys.Accent} alt={t("button.edit")}>
         <Pencil size={20}/>
       </IconButton>
-      <IconButton onClick={async () => deauthorizeSession(s.id)} color={ColorKeys.Danger} alt="Deauthorize">
+      <IconButton onClick={async () => deauthorizeSession(s.id)} color={ColorKeys.Danger} alt={t("settings.dev.deauthorize")}>
         <LogOut size={20}/>
       </IconButton>
     </div>
 
     <span class="id">
-      ID: {s.id}
+      {t("session.id.inline", { values: { id: s.id } })}
     </span>
   </div>
 {/snippet}

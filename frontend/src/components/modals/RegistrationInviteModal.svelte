@@ -117,8 +117,8 @@
       displayCopyButton={true}
     />
       
-    <DateTimeInput value={invite.created_at} allDay={false} placeholder={t("invite.date.creation")} name="created_at" editable={false}/>
-    <DateTimeInput value={invite.expires_at} allDay={false} placeholder={t("invite.date.expiry")} name="expires_at" editable={false}/>
+    <DateTimeInput value={invite.created_at} allDay={false} placeholder={t("invite.date.creation.display")} name="created_at" editable={false}/>
+    <DateTimeInput value={invite.expires_at} allDay={false} placeholder={t("invite.date.expiry.display")} name="expires_at" editable={false}/>
 
     {#if settings.userSettings[UserSettingKeys.DebugMode]}
       <TextInput value={invite.id} name="id" placeholder={t("invite.id.label")} editable={false} />

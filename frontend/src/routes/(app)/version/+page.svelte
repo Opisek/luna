@@ -14,6 +14,7 @@
   import Divider from "../../../components/layout/Divider.svelte";
   import { getRedirectPage } from "../../../lib/common/parsing";
   import { ColorKeys } from "../../../types/colors";
+  import { t } from "@sveltia/i18n";
 
   let versions: ({ frontend: string, backend: string, compatibility: VersionCompatibility } | undefined) = $state();
   let isCompatible = $derived(versions !== undefined && ![VersionCompatibility.BackendOutdatedMajor, VersionCompatibility.FrontendOutdatedMajor].includes(versions.compatibility));
@@ -71,14 +72,14 @@
 
     <Horizontal position="right">
       <Button onClick={loadVersions} >
-        Refresh
+        {t("button.refresh")}
       </Button>
 
       {#if isCompatible}
         {#if !browser || redirectPage === "/"}
-          <Button color={ColorKeys.Success} href="/">Home</Button>
+          <Button color={ColorKeys.Success} href="/">{t("nav.home")}</Button>
         {:else}
-          <Button color={ColorKeys.Success} href={redirectPage}>Continue</Button>
+          <Button color={ColorKeys.Success} href={redirectPage}>{t("nav.continue")}</Button>
         {/if}
       {/if}
     </Horizontal>

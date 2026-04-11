@@ -30,15 +30,15 @@
   }: Props = $props();
 
   function logout() {
-    showConfirmation("Are you sure you want to log out?").then(async () => {
+    showConfirmation(t("settings.logout.confirm.current")).then(async () => {
       await fetchResponse("/api/sessions/current", { method: "DELETE" }); // We don't need to check for errors, because the cookie is deleted either way
       clearSession();
     });
   }
   async function deauthorizeSessions() {
     await showConfirmation(
-      "Are you sure you want to deauthorize all sessions?\nThis will log you out of all your devices.",
-      "Your API tokens will remain valid.\nTo deauthorize those, head to the \"Developer\" tab."
+      t("settings.logout.confirm.all.display"),
+      t("settings.logout.confirm.all.info")
     ).then(async () => {
       sessions.deauthorizeUserSessions().catch((err) => {
         queueNotification(ColorKeys.Danger, err);
@@ -108,12 +108,12 @@
   }
 </style>
 
-<Button color={ColorKeys.Danger} onClick={logout}>Log out of my account</Button>
-<Button color={ColorKeys.Danger} onClick={deauthorizeSessions}>Deauthorize all sessions</Button>
+<Button color={ColorKeys.Danger} onClick={logout}>{t("settings.logout.button.current")}</Button>
+<Button color={ColorKeys.Danger} onClick={deauthorizeSessions}>{t("settings.logout.button.all")}</Button>
 
 <List
-  label="Active Sessions"
-  info={"To see your API sessions, head to the \"Developer\" tab."}
+  label={t("settings.logout.sessions.display")}
+  info={t("settings.logout.sessions.info")}
   items={sessions.activeSessions.filter(x => !x.is_api)}
   id={item => item.id}
   template={sessionTemplate}
@@ -140,8 +140,7 @@
         <Tablet size={20}/>
       {:else if userAgent.device.type === UAParser.DEVICE.WEARABLE}
         <Watch size={20}/>
-      <!--{:else if userAgent.device.type === UAParser.DEVICE.XR}-->
-      {:else if userAgent.device.type === "xr"}
+      {:else if userAgent.device.type === UAParser.DEVICE.XR}
         <RectangleGoggles size={20}/>
       {:else if deviceName === ""}
         <Bot size={20}/>
@@ -162,11 +161,11 @@
       {s.location}
       •
       {#if isActive}
-        Current session
+        {t("session.current")}
       {:else if today.getDate() == s.last_seen.getDate() && today.getMonth() == s.last_seen.getMonth() && today.getFullYear() == s.last_seen.getFullYear()}
-        Last active {s.last_seen.toLocaleTimeString()}
+        {t("session.active.today", { values: { date: s.last_seen } })}
       {:else}
-        Last active {s.last_seen.toLocaleDateString()} {s.last_seen.toLocaleTimeString()}
+        {t("session.active.elsewhen", { values: { date: s.last_seen } })}
       {/if}
     </span>
 
@@ -174,13 +173,13 @@
       <IconButton onClick={() => editApiToken(s, s.is_api)} alt={t("button.details")}>
         <Info size={20}/>
       </IconButton>
-      <IconButton onClick={() => deauthorizeSession(s.id)} color={ColorKeys.Danger} alt="Log out">
+      <IconButton onClick={() => deauthorizeSession(s.id)} color={ColorKeys.Danger} alt={t("settings.logout.button.single")}>
         <LogOut size={20}/>
       </IconButton>
     </div>
 
     <span class="id">
-      ID: {s.id}
+      {t("session.id.inline", { values: { id: s.id } })}
     </span>
   </div>
 {/snippet}

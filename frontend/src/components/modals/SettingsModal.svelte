@@ -94,7 +94,7 @@
     [
       { name: t("settings.account.title"), value: "account", icon: User },
       { name: t("settings.appearance.title"), value: "appearance", icon: Palette },
-      { name: t("settings.developer.title"), value: "developer", icon: Code }
+      { name: t("settings.dev.title"), value: "developer", icon: Code }
     ],
     [
       { name: t("settings.users.title"), value: "users", icon: Users },
@@ -110,9 +110,9 @@
   ]);
   const categories: Option<string>[][] = $derived([
     [
-      { name: t("settigs.account.title"), value: "account", icon: User },
-      { name: t("settigs.appearance.title"), value: "appearance", icon: Palette },
-      { name: t("settigs.developer.title"), value: "developer", icon: Code }
+      { name: t("settings.account.title"), value: "account", icon: User },
+      { name: t("settings.appearance.title"), value: "appearance", icon: Palette },
+      { name: t("settings.dev.title"), value: "developer", icon: Code }
     ],
     [
       { name: t("settings.danger.title"), value: "danger", icon: TriangleAlert, color: ColorKeys.Danger },
@@ -137,7 +137,7 @@
   ]);
   let defaultLanguageName = t(`language.${await getDefaultLanguage()}`);
   let defaultLanguageOption = $derived({ name: t("language.default", { values: { default: defaultLanguageName} }), value: "default" });
-  let languages = $derived<Option<string>[]>([defaultLanguageOption].concat(locales.map(x => ({ name: t(`language.${x}`), value: x}))));
+  let languages = $derived<Option<string>[]>([defaultLanguageOption].concat(locales.map(x => ({ name: t(`language.${x}`), value: x}))).toSorted((a, b) => a.name.localeCompare(b.name)));
 
   function formatInstalledFile(icon: any = null): (rawName: string) => Option<string> {
     return (rawName: string): Option<string> => {
@@ -239,8 +239,8 @@
   async function deleteAccount(id: string = "self") {
     const ownAccount = id === "self" || id === users.currentUser;
     await showConfirmation(
-      `${ownAccount ? t("settings.account.delete.confirmation") : t("settings.users.delete.confirmation")}\n${t("confirmation.irreversible")}`,
-      ownAccount ? t("settings.account.delete.details") : t("settings.users.delete.details"),
+      `${ownAccount ? t("settings.account.delete.confirm") : t("settings.users.confirm.delete")}\n${t("confirmation.irreversible")}`,
+      ownAccount ? t("settings.account.delete.details") : t("settings.users.info.delete"),
     ).then(async () => {
       accountDeletionReauthenticationRequired = true;
       const password = await new Promise<string>(resolve => setTimeout(async () => resolve(await passwordPrompt().catch(() => "")), 0));
@@ -249,9 +249,9 @@
       const body = new FormData();
       body.append("password", password);
       await fetchResponse(`/api/users/${id}`, { method: "DELETE", body: body }).then(() => {
-        queueNotification(ColorKeys.Success, ownAccount ? t("settings.account.delete.success") : t("settings.users.delete.success"));
+        queueNotification(ColorKeys.Success, ownAccount ? t("settings.account.delete.success") : t("settings.users.success.delete"));
       }).catch((err) => {
-        queueNotification(ColorKeys.Danger, t(ownAccount ? "settings.account.delete.error" : "settings.users.delete.error", { values: { msg: err.message}}));
+        queueNotification(ColorKeys.Danger, t(ownAccount ? "settings.account.delete.error" : "settings.users.error.delete", { values: { msg: err.message}}));
         throw err;
       });
       if (ownAccount) clearSession();
@@ -317,7 +317,7 @@
         refetchProfilePicture();
         if (settings.userData.admin) users.fetchAll();
       }).catch((err) => {
-        queueNotification(ColorKeys.Danger, t("error.message.userdata.save", { values: { msg: err.message }}));
+        queueNotification(ColorKeys.Danger, t("settings.error.save.profile", { values: { msg: err.message }}));
         saving = false;
         throw err;
       });
@@ -339,7 +339,7 @@
       }).then(async () => {
         userSettingsSnapshot = await deepCopy(settings.userSettings);
       }).catch((err) => {
-        queueNotification(ColorKeys.Danger, t("error.message.usersettings.save", { values: { msg: err.message }}));
+        queueNotification(ColorKeys.Danger, t("settings.error.save.preferences", { values: { msg: err.message }}));
         saving = false;
         throw err;
       });

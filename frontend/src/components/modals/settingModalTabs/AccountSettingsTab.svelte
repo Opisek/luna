@@ -209,14 +209,14 @@
 
 <TextInput
   name="username"
-  placeholder={t("settings.account.username")}
+  placeholder={t("user.username")}
   bind:value={settings.userData.username}
   validation={isValidUsername}
   bind:validity={usernameValidity}
 />
 <TextInput
   name="email"
-  placeholder={t("settings.account.email")}
+  placeholder={t("user.email")}
   bind:value={settings.userData.email}
   validation={isValidEmail}
   bind:validity={emailValidity}
@@ -293,5 +293,5 @@
   {t("error.unavailable")}
 {/if}
 {#if settings.userData.id && settings.userSettings[UserSettingKeys.DebugMode]}
-  <TextInput value={settings.userData.id} name="id" placeholder={t("user.id")} editable={false} />
+  <TextInput value={settings.userData.id} name="id" placeholder={t("user.id.display")} editable={false} />
 {/if}

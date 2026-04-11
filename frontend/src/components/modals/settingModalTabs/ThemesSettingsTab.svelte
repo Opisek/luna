@@ -9,6 +9,7 @@
   import type { Option } from "../../../types/options";
   import { queueNotification } from "../../../lib/client/notifications";
   import { ColorKeys } from "../../../types/colors";
+  import { t } from "@sveltia/i18n";
 
   interface Props {
     lightThemes: Option<string>[];
@@ -32,7 +33,7 @@
     if (uploadingThemeFile) return;
     
     if (themeFile == null) {
-      queueNotification(ColorKeys.Danger, "Missing or corrupted theme file");
+      queueNotification(ColorKeys.Danger, t("settings.themes.error.file"));
       return;
     }
 
@@ -41,7 +42,7 @@
     const themeFiles = lightThemes.concat(darkThemes).map(x => x.value.split("/").pop() + ".css");
 
     if (themeFiles.includes(themeFile[0].name)) {
-      const confirmed = await showConfirmation("A theme with the same file name already exists.\nContinuing will overwrite that theme.\nAre you sure you want to proceed?").then(() => true).catch(() => false);
+      const confirmed = await showConfirmation(t("settings.themes.confirm.overwrite")).then(() => true).catch(() => false);
       if (!confirmed) {
         uploadingThemeFile = false;
         return;
@@ -56,27 +57,27 @@
       body: formData,
     }).then(async () => {
       fetchThemes();
-      queueNotification(ColorKeys.Success, "Theme installed successfully");
+      queueNotification(ColorKeys.Success, t("settings.themes.success.install"));
       themeFile = null;
     }).catch((err) => {
-      queueNotification(ColorKeys.Danger, "Failed to install theme: " + err);
+      queueNotification(ColorKeys.Danger, t("settings.themes.error.install", { values: { msg: err.message } }));
     });
 
     uploadingThemeFile = false;
   }
 
   async function deleteTheme(theme: string, name: string, isLightTheme: boolean) {
-    const confirmed = await showConfirmation(`Are you sure you want to uninstall the theme "${name}"?\nThis action is irreversible.`).then(() => true).catch(() => false);
+    const confirmed = await showConfirmation(`${t("settings.themes.confirm.uninstall", { values: { name: name } })}\n${t("confirmation.irreversible")}`).then(() => true).catch(() => false);
     if (!confirmed) return;
 
     await fetchResponse(`/installed/themes/${isLightTheme ? "light" : "dark"}/${theme}`, {
       method: "DELETE",
     }).then(async () => {
       fetchThemes();
-      queueNotification(ColorKeys.Success, "Theme uninstalled successfully");
+      queueNotification(ColorKeys.Success, t("settings.themes.success.uninstall"));
       themeFile = null;
     }).catch((err) => {
-      queueNotification(ColorKeys.Danger, "Failed to uninstall theme: " + err);
+      queueNotification(ColorKeys.Danger, t("settings.themes.error.uninstall", { values: { msg: err.message } }));
     });
   }
 </script>
@@ -123,7 +124,7 @@
 
 <FileUpload
   name="theme_file"
-  placeholder="Install a Theme"
+  placeholder={t("settings.themes.new")}
   bind:files={themeFile}
   bind:fileId={themeFileId}
   accept={".css"}
@@ -133,13 +134,13 @@
     {#if uploadingThemeFile}
       <Spinner/> <!-- TODO: Spinner does not have the same height as text -->
     {:else}
-      Upload Theme
+      {t("settings.themes.upload")}
     {/if}
   </Button>
 {/if}
 <List
-  label="Installed Themes"
-  info={"Looking to change your current theme? Head to the \"Appearance\" tab."}
+  label={t("settings.themes.list")}
+  info={t("settings.themes.current")}
   items={lightThemes.concat(darkThemes)}
   id={item => item.value}
   template={themeTemplate}
@@ -161,10 +162,10 @@
     </span>
 
     <div class="buttons">
-      <IconButton onClick={() => { downloadFileToClient(`/themes/${isLightTheme ? "light" : "dark"}/${theme.value}.css`); }} color={ColorKeys.Accent} alt="Download">
+      <IconButton onClick={() => { downloadFileToClient(`/themes/${isLightTheme ? "light" : "dark"}/${theme.value}.css`); }} color={ColorKeys.Accent} alt={t("button.download")}>
         <Download size={20}/>
       </IconButton>
-      <IconButton onClick={async () => deleteTheme(theme.value, theme.name, isLightTheme)} color={ColorKeys.Danger} alt="Delete">
+      <IconButton onClick={async () => deleteTheme(theme.value, theme.name, isLightTheme)} color={ColorKeys.Danger} alt={t("button.delete")}>
         <Trash2 size={20}/>
       </IconButton>
     </div>

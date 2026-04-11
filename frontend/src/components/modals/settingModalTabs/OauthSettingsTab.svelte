@@ -9,6 +9,7 @@
   import type { Settings } from "../../../lib/client/data/settings.svelte";
   import type { OauthClients } from "../../../lib/client/data/oauth.svelte";
   import OauthClientModal from "../OauthClientModal.svelte";
+  import { t } from "@sveltia/i18n";
 
   interface Props {
     settings: Settings;
@@ -82,11 +83,11 @@
   }
 </style>
 
-<Button color={ColorKeys.Accent} onClick={showOauthClientModal}>Register an OAuth 2.0 Client</Button>
+<Button color={ColorKeys.Accent} onClick={showOauthClientModal}>{t("settings.oauth.new")}</Button>
 
 {#if clients.clients.length !== 0}
   <List
-    label="Registered OAuth 2.0 Client"
+    label={t("settings.oauth.list")}
     items={clients.clients}
     id={item => item.id}
     template={clientTemplate}
@@ -104,16 +105,16 @@
     </span>
 
     <div class="buttons">
-      <IconButton onClick={async () => showOauthClientModal(client, true)} alt="Edit">
+      <IconButton onClick={async () => showOauthClientModal(client, true)} alt={t("button.edit")}>
         <Pencil size={20}/>
       </IconButton>
-      <IconButton onClick={async () => deleteClient(client.id)} color={ColorKeys.Danger} alt="Delete">
+      <IconButton onClick={async () => deleteClient(client.id)} color={ColorKeys.Danger} alt={t("button.delete")}>
         <Trash2 size={20}/>
       </IconButton>
     </div>
 
     <span class="internalId">
-      ID: {client.id}
+      {t("auth.oauth.client.id.inline", { values: { id: client.id } })}
     </span>
   </div>
 {/snippet}

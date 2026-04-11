@@ -28,9 +28,9 @@
     {/if}
 
     <Horizontal position="right">
-      <Button href="/">{t("navigation.home")}</Button>
+      <Button href="/">{t("nav.home")}</Button>
       {#if browser && window.history.length > 1}
-        <Button onClick={() => history.back()}>{t("navigation.back")}</Button>
+        <Button onClick={() => history.back()}>{t("nav.back")}</Button>
       {/if}
     </Horizontal>
   </Box>

@@ -1,3 +1,5 @@
+import { t } from "@sveltia/i18n";
+
 const characterRegex = /^[a-zA-Z0-9]*$/;
 // RFC 1738 3.3, RFC 1034 3.5, RFC 3986 3 
 // IPvFuture is not included
@@ -29,65 +31,65 @@ export const alwaysValidFile: FileValidation = () => Promise.resolve(valid);
 
 export const isValidUsername: InputValidation = async (username) => {
   if (username.length < 3)
-    return invalidResponse("Username must be at least 3 characters long.");
+    return invalidResponse(t("validation.username.short", { values: { len: 3 } }));
   if (username.length > 25)
-    return invalidResponse("Username must be at most 25 characters long.");
+    return invalidResponse(t("validation.username.long", { values: { len: 25 } }));
   if (!characterRegex.test(username))
-    return invalidResponse("Username must only contain letters and numbers.");
+    return invalidResponse(t("validation.username.characters"));
   return valid;
 }
 
 export const isValidPassword: InputValidation = async (password) => {
   if (password.length < 8)
-    return invalidResponse("Password must be at least 8 characters long.");
+    return invalidResponse(t("validation.password.short", { values: { len: 8 } }));
   if (password.length > 1000)
-    return invalidResponse("Password must be at most 1000 characters long.");
+    return invalidResponse(t("validation.password.long", { values: { len: 1000 } }));
   return valid;
 }
 
 export const isValidRepeatPassword = (repeatPassword: string): InputValidation => {
   return async (password) => {
     if (password !== repeatPassword)
-      return invalidResponse("Passwords do not match.");
+      return invalidResponse(t("validation.password.match"));
     return valid;
   }
 }
 
 export const isValidUrl: InputValidation = async (url) => {
   if (!url.startsWith("http://") && !url.startsWith("https://"))
-    return invalidResponse("URL must start with \"http://\" or \"https://\".");
+    return invalidResponse(t("validation.url.proto"));
   if (!urlRegex.test(url))
-    return invalidResponse("The URL contains illegal characters or is invalid.");
+    return invalidResponse(t("validation.url.invalid"));
   return valid;
 }
 
 export const isValidEmail: InputValidation = async (email) => {
   if (!emailRegex.test(email))
-    return invalidResponse("Invalid email address");
+    return invalidResponse(t("validation.email.invalid"));
   return valid;
 }
 
 export const isValidPath: InputValidation = async (path) => {
   if (path.length < 1)
-    return invalidResponse("Path must be at least 1 character long.");
+    return invalidResponse(t("validation.path.empty"));
   return valid;
 }
 
 export const isValidInviteCode: InputValidation = async (inviteCode) => {
   if (!inviteCodeRegex.test(inviteCode))
-    return invalidResponse("Invalid invite code.");
+    return invalidResponse(t("validation.invite.invalid"));
   return valid;
 }
 
 export const isValidFile: FileValidation = async (files) => {
   if (files.length === 0)
-    return invalidResponse("No files selected.");
+    return invalidResponse(t("validation.file.empty"));
   if (files.length > 1)
-    return invalidResponse("Too many files selected.");
+    return invalidResponse(t("validation.file.multiple"));
   if (files.item(0) === null)
-    return invalidResponse("File is null.");
+    return invalidResponse(t("validation.file.null"));
   if ((files.item(0) as File).size > 50000000)
-    return invalidResponse("File must not be larger than 50MB.");
+    return invalidResponse(t("validation.file.size", { values: { size: "50MB" } }));
   return valid;
 }
 
@@ -99,12 +101,12 @@ export const isValidIcalFile: FileValidation = async (files) => {
   const file = files.item(0) as File;
 
   if (file.type !== "text/calendar")
-    return invalidResponse("File must be of type text/calendar.");
+    return invalidResponse(t("validation.file.type", { values: { type: "text/calendar." } }));
   
   const content = await file.text();
 
   if (!content.includes("BEGIN:VCALENDAR") || !content.includes("END:VCALENDAR"))
-    return invalidResponse("Invalid file format");
+    return invalidResponse(t("validation.file.invalid"));
 
   return valid;
 }

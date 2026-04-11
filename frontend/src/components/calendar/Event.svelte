@@ -5,12 +5,12 @@
   import { passIfEnter } from "$lib/common/inputs";
 
   import { getContext } from "svelte";
-  import type { Writable } from "svelte/store";
   import { NoOp } from "$lib/client/placeholders";
   import ColorCircle from "../misc/ColorCircle.svelte";
   import { getSettings } from "$lib/client/data/settings.svelte";
   import { UserSettingKeys } from "../../types/settings";
   import { getDayIndex } from "$lib/common/date";
+  import { time } from "@sveltia/i18n";
 
   interface Props {
     visible?: boolean;
@@ -223,7 +223,7 @@
     {/if}
     {#if !event.date.allDay && event.date.start >= date}
       <span class="time">
-        {event.date.start.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
+        {time(event.date.start, { hour: "2-digit", minute: "2-digit" })}
       </span>
     {/if}
     <span class="name">

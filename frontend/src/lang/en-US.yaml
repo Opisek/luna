@@ -4,7 +4,9 @@ branding:
 
 language:
   default: "Default ({$default})"
-  en-US: "English"
+  en-US: "English (US)"
+  en-DE: "English (EU)"
+  en-GB: "English (UK)"
   de-DE: "Deutsch"
   pl-PL: "polski"
 
@@ -70,7 +72,18 @@ confirmation:
     prompty: "To perform this action, you must authenticate yourself with your password."
   
 login:
+  title:
+    login: "Login"
+    register: "Register"
   password: "Password"
+  repeat: "Repeat password"
+  invite: "Invite code"
+  remember: "Remember me"
+  link:
+    login: "Already got an account?"
+    register: "No account yet?"
+    recover: "Forgot password?"
+  closed: "To register, please input an invite code.\nPlease contact the administrator if you don't have one."
 
 form:
   desc: "Description"
@@ -114,9 +127,10 @@ primitives:
   calendar: "Calendar"
   event: "Event"
 
-navigation:
+nav:
   home: "Home"
   back: "Go Back"
+  continue: "Continue"
 
 error:
   code: "Error {$code}"
@@ -134,16 +148,22 @@ fonts:
   error:
     fetch: "Failed to fetch fonts: {$msg}"
 
-account:
-  error:
-    delete:
-    data:
-      save: "Failed to save user data: {$msg}"
-    settings:
-      save: "Failed to save user settings: {$msg}"
-
 user:
-  id: "User ID"
+  username: "Username"
+  email: "E-Mail Address"
+  id:
+    display: "User ID"
+    inline: "ID: {$id}"
+  creation: "Created on {$date :date length=short} at {$date :time precision=minute}"
+  action:
+    enable: "Enable account"
+    disable: "Disable account"
+  status:
+    admin: "Administrator"
+    disabled: "Account disabled"
+    verified: "Verified e-Mail address"
+  pfp:
+    alt: "Profile picture of user {$name}"
 
 invite:
   title:
@@ -161,11 +181,24 @@ invite:
     label: "Invite ID"
     inline: "ID: {$id}"
   date:
-    creation: "Creation Date"
-    expiry: "Expiry Date"
+    creation:
+      display: "Creation Date"
+      inline: "Created on {$date :date length=short} at {$date :time precision=minute} by {$name}"
+    expiry:
+      display: "Expiry Date"
+      today: |
+        .input {$hours :integer}
+        .input {$minutes :integer}
+      
+        .match $hours $minutes
+          0 1 {{{$minutes} minute left}}
+          0 * {{{$minutes} minutes left}}
+          1 * {{{$hours} hour left}}
+          * * {{{$hours} hours left}}
+      elsewhen: "Expires on {$date :date length=short} at {$date :time precision=minute}"
   expiry:
     display: "Invite Expiration"
-    presets:
+    preset:
       1h: "1 Hour"
       3h: "3 Hours"
       1d: "1 Day"
@@ -194,7 +227,9 @@ session:
   ip:
     initial: "Initial IP Address"
     latest: "Latest IP Address"
-  id: "Session ID"
+  id:
+    display: "Session ID"
+    inline: "ID: {:id}"
   permissions:
     subtitle: "Permissions"
   error:
@@ -205,6 +240,14 @@ session:
     delete: "Could not delete API token {$name}: {$msg}"
     password: "You must provide your password to create an API token."
   clipboard: "API token copied to clipboard"
+  current: "Current session"
+  location:
+    host: "Local host"
+    lan: "Local network"
+    unknown: "Unknown location"
+  active:
+    today: "Last active {$date :time precision=second}"
+    elsewhen: "Last active {$date :date length=short} at {$date :time precision=second}"
 
 file:
   display: "File"
@@ -319,7 +362,7 @@ calendar:
         .input {$count :integer}
         .match $count
           0 {{No events}}
-          one {{{$count} event}}
+          1 {{{$count} event}}
           * {{{$count} events}}
       more: |
         .input {$count :integer}
@@ -433,30 +476,111 @@ settings:
     password:
       new: "New Password"
       confirm: "Confirm New Password"
-    email: "E-Mail Address"
-    username: "Username"
     delete:
-      confirmation: "Are you sure you want to delete your account?"
+      confirm: "Are you sure you want to delete your account?"
       details: "All your data will be deleted."
       error: "Could not delete your account: {$msg}"
       success: "Successfully deleted your account."
   appearance:
     title: "Appearance"
-  developer:
+    calendar:
+      subtitle: "Calendar appearance"
+      fill:
+        allDay: "Fill all-day events"
+        nonAllDay: "Fill non-all-day events"
+      small: "Display small calendar"
+      dynamic:
+        main: "Dynamic calendar row count"
+        small: "Dynamic small calendar row count"
+      week:
+        numbers: "Display week numbers"
+        first: "First day of week"
+    site:
+      subtitle: "Site appearance"
+      language: "Language"
+      frosted: "Translucent windows"
+      rounded: "Rounded corners"
+      buttons: "Use textual buttons"
+      scaling: "Scaling"
+      theme:
+        light: "Light theme"
+        dark: "Dark theme"
+        sync: "Synchronize theme with system"
+      font:
+        text: "Text font"
+        mono: "Monospaced font"
+    animations:
+      subtitle: "Animations"
+      duration:
+        display: "Animation duration"
+        info: "To disable animations, set the animation duration to 0%."
+      calendar:
+        main: "Animate calendar"
+        small: "Animate small calendar"
+      month: "Animate month selection"
+  dev:
     title: "Developer"
+    deauthorize: "Deauthorize"
+    ids: "Display IDs"
+    api: "API Tokens"
   users:
     title: "Users"
-    delete:
-      confirmation: "Are you sure you want to delete this account?"
-      details: "All user data will be deleted."
-      error: "Could not delete this account: {$msg}"
-      success: "Successfully deleted the user's account."
+    list:
+      users: "Registered users"
+      invites: "Active invites"
+    action:
+      invite:
+        new: "Invite a user"
+        delete: "Delete all invites"
+    confirm:
+      delete: "Are you sure you want to delete this account?"
+      enable: "Are you sure you want to enable this account?\nThe user will be able log in again."
+      disable: "Are you sure you want to disable this account?\nThe user will no longer be able to log in."
+    info:
+      preserve: "The user's account will remain intact"
+      delete: "All user data will be deleted"
+    success:
+      delete: "Successfully deleted the user's account."
+    error:
+      enable: "Could not enable account: {$msg}"
+      disable: "Could not disable acount: {$msg}"
+      delete: "Could not delete account: {$msg}"
   themes:
     title: "Themes"
+    list: "Installed themes"
+    current: "Looking to change your current theme? Head to the \"Appearance\" tab."
+    new: "Install a theme"
+    upload: "Upload theme"
+    success:
+      install: "Theme installed successfully"
+      uninstall: "Theme uninstalled successfully"
+    error:
+      install: "Failed to install theme: {$msg}"
+      uninstall: "Failed to uninstall theme: {$msg}"
+      file: "Missing or corrupted font theme"
+    confirm:
+      uninstall: "Are you sure you want to uninstall the theme {$name}?"
+      overwrite: "A theme with the same file name already exists.\nContinuing will overwrite that the.\nAre you sure you want to proceed?"
   fonts:
     title: "Fonts"
+    list: "Installed fonts"
+    current: "Looking to change your current font? Head to the \"Appearance\" tab."
+    new: "Install a font"
+    upload: "Upload font"
+    success:
+      install: "Font installed successfully"
+      uninstall: "Font uninstalled successfully"
+    error:
+      install: "Failed to install font: {$msg}"
+      uninstall: "Failed to uninstall font: {$msg}"
+      file: "Missing or corrupted font file"
+    confirm:
+      uninstall: "Are you sure you want to uninstall the font {$name}?"
+      overwrite: "A font with the same file name already exists.\nContinuing will overwrite that font.\nAre you sure you want to proceed?"
   oauth:
     title: "OAuth 2.0"
+    new: "Register an OAuth 2.0 client"
+    list: "Registered OAuth 2.0 clients"
   admin:
     title: "Administrative"
     confirm:
@@ -495,6 +619,86 @@ settings:
     delete: "Delete my account"
   logout:
     title: "Logout"
+    button:
+      current: "Log out of my account"
+      all: "Log out from all devices"
+      single: "Log out"
+    confirm:
+      current: "Are you sure you want to log out?"
+      all:
+        display: "Are you sure you want to deauthorize all sessions?\nThis will log you out of all your devices."
+        info: "Your API tokens will remain valid.\nTo deauthorize those, head to the \"Developer\" tab."
+    sessions:
+      display: "Active sessions"
+      info: "To see your API sessions, head to the \"Developer\" tab."
   error:
     save:
       global: "Failed to save global settings: {$msg}"
+      preferences: "Failed to save user settings: {$msg}"
+      profile: "Failed to save user data: {$msg}"
+
+validation:
+  username:
+    short: "Username must be at least {$len :integer} characters long."
+    long: "Username must be at most {$len :integer} characters long."
+    characters: "Username must only contain letters and numbers."
+  password:
+    short: "Password must be at least {$len :integer} characters long."
+    long: "Password must be at most {$len :integer} characters long."
+    match: "The passwords do not match."
+  url:
+    proto: "URL must start with \"http://\" or \"https://\"."
+    invalid: "The URL contains illegal characters or is invalid."
+  email:
+    invalid: "The E-Mail address is invalid."
+  path:
+    empty: "Path must not be empty."
+  invite:
+    invalid: "The invite code is invalid."
+  file:
+    empty: "No files selected"
+    multiple: "Too many files selected"
+    null: "File is null"
+    size: "File must not be larger than {$size}."
+    type: "File must be of type {$type}"
+    invalid: "Invalid file format"
+  auth:
+    unknown: "Unsupported authentication type"
+  source:
+    unknown: "Unsupported source type"
+    location:
+      unknown: "Unsupported iCal file location"
+
+  repository:
+    error:
+      event:
+        fetch: "Could not fetch events from {$name}: {$msg}"
+      calendar:
+        fetch: "Could net fetch calendars from {$name}: {$msg}"
+      reorder:
+        source: "Could not reorder cached source"
+        calendar: "Could not reorder cached calendar"
+    info:
+      hidden: "Event {$name} was added to a hidden calendar."
+
+perms:
+  read_events: "Read events"
+  add_events: "Create events"
+  edit_events: "Edit events"
+  delete_events: "Delete events"
+  read_calendars: "Read calendars"
+  add_calendars: "Create calendars"
+  edit_calendars: "Edit calendars"
+  delete_calendars: "Delete calendars"
+  read_sources: "Read sources"
+  add_sources: "Add sources"
+  edit_sources: "Edit sources"
+  delete_sources: "Delete sources"
+  manage_invites: "Manage registration invites"
+  manage_users: "Manage users"
+  manage_oauth_clients: "Manage OAuth 2.0 clients"
+  manage_global_settings: "Manage global settings"
+  manage_user_settings: "Manage user preferences"
+  manage_sessions: "Manage sessions"
+  manage_resources: "Manage fonts and themes"
+  administrative: "Administrative"

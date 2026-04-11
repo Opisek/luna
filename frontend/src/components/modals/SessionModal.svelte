@@ -123,13 +123,13 @@
     <TextInput value={session.initial_ip_address} name="initial_ip_address" placeholder={t("session.ip.initial")} editable={false} />
     <TextInput value={session.last_ip_address} name="last_ip_address" placeholder={t("session.ip.latest")} editable={false} />
     {#if session.id && settings.userSettings[UserSettingKeys.DebugMode]}
-      <TextInput value={session.id} name="id" placeholder={t("session.id")} editable={false} />
+      <TextInput value={session.id} name="id" placeholder={t("session.id.display")} editable={false} />
     {/if}
   {/if}
   {#if session.is_api}
     <SectionDivider title={t("session.permissions.subtitle")}/>
     {#each Object.values(PermissionKeys) as permission}
-      {@const permissionName = permission.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+      {@const permissionName = t(`perms.${permission}`)}
       <ToggleInput
         name={permission} 
         description={permissionName}

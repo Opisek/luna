@@ -13,6 +13,7 @@
   import type { Settings } from "../../../lib/client/data/settings.svelte";
   import RegistrationInviteModal from "../RegistrationInviteModal.svelte";
   import { NoOp } from "../../../lib/client/placeholders";
+  import { t } from "@sveltia/i18n";
 
   interface Props {
     today: Date;
@@ -47,17 +48,17 @@
   }
 
   async function disableAccount(id: string) {
-    await showConfirmation("Are you sure you want to disable this account?\nThe user will no longer be able to log in.\nThe user's account will remain intact.").then(async () => {
+    await showConfirmation(t("settings.users.confirm.disable"), t("settings.users.info.preserve")).then(async () => {
       users.disableUser(id).catch((err) => {
-        queueNotification(ColorKeys.Danger, `Could not disable user account: ${err.message}`)
+        queueNotification(ColorKeys.Danger, t("settings.users.error.disable", { values: { msg: err.message } }))
       })
     }).catch(NoOp);
   }
 
   async function enableAccount(id: string) {
-    await showConfirmation("Are you sure you want to enable this account?\nThe user will be able log in again.").then(async () => {
+    await showConfirmation(t("settings.users.confirm.enable")).then(async () => {
       users.enableUser(id).catch((err) => {
-        queueNotification(ColorKeys.Danger, `Could not enable user account: ${err.message}`)
+        queueNotification(ColorKeys.Danger, t("settings.users.error.enable", { values: { msg: err.message } }))
       })
     }).catch(NoOp);
   }
@@ -173,21 +174,21 @@
   } 
 </style>
 
-<Button color={ColorKeys.Accent} onClick={showRegistrationInviteModal}>Invite a user</Button>
+<Button color={ColorKeys.Accent} onClick={showRegistrationInviteModal}>{t("settings.users.action.invite.new")}</Button>
 
 {#if invites.activeInvites.length !== 0}
   <List
-    label="Active Invites"
+    label={t("settings.users.list.invites")}
     items={invites.activeInvites}
     id={item => item.id}
     template={inviteTemplate}
   />
 
-  <Button color={ColorKeys.Danger} onClick={deleteInvites}>Delete all invites</Button>
+  <Button color={ColorKeys.Danger} onClick={deleteInvites}>{t("settings.users.action.invite.delete")}</Button>
 {/if}
 
 <List
-  label="Registered Users"
+  label={t("settings.users.list.users")}
   items={users.users}
   id={item => item.id}
   template={userTemplate}
@@ -198,18 +199,14 @@
 
   {@const hoursRemaining = Math.floor((invite.expires_at.getTime() - today.getTime()) / (1000 * 60 * 60))}
   {@const minutesRemaining = Math.floor((invite.expires_at.getTime() - today.getTime()) / (1000 * 60)) % 60}
-  {@const daysRemaining = Math.floor((invite.expires_at.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))}
-
-  {@const expiresString = expiresToday ? `at ${invite.expires_at.toLocaleTimeString()}` : `${invite.expires_at.toLocaleDateString()} at ${invite.expires_at.toLocaleTimeString()}`}
-  {@const expiresDetailed = expiresToday ? ` (${hoursRemaining == 0 ? `${minutesRemaining} minutes left` : `${hoursRemaining} ${hoursRemaining == 1 ? "hour" : "hours"} left`})` : ""}
 
   <div class="invite" class:showId={settings.userSettings[UserSettingKeys.DebugMode]}>
     <span class="expiry">
-      Expires {expiresString}{expiresDetailed}
+      {t(`invite.date.expiry.${expiresToday ? "today" : "elsewhen"}`, { values: { date: invite.expires_at, hours: hoursRemaining, minutes: minutesRemaining } })}
     </span>
 
     <span class="details">
-      Created {invite.created_at.toLocaleDateString()} at {invite.created_at.toLocaleTimeString()} by {users.users.filter(x => x.id == invite.author)[0]?.username || invite.author}
+      {t("invite.date.creation.inline", { values: { date: invite.created_at, name: users.users.filter(x => x.id == invite.author)[0]?.username || invite.author } })}
       {#if invite.email != ""}
         •
         {invite.email}
@@ -217,16 +214,16 @@
     </span>
 
     <div class="buttons">
-      <IconButton onClick={async () => showRegistrationInviteModal(invite)} alt="Details">
+      <IconButton onClick={async () => showRegistrationInviteModal(invite)} alt={t("button.details")}>
         <Eye size={20}/>
       </IconButton>
-      <IconButton onClick={async () => deleteInvite(invite.id)} color={ColorKeys.Danger} alt="Delete">
+      <IconButton onClick={async () => deleteInvite(invite.id)} color={ColorKeys.Danger} alt={t("button.delete")}>
         <Trash2 size={20}/>
       </IconButton>
     </div>
 
     <span class="id">
-      ID: {invite.id}
+      {t("invite.id.inline", { values: { id: invite.id } })}
     </span>
   </div>
 {/snippet}
@@ -238,7 +235,7 @@
     <div class="profilePicture">
       <Image
         src={u.profile_picture}
-        alt={`Profile picture of user ${u.username}`}
+        alt={t("user.pfp.alt", { values: { name: u.profile_picture } })}
         small={true}
       />
     </div>
@@ -250,7 +247,7 @@
           {#snippet icon()}
             <Shield size={12}/>
           {/snippet}
-          Administrator
+          {t("user.status.admin")}
         </Tooltip>
       {/if}
       {#if u.verified}
@@ -258,7 +255,7 @@
           {#snippet icon()}
             <BadgeCheck size={12}/>
           {/snippet}
-          Verified E-Mail Address
+          {t("user.status.verified")}
         </Tooltip>
       {/if}
       {#if !u.enabled}
@@ -266,7 +263,7 @@
           {#snippet icon()}
             <Ban size={12}/>
           {/snippet}
-          Account disabled
+          {t("user.status.disabled")}
         </Tooltip>
       {/if}
     </span>
@@ -276,12 +273,12 @@
     </span>
 
     <span class="date">
-      Created {u.created_at.toLocaleDateString()} at {u.created_at.toLocaleTimeString()}
+      {t("user.creation", { values: { date: u.created_at } })}
     </span>
 
     <div class="buttons">
       {#if !u.admin}
-        <IconButton onClick={async () => { u.enabled ? disableAccount(u.id) : enableAccount(u.id) }} alt={ u.enabled ? "Disable account" : "Enable account"}>
+        <IconButton onClick={async () => { u.enabled ? disableAccount(u.id) : enableAccount(u.id) }} alt={ u.enabled ? t("user.action.disable") : t("user.action.enable")}>
           {#if u.enabled}
             <UserRoundX size={20}/>
           {:else}
@@ -290,14 +287,14 @@
         </IconButton>
       {/if}
       {#if !isActive}
-        <IconButton onClick={async () => deleteAccount(u.id)} color={ColorKeys.Danger} alt="Delete">
+        <IconButton onClick={async () => deleteAccount(u.id)} color={ColorKeys.Danger} alt={t("button.delete")}>
           <Trash2 size={20}/>
         </IconButton>
       {/if}
     </div>
 
     <span class="id">
-      ID: {u.id}
+      {t("user.id.inline", { values: { id: u.id } })}
     </span>
   </div>
 {/snippet}
