@@ -294,7 +294,7 @@
     bind:this={optionsWrapper}
     popover="manual"
   >
-    {#each options as option}
+    {#each options as option (option.value)}
       <button
         class="option" 
         onclick={() => optionClick(option)}

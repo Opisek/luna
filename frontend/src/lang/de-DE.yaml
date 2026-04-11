@@ -475,9 +475,9 @@ settings:
       error: "Ihr Konto konnte nicht gelöscht werden: {$msg}"
       success: "Konto erfolgreich gelöscht."
   appearance:
-    title: "Aussehen"
+    title: "Darstellung"
     calendar:
-      subtitle: "Kalendaraussehen"
+      subtitle: "Kalendardarstellung"
       fill:
         allDay: "Ganztägige Ereignisse ausfüllen"
         nonAllDay: "Nicht-ganztägige Ereignisse ausfüllen"
@@ -489,7 +489,7 @@ settings:
         numbers: "Wochennummer anzeigen"
         first: "Erster Wochentag"
     site:
-      subtitle: "Seitenaussehen"
+      subtitle: "Seitendarstellung"
       language: "Sprache"
       frosted: "Durchscheinende Fenster"
       rounded: "Abgerundete Ecken"
@@ -543,7 +543,7 @@ settings:
   themes:
     title: "Farbstile"
     list: "Installierte Farbstile"
-    current: "Wenn Sie Ihr Farbstil ändern möchten, gehen Sie in die \"Aussehen\" Kategorie."
+    current: "Wenn Sie Ihr Farbstil ändern möchten, gehen Sie in die \"Darstellung\" Kategorie."
     new: "Farbstil installieren"
     upload: "Farbstil hochladen"
     success:
@@ -559,7 +559,7 @@ settings:
   fonts:
     title: "Schriftarten"
     list: "Installierte Schriftarten"
-    current: "Wenn Sie Ihre Schriftart ändern möchten, gehen Sie in die \"Aussehen\" Kategorie."
+    current: "Wenn Sie Ihre Schriftart ändern möchten, gehen Sie in die \"Darstellung\" Kategorie."
     new: "Schriftart installieren"
     upload: "Schriftart hochladen"
     success:

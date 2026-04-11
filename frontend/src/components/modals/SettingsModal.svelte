@@ -137,7 +137,7 @@
   ]);
   let defaultLanguageName = t(`language.${await getDefaultLanguage()}`);
   let defaultLanguageOption = $derived({ name: t("language.default", { values: { default: defaultLanguageName} }), value: "default" });
-  let languages = $derived<Option<string>[]>([defaultLanguageOption].concat(locales.map(x => ({ name: t(`language.${x}`), value: x}))).toSorted((a, b) => a.name.localeCompare(b.name)));
+  let languages = $derived<Option<string>[]>([defaultLanguageOption].concat(locales.map(x => ({ name: t(`language.${x}`), value: x})).toSorted((a, b) => a.name.localeCompare(b.name))));
 
   function formatInstalledFile(icon: any = null): (rawName: string) => Option<string> {
     return (rawName: string): Option<string> => {

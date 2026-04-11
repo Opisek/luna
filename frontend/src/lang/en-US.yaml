@@ -101,7 +101,7 @@ recurrence:
 
 date:
   title: "Pick Date"
-  allDay: "All Day"
+  allDay: "All-day"
   start: "Start"
   end: "End"
   date: "Date"
@@ -142,7 +142,7 @@ error:
 
 user:
   username: "Username"
-  email: "E-Mail Address"
+  email: "E-Mail address"
   id:
     display: "User ID"
     inline: "ID: {$id}"
@@ -190,13 +190,13 @@ invite:
           * * {{Expires at {$date :time precision=minute} ({$hours} hours left)}}
       elsewhen: "Expires on {$date :date length=short} at {$date :time precision=minute}"
   expiry:
-    display: "Invite Expiration"
+    display: "Invite expiration"
     preset:
-      1h: "1 Hour"
-      3h: "3 Hours"
-      1d: "1 Day"
-      3d: "3 Days"
-      7d: "7 Days"
+      1h: "1 hour"
+      3h: "3 hours"
+      1d: "1 day"
+      3d: "3 days"
+      7d: "7 days"
 
 session:
   title: 
@@ -266,7 +266,7 @@ google:
   display: "Google Calendar"
 
 auth:
-  type: "Authentication Type"
+  type: "Authentication type"
   none:
     display: "None"
   basic:
@@ -294,13 +294,13 @@ auth:
       title:
         create: "Register OAuth 2.0 Client"
         edit: "Edit OAuth 2.0 Client"
-      display: "Authorization Provider"
+      display: "Authorization provider"
       extid: "Client ID"
-      secret: "Client Secret"
+      secret: "Client secret"
       base: "Base URL"
       scope: "Scope"
       id:
-        label: "Internal Client ID"
+        label: "Internal client ID"
         inline: "ID: {$id}"
       confirm:
         delete: "Are you sure you want to delete the OAuth 2.0 client?"
@@ -480,7 +480,7 @@ settings:
   appearance:
     title: "Appearance"
     calendar:
-      subtitle: "Calendar appearance"
+      subtitle: "Calendar Appearance"
       fill:
         allDay: "Fill all-day events"
         nonAllDay: "Fill non-all-day events"
@@ -492,7 +492,7 @@ settings:
         numbers: "Display week numbers"
         first: "First day of the week"
     site:
-      subtitle: "Site appearance"
+      subtitle: "Site Appearance"
       language: "Language"
       frosted: "Translucent windows"
       rounded: "Rounded corners"

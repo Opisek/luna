@@ -170,7 +170,7 @@ invite:
   date:
     creation:
       display: "Data utworzenia"
-      inline: "Utworzono {$date :date length=short} o {$date :time precision=minute} by {$name}"
+      inline: "Utworzono {$date :date length=short} o {$date :time precision=minute} przez użytkownika {$name}"
     expiry:
       display: "Data wygasnięcia"
       today: |
@@ -481,7 +481,7 @@ settings:
   appearance:
     title: "Wygląd"
     calendar:
-      subtitle: "Wygląd kalendarza"
+      subtitle: "Wygląd Kalendarza"
       fill:
         allDay: "Wypełniaj wydarzenia całodniowe"
         nonAllDay: "Wypełniaj wydarzenia niecałodniowe"
@@ -493,7 +493,7 @@ settings:
         numbers: "Pokazuj numery tygodnia"
         first: "Pierwszy dzień tygodnia"
     site:
-      subtitle: "Wygląd strony"
+      subtitle: "Wygląd Strony"
       language: "Język"
       frosted: "Prześwitujące okna"
       rounded: "Zaokrąglone rogi"
