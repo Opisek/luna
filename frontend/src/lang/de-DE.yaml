@@ -294,7 +294,7 @@ auth:
       extid: "Client-ID"
       secret: "Client-Geheimnis"
       base: "Basis-URL"
-      scope: "Umfang"
+      scope: "Anwendungsbereich"
       id:
         label: "Interne Client-ID"
         inline: "ID: {$id}"

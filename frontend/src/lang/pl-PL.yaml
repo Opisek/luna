@@ -1,0 +1,703 @@
+branding:
+  name: "Luna"
+  copyright: "Copyright © 2026 Kacper Darowski (Opisek)\Na licencji TBD"
+
+language:
+  default: "Domyślny ({$default})"
+
+button:
+  settings: "Ustawienia"
+  add:
+    generic: "Dodaj"
+    event: "Stwórz wydarzenie"
+    calendar: "Stwórz kalendarz"
+    source: "Dodaj źródło"
+  theme:
+    dark: "Włącz tryb ciemny"
+    light: "Włącz tryb jasny"
+  credits: "Credits"
+  refresh: "Odśwież"
+  upload: "Wgraj"
+  download: "Pobierz"
+  clear: "Wyczyść"
+  submit: "Wyślij"
+  save: "Zapisz"
+  copy: "Skopiuj"
+  close: "Zamnkij"
+  month:
+    previous: "Poprzedni miesiąc"
+    next: "Następny miesiąc"
+  hide: "Ukryj"
+  show: "Pokaż"
+  confirm: "Zatwierdź"
+  cancel: "Anuluj"
+  reset: "Resetuj"
+  details: "Szczegóły"
+
+credits:
+  title: "Credits"
+  repository: "Repozytorium Luna"
+  stack:
+    display: "Tech Stack"
+    subtitle: "Tech Stack i Języki"
+  frontend:
+    display: "Frontend"
+    subtitle: "Biblioteki Frontend"
+  backend:
+    display: "Backend"
+    subtitle: "Biblioteki Backend"
+  themes:
+    display: "Motywy"
+    subtitle: "Palety kolorowe motywów"
+  fonts:
+    display: "Czcionki"
+    subtitle: "Domyślie zainstalowane czcionki"
+  source: "Źródło"
+
+notification:
+  hover: "Najedź myszką aby zobaczyć szczegóły"
+  success:
+    save: "Zapisono"
+    delete: "Usunięto"
+    clipboard: "Skopiowano do schowka"
+  error:
+    clipboard: "Nie udano się skopiować do schowka"
+
+confirmation:
+  title: "Potwierdzenie"
+  irreversible: "Ta akcja jest nieodwracalna."
+  password:
+    title: "Uwierzytelnienie"
+    prompt: "Aby wykonać tą akcję, należy ponownie wpisać hasło."
+  
+login:
+  title:
+    login: "Logowanie"
+    register: "Rejestracja"
+  password: "Hasło"
+  repeat: "Powtórz hasło"
+  invite: "Kod zaproszeniowy"
+  remember: "Zapamiętaj mnie"
+  link:
+    login: "Już mam konto"
+    register: "Jeszcze nie mam konta"
+    recover: "Zapomniałem hasło"
+  closed: "Do rejestracji wymagany jest kod zaproszeniowy.\nJeżeli takowego nie masz, skontaktuj się z administratorem."
+
+form:
+  desc: "Opis"
+  name: "Nazwa"
+  wizard:
+    location: "Skąd chcesz importować kalendarze?"
+  advanced: "Kliknij aby wejść w tryb zaawansowany"
+
+recurrence:
+  repeats: "Powtarzające się wydarzenie"
+
+date:
+  title: "Wybór Daty"
+  allDay: "Całodniowe"
+  start: "Początek"
+  end: "Koniec"
+  date: "Data"
+
+time:
+  title: "Wybór Czasu"
+  am: "Przed południem"
+  pm: "Po południu"
+  ampm: "Przed/po południem"
+
+color:
+  display: "Kolor"
+  code: "Kod koloru"
+  title: "Wybór Koloru"
+  preset:
+    default: "Kolor domyślny"
+    red: "Czerwony"
+    orange: "Pomarańczowy"
+    yellow: "Żółty"
+    green: "Zienoly"
+    blue: "Niebieski"
+    purple: "Fioletowy"
+    pink: "Różowy"
+
+nav:
+  home: "Home"
+  back: "Wróć"
+  continue: "Kontunuuj"
+
+error:
+  code: "Błąd {$code}"
+  generic: "Wystąpił bład."
+  unknown: "Nieznany błąd"
+  retry: "Proszę spróbować ponownie."
+  unavailable: "Funkcja jeszcze nie dostępna"
+  unimplemented: "Funkcja niezaimplementowana"
+  empty: "Nic do pokazania"
+
+user:
+  username: "Nazwa użytkownika"
+  email: "Adres E-Mail"
+  id:
+    display: "ID użytkownika"
+    inline: "ID: {$id}"
+  creation: "Zarejestrowano {$date :date length=short} o {$date :time precision=minute}"
+  action:
+    enable: "Włącz konto"
+    disable: "Wyłącz konto"
+  status:
+    admin: "Administrator"
+    disabled: "Konto wyłączone"
+    verified: "Zweryfikowany adres E-Mail"
+  pfp:
+    alt: "Zdjęcie profilowe użytkownika {$name}"
+
+invite:
+  title:
+    view: "Zaproszenie do Rejestracji"
+    create: "Zaproś Użytkownika"
+  confirm:
+    delete: "Czy na pewno chcesz usunąć to zaproszenie do rejestracji?"
+  error:
+    create: "Nie udało się utworzyć zaproszenia: {$msg}"
+    delete: "Nie udało się usunąć zaproszenia: {$msg}"
+  qr: "Kod QR"
+  code: "Kod zaproszeniowy"
+  link: "Link zaproszeniowy"
+  id:
+    label: "ID zaproszenia"
+    inline: "ID: {$id}"
+  date:
+    creation:
+      display: "Data utworzenia"
+      inline: "Utworzono {$date :date length=short} o {$date :time precision=minute} by {$name}"
+    expiry:
+      display: "Data wygasnięcia"
+      today: |
+        .input {$date}
+        .input {$hours :integer}
+        .input {$minutes :integer}
+
+        .match $hours $minutes
+          0 one {{Wygasa o {$date :time precision=minute} (jeszcze {$minutes} minuta)}}
+          0 few {{Wygasa o {$date :time precision=minute} (jeszcze {$minutes} minuty)}}
+          0 many {{Wygasa o {$date :time precision=minute} (jeszcze {$minutes} minut)}}
+          0 * {{Wygasa o {$date :time precision=minute} (jeszcze {$minutes} minuty)}}
+          one * {{Wygasa o {$date :time precision=minute} (jeszcze {$hours} godzina)}}
+          few * {{Wygasa o {$date :time precision=minute} (jeszcze {$hours} godziny)}}
+          many * {{Wygasa o {$date :time precision=minute} (jeszcze {$hours} godzin)}}
+          * * {{Wygasa o {$date :time precision=minute} (jeszcze {$hours} godziny)}}
+      elsewhen: "Wygasa {$date :date length=short} o {$date :time precision=minute}"
+  expiry:
+    display: "Czas ważności"
+    preset:
+      1h: "1 godzina"
+      3h: "3 godziny"
+      1d: "1 dzień"
+      3d: "3 dni"
+      7d: "7 dni"
+
+session:
+  title: 
+    view:
+      user: "Szczegóły Sesji"
+      api: "Klucz API"
+    create:
+      api: "Tworzenie Klucza API"
+    edit:
+      api: "Edytowanie Klucza API"
+  confirm:
+    delete:
+      user: "Czy na pewno chcesz unieważnić tą sesję?"
+      api: "Czy na pewno chcesz unieważnić klucz API o nazwie {$name}?"
+  agent:
+    user: "Agent użytkownika"
+    api: "Nazwa"
+  date:
+    creation: "Data utworzenia"
+    latest: "Ostatnia aktywność"
+  ip:
+    initial: "Inicjalny adres IP"
+    latest: "Ostatni adres IP"
+  id:
+    display: "ID sesji"
+    inline: "ID: {:id}"
+  permissions:
+    subtitle: "Uprawnienia"
+  error:
+    permissions: "Nie udało się pobrać zezwoleń klucza API o nazwie {$name}: {$msg}"
+    create: "Nie udało się utworzyć klucza API o nazwie {$name}: {$msg}"
+    clipboard: "Nie udało się skopiować klucza API {$name} do schowka: {$msg}"
+    edit: "Nie udało się edytować klucza API o nazwie {$name}: {$msg}"
+    delete: "Nie udało się usunąć klucza API o nazwie {$name}: {$msg}"
+    password: "Aby utworzyć klucz API należy podać hasło użytkownika."
+  clipboard: "Skopiowano klucz API do schowka"
+  current: "Obecna sesja"
+  location:
+    host: "Host lokalny"
+    lan: "Sieć lokalna"
+    unknown: "Nieznana lokalizacja"
+  active:
+    today: "Ostatnio aktywny o {$date :time precision=second}"
+    elsewhen: "Ostatnio aktywny {$date :date length=short} o {$date :time precision=second}"
+
+file:
+  display: "Plik"
+  id: "ID pliku"
+  error:
+    fetch: "Nie udało się pobrać pliku: {$msg}"
+
+caldav:
+  display: "CalDav"
+  url: "Adres CalDav"
+
+ical:
+  display: "iCal"
+  location:
+    remote: "Adres internetowy"
+    database: "Wgraj plik"
+    local: "Scieżka na serwerze"
+  url: "Adres iCal"
+  file: "Plik iCal"
+  path: "Scieżka iCal"
+
+google:
+  display: "Kalendarz Google"
+
+auth:
+  type: "Sposób Uwierzytelniania"
+  none:
+    display: "Żaden"
+  basic:
+    display: "Hasło"
+    username: "Nazwa użytkownika"
+    password: "Hasło"
+  bearer:
+    display: "Klucz"
+    token: "Token Klucz"
+  oauth:
+    display: "OAuth 2.0"
+    different: "Wybierz inne konto"
+    abort: "Uwierzytelnianie anulowane"
+    success: "Pomyślnie zalogowano do {$client}"
+    google:
+      unconfigured: "Administrator tej instancji Luny jeszcze nie skonfigurował integracji z kalendarzem Google."
+    tokens:
+      title: "Wybierz Konto"
+      list: "Autoryzowane konta"
+      id: "ID: {$id}"
+      use: "Użyj konta"
+      exists: "Już jesteś zalogowany do {$client}.\nMożesz użyć jednego z następujących kont lub zalogować się do kolejnego."
+      new: "Zaloguj się do innego konta"
+    client:
+      title:
+        create: "Zarejestrój Klienta OAuth 2.0"
+        edit: "Edytuj Klienta OAuth 2.0"
+      display: "Serwir autoryzacyjny"
+      extid: "ID klienta"
+      secret: "Klucz klienta"
+      base: "Adres bazowy"
+      scope: "Uprawnienia"
+      id:
+        label: "Wewnętrzne ID klienta"
+        inline: "ID: {$id}"
+      confirm:
+        delete: "Czy na pewno chcesz usunąć tego klienta OAuth 2.0?"
+      error:
+        create: "Nie udało się zarejestrować klienta OAuth 2.0 o nazwie {$name}: {$msg}"
+        edit: "Nie udało się edytować klienta OAuth 2.0 o nazwie {$name}: {$msg}"
+        delete: "Nie udało się usunąć klienta OAuth 2.0 o nazwie {$name}: {$msg}"
+        details: "Nie udało się pobrać klienta OAuth 2.0 o nazwie {$name}: {$msg}"
+
+source:
+  display: "Źródło"
+  id: "ID źródła"
+  title:
+    view: "Źródło"
+    create: "Dodawanie Źródła"
+    wizard: "Kreator Źródła"
+    edit: "Edytowanie Źródła"
+  confirm:
+    delete: "Czy na pewno chcesz usunąć źródło o nazwie {$name}?"
+  error:
+    create: "Nie udało się dodać utworzyć źródła o nazwie {$name}: {$msg}"
+    edit: "Nie udało się dodać edytować źródła o nazwie {$name}: {$msg}"
+    delete: "Nie udało się dodać usunąć źródła o nazwie {$name}: {$msg}"
+    details: "Nie udało się dodać pobrać szczegółów źródła o nazwie {$name}: {$msg}"
+    url:
+      empty: "Adres jest wymagany."
+      credentials:
+        empty: "Dane uwierzytalniące są wemygane dla tego adresu."
+        incorrect: "Podane dane uwierzytalniące są nieprawidłowe."
+      calendars: "Nie udało się znaleźć kalendarzy. Czy jesteś pewny, że ten adres jest poprawny?"
+    calendars:
+      find: "Nie udało się znaleźć kalendarzy: {$msg}"
+      tooltip: "Podczas pobieriania kalendarzy z tego źródła wystąpił błąd."
+
+calendar:
+  display: "Kalendarz"
+  id: "ID kalendarza"
+  title:
+    view: "Kalendarz"
+    create: "Tworzenie Kalendarza"
+    edit: "Edytowanie Kalendarza"
+  confirm:
+    delete: "Czy na pewno chcesz usunąć kalendarz o nazwie {$name}?"
+  error:
+    create: "Nie udało się utworzyć kalendarza o nazwie {$name}: {$msg}"
+    edit: "Nie udało się edytować kalendarza o nazwie {$name}: {$msg}"
+    delete: "Nie udało się usunąć kalendarza o nazwie {$name}: {$msg}"
+    move: "Nie udało się przenieść kalendarza o nazwie {$name}: {$msg}"
+    reset: "Nie udało się zresetować kalendarza o nazwie {$name}: {$msg}"
+    events:
+      tooltip: "Podczas pobieriania wydarzeń z tego kalendarza wystąpił błąd."
+  events:
+    count:
+      all: |
+        .input {$count :integer}
+        .match $count
+          0 {{Brak wydarzeń}}
+          one {{{$count} wydarzenie}}
+          few {{{$count} wydarzenia}}
+          many {{{$count} wydarzeń}}
+          * {{{$count} wydarzenia}}
+      more: |
+        .input {$count :integer}
+        .match $count
+          * {{i {$count} więcej}}
+
+event:
+  display: "Wydarzenie"
+  id: "ID wydarzenia"
+  title:
+    view: "Wydarzenie"
+    create: "Tworzenie Wydarzenia"
+    edit: "Edytowanie Wydarzenia"
+    copy: "Kopiowanie Wydarzenia"
+  copy:
+    instruction: "Wybierz w które dni ma miejsce to wydarzenie."
+  confirm:
+    delete: "Czy na pewno chcesz usunąć wydarzenie o nazwie {$name}?"
+  error:
+    create: "Nie udało się utworzyć wydarzenia o nazwie {$name}: {$msg}"
+    edit: "Nie udało się edytować wydarzenia o nazwie {$name}: {$msg}"
+    delete: "Nie udało się usunąć wydarzenia o nazwie {$name}: {$msg}"
+    move: "Nie udało się przenieść wydarzenia o nazwie {$name}: {$msg}"
+    reset: "Nie udało się zresetować wydarzenia o nazwie {$name}: {$msg}"
+    copy: "Nie udało się skopiować wydarzenia o nazwie {$name}: {$msg}"
+  recurrence:
+    affect:
+      this: "To wydarzenie"
+      thisandfuture: "To i przyszłe wydarzenia"
+      all: "Wszystkie wydarzenia"
+    edit:
+      title: "Edytowanie powtarzającego się wydarzenia"
+    delete:
+      title: "Usuwanie powtarzającego się wydarzenia"
+
+reachability:
+  database: "Nie udało się połączyć do bazy danych."
+  backend: "Tie udało się połączyć do serweru backend."
+  frontend: "Tie udało się połączyć do serweru frontend."
+  compatibility: "Serwery frontend i backend nie sę ze sobą kompatybilne."
+  unknown: "Nieznany błąd sieciowy"
+
+weekdays:
+  full:
+    monday: "Poniedziałek"
+    tuesday: "Wtorek"
+    wednesday: "Środa"
+    thursday: "Czwartek"
+    friday: "Piątek"
+    saturday: "Sobota"
+    sunday: "Niedziela"
+  short:
+    monday: "Pon"
+    tuesday: "Wto"
+    wednesday: "Śro"
+    thursday: "Czw"
+    friday: "Pią"
+    saturday: "Sob"
+    sunday: "Nie"
+
+months:
+  full:
+    january: "Styczeń"
+    february: "Luty"
+    march: "Marzec"
+    april: "Kwiecień"
+    may: "Maj"
+    june: "Czerwiec"
+    july: "Lipiec"
+    august: "Sierpień"
+    september: "Wrzesień"
+    october: "Październik"
+    november: "Listopad"
+    december: "Grudzień"
+  short:
+    january: "Sty"
+    february: "Lut"
+    march: "Mar"
+    april: "Kwi"
+    may: "Maj"
+    june: "Cze"
+    july: "Lip"
+    august: "Sie"
+    september: "Wrz"
+    october: "Paź"
+    november: "Lis"
+    december: "Gru"
+
+scope:
+  today: "Dziś"
+  day: "Dzień"
+  week: "Tydzień"
+  month: "Miesąc"
+
+settings:
+  title: "Ustawienia"
+  account:
+    title: "Konto"
+    pfp:
+      display: "Zdjęcie Profilowe"
+      type:
+        gravatar: "Gravatar"
+        database: "Wgraj plik"
+        remote: "Adres internetowy"
+        luna: "Luna"
+      file: "Plik zdjęcia profilowego"
+      link: "Adres zdjęcia profilowego"
+      gravatar:
+        default: "Użyj domyślnego zdjęcia Gravatar"
+    searchable: "Zezwalaj na znajdywanie mnie"
+    password:
+      new: "Nowe hasło"
+      confirm: "Powtórz nowe hasło"
+    delete:
+      confirm: "Czy na pewno chcesz usunąć swoje konto?"
+      details: "Wszystkie twoje dane zostaną usunięte."
+      error: "Nie udało się usunąć twojego konta: {$msg}"
+      success: "Konto usunięto pomyślnie"
+  appearance:
+    title: "Wygląd"
+    calendar:
+      subtitle: "Wygląd kalendarza"
+      fill:
+        allDay: "Wypełniaj wydarzenia całodniowe"
+        nonAllDay: "Wypełniaj wydarzenia niecałodniowe"
+      small: "Pokazuj mały kalendarz"
+      dynamic:
+        main: "Dynamiczna licza wierszy kalendarza"
+        small: "Dynamiczna licza wierszy małego kalendarza"
+      week:
+        numbers: "Pokazuj numery tygodnia"
+        first: "Pierwszy dzień tygodnia"
+    site:
+      subtitle: "Wygląd strony"
+      language: "Język"
+      frosted: "Prześwitujące okna"
+      rounded: "Zaokrąglone rogi"
+      buttons: "Używaj przycisków tekstowych"
+      scaling: "Skala"
+      theme:
+        light: "Motyw jasny"
+        dark: "Motyw ciemny"
+        sync: "Synchronizuj motyw z systemem"
+      font:
+        text: "Czcionka zwykła"
+        mono: "Czcionka o stałej szerokości"
+    animations:
+      subtitle: "Animacje"
+      duration:
+        display: "Prędkość animacji"
+        info: "Aby wyłączyć animacje, ustaw prędkość na 0%."
+      calendar:
+        main: "Animuj kalendarz"
+        small: "Animuj mały kalendarz"
+      month: "Animuj wybór miesiąca"
+  dev:
+    title: "Programista"
+    deauthorize: "Odbierz zezwolenia"
+    ids: "Pokazuj ID"
+    api:
+      list: "Klucze API"
+      new: "Stwórz klucz API"
+  users:
+    title: "Użytkownicy"
+    list:
+      users: "Zarejestrowani użytkownicy"
+      invites: "Aktywne zaproszenia"
+    action:
+      invite:
+        new: "Zaproś użytkownika"
+        delete: "Usuń wszystkie zaproszenia"
+    confirm:
+      delete: "Czy na pewno chcesz usunąć twoje konto?"
+      enable: "Czy na pewno chcesz włączyć to konto?\nUżytkownik będzie mógł się znowu logować."
+      disable: "Czy na pewno chcesz wyłączyć to konto?\nUzytkownik nie będzie mógł się juz logować."
+    info:
+      preserve: "Konto użytkownika nie zostanie naruszone."
+      delete: "Wszystkie dane użytkownika zostaną usunięte."
+    success:
+      delete: "Pomyślnie usunięto konto użytkownika."
+    error:
+      enable: "Nie udało się włączyć konta: {$msg}"
+      disable: "Nie udało się wyłączyć konta: {$msg}"
+      delete: "Nie udało się usunąć konta: {$msg}"
+  themes:
+    title: "Motywy"
+    list: "Zainstalowane motywy"
+    current: "Chcesz zmienić używany motyw? Przejdź do zakładki \"Wygląd\"."
+    new: "Zainstaluj motyw"
+    upload: "Wgraj motyw"
+    success:
+      install: "Motyw został zainstalowany pomyślnie."
+      uninstall: "Motyw został usunięty pomyślnie."
+    error:
+      install: "Nie udało się zainstalować motywu: {$msg}"
+      uninstall: "Nie udało się usunąć motywu: {$msg}"
+      file: "Brakujący app uszkodzony plik z motywem"
+    confirm:
+      uninstall: "Czy na pewno chcesz usunąć motyw o nazwie {$name}?"
+      overwrite: "Motyw o tej samej nazwie już istnieje.\nKontynuowanie nadpisze ten motyw.\nCzy kontynuować?"
+  fonts:
+    title: "Czcionki"
+    list: "Zainstalowane czcionki"
+    current: "Chcesz zmienić używaną czcionkę? Przejdź do zakładki \"Wygląd\"."
+    new: "Zainstaluj czcionkę"
+    upload: "Wgraj czcionkę"
+    success:
+      install: "Czcionka została zainstalowany pomyślnie."
+      uninstall: "Czconika została usunięta pomyślnie."
+    error:
+      install: "Nie udało się zainstalować czcionki: {$msg}"
+      uninstall: "Nie udało się usunąć czcionki: {$msg}"
+      file: "Brakujący app uszkodzony plik z czcionką"
+    confirm:
+      uninstall: "Czy na pewno chcesz usunąć czcionkę o nazwie {$name}?"
+      overwrite: "Czcionka o tej samej nazwie już istnieje.\nKontynuowanie nadpisze tą czcionkę.\nCzy kontynuować?"
+  oauth:
+    title: "OAuth 2.0"
+    new: "Zarejestruj klienta OAuth 2.0"
+    list: "Zarejestrowani klienci OAuth 2.0"
+  admin:
+    title: "Administratywne"
+    confirm:
+      reset: "Czy na pewno chcesz zresetować wszystkie ustawienia globalne?"
+    registration:
+      display: "Otwarta rejestracja"
+      info: "Zezwala każdemu na rajestrację konta.\nJeżeli chcesz zaprosić tylko kilka osób, przejdź to zakładki \"Użytkownicy\"."
+    geolocation:
+      display: "Określanie lokalizacji adresów IP"
+      info: "To ustawienia zezwala na określanie przybliżonej lokalizacj sesji użytkowników w ich ustawieniach. Dzięki temu, użytkownicy mogą łatwiej stwierdzić niedozwolony dostęp do ich konta. Z tego powodu, że określenie lokalizacji IP wymaga użytku dostawcy zewnętrznego, proces ten wzbudza obawy względem ochrony danych. Jeżeli wolisz nie używać tej funkcji, możesz ją tu wyłączyć. Proszę wziąć pod uwagę, że same adresy IP nadal będą zapisywana w bazie danych ze względów bezpieczeństwa, nie są lecz udostępniane żadnym dostawcom zewnętrznym poza tym ustawieniem."
+    pfp:
+      gravatar:
+        display: "Zezwalaj na zdjęcia profilowe Gravatar"
+        info: "Gravatar to zewnętrzny serwis, który pozwala użytkowniką powiązać zdjęcie profilowe z ich adresem E-Mail. Jest to zrealizowanie poprzez wysłanie wartości hashu MD5 adresu E-Mail użytkownika do serverów Gravatar. Można to uznać za problematyczne dla ochrony danych, ponieważ Gravatar może śledzenie użytkowników poprzez różne serwisy. Jeśli wolisz nie używać zdjęć profilowych Gravatar, możesz je tu wyłączyć. To ustawienia dotyczy wszystkich użytkowników."
+      cache:
+        display: "Buforój zdjęcia profilowe"
+        info: "Czy zdjęcia profilowe z innych stron internetowych (również Gravatar) mają być buforowane lokalnie. Buforowanie zdjęć profilowych polepsza wydajność i prywatność, ale wprowadza również ryzyko hostowania nielegalnych treści, w przypadku kiedy złowrogi użytkownik ustawi takowe zdjęcie profilowe. To samo ryzoko istnieje również wtedy, gdy użytkownicy mogą wgrywać własne zdjęcia profilowe."
+      upload:
+        display: "Pozwalaj na wgrywanie własnych zdjęć profilowych"
+        info: "Pozwala użytkownikom wgrywać własne zdjęcia profilowe bezpośrednio na serwer. Wprowadza to ryzyko hostowania nielegalnych treści, w przypadku kiedy złowrogi użytkowni takoge wgra jako swoje zdjęcie profilowe. To samo ryzyko instije również wtedy, gdy atkywne jest buferowanie zdjęć profilowych."
+    verbosity:
+      display: "Szczegółowość komunikatów błedów"
+      info: "Jak szczegółowe powinny być komunikaty błędów pokazywane użytkownikom.\nTo ustawienia tyczy się wszystkich użytkowników.\nPoziom \"Debug\" nie powinien nigdy być używany w produkcji."
+      lvl:
+        broad: "Znikoma"
+        plain: "Zwykła"
+        wordy: "Dokładna"
+        debug: "Debug"
+    reset: "Zresetuj wszystkie ustawienia globalne"
+  danger:
+    title: "Strefa Zagrożenia"
+    reset:
+      button: "Zresetuj wszystkie moje preferencje"
+      confirmation: "Czy na pewno chcesz zresetować wszytkie twoje preferencje?"
+      details: "Twoje dane nie zostaną naruszone."
+    delete: "Usuń moje konto"
+  logout:
+    title: "Wyloguj"
+    button:
+      current: "Wyloguj się"
+      all: "Wyloguj ze wszystkich urządzeń"
+      single: "Wyloguj"
+    confirm:
+      current: "Czy na pewno chcesz się wylogować?"
+      all:
+        display: "Czy na pewno chcesz się wylogować ze wszystkich urządzeń?"
+        info: "Twoje klucze API nie zostaną naruszone.\nAby je usunąć, przejdź do zakładki \"Programista\"."
+    sessions:
+      display: "Aktywne sesje"
+      info: "Aby zobaczyć twoje sesje API, przejdź do zakładki \"Programista\"."
+  error:
+    save:
+      global: "Nie udało się zapisać ustawień globalnych: {$msg}"
+      preferences: "Nie udało się zapisać preferecji użytkownika: {$msg}"
+      profile: "Nie udało się zapisać profilu użytkownika: {$msg}"
+
+validation:
+  username:
+    short: "Nazwa użytkownika musi mieć przynajmniej {$len :integer} znaków."
+    long: "Nazwa użytkownika nie może mieć więcej niż {$len :integer} znaków."
+    characters: "Nazwa użytkownika może zawierać wyłącznie litery oraz liczby."
+  password:
+    short: "Hasło musi mieć przynajmniej {$len :integer} znaków."
+    long: "Hasło nie może mieć więcej niż {$len :integer} znaków."
+    match: "Hasło się nie zgadzają."
+  url:
+    proto: "Adres musi się zaczynać na \"http://\" lub \"https://\"."
+    invalid: "Adres zawiera niedozwolone znaki lub jest niepoprawny."
+  email:
+    invalid: "Adres E-Mail jest niepoprawny."
+  path:
+    empty: "Scieżka nie może być pusta."
+  invite:
+    invalid: "Kod zaproszenia jest niepoprawny."
+  file:
+    empty: "Nie wybrano żadnych plików."
+    multiple: "Wybrano za dużo plików."
+    null: "Plik jest null"
+    size: "Plik nie może mieć ponad {$size}."
+    type: "Plik musi mieć typ \"{$type}\""
+    invalid: "Niepoprawnie sformatowany plik"
+  auth:
+    unknown: "Niewspierana forma uwierzytelniania"
+  source:
+    unknown: "Niewspierany typ źródła"
+    location:
+      unknown: "Niewspierana lokalizacja pliku iCal"
+
+  repository:
+    error:
+      event:
+        fetch: "Nie udało się pobrać wydarzeń z {$name}: {$msg}"
+      calendar:
+        fetch: "Nie udało się pobrać kalendarzy z {$name}: {$msg}"
+      reorder:
+        source: "Nie udało się zmienić kolejności źródłap"
+        calendar: "Nie udało się zmienić kolejności kalendarza."
+    info:
+      hidden: "Wydarzenie {$name} zostało dodane do ukrytego kalendarza."
+
+perms:
+  read_events: "Czytanie events"
+  add_events: "Tworzenie events"
+  edit_events: "Edytowanie events"
+  delete_events: "Usuwanie events"
+  read_calendars: "Czytanie calendars"
+  add_calendars: "Tworzenie calendars"
+  edit_calendars: "Edytowanie calendars"
+  delete_calendars: "Usuwanie calendars"
+  read_sources: "Czytanie sources"
+  add_sources: "Tworzenie sources"
+  edit_sources: "Edytowanie sources"
+  delete_sources: "Usuwanie sources"
+  manage_invites: "Zarządzanie zaproszeń do rejestracji"
+  manage_users: "Zarządzanie użytkowników"
+  manage_oauth_clients: "Zarzędzanie klientów OAuth 2.0"
+  manage_global_settings: "Zarządzanie ustawień globalnych"
+  manage_user_settings: "Zarządzanie ustawień użytkownika"
+  manage_sessions: "Zarządzanie sesji"
+  manage_resources: "Zarządzanie czcionek i motywów"
+  administrative: "Administratywne"
