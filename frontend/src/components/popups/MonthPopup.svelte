@@ -52,7 +52,6 @@
   /* Animation */
   let viewIteration = $state(0);
   let flyDirection = $state("left");
-  setContext("flyDirection", () => flyDirection);
 
   /* Selection */
   let selectedMonth: number = $state(date.getMonth());
@@ -206,8 +205,8 @@
   <div
     class="grid month"
     class:animate={animate}
-    in:svelteFlyInHorizontal={{duration: animate ? 500 * settings.userSettings[UserSettingKeys.AnimationDuration] : 0}}
-    out:svelteFlyOutHorizontal={{duration: animate ? 500 * settings.userSettings[UserSettingKeys.AnimationDuration] : 0}}
+    in:svelteFlyInHorizontal={{duration: animate ? 500 * settings.userSettings[UserSettingKeys.AnimationDuration] : 0, flyDirection: () => flyDirection}}
+    out:svelteFlyOutHorizontal={{duration: animate ? 500 * settings.userSettings[UserSettingKeys.AnimationDuration] : 0, flyDirection: () => flyDirection}}
   >
     {#each Array(12) as _, i}
       <button
@@ -226,8 +225,8 @@
   <div
     class="grid year"
     class:animate={animate}
-    in:svelteFlyInHorizontal={{duration: animate ? 500 * settings.userSettings[UserSettingKeys.AnimationDuration] : 0}}
-    out:svelteFlyOutHorizontal={{duration: animate ? 500 * settings.userSettings[UserSettingKeys.AnimationDuration] : 0}}
+    in:svelteFlyInHorizontal={{duration: animate ? 500 * settings.userSettings[UserSettingKeys.AnimationDuration] : 0, flyDirection: () => flyDirection}}
+    out:svelteFlyOutHorizontal={{duration: animate ? 500 * settings.userSettings[UserSettingKeys.AnimationDuration] : 0, flyDirection: () => flyDirection}}
   >
     {#each Array(10) as _, i}
       <button

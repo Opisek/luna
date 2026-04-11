@@ -35,7 +35,6 @@
   let viewIteration = $state(0);
   let currentDate = $state(untrack(() => new Date($state.snapshot(date)))); // https://github.com/sveltejs/svelte/issues/17303
   let flyDirection = $state("left");
-  setContext("flyDirection", () => flyDirection);
   $effect(() => {
     if (date.getTime() === currentDate.getTime()) return;
     flyDirection = currentDate.getTime() <= date.getTime() ? "left" : "right";
@@ -300,8 +299,8 @@
     class:columns-month={view === "month"}
     class:columns-week={view === "week"}
     class:columns-day={view === "day"}
-    in:svelteFlyInHorizontal={{duration: animate ? 500 * settings.userSettings[UserSettingKeys.AnimationDuration] : 0}}
-    out:svelteFlyOutHorizontal={{duration: animate ? 500 * settings.userSettings[UserSettingKeys.AnimationDuration] : 0}}
+    in:svelteFlyInHorizontal={{duration: animate ? 500 * settings.userSettings[UserSettingKeys.AnimationDuration] : 0, flyDirection: () => flyDirection}}
+    out:svelteFlyOutHorizontal={{duration: animate ? 500 * settings.userSettings[UserSettingKeys.AnimationDuration] : 0, flyDirection: () => flyDirection}}
   >
     {#each days as day, i}
       <Day

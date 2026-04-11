@@ -62,7 +62,6 @@
   let displayDays = $state(days);
   let currentDate = $state(new Date(date));
   let flyDirection = $state("left");
-  setContext("flyDirection", () => flyDirection);
   $effect(() => {
     if (date.getTime() === currentDate.getTime()) return;
     flyDirection = currentDate.getTime() <= date.getTime() ? "left" : "right";
@@ -148,8 +147,8 @@
     class:smaller={smaller}
     class:animate={animate}
     style="grid-template-rows: repeat({amountOfRows}, 1fr)"
-    in:svelteFlyInHorizontal={{duration: animate ? 500 * settings.userSettings[UserSettingKeys.AnimationDuration] : 0}}
-    out:svelteFlyOutHorizontal={{duration: animate ? 500 * settings.userSettings[UserSettingKeys.AnimationDuration] : 0}}
+    in:svelteFlyInHorizontal={{duration: animate ? 500 * settings.userSettings[UserSettingKeys.AnimationDuration] : 0, flyDirection: () => flyDirection}}
+    out:svelteFlyOutHorizontal={{duration: animate ? 500 * settings.userSettings[UserSettingKeys.AnimationDuration] : 0, flyDirection: () => flyDirection}}
   >
     {#each days as day}
       {@const dayId = day.toISOString().substring(0, 10)}
