@@ -1,0 +1,702 @@
+branding:
+  name: "Luna"
+  copyright: "Copyright © 2026 Kacper Darowski (Opisek)\nLicensed under TBD"
+
+language:
+  default: "Default ({$default})"
+  en-US: "English (US)"
+  en-DE: "English (EU)"
+  en-GB: "English (UK)"
+  de-DE: "Deutsch"
+  pl-PL: "Polski"
+
+button:
+  settings: "Settings"
+  add:
+    generic: "Add"
+    event: "Create Event"
+    calendar: "Create Calendar"
+    source: "Add Source"
+  theme:
+    dark: "Toggle dark mode"
+    light: "Toggle light mode"
+  credits: "Credits"
+  refresh: "Refresh"
+  upload: "Upload"
+  download: "Download"
+  clear: "Clear"
+  submit: "Submit"
+  save: "Save"
+  copy: "Copy"
+  close: "Close"
+  month:
+    previous: "Previous month"
+    next: "Next month"
+  hide: "Hide"
+  show: "Show"
+  confirm: "Confirm"
+  cancel: "Cancel"
+  reset: "Reset"
+  details: "Details"
+
+credits:
+  title: "Credits"
+  repository: "Luna Repository"
+  stack:
+    display: "Tech Stack"
+    subtitle: "Tech Stack and Languages"
+  frontend:
+    display: "Frontend"
+    subtitle: "Frontend Libraries"
+  backend:
+    display: "Backend"
+    subtitle: "Backend Libraries"
+  themes:
+    display: "Themes"
+    subtitle: "Theme Color Palettes"
+  fonts:
+    display: "Fonts"
+    subtitle: "Pre-installed Fonts"
+  source: "Source"
+
+notification:
+  hover: "Hover to view details"
+  success:
+    save: "Saved successfully"
+    delete: "Deleted successfully"
+    clipboard: "Copied to clipboard"
+  error:
+    clipboard: "Could not copy to clipboard"
+
+confirmation:
+  title: "Confirmation"
+  irreversible: "This action is irreversible."
+  password:
+    title: "Authentication"
+    prompt: "To perform this action, you must authenticate yourself with your password."
+  
+login:
+  title:
+    login: "Login"
+    register: "Register"
+  password: "Password"
+  repeat: "Repeat password"
+  invite: "Invite code"
+  remember: "Remember me"
+  link:
+    login: "Already got an account?"
+    register: "No account yet?"
+    recover: "Forgot password?"
+  closed: "To register, please input an invite code.\nPlease contact the administrator if you don't have one."
+
+form:
+  desc: "Description"
+  name: "Name"
+  wizard:
+    location: "What do you want to add?"
+  advanced: "Click to enter advanced mode"
+
+recurrence:
+  repeats: "Repeats"
+
+date:
+  title: "Pick Date"
+  allDay: "All-day"
+  start: "Start"
+  end: "End"
+  date: "Date"
+
+time:
+  title: "Pick Time"
+  am: "AM"
+  pm: "PM"
+  ampm: "AM/PM"
+
+color:
+  display: "Color"
+  code: "Color code"
+  title: "Pick Color"
+  preset:
+    default: "Default color"
+    red: "Red"
+    orange: "Orange"
+    yellow: "Yellow"
+    green: "Green"
+    blue: "Blue"
+    purple: "Purple"
+    pink: "Pink"
+
+nav:
+  home: "Home"
+  back: "Go Back"
+  continue: "Continue"
+
+error:
+  code: "Error {$code}"
+  generic: "An error occurred."
+  unknown: "Unknown error"
+  retry: "Please try again"
+  unavailable: "Feature not yet available"
+  unimplemented: "Not implemented"
+  empty: "Nothing to show"
+
+user:
+  username: "Username"
+  email: "E-Mail address"
+  id:
+    display: "User ID"
+    inline: "ID: {$id}"
+  creation: "Registered on {$date :date length=short} at {$date :time precision=minute}"
+  action:
+    enable: "Enable account"
+    disable: "Disable account"
+  status:
+    admin: "Administrator"
+    disabled: "Account disabled"
+    verified: "Verified E-Mail address"
+  pfp:
+    alt: "Profile picture of user {$name}"
+
+invite:
+  title:
+    view: "Registration Invite"
+    create: "Invite User"
+  confirm:
+    delete: "Are you sure you want to delete the registration invite?"
+  error:
+    create: "Could not create registration invite: {$msg}"
+    delete: "Could not delete registration invite: {$msg}"
+  qr: "QR Code"
+  code: "Invite Code"
+  link: "Invite Link"
+  id:
+    label: "Invite ID"
+    inline: "ID: {$id}"
+  date:
+    creation:
+      display: "Creation Date"
+      inline: "Created on {$date :date length=short} at {$date :time precision=minute} by {$name}"
+    expiry:
+      display: "Expiry Date"
+      today: |
+        .input {$date}
+        .input {$hours :integer}
+        .input {$minutes :integer}
+
+        .match $hours $minutes
+          0 1 {{Expires at {$date :time precision=minute} ({$minutes} minute left)}}
+          0 * {{Expires at {$date :time precision=minute} ({$minutes} minutes left)}}
+          1 * {{Expires at {$date :time precision=minute} ({$hours} hour left)}}
+          * * {{Expires at {$date :time precision=minute} ({$hours} hours left)}}
+      elsewhen: "Expires on {$date :date length=short} at {$date :time precision=minute}"
+  expiry:
+    display: "Invite expiration"
+    preset:
+      1h: "1 hour"
+      3h: "3 hours"
+      1d: "1 day"
+      3d: "3 days"
+      7d: "7 days"
+
+session:
+  title: 
+    view:
+      user: "Session details"
+      api: "API Token"
+    create:
+      api: "Create API Token"
+    edit:
+      api: "Edit API Token"
+  confirm:
+    delete:
+      user: "Are you sure you want to deauthorize this session?"
+      api: "Are you sure you want to delete API token {$name}?"
+  agent:
+    user: "User agent"
+    api: "Name"
+  date:
+    creation: "Creation date"
+    latest: "Latest activity"
+  ip:
+    initial: "Initial IP address"
+    latest: "Latest IP address"
+  id:
+    display: "Session ID"
+    inline: "ID: {:id}"
+  permissions:
+    subtitle: "Permissions"
+  error:
+    permissions: "Could not fetch permissions for API token {$name}: {$msg}"
+    create: "Could not create API token {$name}: {$msg}"
+    clipboard: "Could not copy API token {$name} to clipboard: {$msg}"
+    edit: "Could not edit API token {$name}: {$msg}"
+    delete: "Could not delete API token {$name}: {$msg}"
+    password: "You must provide your password to create an API token."
+  clipboard: "API token copied to clipboard"
+  current: "Current session"
+  location:
+    host: "Local host"
+    lan: "Local network"
+    unknown: "Unknown location"
+  active:
+    today: "Last active at {$date :time precision=second}"
+    elsewhen: "Last active on {$date :date length=short} at {$date :time precision=second}"
+
+file:
+  display: "File"
+  id: "File ID"
+  error:
+    fetch: "Could not get file: {$msg}"
+
+caldav:
+  display: "CalDav"
+  url: "CalDav URL"
+
+ical:
+  display: "iCal"
+  location:
+    remote: "Internet link"
+    database: "Upload file"
+    local: "Server filepath"
+  url: "iCal URL"
+  file: "iCal File"
+  path: "iCal Path"
+
+google:
+  display: "Google Calendar"
+
+auth:
+  type: "Authentication type"
+  none:
+    display: "None"
+  basic:
+    display: "Password"
+    username: "Username"
+    password: "Password"
+  bearer:
+    display: "Token"
+    token: "Token"
+  oauth:
+    display: "OAuth 2.0"
+    different: "Choose a different account"
+    abort: "Authorization aborted"
+    success: "Logged into {$client} successfully"
+    google:
+      unconfigured: "The administrator of this Luna instance has not set up Google Calendar integration yet."
+    tokens:
+      title: "Choose account"
+      list: "Authorized accounts"
+      id: "ID: {$id}"
+      use: "Use account"
+      exists: "You are already siged in with {$client}.\nYou can choose one of your existing accounts or authorize a new account."
+      new: "Sign into a different account"
+    client:
+      title:
+        create: "Register OAuth 2.0 Client"
+        edit: "Edit OAuth 2.0 Client"
+      display: "Authorization provider"
+      extid: "Client ID"
+      secret: "Client secret"
+      base: "Base URL"
+      scope: "Scope"
+      id:
+        label: "Internal client ID"
+        inline: "ID: {$id}"
+      confirm:
+        delete: "Are you sure you want to delete the OAuth 2.0 client?"
+      error:
+        create: "Could not register OAuth 2.0 client {$name}: {$msg}"
+        edit: "Could not edit OAuth 2.0 client {$name}: {$msg}"
+        delete: "Could not delete OAuth 2.0 client {$name}: {$msg}"
+        details: "Could not get details for OAuth 2.0 client {$name}: {$msg}"
+
+source:
+  display: "Source"
+  id: "Source ID"
+  title:
+    view: "Source"
+    create: "Add Source"
+    wizard: "Source Wizard"
+    edit: "Edit Source"
+  confirm:
+    delete: "Are you sure you want to delete source {$name}?"
+  error:
+    create: "Could not add source {$name}: {$msg}"
+    edit: "Could not edit source {$name}: {$msg}"
+    delete: "Could not delete source {$name}: {$msg}"
+    details: "Could not get source details: {$msg}"
+    url:
+      empty: "URL is required."
+      credentials:
+        empty: "Credentials are required to access this URL."
+        incorrect: "The provided credentials are incorrect."
+      calendars: "Could not find calendars. Are you sure this URL is correct?"
+    calendars:
+      find: "Could not find calendars: {$msg}"
+      tooltip: "An error occurred trying to retrieve calendars from this source."
+
+calendar:
+  display: "Calendar"
+  id: "Calendar ID"
+  title:
+    view: "Calendar"
+    create: "Create Calendar"
+    edit: "Edit Calendar"
+  confirm:
+    delete: "Are you sure you want to delete calendar {$name}?"
+  error:
+    create: "Could not create calendar {$name}: {$msg}"
+    edit: "Could not edit calendar {$name}: {$msg}"
+    delete: "Could not delete calendar {$name}: {$msg}"
+    move: "Could not move calendar {$name}: {$msg}"
+    reset: "Could not reset calendar {$name}: {$msg}"
+    events:
+      tooltip: "An error occurred trying to retrieve events from this calendar."
+  events:
+    count:
+      all: |
+        .input {$count :integer}
+        .match $count
+          0 {{No events}}
+          1 {{{$count} event}}
+          * {{{$count} events}}
+      more: |
+        .input {$count :integer}
+        .match $count
+          * {{and {$count} more}}
+
+event:
+  display: "Event"
+  id: "Event ID"
+  title:
+    view: "Event"
+    create: "Create Event"
+    edit: "Edit Event"
+    copy: "Copy Event"
+  copy:
+    instruction: "Select on which days the event should take place."
+  confirm:
+    delete: "Are you sure you want to delete event {$name}?"
+  error:
+    create: "Could not create event {$name}: {$msg}"
+    edit: "Could not edit event {$name}: {$msg}"
+    delete: "Could not delete event {$name}: {$msg}"
+    move: "Could not move event {$name}: {$msg}"
+    reset: "Could not reset event {$name}: {$msg}"
+    copy: "Could not copy event {$name}: {$msg}"
+  recurrence:
+    affect:
+      this: "This event"
+      thisandfuture: "This and future events"
+      all: "All events"
+    edit:
+      title: "Editing recurring event"
+    delete:
+      title: "Deleting recurring event"
+
+reachability:
+  database: "The database cannot be reached."
+  backend: "The backend server cannot be reached."
+  frontend: "The backend server cannot be reached."
+  compatibility: "The frontend server and the backend server are not compatible."
+  unknown: "Unknown network error"
+
+weekdays:
+  full:
+    monday: "Monday"
+    tuesday: "Tuesday"
+    wednesday: "Wednesday"
+    thursday: "Thursday"
+    friday: "Friday"
+    saturday: "Saturday"
+    sunday: "Sunday"
+  short:
+    monday: "Mon"
+    tuesday: "Tue"
+    wednesday: "Wed"
+    thursday: "Thu"
+    friday: "Fri"
+    saturday: "Sat"
+    sunday: "Sun"
+
+months:
+  full:
+    january: "January"
+    february: "February"
+    march: "March"
+    april: "April"
+    may: "May"
+    june: "June"
+    july: "July"
+    august: "August"
+    september: "September"
+    october: "October"
+    november: "November"
+    december: "December"
+  short:
+    january: "Jan"
+    february: "Feb"
+    march: "Mar"
+    april: "Apr"
+    may: "May"
+    june: "Jun"
+    july: "Jul"
+    august: "Aug"
+    september: "Sep"
+    october: "Oct"
+    november: "Nov"
+    december: "Dec"
+
+scope:
+  today: "Today"
+  day: "Day"
+  week: "Week"
+  month: "Month"
+
+settings:
+  title: "Settings"
+  account:
+    title: "Account"
+    pfp:
+      display: "Profile Picture"
+      type:
+        gravatar: "Gravatar"
+        database: "Upload file"
+        remote: "Internet link"
+        luna: "Luna art"
+      file: "Profile picture file"
+      link: "Profile picture link"
+      gravatar:
+        default: "Use default gravatar profile picture"
+    searchable: "Allow other users to find me"
+    password:
+      new: "New Password"
+      confirm: "Confirm New Password"
+    delete:
+      confirm: "Are you sure you want to delete your account?"
+      details: "All your data will be deleted."
+      error: "Could not delete your account: {$msg}"
+      success: "Successfully deleted your account."
+  appearance:
+    title: "Appearance"
+    calendar:
+      subtitle: "Calendar Appearance"
+      fill:
+        allDay: "Fill all-day events"
+        nonAllDay: "Fill non-all-day events"
+      small: "Display small calendar"
+      dynamic:
+        main: "Dynamic calendar row count"
+        small: "Dynamic small calendar row count"
+      week:
+        numbers: "Display week numbers"
+        first: "First day of the week"
+    site:
+      subtitle: "Site Appearance"
+      language: "Language"
+      frosted: "Translucent windows"
+      rounded: "Rounded corners"
+      buttons: "Use textual buttons"
+      scaling: "Scaling"
+      theme:
+        light: "Light theme"
+        dark: "Dark theme"
+        sync: "Synchronize theme with system"
+      font:
+        text: "Text font"
+        mono: "Monospaced font"
+    animations:
+      subtitle: "Animations"
+      duration:
+        display: "Animation duration"
+        info: "To disable animations, set the animation duration to 0%."
+      calendar:
+        main: "Animate calendar"
+        small: "Animate small calendar"
+      month: "Animate month selection"
+  dev:
+    title: "Developer"
+    deauthorize: "Deauthorize"
+    ids: "Display IDs"
+    api:
+      list: "API tokens"
+      new: "Create an API token"
+  users:
+    title: "Users"
+    list:
+      users: "Registered users"
+      invites: "Active invites"
+    action:
+      invite:
+        new: "Invite a user"
+        delete: "Delete all invites"
+    confirm:
+      delete: "Are you sure you want to delete this account?"
+      enable: "Are you sure you want to enable this account?\nThe user will be able log in again."
+      disable: "Are you sure you want to disable this account?\nThe user will no longer be able to log in."
+    info:
+      preserve: "The user's account will remain intact."
+      delete: "All user data will be deleted."
+    success:
+      delete: "Successfully deleted the user's account."
+    error:
+      enable: "Could not enable account: {$msg}"
+      disable: "Could not disable acount: {$msg}"
+      delete: "Could not delete account: {$msg}"
+  themes:
+    title: "Themes"
+    list: "Installed themes"
+    current: "Looking to change your current theme? Head to the \"Appearance\" tab."
+    new: "Install a theme"
+    upload: "Upload theme"
+    success:
+      install: "Theme installed successfully"
+      uninstall: "Theme uninstalled successfully"
+    error:
+      install: "Failed to install theme: {$msg}"
+      uninstall: "Failed to uninstall theme: {$msg}"
+      file: "Missing or corrupted theme file"
+    confirm:
+      uninstall: "Are you sure you want to uninstall the theme {$name}?"
+      overwrite: "A theme with the same file name already exists.\nContinuing will overwrite that the.\nAre you sure you want to proceed?"
+  fonts:
+    title: "Fonts"
+    list: "Installed fonts"
+    current: "Looking to change your current font? Head to the \"Appearance\" tab."
+    new: "Install a font"
+    upload: "Upload font"
+    success:
+      install: "Font installed successfully"
+      uninstall: "Font uninstalled successfully"
+    error:
+      install: "Failed to install font: {$msg}"
+      uninstall: "Failed to uninstall font: {$msg}"
+      file: "Missing or corrupted font file"
+    confirm:
+      uninstall: "Are you sure you want to uninstall the font {$name}?"
+      overwrite: "A font with the same file name already exists.\nContinuing will overwrite that font.\nAre you sure you want to proceed?"
+  oauth:
+    title: "OAuth 2.0"
+    new: "Register an OAuth 2.0 client"
+    list: "Registered OAuth 2.0 clients"
+  admin:
+    title: "Administrative"
+    confirm:
+      reset: "Are you sure you want to reset all global settings?"
+    registration:
+      display: "Enable open registration"
+      info: "Allows anyone to create an account.\nIf you just want to invite a few people, head to the \"Users\" tab."
+    geolocation:
+      display: "Determine IP address geolocation"
+      info: "This setting enables the frontend to display an approximate location of the user's sessions in their settings page. This feature is meant to help users determine whether illicit actors have access to their account. Since determining the geolocation of an IP address requires the use of a third-party service, using it raises some privacy concerns. If you would prefer not to use this feature, it can be disabled here. Please note that IP addresses themselves will still be stored in the database for security and audit purposes, but they are never shared with any third party outside of the behavior controlled by this toggle."
+    pfp:
+      gravatar:
+        display: "Enable Gravatar profile pictures"
+        info: "Gravatar is a third party service that lets users set their profile picture once and have it associated with their e-mail address. This is accomplished by querying said server with an MD5 hash of the user's e-mail address. This can be seen as a privacy concern, as it allows Gravatar to track users across different services. If you would prefer not to use Gravatar profile pictures, you can disable them here. This setting disables the use of Gravatar site-wide."
+      cache:
+        display: "Cache profile pictures"
+        info: "Whether profile pictures from remote websites (including Gravatar) should be cached locally. Caching profile pictures can improve performance and privacy, but it introduces the risk of hosting illicit content if a malicious user uses it as their profile picture. The same risk exists if users upload profile pictures directly."
+      upload:
+        display: "Enable profile picture uploads"
+        info: "Allow users to upload their own profile pictures directly to the server. This introduces the risk of hosting illicit content if a malicious user uploads such an image as their profile picture. The same risk exists if caching of remote profile pictures is enabled."
+    verbosity:
+      display: "Error message verbosity"
+      info: "How much information about errors is returned to the user.\nThis setting applies to all users.\n\"Debug\" should never be used in production."
+      lvl:
+        broad: "Broad"
+        plain: "Plain"
+        wordy: "Wordy"
+        debug: "Debug"
+    reset: "Reset all global settings"
+  danger:
+    title: "Danger Zone"
+    reset:
+      button: "Reset all my preferences"
+      confirmation: "Are you sure you want to reset all your preferences?"
+      details: "Your account will remain intact."
+    delete: "Delete my account"
+  logout:
+    title: "Logout"
+    button:
+      current: "Log out of my account"
+      all: "Log out from all devices"
+      single: "Log out"
+    confirm:
+      current: "Are you sure you want to log out?"
+      all:
+        display: "Are you sure you want to deauthorize all sessions?\nThis will log you out of all your devices."
+        info: "Your API tokens will remain valid.\nTo deauthorize those, head to the \"Developer\" tab."
+    sessions:
+      display: "Active sessions"
+      info: "To see your API sessions, head to the \"Developer\" tab."
+  error:
+    save:
+      global: "Failed to save global settings: {$msg}"
+      preferences: "Failed to save user settings: {$msg}"
+      profile: "Failed to save user data: {$msg}"
+
+validation:
+  username:
+    short: "Username must be at least {$len :integer} characters long."
+    long: "Username must be at most {$len :integer} characters long."
+    characters: "Username must only contain letters and numbers."
+  password:
+    short: "Password must be at least {$len :integer} characters long."
+    long: "Password must be at most {$len :integer} characters long."
+    match: "The passwords do not match."
+  url:
+    proto: "URL must start with \"http://\" or \"https://\"."
+    invalid: "The URL contains illegal characters or is invalid."
+  email:
+    invalid: "The E-Mail address is invalid."
+  path:
+    empty: "Path must not be empty."
+  invite:
+    invalid: "The invite code is invalid."
+  file:
+    empty: "No files selected"
+    multiple: "Too many files selected"
+    null: "File is null"
+    size: "File must not be larger than {$size}."
+    type: "File must be of type \"{$type}\""
+    invalid: "Invalid file format"
+  auth:
+    unknown: "Unsupported authentication type"
+  source:
+    unknown: "Unsupported source type"
+    location:
+      unknown: "Unsupported iCal file location"
+
+  repository:
+    error:
+      event:
+        fetch: "Could not fetch events from {$name}: {$msg}"
+      calendar:
+        fetch: "Could net fetch calendars from {$name}: {$msg}"
+      reorder:
+        source: "Could not reorder cached source"
+        calendar: "Could not reorder cached calendar"
+    info:
+      hidden: "Event {$name} was added to a hidden calendar."
+
+perms:
+  read_events: "Read events"
+  add_events: "Create events"
+  edit_events: "Edit events"
+  delete_events: "Delete events"
+  read_calendars: "Read calendars"
+  add_calendars: "Create calendars"
+  edit_calendars: "Edit calendars"
+  delete_calendars: "Delete calendars"
+  read_sources: "Read sources"
+  add_sources: "Add sources"
+  edit_sources: "Edit sources"
+  delete_sources: "Delete sources"
+  manage_invites: "Manage registration invites"
+  manage_users: "Manage users"
+  manage_oauth_clients: "Manage OAuth 2.0 clients"
+  manage_global_settings: "Manage global settings"
+  manage_user_settings: "Manage user preferences"
+  manage_sessions: "Manage sessions"
+  manage_resources: "Manage fonts and themes"
+  administrative: "Administrative"

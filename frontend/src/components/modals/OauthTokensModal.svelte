@@ -14,6 +14,7 @@
   import Paragraph from "../forms/Paragraph.svelte";
   import Button from "../interactive/Button.svelte";
   import Spinner from "../decoration/Spinner.svelte";
+  import { t } from "@sveltia/i18n";
   
   interface Props {
     authorize?: (clientId: string) => Promise<string>;
@@ -61,7 +62,7 @@
 
   async function authorizeWithExternalProvider() {
     const json = await fetchJson(`/api/oauth/authorization/${selectedClientId}`, { method: "PUT" }).catch((err: Error) => {
-      if (err.message.includes("Service unavailable")) err.message = "Please try again";
+      if (err.message.includes("Service unavailable")) err.message = t("error.retry");
       queueNotification(ColorKeys.Danger, err.message)
     });
     if (!json || !json.url || !json.request?.request_id) return Promise.reject();
@@ -99,14 +100,14 @@
           queueNotification(ColorKeys.Warning, warning);
         }
       }
-      else queueNotification(ColorKeys.Success, `Logged into ${selectedClient?.name} successfully`);
+      else queueNotification(ColorKeys.Success, t("auth.oauth.success", { values: { client: selectedClient?.name } }));
       await oauthClients.fetchTokens();
       externalAuthPromiseResolve(response.token);
     } else if ((response?.error as string || "").toLowerCase().includes("service unavailable")) {
-      queueNotification(ColorKeys.Warning, "Please try again");
+      queueNotification(ColorKeys.Warning, t("error.retry"));
       externalAuthPromiseReject();
     } else {
-      queueNotification(ColorKeys.Danger, response?.error || "Unknown error");
+      queueNotification(ColorKeys.Danger, response?.error || t("error.unknown"));
       externalAuthPromiseReject();
     }
   }
@@ -162,25 +163,24 @@
 </style>
 
 <Modal
-  title={"Choose account"}
+  title={t("auth.oauth.tokens.title")}
   bind:showModal={showModalInternal}
   bind:success
   bind:failure
 >
   <Paragraph>
-    You are already signed in with {selectedClient?.name}.<br>
-    You can choose one of your existing accounts or authorize a new account.
+    {t("auth.oauth.tokens.exists", { values: { client: selectedClient?.name } })}
   </Paragraph>
 
   <List
-    label="Authorized Accounts"
+    label={t("auth.oauth.tokens.list")}
     items={oauthClients.clientTokens.get(selectedClientId) || []}
     id={item => item.id}
     template={tokensTemplate}
   />
 
   <Button color={ColorKeys.Accent} onClick={async () => authorizeWithExternalProvider().then(res => success(res)).catch(NoOp)}>
-    Sign into a different account
+    {t("auth.oauth.tokens.new")}
   </Button>
 </Modal>
 
@@ -191,13 +191,13 @@
     </span>
 
     <div class="buttons">
-      <IconButton onClick={() => success(tokens.id)} alt="Use account">
+      <IconButton onClick={() => success(tokens.id)} alt={t("auth.oauth.tokens.use")}>
         <Check size={20}/>
       </IconButton>
     </div>
 
     <span class="internalId">
-      ID: {tokens.id}
+      {t("auth.oauth.tokens.id", { values: { id: tokens.id } })}
     </span>
   </div>
 {/snippet}

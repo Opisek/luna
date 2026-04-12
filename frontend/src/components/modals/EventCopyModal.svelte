@@ -15,6 +15,7 @@
   import IconButton from "../interactive/IconButton.svelte";
   import { Check, Save, X } from "lucide-svelte";
   import { parseTimestampList, serializeTimestampList } from "../../lib/common/ical";
+  import { t } from "@sveltia/i18n";
   
   interface Props {
     copy?: (event: EventModel) => Promise<EventModel>;
@@ -81,7 +82,7 @@
     if (!event.date.recurrence) event.date.recurrence = {};
     event.date.recurrence.RDATE = serializeTimestampList("RDATE", event.date.allDay, "UTC", [...marked.values()]);
     return getRepository().editEvent(event, { date: true }, false).then(() => success(event)).catch(err => {
-      throw new Error(`Could not copy event ${event.name}: ${err.message}`);
+      throw new Error(t("event.error.copy", { values: { name: event.name, msg: err.message } }));
     });
   }
 </script>
@@ -93,22 +94,22 @@
 </style>
 
 <Modal
-  title={"Copy Event"}
+  title={t("event.title.copy")}
   bind:showModal={showModalInternal}
   bind:success
   bind:failure
 >
-  <SelectInput bind:value={event.calendar} name="calendar" placeholder="Calendar" options={selectableCalendars} />
+  <SelectInput bind:value={event.calendar} name="calendar" placeholder={t("calendar.display")} options={selectableCalendars} />
 
   <Paragraph>
-    Select on which days the event should take place.
+    {t("event.copy.instruction")}
   </Paragraph>
 
   <MonthSelection bind:date />
   <SmallCalendar bind:date bind:marked onDayClick={daySelected} />
 
   {#snippet buttons()}
-    <IconButton onClick={save} color={ColorKeys.Success} enabled={marked.size != 0} type="submit" alt="Save" canRenderAsButton={true}><Check/></IconButton>
-    <IconButton onClick={failure} color={ColorKeys.Danger} alt="Cancel" canRenderAsButton={true}><X/></IconButton>
+    <IconButton onClick={save} color={ColorKeys.Success} enabled={marked.size != 0} type="submit" alt={t("button.save")} canRenderAsButton={true}><Check/></IconButton>
+    <IconButton onClick={failure} color={ColorKeys.Danger} alt={t("button.cancel")} canRenderAsButton={true}><X/></IconButton>
   {/snippet}
 </Modal>

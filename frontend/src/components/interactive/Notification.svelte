@@ -1,6 +1,8 @@
 <script lang="ts">
+  import { t } from "@sveltia/i18n";
   import { ColorKeys } from "../../types/colors";
   import type { NotificationModel } from "../../types/notification";
+  import { untrack } from "svelte";
 
   interface Props {
     notification: NotificationModel;
@@ -39,7 +41,7 @@
     viewDetails = false;
   }
 
-  let previousCount = $state(notification.count);
+  let previousCount = $state(untrack(() => $state.snapshot(notification.count))); // https://github.com/sveltejs/svelte/issues/17303
   let counterVisible = $state(false);
   let counterPop = $state(true);
   $effect(() => {
@@ -163,7 +165,7 @@
         {#if viewDetails}
           {notification.details}
         {:else}
-          Hover to view details
+          {t("notification.hover")}
         {/if}
       </span>
     {/if}

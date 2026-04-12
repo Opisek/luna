@@ -4,6 +4,7 @@
   import IconButton from "../interactive/IconButton.svelte";
   import Label from "./Label.svelte";
   import { NoOp } from "../../lib/client/placeholders";
+  import { t } from "@sveltia/i18n";
 
   interface Props {
     color: string;
@@ -32,12 +33,12 @@
   }
 </style>
 
-<Label name={name}>Color</Label>
+<Label name={name}>{t("color.display")}</Label>
 <div
   class:editable={editable}
 >
   {#if editable}
-    <IconButton onClick={pickColor} alt="Color">
+    <IconButton onClick={pickColor} alt={t("color.display")}>
       {@render circle()}
     </IconButton>
     <ColorModal

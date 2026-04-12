@@ -28,12 +28,14 @@
   "type": "module",
   "dependencies": {
     "@sveltejs/kit": "^2.55.0",
+    "@sveltia/i18n": "^1.0.2",
     "dayjs": "^1.11.20",
     "dotenv": "^17.3.1",
     "iplocation": "^7.2.0",
     "rrule": "^2.8.1",
     "sha1": "^1.1.1",
     "sha256": "^0.2.0",
-    "ua-parser-js": "^2.0.9"
+    "ua-parser-js": "^2.0.9",
+    "yaml": "^2.8.3"
   }
 }

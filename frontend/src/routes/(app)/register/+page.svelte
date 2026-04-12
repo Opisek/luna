@@ -16,6 +16,7 @@
   import Box from '../../../components/layout/Box.svelte';
   import { browser } from '$app/environment';
   import type { ActionResult } from '@sveltejs/kit';
+  import { t } from '@sveltia/i18n';
 
   interface PageProps {
     data: {
@@ -108,22 +109,22 @@
 
 <SimplePage>
   {#if data.registrationEnabled || inviteCodeValidAndNotEmpty}
-    <Form title="Register" submittable={canSubmit} callback={handleError}>
+    <Form title={t("login.title.register")} submittable={canSubmit} callback={handleError}>
       <TextInput
         name="username"
-        placeholder="Username"
+        placeholder={t("user.username")}
         validation={isValidUsername}
         bind:validity={usernameValidity}
       />
       <TextInput
         name="email"
-        placeholder="Email"
+        placeholder={t("user.email")}
         validation={isValidEmail}
         bind:validity={emailValidity}
       />
       <TextInput
         name="password"
-        placeholder="Password"
+        placeholder={t("login.password")}
         password={true}
         validation={isValidPassword}
         bind:value={password}
@@ -131,43 +132,40 @@
       />
       <TextInput
         name="password_repeat"
-        placeholder="Repeat Password"
+        placeholder={t("login.repeat")}
         password={true}
         validation={isValidRepeatPassword(password)}
         bind:validity={passwordRepeatValidity}
       />
       <ToggleInput
         name="remember"
-        description="Remember me"
+        description={t("login.remember")}
       />
       {#if !data.registrationEnabled}
         <TextInput
           name="invite_code"
-          placeholder="Invite Code"
+          placeholder={t("login.invite")}
           bind:value={inviteCode}
           validation={isValidInviteCode}
           bind:validity={inviteCodeValidity}
           formatting={inviteCodeFormatting}
         />
       {/if}
-      <Link href="/login?redirect={encodeURIComponent(redirect)}">Already got an account?</Link>
+      <Link href="/login?redirect={encodeURIComponent(redirect)}">{t("login.link.login")}</Link>
     </Form>
   {:else}
     <Box>
-      <Title>Registration</Title>
-      <Paragraph>
-        To register, please input an invite code.
-        Please contact the administrator if you don't have one.
-      </Paragraph>
+      <Title>{t("login.title.register")}</Title>
+      <Paragraph>{t("login.closed")}</Paragraph>
       <TextInput
         name="invite_code"
-        placeholder="Invite Code"
+        placeholder={t("login.invite")}
         bind:value={inviteCode}
         validation={isValidInviteCode}
         bind:validity={inviteCodeValidity}
         formatting={inviteCodeFormatting}
       />
-      <Link href="/login?redirect={encodeURIComponent(redirect)}">Already got an account?</Link>
+      <Link href="/login?redirect={encodeURIComponent(redirect)}">{t("login.link.login")}</Link>
     </Box>
   {/if}
 </SimplePage>

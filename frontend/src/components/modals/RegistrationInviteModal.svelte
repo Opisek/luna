@@ -12,6 +12,7 @@
   import { getRegistrationInvites } from "../../lib/client/data/invites.svelte";
   import Image from "../layout/Image.svelte";
   import Horizontal from "../layout/Horizontal.svelte";
+  import { t } from "@sveltia/i18n";
   
   interface Props {
     showModal: (initial?: RegistrationInvite, edit?: boolean) => Promise<RegistrationInvite>;
@@ -37,11 +38,11 @@
   };
 
   let editMode: boolean = $state(false);
-  let title: string = $derived(invite.id? "Registration Invite" : "Invite User");
+  let title: string = $derived(invite.id ? t("invite.title.view") : t("invite.title.create"));
 
   const onDelete = async () => {
     return invites.revokeInvite(invite.id).then(() => invite).catch(err => {
-      throw new Error(`Could not delete registration invite: ${err.message}`);
+      throw new Error(t("invite.error.delete", { values: { msg: err.message } }));
     });
   };
   const onEdit = async () => {
@@ -52,10 +53,10 @@
         }, 50);
         return newInvite;
       }).catch(err => {
-        throw new Error(`Could not create registration invite: ${err.message}`);
+        throw new Error(t("invite.error.create", { values: { msg: err.message } }));
       });
     } else {
-      throw new Error("Not implemented");
+      throw new Error(t("error.unimplemented"));
     }
   };
 
@@ -67,7 +68,7 @@
 
 <EditableModal
   title={title}
-  deleteConfirmation={`Are you sure you want to delete the registration invite?`}
+  deleteConfirmation={t("invite.confirm.delete")}
   bind:editMode={editMode}
   bind:showModal={showModalInternal}
   onDelete={onDelete}
@@ -80,13 +81,13 @@
     <SelectInput
       bind:value={duration}
       name="duration"
-      placeholder="Invite Expiration"
+      placeholder={t("invite.expiry.display")}
       options={[
-        { name: "1 Hour", value: 60 * 60 },
-        { name: "3 Hours", value: 3 * 60 * 60 },
-        { name: "1 Day", value: 24 * 60 * 60 },
-        { name: "3 Days", value: 3 * 24 * 60 * 60 },
-        { name: "7 Days", value: 7 * 24 * 60 * 60 },
+        { name: t("invite.expiry.preset.1h"), value: 60 * 60 },
+        { name: t("invite.expiry.preset.3h"), value: 3 * 60 * 60 },
+        { name: t("invite.expiry.preset.1d"), value: 24 * 60 * 60 },
+        { name: t("invite.expiry.preset.3d"), value: 3 * 24 * 60 * 60 },
+        { name: t("invite.expiry.preset.7d"), value: 7 * 24 * 60 * 60 },
       ]}
     />
   {:else}
@@ -94,15 +95,15 @@
     <Horizontal position="center">
       <Image
           src={`/api/invites/${invite.id}/qr`}
-          alt="QR Code"
+          alt={t("invite.qr")}
           large={true}
       />
     </Horizontal>
 
     <TextInput
       value={inviteCode}
-      name="id"
-      placeholder="Invite Code"
+      name="invite_code"
+      placeholder={t("invite.code")}
       editable={false}
       displayCopyButton={true}
       mono={true}
@@ -110,17 +111,17 @@
 
     <TextInput
       value={inviteLink}
-      name="user_id"
-      placeholder="Invite Link"
+      name="invite_link"
+      placeholder={t("invite.link")}
       editable={false}
       displayCopyButton={true}
     />
       
-    <DateTimeInput value={invite.created_at} allDay={false} placeholder="Creation Date" name="created_at" editable={false}/>
-    <DateTimeInput value={invite.expires_at} allDay={false} placeholder="Expiry Date" name="expires_at" editable={false}/>
+    <DateTimeInput value={invite.created_at} allDay={false} placeholder={t("invite.date.creation.display")} name="created_at" editable={false}/>
+    <DateTimeInput value={invite.expires_at} allDay={false} placeholder={t("invite.date.expiry.display")} name="expires_at" editable={false}/>
 
     {#if settings.userSettings[UserSettingKeys.DebugMode]}
-      <TextInput value={invite.id} name="id" placeholder="Invite ID" editable={false} />
+      <TextInput value={invite.id} name="id" placeholder={t("invite.id.label")} editable={false} />
     {/if}
   {/if}
 </EditableModal>

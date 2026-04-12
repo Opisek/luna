@@ -9,6 +9,8 @@
   import { focusIndicator } from "$lib/client/decoration";
   import { getMonthName } from "$lib/common/humanization";
 
+  import { t } from "@sveltia/i18n";
+
   interface Props {
     date: Date;
     granularity?: "month" | "week" | "day";
@@ -22,6 +24,7 @@
   }: Props = $props();
 
   let showPopup: () => any = $state(NoOp);
+  let popupButton: HTMLElement | undefined = $state();
 
   function previousMonth() {
     const newDate = new Date(date.getFullYear(), date.getMonth() - 1, date.getDate());
@@ -84,17 +87,17 @@
   {:else if granularity === "day"}
     {@render buttons(previousDay, nextDay)}
   {/if}
-  <button onclick={showPopup} type="button" use:focusIndicator={{ type: "underline" }}>
+  <button bind:this={popupButton} onclick={() => showPopup().catch(NoOp)} type="button" use:focusIndicator={{ type: "underline" }}>
     {`${getMonthName(date.getMonth())} ${date.getFullYear()}`}
-    <MonthPopup bind:showPopup bind:date={date} onSelect={onSelect}/>
   </button>
+  <MonthPopup bind:showPopup bind:date={date} onSelect={onSelect} anchor={popupButton}/>
 </div>
 
 {#snippet buttons(prev: () => void, next: () => void)}
-  <IconButton onClick={prev} alt="Previous month">
+  <IconButton onClick={prev} alt={t("button.month.previous")}>
     <LeftIcon/>
   </IconButton>
-  <IconButton onClick={next} alt="Next month">
+  <IconButton onClick={next} alt={t("button.month.next")}>
     <RightIcon/>
   </IconButton>
 {/snippet}

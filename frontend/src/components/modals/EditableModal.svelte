@@ -10,6 +10,7 @@
   import { ColorKeys } from "../../types/colors";
   import IconButton from "../interactive/IconButton.svelte";
   import { Check, Pencil, Trash2, X } from "lucide-svelte";
+  import { t } from "@sveltia/i18n";
  
   interface Props {
     title: string;
@@ -76,7 +77,7 @@
   async function saveEdit() {
     return onEdit().then((result) => {
       editMode = false;
-      queueNotification(ColorKeys.Success, "Saved successfully")
+      queueNotification(ColorKeys.Success, t("notification.success.save"))
       success(result);
     }).catch((err) => {
       queueNotification(ColorKeys.Danger, err)
@@ -85,7 +86,7 @@
 
   const confirmDelete = async () => {
     return onDelete().then((result) => {
-      queueNotification(ColorKeys.Success, "Deleted successfully")
+      queueNotification(ColorKeys.Success, t("notification.success.delete"))
       success(result);
     }).catch((err) => {
       queueNotification(ColorKeys.Danger, err)
@@ -104,18 +105,18 @@
 {#snippet buttons()}
     {@render extraButtonsLeft?.()}
     {#if editMode}
-      <IconButton onClick={saveEdit} color={ColorKeys.Success} enabled={submittable} type="submit" alt="Save" canRenderAsButton={true}>
+      <IconButton onClick={saveEdit} color={ColorKeys.Success} enabled={submittable} type="submit" alt={t("button.save")} canRenderAsButton={true}>
         <Check/>
       </IconButton>
-      <IconButton onClick={cancelEdit} color={ColorKeys.Danger} alt="Cancel" canRenderAsButton={true}><X/></IconButton>
+      <IconButton onClick={cancelEdit} color={ColorKeys.Danger} alt={t("button.cancel")} canRenderAsButton={true}><X/></IconButton>
     {:else}
       {#if editable}
-        <IconButton onClick={startEditMode} alt="Edit" canRenderAsButton={true}>
+        <IconButton onClick={startEditMode} alt={t("button.edit")} canRenderAsButton={true}>
           <Pencil/>
         </IconButton>
       {/if}
       {#if deletable}
-        <IconButton onClick={() => showDeleteModal().then(confirmDelete).catch(NoOp)} color={ColorKeys.Danger} alt="Delete" canRenderAsButton={true}>
+        <IconButton onClick={() => showDeleteModal().then(confirmDelete).catch(NoOp)} color={ColorKeys.Danger} alt={t("button.delete")} canRenderAsButton={true}>
           <Trash2/>
         </IconButton>
       {/if}
@@ -127,5 +128,5 @@
 <ConfirmationModal bind:showModal={showDeleteModal}>
   {deleteConfirmation}
   <br>
-  This action is irreversible.
+  {t("confirmation.irreversible")}
 </ConfirmationModal>

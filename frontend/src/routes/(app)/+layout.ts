@@ -14,6 +14,12 @@ import { Theme } from "$lib/client/data/theme.svelte";
 import { Users } from "$lib/client/data/users.svelte";
 import { Settings } from "$lib/client/data/settings.svelte";
 import { OauthClients } from "$lib/client/data/oauth.svelte";
+import { browser } from "$app/environment";
+
+import "$lib/common/i18n";
+import { getLocaleFromNavigator, getLocaleFromQueryString, locale, locales, waitLocale } from "@sveltia/i18n";
+import { UserSettingKeys } from "../../types/settings";
+import { loadLanguage } from "$lib/common/i18n";
 
 function getSingletons(version: string, preloadedSettings: { userData: any, userSettings: any, globalSettings: any } | null = null): {
   connectivity: Connectivity;
@@ -79,7 +85,11 @@ export const load: PageLoad = async (event: LoadEvent) => {
     return null; 
   });
 
-  if (!results || results[0].user === undefined) return {
+  const settingsLoaded = results && results[0].user !== undefined;
+
+  await loadLanguage(((results || {})[1] || {})[UserSettingKeys.Language])
+
+  if (!settingsLoaded) return {
     version: version,
     singletons: getSingletons(version)
   };

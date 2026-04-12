@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from "@sveltia/i18n";
   import type { Settings } from "../../../lib/client/data/settings.svelte";
   import { fetchResponse } from "../../../lib/client/net";
   import { NoOp } from "../../../lib/client/placeholders";
@@ -23,8 +24,8 @@
 
   async function resetPreferences() {
     await showConfirmation(
-      "Are you sure you want to reset all your preferences?\nThis action is irreversible.",
-      "Your account will remain intact."
+      `${t("settings.danger.reset.confirmation")}\n${t("confirmation.irreversible")}`,
+      t("settings.danger.reset.details")
     ).then(async () => {
       await fetchResponse("/api/users/self/settings", { method: "DELETE" });
       settings.fetchSettings().then(() => {
@@ -35,5 +36,5 @@
   }
 </script>
 
-<Button color={ColorKeys.Danger} onClick={resetPreferences}>Reset all my preferences</Button>
-<Button color={ColorKeys.Danger} onClick={() => deleteAccount()}>Delete my account</Button>
+<Button color={ColorKeys.Danger} onClick={resetPreferences}>{t("settings.danger.reset.button")}</Button>
+<Button color={ColorKeys.Danger} onClick={() => deleteAccount()}>{t("settings.danger.delete")}</Button>

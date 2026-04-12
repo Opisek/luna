@@ -4,6 +4,7 @@ import { getRedirectPage } from "./lib/common/parsing";
 import "dotenv/config"
 import { loginPaths, unprivilegedPaths } from "./lib/common/paths";
 import { encodeRedirectUrl } from "./lib/common/url";
+import { locale } from "@sveltia/i18n";
 
 export const handle: Handle = async ({ event, resolve }) => {
   const tokenPresent = event.cookies.get("tokenPresent");
@@ -61,5 +62,8 @@ export const handle: Handle = async ({ event, resolve }) => {
     }
   }
 
-  return await resolve(event)
+  const lang = event.request.headers.get('accept-language')?.split(',')[0];
+  if (lang) await locale.set(lang);
+
+  return resolve(event)
 }

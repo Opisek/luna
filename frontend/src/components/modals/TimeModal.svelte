@@ -6,6 +6,7 @@
   import { NoOp } from '$lib/client/placeholders';
   import { untrack } from "svelte";
   import { ColorKeys } from "../../types/colors";
+  import { t } from "@sveltia/i18n";
 
   interface Props {
     showModal: (initial: Date) => Promise<Date>;
@@ -146,7 +147,7 @@
 </style>
 
 <Modal
-  title="Pick Time"
+  title={t("time.title")}
   bind:showModal={showModalInternal}
   bind:success
   bind:failure
@@ -260,9 +261,9 @@
         {/if}
       {/each}
   </div>
-  <SelectButtons bind:value={amPm} name="AM/PM" placeholder="AM/PM" editable={true} options={[{name: "AM", value: "am"}, {name: "PM", value: "pm"}]} label={false}/>
+  <SelectButtons bind:value={amPm} name="AM/PM" placeholder={t("time.ampm")} editable={true} options={[{name: t("time.am"), value: "am"}, {name: t("time.pm"), value: "pm"}]} label={false}/>
   {#snippet buttons()}
-      <Button onClick={dateSelected} color={ColorKeys.Success}>Confirm</Button>
-      <Button onClick={failure} color={ColorKeys.Danger}>Cancel</Button>
+      <Button onClick={dateSelected} color={ColorKeys.Success}>{t("button.confirm")}</Button>
+      <Button onClick={failure} color={ColorKeys.Danger}>{t("button.cancel")}</Button>
   {/snippet}
 </Modal>

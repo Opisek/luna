@@ -3,7 +3,7 @@
 
   import type { Snippet } from "svelte";
   import Popup from "../popups/Popup.svelte";
-  import { NoOp } from "../../lib/client/placeholders";
+  import { AsyncNoOp, NoOp } from "../../lib/client/placeholders";
 
   interface Props {
     error?: boolean;
@@ -29,7 +29,7 @@
     icon,
   }: Props = $props();
 
-  let showPopover = $state(NoOp);
+  let showPopover = $state(AsyncNoOp);
   let hidePopover = $state(NoOp);
 </script>
 
@@ -87,7 +87,7 @@
   class:pointerCursor={pointerCursor}
   role={role}
   tabindex="-1"
-  onmouseenter={showPopover}
+  onmouseenter={() => showPopover().catch(NoOp)}
   onmouseleave={hidePopover}
   onfocus={hidePopover}
   onblur={hidePopover}

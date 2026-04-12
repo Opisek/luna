@@ -8,6 +8,7 @@
   import { calculateOptimalPopupPosition } from "$lib/common/calculations";
   import { focusIndicator } from "$lib/client/decoration";
   import type { Option } from "../../types/options";
+  import { NoOp } from "$lib/client/placeholders";
 
   let active = $state(false);
   let optionsAbove = $state(false);
@@ -19,6 +20,7 @@
     editable?: boolean;
     options: Option<T>[];
     showLabel?: boolean;
+    click?: (value: T) => void;
   }
 
   let {
@@ -27,7 +29,8 @@
     name,
     editable = true,
     options,
-    showLabel = true
+    showLabel = true,
+    click = NoOp,
   }: Props = $props();
 
   let selectedOption: Option<T> | null = $derived(options.filter(x => x.value === value)[0] || null);
@@ -69,6 +72,7 @@
   function optionClick(option: Option<T>) {
     value = option.value;
     selectWrapper.focus();
+    click(value);
   }
 
   function clickOutside(event: MouseEvent) {
@@ -290,7 +294,7 @@
     bind:this={optionsWrapper}
     popover="manual"
   >
-    {#each options as option}
+    {#each options as option (option.value)}
       <button
         class="option" 
         onclick={() => optionClick(option)}

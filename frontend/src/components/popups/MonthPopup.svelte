@@ -12,9 +12,11 @@
   import { getSettings } from "../../lib/client/data/settings.svelte";
   import { UserSettingKeys } from "../../types/settings";
   import { ColorKeys } from "../../types/colors";
+  import { t } from "@sveltia/i18n";
 
   interface Props {
     date: Date;
+    anchor?: HTMLElement | undefined;
     showPopup?: () => Promise<void>;
     hidePopup?: () => void;
     onSelect?: (date: Date) => void;
@@ -22,6 +24,7 @@
 
   let {
     date = $bindable(new Date()),
+    anchor = undefined,
     showPopup = $bindable(AsyncNoOp),
     hidePopup = $bindable(NoOp),
     onSelect = NoOp,
@@ -49,7 +52,6 @@
   /* Animation */
   let viewIteration = $state(0);
   let flyDirection = $state("left");
-  setContext("flyDirection", () => flyDirection);
 
   /* Selection */
   let selectedMonth: number = $state(date.getMonth());
@@ -156,9 +158,9 @@
   }
 </style>
 
-<Popup bind:showPopup={internalShow} bind:hidePopup={internalClose} tooltip={false}>
+<Popup bind:showPopup={internalShow} bind:hidePopup={internalClose} tooltip={false} anchor={anchor}>
   <div class="topRow">
-    <IconButton onClick={prev} alt="Previous month" color={ColorKeys.Accent}>
+    <IconButton onClick={prev} alt={t("button.month.previous")} color={ColorKeys.Accent}>
       <ChevronLeft/>
     </IconButton>
     <button
@@ -173,7 +175,7 @@
         {decadeStart} - {decadeStart + 9}
       {/if}
     </button>
-    <IconButton onClick={next} alt="Next month" color={ColorKeys.Accent}>
+    <IconButton onClick={next} alt={t("button.month.next")} color={ColorKeys.Accent}>
       <ChevronRight/>
     </IconButton>
   </div>
@@ -203,8 +205,8 @@
   <div
     class="grid month"
     class:animate={animate}
-    in:svelteFlyInHorizontal={{duration: animate ? 500 * settings.userSettings[UserSettingKeys.AnimationDuration] : 0}}
-    out:svelteFlyOutHorizontal={{duration: animate ? 500 * settings.userSettings[UserSettingKeys.AnimationDuration] : 0}}
+    in:svelteFlyInHorizontal={{duration: animate ? 500 * settings.userSettings[UserSettingKeys.AnimationDuration] : 0, flyDirection: () => flyDirection}}
+    out:svelteFlyOutHorizontal={{duration: animate ? 500 * settings.userSettings[UserSettingKeys.AnimationDuration] : 0, flyDirection: () => flyDirection}}
   >
     {#each Array(12) as _, i}
       <button
@@ -213,7 +215,7 @@
         onclick={(e) => clickMonth(e, i)}
         use:focusIndicator
       >
-        {getMonthName(i).substring(0, 3)}
+        {getMonthName(i, true)}
       </button>
     {/each}
   </div>
@@ -223,8 +225,8 @@
   <div
     class="grid year"
     class:animate={animate}
-    in:svelteFlyInHorizontal={{duration: animate ? 500 * settings.userSettings[UserSettingKeys.AnimationDuration] : 0}}
-    out:svelteFlyOutHorizontal={{duration: animate ? 500 * settings.userSettings[UserSettingKeys.AnimationDuration] : 0}}
+    in:svelteFlyInHorizontal={{duration: animate ? 500 * settings.userSettings[UserSettingKeys.AnimationDuration] : 0, flyDirection: () => flyDirection}}
+    out:svelteFlyOutHorizontal={{duration: animate ? 500 * settings.userSettings[UserSettingKeys.AnimationDuration] : 0, flyDirection: () => flyDirection}}
   >
     {#each Array(10) as _, i}
       <button

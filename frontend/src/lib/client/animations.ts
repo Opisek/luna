@@ -1,9 +1,8 @@
 import { getContext } from "svelte";
 import { cubicOut } from "svelte/easing";
 
-export function svelteFlyInHorizontal(node: Node, { duration }: { duration: number }) {
-  const context = getContext("flyDirection");
-  const direction = typeof context === "function" ? context() : "left";
+export function svelteFlyInHorizontal(node: Node, { duration, flyDirection }: { duration: number, flyDirection: () => string }) {
+  const direction = flyDirection();
   return {
     duration: duration,
     easing: cubicOut,
@@ -11,9 +10,8 @@ export function svelteFlyInHorizontal(node: Node, { duration }: { duration: numb
   }
 }
 
-export function svelteFlyOutHorizontal(node: Node, { duration }: { duration: number }) {
-  const context = getContext("flyDirection");
-  const direction = typeof context === "function" ? context() : "left";
+export function svelteFlyOutHorizontal(node: Node, { duration, flyDirection }: { duration: number, flyDirection: () => string }) {
+  const direction = flyDirection();
   return {
     duration: duration,
     easing: cubicOut,

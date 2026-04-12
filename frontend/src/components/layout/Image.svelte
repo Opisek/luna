@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { untrack } from "svelte";
   import Loader from "../decoration/Loader.svelte";
 
   interface Props {
@@ -19,7 +20,7 @@
 
   let loaded = $state(false);
   let error = $state(false);
-  let previousSrc = $state(src);
+  let previousSrc = $state(untrack(() => $state.snapshot(src))); // https://github.com/sveltejs/svelte/issues/17303
 
   $effect(() => {
     if (src !== previousSrc) {

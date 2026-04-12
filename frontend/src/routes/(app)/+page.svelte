@@ -15,7 +15,7 @@
   import SourceModal from "../../components/modals/SourceModal.svelte";
   import Title from "../../components/layout/Title.svelte";
 
-  import { afterNavigate, beforeNavigate } from "$app/navigation";
+  import { afterNavigate, beforeNavigate, replaceState } from "$app/navigation";
   import { browser } from "$app/environment";
 
   import SmallCalendar from "../../components/interactive/SmallCalendar.svelte";
@@ -37,6 +37,7 @@
   import { page } from "$app/state";
   import CreditsModal from "../../components/modals/CreditsModal.svelte";
   import CreatePopup from "../../components/popups/CreatePopup.svelte";
+  import { locale, t } from "@sveltia/i18n";
 
   /* Singletons */
   const settings = getSettings();
@@ -68,7 +69,7 @@
     url.searchParams.set("view", view);
     url.searchParams.set("date", date.toISOString().split("T")[0]);
 
-    history.replaceState(history.state, '', url);
+    replaceState(url, page.state);
   })
 
   function getVisibleRange(date: Date, view: "month" | "week" | "day"): { start: Date, end: Date } {
@@ -192,6 +193,8 @@
   let showCreditsModal: () => any = $state(NoOp);
 
   let showCreatePopup: () => any = $state(NoOp);
+
+  let addButton: HTMLElement | undefined = $state();
 </script>
 
 <style lang="scss">
@@ -287,7 +290,7 @@
 <CreditsModal bind:showModal={showCreditsModal}/>
 
 <aside>
-  <Title>Luna</Title>
+  <Title>{t("branding.name")}</Title>
 
   {#if settings.userSettings[UserSettingKeys.DisplaySmallCalendar]}
     <SmallCalendar date={date} smaller={true} onDayClick={(clickedDate) => smallCalendarClick(clickedDate)}></SmallCalendar>
@@ -298,26 +301,26 @@
   </div>
 
   <Horizontal position="center">
-    <IconButton onClick={showSettingsModal} alt="Settings">
+    <IconButton onClick={showSettingsModal} alt={t("button.settings")}>
       <Settings/>
     </IconButton>
-    <IconButton onClick={showCreatePopup} alt="Add source">
+    <IconButton bind:button={addButton} onClick={() => showCreatePopup().catch(NoOp)} alt={t("button.add.generic")}>
       <PlusIcon/>
-      <CreatePopup
-        bind:showPopup={showCreatePopup}
-        addSource={showSourceWizardModal}
-        addCalendar={showCalendarModal}
-        addEvent={showEventModal}
-      />
     </IconButton>
-    <IconButton onClick={showCreditsModal} alt="Credits">
+    <CreatePopup
+      bind:showPopup={showCreatePopup}
+      anchor={addButton}
+      addSource={showSourceWizardModal}
+      addCalendar={showCalendarModal}
+      addEvent={showEventModal}
+    />
+    <IconButton onClick={showCreditsModal} alt={t("button.credits")}>
       <Copyleft/>
     </IconButton>
   </Horizontal>
 
   <span class="copyright">
-    Copyright © 2026 Kacper Darowski (Opisek)<br>
-    Licensed under TBD 
+    {t("branding.copyright")}
   </span>
 </aside>
 
@@ -328,21 +331,21 @@
       {#if connectivity.reachable != Reachability.Database}
         <span class="reachability">
           {#if connectivity.reachable == Reachability.Backend}
-            The database cannot be reached.
+            {t("reachability.database")}
           {:else if connectivity.reachable == Reachability.Frontend}
-            The backend server cannot be reached.
+            {t("reachability.backend")}
           {:else if connectivity.reachable == Reachability.None}
-            The frontend server cannot be reached.
+            {t("reachability.frontend")}
           {:else if connectivity.reachable == Reachability.Incompatible}
-            The frontend server and the backend server are not compatible.
+            {t("reachability.compatibility")}
           {:else}
-            Unknown network error
+            {t("reachability.unknown")}
           {/if}
           <WifiOff size={20}/>
         </span>
       {/if}
 
-      <IconButton onClick={forceRefresh} alt="Refresh">
+      <IconButton onClick={forceRefresh} alt={t("button.refresh")}>
         <span class="refreshButtonWrapper" class:spin={loaderAnimation} onanimationiteration={() => { if (!isLoading) loaderAnimation = false; }}>
           <RefreshCw size={20}/>
         </span>
@@ -350,7 +353,7 @@
 
       {#if !todayInRange}
         <Button onClick={seeToday} compact={true}>
-          Today
+          {t("scope.today")}
         </Button>
       {/if}
 
@@ -363,9 +366,9 @@
         compact={true}
         bind:value={view}
         options={[
-          { value: "day", name: "Day"},
-          { value: "week", name: "Week"},
-          { value: "month", name: "Month"},
+          { value: "day", name: t("scope.day")},
+          { value: "week", name: t("scope.week")},
+          { value: "month", name: t("scope.month")},
         ]}
       />
     </Horizontal>

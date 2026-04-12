@@ -8,6 +8,7 @@
   import { Github } from "svelte-simples";
   import List from "../forms/List.svelte";
   import Vertical from "../layout/Vertical.svelte";
+  import { t } from "@sveltia/i18n";
 
   interface Props {
     showModal: () => any;
@@ -17,20 +18,20 @@
     showModal = $bindable(),
   }: Props = $props();
 
-  const categories: Option<string>[][] = [
+  const categories: Option<string>[][] = $derived([
     [
       //{ name: "Tech Stack", value: "languages", icon: Languages },
-      { name: "Tech Stack", value: "languages", icon: Layers },
+      { name: t("credits.stack.display"), value: "languages", icon: Layers },
     ],
     [
-      { name: "Frontend", value: "frontend", icon: Package },
-      { name: "Themes", value: "themes", icon: Palette },
-      { name: "Fonts", value: "fonts", icon: CaseSensitive },
+      { name: t("credits.frontend.display"), value: "frontend", icon: Package },
+      { name: t("credits.themes.display"), value: "themes", icon: Palette },
+      { name: t("credits.fonts.display"), value: "fonts", icon: CaseSensitive },
     ],
     [
-      { name: "Backend", value: "backend", icon: Package },
+      { name: t("credits.backend.display"), value: "backend", icon: Package },
     ],
-  ]
+  ]);
 
   let selectedCategory: string = $state("languages");
 </script>
@@ -102,7 +103,7 @@
 </style>
 
 <Modal
-  title={"Credits"}
+  title={t("credits.title")}
   bind:showModal
 >
   <div class="container">
@@ -111,14 +112,14 @@
         bind:value={selectedCategory}
         options={categories} 
       />
-      <IconButton href="https://github.com/Opisek/luna" alt="Luna Repository">
+      <IconButton href="https://github.com/Opisek/luna" alt={t("credits.repository")}>
         <Github/>
       </IconButton>
     </Vertical>
     <main tabindex="-1">
       {#if selectedCategory === "languages"}
         <List
-          label="Tech Stack and Languages"
+          label={t("credits.stack.subtitle")}
           items={[
             { name: "Bun", desc: "JavaScript Runtime", license: "MIT", url: "https://bun.com/", author: "Oven"},
             { name: "ECMAScript", desc: "Frontend Language", license: "Ecma Text Copyright Policy", url: "https://ecma-international.org/technical-committees/tc39/", author: "Ecma International"},
@@ -133,7 +134,7 @@
         />
       {:else if selectedCategory === "frontend"}
         <List
-          label="Frontend Libraries"
+          label={t("credits.frontend.subtitle")}
           items={[
             { name: "@types", desc: "Various TypeScript type definitions", license: "MIT", url: "https://github.com/DefinitelyTyped/DefinitelyTyped/", author: "DefinitelyTyped contributors"},
             { name: "Lucide (for Svelte)", desc: "Main icons library", license: "ISC", url: "https://lucide.dev/", author: "Lucide contributors"},
@@ -148,13 +149,15 @@
             { name: "sha256", desc: "SHA256 implementation", license: "MIT", url: "https://github.com/cryptocoinjs/sha256", author: "JP Richardson"},
             { name: "svelte-adapter-bun", desc: "Svelte integration for bun web server", license: "MIT", url: "https://github.com/gornostay25/svelte-adapter-bun", author: "Volodymyr Palamar"},
             { name: "vite-plugin-svelte", desc: "Svelte integration for vite web server", license: "MIT", url: "https://github.com/sveltejs/vite-plugin-svelte", author: "Svelte contributors"},
+            { name: "Sveltia I18n", desc: "Internationalization library", license: "MIT", url: "https://github.com/sveltia/sveltia-i18n", author: "Sveltia"},
+            { name: "yaml", desc: "YAML format parsing", license: "ISC", url: "https://github.com/eemeli/yaml", author: "Eemeli Aro"},
           ]}
           id={item => item.url}
           template={creditTemplate}
         />
       {:else if selectedCategory === "backend"}
         <List
-          label="Backend Libraries"
+          label={t("credits.backend.subtitle")}
           items={[
             { name: "Cron", desc: "Cron job scheduler", license: "MIT", url: "https://github.com/robfig/cron", author: "Rob Figueiredo"},
             { name: "Gin", desc: "Web server framework", license: "MIT", url: "https://gin-gonic.com/", author: "Gin contributors"},
@@ -177,7 +180,7 @@
         />
       {:else if selectedCategory === "fonts"}
         <List
-          label="Pre-installed Fonts"
+          label={t("credits.fonts.subtitle")}
           items={[
             { name: "Atkinson Hyperlegible (Next/Mono)", desc: "Accessibility-focused typefaces", license: "SIL OPEN FONT LICENSE Version 1.1", url: "https://www.brailleinstitute.org/freefont/", author: "Braille Institute of America, Inc."},
           ]}
@@ -186,7 +189,7 @@
         />
       {:else if selectedCategory === "themes"}
         <List
-          label="Theme Color Definitions"
+          label={t("credits.themes.subtitle")}
           items={[
             { name: "Catpuccin", desc: "", license: "MIT", url: "https://catppuccin.com/", author: "Catpuccin"},
             { name: "Dracula", desc: "", license: "MIT", url: "https://draculatheme.com/", author: "Zeno Rocha & Lucas de França"},
@@ -216,7 +219,7 @@
     </span>
 
     <div class="buttons">
-      <IconButton href={c.url} alt="Source">
+      <IconButton href={c.url} alt={t("credits.source")}>
         {#if c.url.startsWith("https://github.com/")}
           <Github size={20}/>
         {:else}

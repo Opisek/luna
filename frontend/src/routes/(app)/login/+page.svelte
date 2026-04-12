@@ -13,6 +13,7 @@
   import { queueNotification } from '$lib/client/notifications';
   import { browser } from '$app/environment';
   import type { ActionResult } from '@sveltejs/kit';
+  import { t } from '@sveltia/i18n';
 
   afterNavigate(() => {
     if (browser) localStorage.clear();
@@ -33,25 +34,25 @@
 </script>
 
 <SimplePage>
-  <Form title="Login" submittable={canSubmit} callback={handleError}>
+  <Form title={t("login.title.login")} submittable={canSubmit} callback={handleError}>
     <TextInput
       name="username"
-      placeholder="Username"
+      placeholder={t("user.username")}
       validation={isValidUsername}
       bind:validity={usernameValidity}
     />
     <TextInput
       name="password"
-      placeholder="Password"
+      placeholder={t("login.password")}
       password={true}
       validation={isValidPassword}
       bind:validity={passwordValidity}
     />
     <ToggleInput
       name="remember"
-      description="Remember me"
+      description={t('login.remember')}
     />
-    <Link href="/register?redirect={encodeURIComponent(redirect)}">No account yet?</Link>
-    <Link href="/recover?redirect={encodeURIComponent(redirect)}">Forgot password?</Link>
+    <Link href="/register?redirect={encodeURIComponent(redirect)}">{t("login.link.register")}</Link>
+    <Link href="/recover?redirect={encodeURIComponent(redirect)}">{t("login.link.recover")}</Link>
   </Form>
 </SimplePage>

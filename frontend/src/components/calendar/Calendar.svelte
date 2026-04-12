@@ -4,8 +4,7 @@
   import { compareEventsByStartDate } from "$lib/common/comparators";
   import { getDayName } from "$lib/common/humanization";
 
-  import { getContext, setContext } from "svelte";
-  import { writable } from "svelte/store";
+  import { getContext, setContext, untrack } from "svelte";
   import { getDayIndex, getWeekNumber, getWeekMonth, isSameDay } from "$lib/common/date";
   import { getSettings } from "$lib/client/data/settings.svelte";
   import { UserSettingKeys } from "../../types/settings";
@@ -34,9 +33,8 @@
 
   /* Animation */
   let viewIteration = $state(0);
-  let currentDate = $state(new Date(date));
+  let currentDate = $state(untrack(() => new Date($state.snapshot(date)))); // https://github.com/sveltejs/svelte/issues/17303
   let flyDirection = $state("left");
-  setContext("flyDirection", () => flyDirection);
   $effect(() => {
     if (date.getTime() === currentDate.getTime()) return;
     flyDirection = currentDate.getTime() <= date.getTime() ? "left" : "right";
@@ -301,8 +299,8 @@
     class:columns-month={view === "month"}
     class:columns-week={view === "week"}
     class:columns-day={view === "day"}
-    in:svelteFlyInHorizontal={{duration: animate ? 500 * settings.userSettings[UserSettingKeys.AnimationDuration] : 0}}
-    out:svelteFlyOutHorizontal={{duration: animate ? 500 * settings.userSettings[UserSettingKeys.AnimationDuration] : 0}}
+    in:svelteFlyInHorizontal={{duration: animate ? 500 * settings.userSettings[UserSettingKeys.AnimationDuration] : 0, flyDirection: () => flyDirection}}
+    out:svelteFlyOutHorizontal={{duration: animate ? 500 * settings.userSettings[UserSettingKeys.AnimationDuration] : 0, flyDirection: () => flyDirection}}
   >
     {#each days as day, i}
       <Day

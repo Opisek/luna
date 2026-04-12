@@ -21,6 +21,7 @@
   import Spinner from "../decoration/Spinner.svelte";
   import IconButton from "../interactive/IconButton.svelte";
   import { Check, X } from "lucide-svelte";
+  import { t } from "@sveltia/i18n";
 
   interface Props {
     showModal?: () => Promise<SourceModel>;
@@ -67,9 +68,6 @@
   let performOauthAuhorization: (clientId: string) => Promise<string> = $state(async () => "");
   let abortOauthAuthorization: () => void = $state(NoOp);
 
-  let promiseResolve: (value: SourceModel) => void = $state(NoOp);
-  let promiseReject: (reason?: any) => void = $state(NoOp);
-
   showModal = async () => {
     oauthClients.fetch();
 
@@ -96,12 +94,7 @@
     }
     lastUrlValidity = valid;
 
-    showModalInternal();
-
-    return new Promise((resolve, reject) => {
-      promiseResolve = resolve;
-      promiseReject = reject;
-    });
+    return showModalInternal();
   }
 
   let submittable = $derived.by(() => {
@@ -144,7 +137,7 @@
     return getRepository().createSource(source).then(() => {
       success(source);
     }).catch(err => {
-      queueNotification(ColorKeys.Danger, `Could not create source ${source.name}: ${err.message}`);
+      queueNotification(ColorKeys.Danger, t("source.error.create", { values: { name: source.name, msg: err.message } }));
     });
   }
 
@@ -167,13 +160,13 @@
     if (checkUrl === "") {
       return {
         valid: false,
-        message: "URL is required.",
+        message: t("source.error.url.empty"),
       };
     }
     if (needAuth && ((authType === "basic" && (auth.username === "" || auth.password === "")) || (authType === "bearer" && auth.token === ""))) {
       return {
         valid: false,
-        message: "Credentials are required to access this URL.",
+        message: t("source.error.url.credentials.empty"),
       };
     }
     if (cachedChecks.has(cacheKey)) {
@@ -208,7 +201,7 @@
               default:
               case "unknown":
                 if (res.type === "unknown" && res.status == 401) {
-                  const message = (needAuth && authType !== "none") ? "Credentials are incorrect." : "Credentials are required to access this URL.";
+                  const message = (needAuth && authType !== "none") ? t("source.error.url.credentials.incorrect") : t("source.error.url.credentials.empty");
                   needAuth = true;
                   if (authType == "none") authType = "basic";
                   return {
@@ -218,7 +211,7 @@
                 } else {
                   return {
                     valid: false,
-                    message: "Could not find calendars. Are you sure this URL is correct?",
+                    message: t("source.error.url.calendars"),
                   };
                 }
               case "ical":
@@ -240,10 +233,10 @@
                 };
             }
           }).catch((err) => {
-            queueNotification(ColorKeys.Danger, `Could not find calendars: ${err.message}`);
+            queueNotification(ColorKeys.Danger, t("source.error.calendars.find", { values: { msg: err.message } }));
             return {
               valid: false,
-              message: "Could not find calendars. Are you sure this URL is correct?",
+              message: t("source.error.url.calendars"),
             }
           });
         })();
@@ -267,7 +260,7 @@
       auth.client_id = googleOauthClient.id;
       auth.tokens_id = id;
     }).catch(() => {
-      queueNotification(ColorKeys.Danger, "Authorization aborted");
+      queueNotification(ColorKeys.Danger, t("auth.oauth.abort"));
     }).finally(() => {
       oauthPending = false;
     });
@@ -275,24 +268,23 @@
 </script>
 
 <Modal
-  title="Source wizard"
+  title={t("source.title.wizard")}
   bind:showModal={showModalInternal}
   bind:success
   bind:failure
   onModalHide={() => {
-    promiseReject();
     abortOauthAuthorization();
   }}
 >
   <TextInput bind:value={name} name="name" placeholder="Name"/>
-  <SelectButtons bind:value={inputType} name="ical_location" placeholder={"What do you want to add?"} options={[
+  <SelectButtons bind:value={inputType} name="ical_location" placeholder={t("form.wizard.location")} options={[
     {
       value: "link",
-      name: "Internet Link",
+      name: t("ical.location.remote"),
     },
     {
       value: "file",
-      name: "Upload File",
+      name: t("ical.location.database"),
     },
     //{
     //  value: "holidays",
@@ -300,28 +292,28 @@
     //},
     {
       value: "google",
-      name: "Google Calendar",
+      name: t("google.display"),
     },
   ]}/>
 
   {#if inputType === "link"}
     <TextInput bind:value={url} name="url" placeholder="URL" validation={checkUrl} bind:validity={urlValid} />
     {#if needAuth}
-        <SelectButtons bind:value={authType} name="auth_type" placeholder={"Authentication Type"} options={[
+        <SelectButtons bind:value={authType} name="auth_type" placeholder={t("auth.type")} options={[
         {
           value: "basic",
-          name: "Password",
+          name: t("auth.basic.display"),
         },
         {
           value: "bearer",
-          name: "Token",
+          name: t("auth.bearer.display"),
         }
       ]}/>
       {#if authType === "basic"}
-        <TextInput bind:value={auth.username} onInput={queueUrlCheck} name="auth_username" placeholder="Username"/>
-        <TextInput bind:value={auth.password} onInput={queueUrlCheck} name="auth_password" placeholder="Password" password={true} />
+        <TextInput bind:value={auth.username} onInput={queueUrlCheck} name="auth_username" placeholder={t("auth.basic.username")}/>
+        <TextInput bind:value={auth.password} onInput={queueUrlCheck} name="auth_password" placeholder={t("auth.basic.password")} password={true} />
       {:else if authType === "bearer"}
-        <TextInput bind:value={auth.token} onInput={queueUrlCheck} name="auth_token" placeholder="Token" password={true} />
+        <TextInput bind:value={auth.token} onInput={queueUrlCheck} name="auth_token" placeholder={t("auth.bearer.token")} password={true} />
       {/if}
     {/if}
     {#if checkingUrl}
@@ -330,7 +322,7 @@
       </Horizontal>
     {/if}
   {:else if inputType === "file"}
-    <FileUpload bind:files={files} name="file" placeholder="File" accept=".ical,.ics,.ifb,.icalendar" validation={isValidIcalFile} bind:validity={fileValid} />
+    <FileUpload bind:files={files} name="file" placeholder={t("file.display")} accept=".ical,.ics,.ifb,.icalendar" validation={isValidIcalFile} bind:validity={fileValid} />
   <!--
   {:else if inputType === "holidays"}
     <Paragraph>
@@ -350,24 +342,24 @@
       </Button>
       {#if googleOauthClientAuthorized}
         <Horizontal position="right">
-          <Link onClick={startOauthAuthorization}>Choose a different account</Link>
+          <Link onClick={startOauthAuthorization}>{t("auth.oauth.different")}</Link>
         </Horizontal>
       {/if}
     {:else}
       <Paragraph>
-        The administrator of this Luna instance has not set up Google Calendar integration yet.
+        {t("auth.oauth.google.unconfigured")}
       </Paragraph>
     {/if}
   {/if}
 
   <Horizontal position="right">
-    <Link onClick={advanced}>Click to enter advanced mode</Link>
+    <Link onClick={advanced}>{t("form.advanced")}</Link>
   </Horizontal>
   {#snippet buttons()}
-    <IconButton onClick={save} color={ColorKeys.Success} enabled={submittable} type="submit" alt="Save" canRenderAsButton={true}>
+    <IconButton onClick={save} color={ColorKeys.Success} enabled={submittable} type="submit" alt={t("button.save")} canRenderAsButton={true}>
       <Check/>
     </IconButton>
-    <IconButton onClick={failure} color={ColorKeys.Danger} alt="Cancel" canRenderAsButton={true}><X/></IconButton>
+    <IconButton onClick={failure} color={ColorKeys.Danger} alt={t("button.cancel")} canRenderAsButton={true}><X/></IconButton>
   {/snippet}
 </Modal>
 

@@ -5,6 +5,7 @@
   import { ColorKeys } from "../../types/colors";
   import { Check, X } from "lucide-svelte";
   import IconButton from "../interactive/IconButton.svelte";
+  import { t } from "@sveltia/i18n";
 
   interface Props {
     showModal: () => Promise<void>;
@@ -20,12 +21,12 @@
   }: Props = $props();
 </script>
 
-<Modal title="Confirmation" bind:showModal bind:success bind:failure>
+<Modal title={t("confirmation.title")} bind:showModal bind:success bind:failure>
   {@render children?.()}
   {#snippet buttons()}
-    <IconButton onClick={success} color={ColorKeys.Success} type="submit" alt="Confirm" canRenderAsButton={true}>
+    <IconButton onClick={success} color={ColorKeys.Success} type="submit" alt={t("button.confirm")} canRenderAsButton={true}>
       <Check/>
     </IconButton>
-    <IconButton onClick={failure} color={ColorKeys.Danger} alt="Cancel" canRenderAsButton={true}><X/></IconButton>
+    <IconButton onClick={failure} color={ColorKeys.Danger} alt={t("button.cancel")} canRenderAsButton={true}><X/></IconButton>
   {/snippet}
 </Modal>

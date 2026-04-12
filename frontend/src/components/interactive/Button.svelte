@@ -13,6 +13,7 @@
     compact?: boolean;
     enabled?: boolean;
     href?: string;
+    element?: HTMLElement | undefined;
     children?: Snippet;
   }
 
@@ -24,6 +25,7 @@
     compact = false,
     enabled = true,
     href = "",
+    element = $bindable(),
     children
   }: Props = $props();
 
@@ -109,6 +111,7 @@
 
 {#if href !== ""}
   <a
+    bind:this={element}
     class:success={color == ColorKeys.Success}
     class:warning={color == ColorKeys.Warning}
     class:danger={color == ColorKeys.Danger}
@@ -126,6 +129,7 @@
   </a>
 {:else}
   <button
+    bind:this={element}
     class:success={color == ColorKeys.Success}
     class:warning={color == ColorKeys.Warning}
     class:danger={color == ColorKeys.Danger}

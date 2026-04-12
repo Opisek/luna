@@ -4,8 +4,10 @@
   import { AsyncNoOp, NoOp } from '$lib/client/placeholders';
   import Button from "../interactive/Button.svelte";
   import { getRepository } from "../../lib/client/data/repository.svelte";
+  import { t } from "@sveltia/i18n";
 
   interface Props {
+    anchor?: HTMLElement | undefined;
     showPopup?: () => Promise<void>;
     hidePopup?: () => void;
     addSource: () => Promise<SourceModel>;
@@ -14,6 +16,7 @@
   }
 
   let {
+    anchor = undefined,
     showPopup = $bindable(AsyncNoOp),
     hidePopup = $bindable(NoOp),
     addSource,
@@ -52,12 +55,12 @@
   }
 </script>
 
-<Popup bind:showPopup={internalShow} bind:hidePopup={internalClose} tooltip={false}>
-  <Button onClick={onAddSourceButtonClick}>Add Source</Button>
+<Popup bind:showPopup={internalShow} bind:hidePopup={internalClose} tooltip={false} anchor={anchor}>
+  <Button onClick={onAddSourceButtonClick}>{t("button.add.source")}</Button>
   {#if canAddCalendars}
-    <Button onClick={onAddCalendarButtonClick}>Add Calendar</Button>
+    <Button onClick={onAddCalendarButtonClick}>{t("button.add.calendar")}</Button>
   {/if}
   {#if canAddEvents}
-    <Button onClick={onAddEventButtonClick}>Add Event</Button>
+    <Button onClick={onAddEventButtonClick}>{t("button.add.event")}</Button>
   {/if}
 </Popup>

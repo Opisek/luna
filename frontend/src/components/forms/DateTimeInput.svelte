@@ -5,6 +5,7 @@
 
   import { NoOp } from "$lib/client/placeholders";
   import { focusIndicator } from "$lib/client/decoration";
+  import { date, time } from "@sveltia/i18n";
 
   interface Props {
     value: Date;
@@ -118,7 +119,7 @@
       tabindex={editable ? 0 : -1}
       use:focusIndicator
     >
-      {value.toLocaleDateString()}
+      {date(value)}
     </button>
     {#if !allDay}
       <button
@@ -128,7 +129,7 @@
         tabindex={editable ? 0 : -1}
         use:focusIndicator
       >
-        {value.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"})}
+        {time(value, { hour: "2-digit", minute: "2-digit" })}
       </button>
     {/if}
   </div>

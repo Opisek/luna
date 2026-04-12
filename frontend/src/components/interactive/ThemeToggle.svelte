@@ -5,6 +5,7 @@
   import { getTheme } from "$lib/client/data/theme.svelte";
 
   import IconButton from "./IconButton.svelte";
+  import { t } from "@sveltia/i18n";
 
   const theme = getTheme();
 </script>
@@ -42,7 +43,7 @@
   }
 </style>
 
-<IconButton onClick={() => theme.toggle()} alt={theme.isLightMode() ? "Toggle dark mode" : "Toggle light mode"}>
+<IconButton onClick={() => theme.toggle()} alt={theme.isLightMode() ? t("button.theme.dark") : t("button.theme.light")}>
   <span class:dark={theme.isLightMode()} class:light={!theme.isLightMode()}>
     <MoonIcon/>
     <SunIcon/>

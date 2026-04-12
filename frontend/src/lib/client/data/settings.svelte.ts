@@ -43,6 +43,7 @@ export class Settings {
     [UserSettingKeys.AnimateMonthSelectionSwipe]: true,
     [UserSettingKeys.AppearenceFrostedGlass]: false,
     [UserSettingKeys.AnimationDuration]: 1,
+    [UserSettingKeys.Language]: "default",
   });
   public globalSettings: GlobalSettings = $state({
     [GlobalSettingKeys.LoggingVerbosity]: 2,

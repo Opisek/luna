@@ -12,6 +12,7 @@
   import { getContext } from "svelte";
   import { queueNotification } from "../../lib/client/notifications";
   import { ColorKeys } from "../../types/colors";
+  import { t } from "@sveltia/i18n";
 
   interface Props {
     source: SourceModel;
@@ -102,7 +103,7 @@
       <CollapseToggle bind:collapsed={sourceCollapsed}/>
     {/if}
     {#if hasErrored}
-      <Tooltip error={true}>An error occurred trying to retrieve calendars from this source.</Tooltip>
+      <Tooltip error={true}>{t("source.error.calendars.tooltip")}</Tooltip>
     {/if}
   </span>
   <!--

@@ -5,6 +5,7 @@
   interface Props {
     tooltip?: boolean;
     delayed?: boolean;
+    anchor?: HTMLElement | undefined;
     children?: Snippet;
     showPopup?: () => Promise<void>;
     hidePopup?: () => void;
@@ -13,29 +14,31 @@
   let {
     tooltip = true,
     delayed = false,
+    anchor = undefined,
     children,
     showPopup = $bindable(),
     hidePopup = $bindable(NoOp),
   }: Props = $props();
 
   let visible = $state(false);
-  let anchorName = $state(Math.floor(Math.random() * 100000000).toString());
   let popover: (HTMLElement | undefined) = $state();
+  let anchorElement = $derived(anchor || (!popover ? undefined : popover.parentElement))
+  let anchorName = $derived(`${Math.floor(Math.random() * 100000000)}-${anchorElement?.classList.values().toArray().join("-")}`);
 
   let promiseResolve: () => void = $state(NoOp);
   let promiseReject: (reason?: any) => void = $state(NoOp);
 
   $effect(() => {
-    if (!popover || !popover.parentElement) return;
+    if (!anchorElement) return;
     // @ts-ignore
-    const currentAnchor = popover.parentElement.style["anchor-name"] as string;
-    if (currentAnchor.startsWith("--anchor")) {
-      anchorName = currentAnchor.substring(8);
+    const currentAnchor = anchorElement.style["anchor-name"] as string;
+    if (currentAnchor.startsWith("--anchor-") && !currentAnchor.includes("undefined")) {
+      anchorName = currentAnchor.substring(9);
     } else {
-      Object.assign(popover.parentElement.style, {
-        "anchor-name": `--anchor${anchorName}`,
+      Object.assign(anchorElement.style, {
+        "anchor-name": `--anchor-${anchorName}`,
       });
-      if (tooltip) popover.parentElement.setAttribute("aria-describedby", `tooltip${anchorName}`);
+      if (tooltip) anchorElement.setAttribute("aria-describedby", `tooltip-${anchorName}`);
     }
   })
 
@@ -135,6 +138,10 @@
   .popup:focus {
     outline: 0;
   }
+
+  .tooltip {
+    pointer-events: none;
+  }
 </style>
 
 <!-- The typecast to "auto" is because the linter does not yet know about "hint" -->
@@ -142,9 +149,10 @@
   bind:this={popover}
   class="popup"
   popover={(tooltip ? "hint" : "auto") as "auto"}
-  style={`position-anchor: --anchor${anchorName};`}
-  id={`tooltip${anchorName}`}
+  style={`position-anchor: --anchor-${anchorName};`}
+  id={`${tooltip ? "tooltip" : "popup"}-${anchorName}`}
   class:visible={visible}
+  class:tooltip={tooltip}
   tabindex="-1"
   ontransitionend={transitionEnd}
   role={tooltip ? "tooltip" : "dialog"}

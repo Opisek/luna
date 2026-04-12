@@ -1,13 +1,15 @@
+import { t } from "@sveltia/i18n";
+
 const dayNames = [
-  "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
+  "sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"
 ]
 const monthNames = [
-  "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"
+  "january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"
 ]
 
-export function getDayName(day: number): string {
-  return dayNames[day];
+export function getDayName(day: number, short?: boolean): string {
+  return t(`weekdays.${short ? "short" : "full"}.${dayNames[day]}`)
 }
-export function getMonthName(month: number): string {
-  return monthNames[month];
+export function getMonthName(month: number, short?: boolean): string {
+  return t(`months.${short ? "short" : "full"}.${monthNames[month]}`);
 }

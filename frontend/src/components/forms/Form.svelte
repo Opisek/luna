@@ -8,6 +8,7 @@
   import { NoOp } from "../../lib/client/placeholders";
   import IconButton from "../interactive/IconButton.svelte";
   import { Send } from "lucide-svelte";
+  import { t } from "@sveltia/i18n";
 
   interface Props {
     title: string;
@@ -71,7 +72,7 @@
   <Title>{title}</Title>
   {@render children?.()}
   <Horizontal position="right">
-    <IconButton type="submit" bind:externalLoading={registerButtonPromise} color={ColorKeys.Success} enabled={submittable} alt="Submit" canRenderAsButton={true}>
+    <IconButton type="submit" bind:externalLoading={registerButtonPromise} color={ColorKeys.Success} enabled={submittable} alt={t("button.submit")} canRenderAsButton={true}>
       <Send/>
     </IconButton>
   </Horizontal>

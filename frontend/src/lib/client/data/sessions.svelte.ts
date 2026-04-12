@@ -6,6 +6,7 @@ import ipLocation from "iplocation";
 import { fetchJson, fetchResponse } from "../net";
 import type { Settings } from "./settings.svelte";
 import { GlobalSettingKeys } from "../../../types/settings";
+import { t } from "@sveltia/i18n";
 
 export function clearSession() {
   if (!browser) return;
@@ -34,15 +35,15 @@ export class ActiveSessions {
         if (cached) {
           x.location = cached;
         } else if (["::1", "127.0.0.1", "localhost", ].includes(x.last_ip_address)) {
-          x.location = "Local Host";
+          x.location = t("session.location.host");
           this.locationCache.set(x.last_ip_address, x.location);
         } else {
           const location = this.settings.globalSettings[GlobalSettingKeys.UseIpGeolocation] ? await ipLocation(x.last_ip_address) : null;
-          if (location == null) x.location = "Unknown Location";
-          else if (location.reserved) x.location = "Local Network";
+          if (location == null) x.location = t("session.location.unknown");
+          else if (location.reserved) x.location = t("session.location.lan");
           else {
             x.location = ((loc => `${loc.country.name} ${loc.region.name} ${loc.city}`)(location as ipLocation.ReturnType as ipLocation.LocationData)); // TypeScript bug, need to double cast even though it should be able to do the first one implicitly
-            if (x.location.trim() === "") x.location = "Local Network"
+            if (x.location.trim() === "") x.location = t("session.location.lan")
           }
           this.locationCache.set(x.last_ip_address, x.location);
         }

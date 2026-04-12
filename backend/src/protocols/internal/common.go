@@ -98,10 +98,9 @@ func ParseIcalEvent(props *ical.Props) (*IcalEventProps, bool, error) {
 	dtend := props.Get("DTEND")
 	duration := props.Get("DURATION")
 
-	if dtend == nil && duration == nil {
-		if !(startTime.Hour() == 0 && startTime.Minute() == 0 && startTime.Second() == 0) {
-			return nil, false, fmt.Errorf("event has no end time or duration")
-		}
+	// TODO: extract "DATE" vs "DATE-TIME" from the prop
+	if dtend == nil && duration == nil && !(startTime.Hour() == 0 && startTime.Minute() == 0 && startTime.Second() == 0) {
+		dtend = dtstart
 	}
 
 	// TODO: X-CO-RECURRINGID?

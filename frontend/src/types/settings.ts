@@ -20,6 +20,7 @@ export enum UserSettingKeys {
   AnimateMonthSelectionSwipe = "animate_month_selection_swipe",
   AppearenceFrostedGlass = "appearance_frosted_glass",
   AnimationDuration = "animation_duration",
+  Language = "language",
 }
 
 export enum GlobalSettingKeys {
@@ -54,6 +55,7 @@ export type UserSettings = {
   [UserSettingKeys.AnimateMonthSelectionSwipe]: boolean;
   [UserSettingKeys.AppearenceFrostedGlass]: boolean;
   [UserSettingKeys.AnimationDuration]: number;
+  [UserSettingKeys.Language]: string;
 };
 
 export type GlobalSettings = {

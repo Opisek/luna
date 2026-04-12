@@ -2,6 +2,7 @@
   import type { Snippet } from 'svelte';
   import Label from './Label.svelte';
   import Tooltip from '../interactive/Tooltip.svelte';
+  import { t } from '@sveltia/i18n';
 
   interface Props {
     label: string;
@@ -42,6 +43,6 @@
   {#each items as item (id(item))}
     {@render template(item)}
   {:else}
-  Nothing to show
+    {t("error.empty")}
   {/each}
 </div>

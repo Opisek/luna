@@ -9,6 +9,7 @@
   import Button from "../../interactive/Button.svelte";
   import IconButton from "../../interactive/IconButton.svelte";
   import type { Option } from "../../../types/options";
+  import { t } from "@sveltia/i18n";
 
   interface Props {
     fonts: Option<string>[];
@@ -30,7 +31,7 @@
     if (uploadingFontFile) return;
     
     if (fontFile == null) {
-      queueNotification(ColorKeys.Danger, "Missing or corrupted font file");
+      queueNotification(ColorKeys.Danger, t("settings.fonts.error.file"));
       return;
     }
 
@@ -39,7 +40,7 @@
     const fontFiles = fonts.map(x => x.value.split("/").pop() + ".ttf");
 
     if (fontFiles.includes(fontFile[0].name)) {
-      const confirmed = await showConfirmation("A font with the same file name already exists.\nContinuing will overwrite that font.\nAre you sure you want to proceed?").then(() => true).catch(() => false);
+      const confirmed = await showConfirmation(t("settings.fonts.confirm.overwrite")).then(() => true).catch(() => false);
       if (!confirmed) {
         uploadingFontFile = false;
         return;
@@ -54,27 +55,27 @@
       body: formData,
     }).then(async () => {
       fetchFonts();
-      queueNotification(ColorKeys.Success, "Font installed successfully");
+      queueNotification(ColorKeys.Success, t("settings.fonts.success.install"));
       fontFile = null;
     }).catch((err) => {
-      queueNotification(ColorKeys.Danger, "Failed to install font: " + err);
+      queueNotification(ColorKeys.Danger, t("settings.fonts.error.install", { values: { msg: err.message } }));
     });
 
     uploadingFontFile = false;
   }
 
   async function deleteFont(font: string, name: string) {
-    const confirmed = await showConfirmation(`Are you sure you want to uninstall the theme "${name}"?\nThis action is irreversible.`).then(() => true).catch(() => false);
+    const confirmed = await showConfirmation(`${t("settings.fonts.confirm.uninstall", { values: { name: name } })}\n${t("confirmation.irreversible")}`).then(() => true).catch(() => false);
     if (!confirmed) return;
 
     await fetchResponse(`/installed/fonts/${font}`, {
       method: "DELETE",
     }).then(async () => {
       fetchFonts();
-      queueNotification(ColorKeys.Success, "Font uninstalled successfully");
+      queueNotification(ColorKeys.Success, t("settings.fonts.success.uninstall"));
       fontFile = null;
     }).catch((err) => {
-      queueNotification(ColorKeys.Danger, "Failed to uninstall font: " + err);
+      queueNotification(ColorKeys.Danger, t("settings.fonts.error.uninstall", { values: { msg: err.message } }));
     });
   }
 
@@ -121,8 +122,8 @@
 </style>
 
 <FileUpload
-  name="theme_file"
-  placeholder="Install a Font"
+  name="font_file"
+  placeholder={t("settings.fonts.new")}
   bind:files={fontFile}
   bind:fileId={fontFileId}
   accept={".ttf"}
@@ -132,13 +133,13 @@
     {#if uploadingFontFile}
       <Spinner/>
     {:else}
-      Upload Theme
+      {t("settings.fonts.upload")}
     {/if}
   </Button>
 {/if}
 <List
-  label="Installed Fonts"
-  info={"Looking to change your current font? Head to the \"Appearance\" tab."}
+  label={t("settings.fonts.list")}
+  info={t("settings.fonts.current")}
   items={fonts}
   id={item => item.value}
   template={fontTemplate}
@@ -155,10 +156,10 @@
     </span>
 
     <div class="buttons">
-      <IconButton onClick={() => { downloadFileToClient(`/fonts/${font.value}.ttf`); }} color={ColorKeys.Accent} alt="Download">
+      <IconButton onClick={() => { downloadFileToClient(`/fonts/${font.value}.ttf`); }} color={ColorKeys.Accent} alt={t("button.download")}>
         <Download size={20}/>
       </IconButton>
-      <IconButton onClick={async () => deleteFont(font.value, font.name)} color={ColorKeys.Danger} alt="Delete">
+      <IconButton onClick={async () => deleteFont(font.value, font.name)} color={ColorKeys.Danger} alt={t("button.delete")}>
         <Trash2 size={20}/>
       </IconButton>
     </div>
