@@ -9,7 +9,10 @@ import (
 	supplementary_caldav "luna-backend/protocols/caldav/internal"
 	common "luna-backend/protocols/internal"
 	"luna-backend/types"
+	"mime"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/emersion/go-ical"
@@ -161,6 +164,18 @@ func (calendar *CaldavCalendar) convertEvent(event *caldav.CalendarObject, q typ
 	return castedEvent, nil
 }
 
+func normalizeEtag(etag string) string {
+	etag = strings.TrimSpace(etag)
+	etag = strings.TrimPrefix(etag, "W/")
+
+	unquoted, err := strconv.Unquote(etag)
+	if err == nil {
+		return unquoted
+	}
+
+	return etag
+}
+
 func (calendar *CaldavCalendar) getEvents(query *caldav.CalendarQuery, q types.DatabaseQueries) ([]types.Event, *errors.ErrorTrace) {
 	client, tr := calendar.source.getClient()
 	if tr != nil {
@@ -207,6 +222,46 @@ func (calendar *CaldavCalendar) getEvents(query *caldav.CalendarQuery, q types.D
 	return convertedEvents, nil
 }
 
+func (calendar *CaldavCalendar) getCalendarObject(path string, q types.DatabaseQueries) (*caldav.CalendarObject, error) {
+	target := *calendar.source.settings.Url.URL()
+	target.Path = path
+	target.RawQuery = ""
+	target.Fragment = ""
+
+	req, err := http.NewRequestWithContext(q.GetContext(), http.MethodGet, target.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Accept", ical.MIMEType)
+
+	resp, err := calendar.source.auth.HttpClient().Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	mediaType, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
+	if err != nil {
+		return nil, err
+	}
+	if !strings.EqualFold(mediaType, ical.MIMEType) {
+		return nil, fmt.Errorf("caldav: expected Content-Type %q, got %q", ical.MIMEType, mediaType)
+	}
+
+	data, err := ical.NewDecoder(resp.Body).Decode()
+	if err != nil {
+		return nil, err
+	}
+
+	return &caldav.CalendarObject{
+		Path:          resp.Request.URL.Path,
+		ModTime:       time.Time{},
+		ContentLength: resp.ContentLength,
+		ETag:          normalizeEtag(resp.Header.Get("ETag")),
+		Data:          data,
+	}, nil
+}
+
 func (calendar *CaldavCalendar) GetEvents(start time.Time, end time.Time, q types.DatabaseQueries) ([]types.Event, *errors.ErrorTrace) {
 	return calendar.getEvents(&caldav.CalendarQuery{
 		CompRequest: caldav.CalendarCompRequest{
@@ -238,8 +293,12 @@ func (calendar *CaldavCalendar) GetEvent(settings types.EventSettings, q types.D
 
 	obj, err := calendar.client.GetCalendarObject(q.GetContext(), caldavSettings.Url.Path)
 	if err != nil {
-		return nil, errors.InterpretRemoteError(errors.New().AddErr(errors.LvlDebug, err), "calendar", "CalDAV calendar").
-			Append(errors.LvlBroad, "Could not get event")
+		// try with a custom construction to handle weak ETags
+		obj, err = calendar.getCalendarObject(caldavSettings.Url.Path, q)
+		if err != nil { 
+			return nil, errors.InterpretRemoteError(errors.New().AddErr(errors.LvlDebug, err), "calendar", "CalDAV calendar").
+				Append(errors.LvlBroad, "Could not get event")
+		}
 	}
 
 	cal, tr := calendar.convertEvent(obj, q)
@@ -316,7 +375,7 @@ func setEventProps(cal *ical.Calendar, id string, name string, desc string, colo
 		event.Props.Del(ical.PropDuration)
 	}
 
-	timestamp := time.Now()
+	timestamp := time.Now().UTC()
 	event.Props.SetDateTime(ical.PropDateTimeStamp, timestamp)
 	//event.Props.SetDateTime(util.PropTimestamp, timestamp)
 
@@ -349,9 +408,13 @@ func (calendar *CaldavCalendar) AddEvent(name string, desc string, color *types.
 
 	obj, err := calendar.client.GetCalendarObject(q.GetContext(), path)
 	if err != nil {
-		return nil, errors.InterpretRemoteError(errors.New().AddErr(errors.LvlDebug, err), "calendar", "CalDAV calendar").
-			Append(errors.LvlWordy, "Could not get finished event").
-			Append(errors.LvlBroad, "Could not add event")
+		// try with a custom construction to handle weak ETags
+		obj, err = calendar.getCalendarObject(path, q)
+		if err != nil { 
+			return nil, errors.InterpretRemoteError(errors.New().AddErr(errors.LvlDebug, err), "calendar", "CalDAV calendar").
+				Append(errors.LvlWordy, "Could not get finished event").
+				Append(errors.LvlBroad, "Could not add event")
+		}
 	}
 
 	finishedEvent, tr := calendar.eventFromCaldav(obj, q)
@@ -387,9 +450,13 @@ func (calendar *CaldavCalendar) EditEvent(originalEvent types.Event, name string
 
 	obj, err := calendar.client.GetCalendarObject(q.GetContext(), originalRawEvent.Path)
 	if err != nil {
-		return nil, errors.InterpretRemoteError(errors.New().AddErr(errors.LvlDebug, err), "calendar", "CalDAV calendar").
-			Append(errors.LvlWordy, "Could not get finished event").
-			Append(errors.LvlBroad, "Could not edit event")
+		// try with a custom construction to handle weak ETags
+		obj, err = calendar.getCalendarObject(originalRawEvent.Path, q)
+		if err != nil { 
+			return nil, errors.InterpretRemoteError(errors.New().AddErr(errors.LvlDebug, err), "calendar", "CalDAV calendar").
+				Append(errors.LvlWordy, "Could not get finished event").
+				Append(errors.LvlBroad, "Could not edit event")
+		}
 	}
 
 	finishedEvent, tr := calendar.eventFromCaldav(obj, q)
