@@ -207,6 +207,15 @@ func (calendar *CaldavCalendar) getEvents(query *caldav.CalendarQuery, q types.D
 	return convertedEvents, nil
 }
 
+func (calendar *CaldavCalendar) getCalendarObjectCompat(q types.DatabaseQueries, path string) (*caldav.CalendarObject, *errors.ErrorTrace) {
+	obj, err := calendar.client.GetCalendarObject(q.GetContext(), path)
+	if err != nil {
+		return nil, errors.InterpretRemoteError(errors.New().AddErr(errors.LvlDebug, err), "calendar", "CalDAV calendar").
+			Append(errors.LvlBroad, "Could not get calendar data")
+	}
+	return obj, nil
+}
+
 func (calendar *CaldavCalendar) GetEvents(start time.Time, end time.Time, q types.DatabaseQueries) ([]types.Event, *errors.ErrorTrace) {
 	return calendar.getEvents(&caldav.CalendarQuery{
 		CompRequest: caldav.CalendarCompRequest{
@@ -236,10 +245,9 @@ func (calendar *CaldavCalendar) GetEvents(start time.Time, end time.Time, q type
 func (calendar *CaldavCalendar) GetEvent(settings types.EventSettings, q types.DatabaseQueries) (types.Event, *errors.ErrorTrace) {
 	caldavSettings := settings.(*CaldavEventSettings)
 
-	obj, err := calendar.client.GetCalendarObject(q.GetContext(), caldavSettings.Url.Path)
+	obj, err := calendar.getCalendarObjectCompat(q, caldavSettings.Url.Path)
 	if err != nil {
-		return nil, errors.InterpretRemoteError(errors.New().AddErr(errors.LvlDebug, err), "calendar", "CalDAV calendar").
-			Append(errors.LvlBroad, "Could not get event")
+		return nil, err.Append(errors.LvlBroad, "Could not get event")
 	}
 
 	cal, tr := calendar.convertEvent(obj, q)
@@ -316,7 +324,7 @@ func setEventProps(cal *ical.Calendar, id string, name string, desc string, colo
 		event.Props.Del(ical.PropDuration)
 	}
 
-	timestamp := time.Now()
+	timestamp := time.Now().UTC()
 	event.Props.SetDateTime(ical.PropDateTimeStamp, timestamp)
 	//event.Props.SetDateTime(util.PropTimestamp, timestamp)
 
@@ -347,9 +355,9 @@ func (calendar *CaldavCalendar) AddEvent(name string, desc string, color *types.
 			Append(errors.LvlBroad, "Could not add event")
 	}
 
-	obj, err := calendar.client.GetCalendarObject(q.GetContext(), path)
-	if err != nil {
-		return nil, errors.InterpretRemoteError(errors.New().AddErr(errors.LvlDebug, err), "calendar", "CalDAV calendar").
+	obj, getCalErr := calendar.getCalendarObjectCompat(q, path)
+	if getCalErr != nil {
+		return nil, getCalErr.
 			Append(errors.LvlWordy, "Could not get finished event").
 			Append(errors.LvlBroad, "Could not add event")
 	}
@@ -385,9 +393,9 @@ func (calendar *CaldavCalendar) EditEvent(originalEvent types.Event, name string
 			AltStr(errors.LvlBroad, "Could not edit event")
 	}
 
-	obj, err := calendar.client.GetCalendarObject(q.GetContext(), originalRawEvent.Path)
-	if err != nil {
-		return nil, errors.InterpretRemoteError(errors.New().AddErr(errors.LvlDebug, err), "calendar", "CalDAV calendar").
+	obj, getCalErr := calendar.getCalendarObjectCompat(q, originalRawEvent.Path)
+	if getCalErr != nil {
+		return nil, getCalErr.
 			Append(errors.LvlWordy, "Could not get finished event").
 			Append(errors.LvlBroad, "Could not edit event")
 	}
