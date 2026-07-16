@@ -3,12 +3,14 @@ package caldav
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"luna-backend/auth"
 	"luna-backend/constants"
 	"luna-backend/errors"
 	supplementary_caldav "luna-backend/protocols/caldav/internal"
 	"luna-backend/types"
 	"net/http"
+	"strings"
 
 	"github.com/emersion/go-webdav/caldav"
 )
@@ -78,11 +80,60 @@ func PackCaldavSource(id types.ID, name string, settings *CaldavSourceSettings, 
 	}
 }
 
+// Some proxy configurations convert strong etags to weak etags
+// However, go-webdav does not support weak etags
+// This HTTP client wrapper optimistically converts all etags to strong ones
+// https://github.com/Opisek/luna/issues/40
+type weakEtagHttpClient struct {
+	baseClient types.HttpClientInterface
+}
+
+func normalizeETag(etag string) (string, error) {
+	etag = strings.TrimSpace(etag)
+	if etag == "" {
+		return "", nil
+	}
+	// strip the weak etag specifier and any whitespace
+	if strings.HasPrefix(etag, "W/") {
+		etag = strings.TrimSpace(etag[2:])
+	}
+
+	// make sure the etag is actually a valid format
+	if len(etag) < 2 || etag[0] != '"' || etag[len(etag)-1] != '"' || strings.Contains(etag[1:len(etag)-1], "\"") {
+		return "", fmt.Errorf("caldav: invalid ETag %q", etag)
+	}
+
+	return etag, nil
+}
+
+func (client weakEtagHttpClient) Do(req *http.Request) (*http.Response, error) {
+	res, err := client.baseClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	originalEtag := res.Header.Get("ETag")
+
+	if len(originalEtag) == 0 {
+		return res, nil
+	}
+
+	strongEtag, err := normalizeETag(originalEtag)
+
+	if err != nil {
+		return nil, err
+	}
+
+	res.Header.Set("ETag", strongEtag)
+
+	return res, nil
+}
+
 func (source *CaldavSource) getClient() (*caldav.Client, *errors.ErrorTrace) {
 	if source.client == nil {
 		var err error
 		source.client, err = caldav.NewClient(
-			source.auth.HttpClient(),
+			weakEtagHttpClient{source.auth.HttpClient()},
 			source.settings.Url.URL().String(),
 		)
 
