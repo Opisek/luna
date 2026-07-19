@@ -201,7 +201,7 @@ func ParseIcalDuration(rawDuration string) (time.Duration, error) {
 
 		switch name {
 		case "sign":
-			positive = len(submatch) == 0 || submatch[0] == '+'
+			positive = submatch[0] == '+'
 			continue
 		case "days":
 			magnitude = time.Hour * 24
