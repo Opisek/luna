@@ -3,6 +3,8 @@ package common
 import (
 	"fmt"
 	"luna-backend/types"
+	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -127,9 +129,13 @@ func ParseIcalEvent(props *ical.Props) (*IcalEventProps, bool, error) {
 
 		eventDate = types.NewEventDateFromEndTime(startTime, endTime, allDay, eventRecurrence)
 	} else if duration != nil {
-		dur, err := time.ParseDuration(duration.Value)
+		dur, err := ParseIcalDuration(duration.Value)
 		if err != nil {
 			return nil, false, fmt.Errorf("could not parse duration %v: %v", duration.Value, err)
+		}
+
+		if dur < 0 {
+			return nil, false, fmt.Errorf("negative duration %v not allowed for events", duration.Value)
 		}
 
 		allDay := startTime.Location() == time.Local && startTime.Hour() == 0 && startTime.Minute() == 0 && startTime.Second() == 0 && dur%(24*time.Hour) == 0
@@ -168,4 +174,59 @@ func ExtractDateFromRecurrenceId(event types.Event) *time.Time {
 		Params: ical.Params{"TZID": {event.GetDate().Timezone()}},
 	})
 	return parsedTime
+}
+
+// RFC 5545 3.3.6
+// The base regex is quite simple but gets ugly when Go's capture group names are introduced.
+// In essence, the following regex is simply a translation of the grammar from the mentioned specification section.
+// Top-level non-terminal: (["+"] / "-") "P" (dur-date / dur-time / dur-week)
+// See the specification for the full grammar.
+var icalDurationRegex = regexp.MustCompile(`^(?P<sign>\+?|-)P((?P<days>\d+)D(T((?P<hours>\d+)H((?P<minutes>\d+)M((?P<seconds>\d+)S)?)?|(?P<minutes>\d+)M((?P<seconds>\d+)S)?|(?P<seconds>\d+)S))?|T((?P<hours>\d+)H((?P<minutes>\d+)M((?P<seconds>\d+)S)?)?|(?P<minutes>\d+)M((?P<seconds>\d+)S)?|(?P<seconds>\d+)S)|(?P<weeks>\d+)W)$`)
+
+func ParseIcalDuration(rawDuration string) (time.Duration, error) {
+	matches := icalDurationRegex.FindStringSubmatch(rawDuration)
+
+	parsedDuration := time.Duration(0)
+	positive := true
+
+	for i, name := range icalDurationRegex.SubexpNames() {
+		submatch := matches[i]
+
+		if len(name)*len(submatch) == 0 {
+			continue
+		}
+
+		numeric, err := strconv.Atoi(submatch)
+		var magnitude time.Duration
+
+		switch name {
+		case "sign":
+			positive = submatch[0] == '+'
+			continue
+		case "days":
+			magnitude = time.Hour * 24
+		case "hours":
+			magnitude = time.Hour
+		case "minutes":
+			magnitude = time.Minute
+		case "seconds":
+			magnitude = time.Second
+		case "weeks":
+			magnitude = time.Hour * 24 * 7
+		default:
+			return 0, fmt.Errorf("unknown subexpression %s", name)
+		}
+
+		if err != nil {
+			return 0, fmt.Errorf("could not parse %s: %v", name, err)
+		}
+
+		parsedDuration += time.Duration(numeric) * magnitude
+	}
+
+	if !positive {
+		parsedDuration *= -1
+	}
+
+	return parsedDuration, nil
 }
