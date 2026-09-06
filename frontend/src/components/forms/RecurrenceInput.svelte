@@ -225,6 +225,15 @@
           byVals.bySetPosLimit = arr;
         }
       }
+
+      // Initialize COUNT/UNTIL
+      if (options.count !== null) {
+        endType = "count";
+      } else if (options.until !== null) {
+        endType = "date";
+      } else {
+        endType = "forever";
+      }
     })
   })
 
