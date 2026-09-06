@@ -9,6 +9,8 @@ button:
     event: "Create Event"
     calendar: "Create Calendar"
     source: "Add Source"
+  edit: "Edit"
+  delete: "Delete"
   theme:
     dark: "Toggle dark mode"
     light: "Toggle light mode"

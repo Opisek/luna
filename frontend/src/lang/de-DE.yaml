@@ -9,6 +9,8 @@ button:
     event: "Ereignis erstellen"
     calendar: "Kalendar erstellen"
     source: "Quelle hinzufügen"
+  edit: "Bearbeiten"
+  delete: "Löschen"
   theme:
     dark: "Dunkelmodus aktivieren"
     light: "Hellmodus aktivieren"

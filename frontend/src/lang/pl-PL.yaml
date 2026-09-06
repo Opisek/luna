@@ -9,6 +9,8 @@ button:
     event: "Stwórz wydarzenie"
     calendar: "Stwórz kalendarz"
     source: "Dodaj źródło"
+  edit: "Edytuj"
+  delete: "Usuń"
   theme:
     dark: "Włącz tryb ciemny"
     light: "Włącz tryb jasny"
