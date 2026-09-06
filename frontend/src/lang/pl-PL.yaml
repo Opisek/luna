@@ -219,7 +219,7 @@ session:
     latest: "Ostatni adres IP"
   id:
     display: "ID sesji"
-    inline: "ID: {:id}"
+    inline: "ID: {$id}"
   permissions:
     subtitle: "Uprawnienia"
   error:

@@ -216,7 +216,7 @@ session:
     latest: "Letzte IP Adresse"
   id:
     display: "Session-ID"
-    inline: "ID: {:id}"
+    inline: "ID: {$id}"
   permissions:
     subtitle: "Berechtigungen"
   error:
