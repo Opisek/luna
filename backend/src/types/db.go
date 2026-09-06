@@ -65,6 +65,6 @@ type DatabaseQueries interface {
 
 	SetCalendarOverrides(calendarId ID, name string, desc string, color *Color) *errors.ErrorTrace
 	DeleteCalendarOverrides(calendarId ID) *errors.ErrorTrace
-	SetEventOverrides(eventId ID, name *string, desc *string, color *Color) *errors.ErrorTrace
+	SetEventOverrides(eventId ID, name *string, desc *string, color *Color, future bool) *errors.ErrorTrace
 	DeleteEventOverrides(eventId ID) *errors.ErrorTrace
 }

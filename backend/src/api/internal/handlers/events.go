@@ -364,46 +364,55 @@ func PatchEvent(c *gin.Context, body *struct {
 	switch query.Affect {
 	case "this":
 		// Editing just one instance
-		_, tr = event.GetCalendar().EditEvent(event, body.Name, body.Desc, body.Color, newEventDate, body.Overridden, u.Tx.Queries())
+		_, tr = event.GetCalendar().EditEvent(event, body.Name, body.Desc, body.Color, newEventDate, body.Overridden, "this", u.Tx.Queries())
 		if tr != nil {
 			u.Error(tr)
 			return
 		}
 	case "thisandfuture":
-		// Editing this and future instances means we transform this event into a master event and shorten the original one
-		if newEventDate.Recurrence().Repeats() {
+		if event.CanDelete() {
+			// Editing this and future instances means we transform this event into a master event and shorten the original one
+			if newEventDate.Recurrence().Repeats() {
+				ruleSet := parentEvent.GetDate().Recurrence().RuleSet()
+				ruleSet.GetRRule().Options.Dtstart = parentEvent.GetDate().Recurrence().RuleSet().GetDTStart()
+				parentEvent.GetDate().Recurrence().SetRuleSet(ruleSet)
+			}
+			if body.Name != nil {
+				event.SetName(*body.Name)
+			}
+			if body.Desc != nil {
+				event.SetDesc(*body.Desc)
+			}
+			if body.Color != nil {
+				event.SetColor(body.Color)
+			}
+			event, tr := event.GetCalendar().AddEvent(event.GetName(), event.GetDesc(), event.GetColor(), newEventDate, u.Tx.Queries())
+			if tr != nil {
+				u.Error(tr)
+				return
+			}
+
+			tr = u.Tx.Queries().InsertEvent(event)
+			if tr != nil {
+				u.Error(tr)
+				return
+			}
+
 			ruleSet := parentEvent.GetDate().Recurrence().RuleSet()
-			ruleSet.GetRRule().Options.Dtstart = parentEvent.GetDate().Recurrence().RuleSet().GetDTStart()
+			ruleSet.GetRRule().Options.Until = event.GetDate().Start().Add(-time.Second)
 			parentEvent.GetDate().Recurrence().SetRuleSet(ruleSet)
-		}
-		if body.Name != nil {
-			event.SetName(*body.Name)
-		}
-		if body.Desc != nil {
-			event.SetDesc(*body.Desc)
-		}
-		if body.Color != nil {
-			event.SetColor(body.Color)
-		}
-		event, tr := event.GetCalendar().AddEvent(event.GetName(), event.GetDesc(), event.GetColor(), newEventDate, u.Tx.Queries())
-		if tr != nil {
-			u.Error(tr)
-			return
-		}
-
-		tr = u.Tx.Queries().InsertEvent(event)
-		if tr != nil {
-			u.Error(tr)
-			return
-		}
-
-		ruleSet := parentEvent.GetDate().Recurrence().RuleSet()
-		ruleSet.GetRRule().Options.Until = event.GetDate().Start().Add(-time.Second)
-		parentEvent.GetDate().Recurrence().SetRuleSet(ruleSet)
-		_, tr = parentEvent.GetCalendar().EditEvent(parentEvent, nil, nil, nil, parentEvent.GetDate(), false, u.Tx.Queries())
-		if tr != nil {
-			u.Error(tr)
-			return
+			_, tr = parentEvent.GetCalendar().EditEvent(parentEvent, nil, nil, nil, parentEvent.GetDate(), false, "thisandfuture", u.Tx.Queries())
+			if tr != nil {
+				u.Error(tr)
+				return
+			}
+		} else {
+			// In case we cannot delete events (e.g., ical), we use overrides instead
+			_, tr = event.GetCalendar().EditEvent(event, body.Name, body.Desc, body.Color, newEventDate, body.Overridden, "thisandfuture", u.Tx.Queries())
+			if tr != nil {
+				u.Error(tr)
+				return
+			}
 		}
 	case "all":
 		// Editing all instances = editing parent event
@@ -422,7 +431,7 @@ func PatchEvent(c *gin.Context, body *struct {
 		}
 
 		// Edit parent event
-		_, tr = parentEvent.GetCalendar().EditEvent(parentEvent, body.Name, body.Desc, body.Color, newEventDate, body.Overridden, u.Tx.Queries())
+		_, tr = parentEvent.GetCalendar().EditEvent(parentEvent, body.Name, body.Desc, body.Color, newEventDate, body.Overridden, "all", u.Tx.Queries())
 		if tr != nil {
 			u.Error(tr)
 			return
@@ -472,7 +481,7 @@ func DeleteEvent(c *gin.Context, query *struct {
 	case "this":
 		// Removing just one instance of a recurrence equates to adding that event to EXDATE
 		parentEvent.GetDate().Recurrence().AddException(event.GetDate().Start())
-		_, err = parentEvent.GetCalendar().EditEvent(parentEvent, nil, nil, nil, parentEvent.GetDate(), false, u.Tx.Queries())
+		_, err = parentEvent.GetCalendar().EditEvent(parentEvent, nil, nil, nil, parentEvent.GetDate(), false, "this", u.Tx.Queries())
 		if err != nil {
 			u.Error(err)
 			return
@@ -483,7 +492,7 @@ func DeleteEvent(c *gin.Context, query *struct {
 		ruleSet := parentEvent.GetDate().Recurrence().RuleSet()
 		ruleSet.GetRRule().Options.Until = event.GetDate().Start().Add(-time.Second)
 		parentEvent.GetDate().Recurrence().SetRuleSet(ruleSet)
-		_, err = parentEvent.GetCalendar().EditEvent(parentEvent, nil, nil, nil, parentEvent.GetDate(), false, u.Tx.Queries())
+		_, err = parentEvent.GetCalendar().EditEvent(parentEvent, nil, nil, nil, parentEvent.GetDate(), false, "thisandfuture", u.Tx.Queries())
 		if err != nil {
 			u.Error(err)
 			return

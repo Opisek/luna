@@ -136,13 +136,14 @@ func (event *IcalEvent) GetDate() *types.EventDate {
 
 func (event *IcalEvent) Clone() types.Event {
 	return &IcalEvent{
-		name:       event.name,
-		desc:       event.desc,
-		color:      event.color.Clone(),
-		overridden: event.overridden,
-		settings:   event.settings.Clone(),
-		calendar:   event.calendar,
-		eventDate:  event.eventDate.Clone(),
+		name:        event.name,
+		desc:        event.desc,
+		color:       event.color.Clone(),
+		overridden:  event.overridden,
+		settings:    event.settings.Clone(),
+		calendar:    event.calendar,
+		eventDate:   event.eventDate.Clone(),
+		parentEvent: event.parentEvent,
 	}
 }
 

@@ -83,7 +83,7 @@ func (calendar *CaldavCalendar) eventsFromCaldav(obj *caldav.CalendarObject, q t
 		}
 
 		if mustUpdate {
-			calendar.EditEvent(event, &parsedProps.Name, &parsedProps.Desc, parsedProps.Color, parsedProps.EventDate, false, q)
+			calendar.EditEvent(event, &parsedProps.Name, &parsedProps.Desc, parsedProps.Color, parsedProps.EventDate, false, "this", q)
 			// TODO: we might want to catch errors and display them as notifications here
 		}
 
@@ -170,13 +170,14 @@ func (event *CaldavEvent) GetDate() *types.EventDate {
 
 func (event *CaldavEvent) Clone() types.Event {
 	return &CaldavEvent{
-		name:       event.name,
-		desc:       event.desc,
-		color:      event.color.Clone(),
-		overridden: event.overridden,
-		settings:   event.settings.Clone(),
-		calendar:   event.calendar,
-		eventDate:  event.eventDate.Clone(),
+		name:        event.name,
+		desc:        event.desc,
+		color:       event.color.Clone(),
+		overridden:  event.overridden,
+		settings:    event.settings.Clone(),
+		calendar:    event.calendar,
+		eventDate:   event.eventDate.Clone(),
+		parentEvent: event.parentEvent,
 	}
 }
 

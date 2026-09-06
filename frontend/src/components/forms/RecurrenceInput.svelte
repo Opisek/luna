@@ -227,7 +227,6 @@
       }
 
       // Initialize COUNT/UNTIL
-      console.log(options.count, options.until);
       if (options.count !== null && options.count !== undefined) {
         endType = "count";
       } else if (options.until !== null && options.until !== undefined) {

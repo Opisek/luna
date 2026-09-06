@@ -18,7 +18,7 @@
   import Horizontal from "../layout/Horizontal.svelte";
   import EventCopyModal from "./EventCopyModal.svelte";
   import IconButton from "../interactive/IconButton.svelte";
-  import { Copy } from "lucide-svelte";
+  import { ArchiveRestore, Copy } from "lucide-svelte";
   import { Frequency, RRule, type Options } from "rrule";
   import { parseTimestampList, serializeTimestampList } from "../../lib/common/ical";
   import { SvelteSet } from "svelte/reactivity";
@@ -255,7 +255,6 @@
   onDelete={onDelete}
   onEdit={onEdit}
   deletable={event?.can_delete}
-  editable={event?.can_edit}
   submittable={event.calendar !== "" && event.name !== "" && (event.date.start.getTime() < event.date.end.getTime() || (event.date.start.getTime() <= event.date.end.getTime() && event.date.allDay))}
 >
   {#if event != EmptyEvent}
@@ -264,32 +263,32 @@
     {:else}
       <Title>{event.name}</Title>
     {/if}
-    <SelectInput bind:value={event.calendar} name="calendar" placeholder={t("calendar.display")} options={selectableCalendars} editable={editMode && eventSourceType !== "ical"} />
+    <SelectInput bind:value={event.calendar} name="calendar" placeholder={t("calendar.display")} options={selectableCalendars} editable={editMode && event.can_delete} />
     {#if editMode}
       <ColorInput bind:color={event.color} name="color" editable={editMode} />
     {/if}
     {#if editMode || event.desc}
       <TextInput bind:value={event.desc} name="desc" placeholder={t("form.desc")} multiline={true} editable={editMode} />
     {/if}
-    {#if editMode}
+    {#if editMode && event.can_edit}
       <ToggleInput bind:value={event.date.allDay} name="all_day" description={t("date.allDay")}/>
     {/if}
     <Horizontal position="left">
-      <DateTimeInput bind:value={event.date.start} name="date_start" placeholder={showEndDate ? t("date.start") : t("date.date")} editable={editMode} allDay={event.date.allDay} onChange={changeStart} wrap={true}/>
+      <DateTimeInput bind:value={event.date.start} name="date_start" placeholder={showEndDate ? t("date.start") : t("date.date")} editable={editMode && event.can_edit} allDay={event.date.allDay} onChange={changeStart} wrap={true}/>
       {#if showEndDate}
-        <DateTimeInput bind:value={event.date.end} name="date_end" placeholder={t("date.end")} editable={editMode} allDay={event.date.allDay} onChange={changeEnd} wrap={true}/>
+        <DateTimeInput bind:value={event.date.end} name="date_end" placeholder={t("date.end")} editable={editMode && event.can_edit} allDay={event.date.allDay} onChange={changeEnd} wrap={true}/>
       {/if}
     </Horizontal>
-    {#if editMode}
+    {#if editMode && event.can_edit}
       <ToggleInput bind:value={eventRepeats} name="repeats" description={t("recurrence.repeats")}/>
     {/if}
     {#if eventRepeats}
-      {#if editMode}
+      {#if editMode && event.can_edit}
         <RecurrenceInput
           bind:options={eventRecurrenceRruleOptions} 
           dtstart={event.date.start}
           allDay={event.date.allDay}
-          editable={editMode}
+          editable={editMode && event.can_edit}
           simple={true}
         />
         <Horizontal position="right">
@@ -309,7 +308,9 @@
   {#snippet extraButtonsLeft()}
     {#if !editMode}
       {#if event != EmptyEvent && event.overridden}
-        <Button color={ColorKeys.Accent} onClick={resetOverrides}>{t("button.reset")}</Button>
+        <IconButton color={ColorKeys.Accent} onClick={resetOverrides} alt={t("button.reset")}>
+          <ArchiveRestore/>
+        </IconButton>
       {/if}
       <IconButton onClick={copyEvent} alt={t("button.copy")} canRenderAsButton={true}>
         <Copy/>

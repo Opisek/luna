@@ -60,9 +60,25 @@ func (q *Queries) getEventEntries(events []types.Event) ([]*types.EventExtendedD
 		SELECT id, calendar, settings, COALESCE(title, '') as title, COALESCE(description, '') as description, color, COALESCE(overridden, false) AS overridden
 		FROM events
 		LEFT OUTER JOIN (
-			SELECT eventid, title, description, color, true AS overridden
+			SELECT DISTINCT COALESCE(masterid, eventid) AS eventid, title, description, color, future, date, true AS overridden
 			FROM event_overrides
-		) AS overrides ON events.id = overrides.eventid
+			LEFT OUTER JOIN (
+				SELECT id, parent_id AS masterid, start_timestamp AS date
+				FROM events
+			) AS parents ON parents.id = event_overrides.eventid
+			ORDER BY date
+		) AS overrides ON (
+			(
+				events.parent_id = overrides.eventid
+				OR events.id = overrides.eventid
+			) AND (
+				events.start_timestamp = overrides.date
+				OR (
+					events.start_timestamp > overrides.date
+					AND overrides.future
+				)
+			)
+		)
 		WHERE id IN (
 			%s
 		);
@@ -105,11 +121,14 @@ func (q *Queries) OverrideEvents(events []types.Event) ([]types.Event, *errors.E
 	}
 
 	eventMap := map[types.ID]types.Event{}
-	for _, event := range events {
-		eventMap[event.GetId()] = event
+	overriddenEvents := make([]types.Event, len(events))
+	for i, event := range events {
+		clone := event.Clone()
+		overriddenEvents[i] = clone
+		eventMap[clone.GetId()] = clone
 	}
 
-	dbEvents, err := q.getEventEntries(events)
+	dbEvents, err := q.getEventEntries(overriddenEvents)
 	if err != nil {
 		return nil, err.
 			Append(errors.LvlWordy, "Could not get cached events").
@@ -134,14 +153,14 @@ func (q *Queries) OverrideEvents(events []types.Event) ([]types.Event, *errors.E
 		}
 	}
 
-	err = q.insertEvents(events)
+	err = q.insertEvents(overriddenEvents)
 	if err != nil {
 		return nil, err.
 			Append(errors.LvlWordy, "Could not cache events").
 			Append(errors.LvlPlain, "Database error")
 	}
 
-	return events, nil
+	return overriddenEvents, nil
 }
 
 func (q *Queries) OverrideEvent(event types.Event) (types.Event, *errors.ErrorTrace) {
@@ -311,9 +330,9 @@ func (q *Queries) DeleteEvent(userId types.ID, eventId types.ID) *errors.ErrorTr
 	}
 }
 
-func (q *Queries) SetEventOverrides(eventId types.ID, name *string, desc *string, color *types.Color) *errors.ErrorTrace {
-	columns := []string{}
-	params := []any{eventId.UUID(), false}
+func (q *Queries) SetEventOverrides(eventId types.ID, name *string, desc *string, color *types.Color, future bool) *errors.ErrorTrace {
+	columns := []string{"future"}
+	params := []any{eventId.UUID(), future}
 
 	if name != nil {
 		columns = append(columns, "title")
@@ -330,14 +349,14 @@ func (q *Queries) SetEventOverrides(eventId types.ID, name *string, desc *string
 
 	query := fmt.Sprintf(
 		`
-		INSERT INTO event_overrides (eventid, future, %s)
-		VALUES ($1, $2, %s)
+		INSERT INTO event_overrides (eventid, %s)
+		VALUES ($1,%s)
 		ON CONFLICT (eventid) DO UPDATE
 		SET %s;
 		`,
 		strings.Join(columns, ", "),
-		util.GenerateArgList(3, len(columns)),
-		util.GenerateSetList(3, columns),
+		util.GenerateArgList(2, len(columns)),
+		util.GenerateSetList(2, columns),
 	)
 
 	_, err := q.Tx.Exec(

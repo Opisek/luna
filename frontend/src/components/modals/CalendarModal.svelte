@@ -133,7 +133,7 @@
   {/if}
   {#snippet extraButtonsLeft()}
     {#if calendar != EmptyCalendar && !editMode && calendar.overridden}
-      <IconButton onClick={resetOverrides} alt={t("button.reset")}>
+      <IconButton color={ColorKeys.Accent} onClick={resetOverrides} alt={t("button.reset")}>
         <ArchiveRestore/>
       </IconButton>
     {/if}

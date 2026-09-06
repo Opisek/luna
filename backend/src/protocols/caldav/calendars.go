@@ -477,7 +477,7 @@ func (calendar *CaldavCalendar) AddEvent(name string, desc string, color *types.
 	return finishedEvent[0], nil
 }
 
-func (calendar *CaldavCalendar) EditEvent(originalEvent types.Event, name *string, desc *string, color *types.Color, date *types.EventDate, _ bool, q types.DatabaseQueries) (types.Event, *errors.ErrorTrace) {
+func (calendar *CaldavCalendar) EditEvent(originalEvent types.Event, name *string, desc *string, color *types.Color, date *types.EventDate, _ bool, _ string, q types.DatabaseQueries) (types.Event, *errors.ErrorTrace) {
 	originalCaldavEvent := originalEvent.(*CaldavEvent)
 	originalCaldavSettings := originalCaldavEvent.GetSettings().(*CaldavEventSettings)
 	uid := originalCaldavSettings.Uid

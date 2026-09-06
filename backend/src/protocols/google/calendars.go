@@ -323,7 +323,7 @@ func (calendar *GoogleCalendar) AddEvent(name string, desc string, color *types.
 	return casted, nil
 }
 
-func (calendar *GoogleCalendar) EditEvent(originalEvent types.Event, name *string, desc *string, color *types.Color, date *types.EventDate, _ bool, q types.DatabaseQueries) (types.Event, *errors.ErrorTrace) {
+func (calendar *GoogleCalendar) EditEvent(originalEvent types.Event, name *string, desc *string, color *types.Color, date *types.EventDate, _ bool, _ string, q types.DatabaseQueries) (types.Event, *errors.ErrorTrace) {
 	var tr *errors.ErrorTrace
 
 	var colId string

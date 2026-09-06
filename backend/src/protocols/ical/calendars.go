@@ -192,9 +192,9 @@ func (calendar *IcalCalendar) GetEvents(start time.Time, end time.Time, q types.
 }
 
 func (calendar *IcalCalendar) GetEvent(settings types.EventSettings, q types.DatabaseQueries) (types.Event, *errors.ErrorTrace) {
-	icalSettings := settings.(*IcalEventSettings)
-	targetUid := icalSettings.Uid
+	targetSettings := settings.(*IcalEventSettings)
 
+	var master types.Event
 	for _, comp := range calendar.icalCalendar.Children {
 		if comp.Name != "VEVENT" {
 			continue
@@ -203,19 +203,56 @@ func (calendar *IcalCalendar) GetEvent(settings types.EventSettings, q types.Dat
 		event, err := calendar.eventFromIcal(&comp.Props)
 		if err != nil {
 			return nil, err.
-				Append(errors.LvlDebug, "Could not parse event %v in calendar %v (%v)", icalSettings.Uid, calendar.GetName(), calendar.GetId()).
-				AltStr(errors.LvlWordy, "Could not parse event %v in calendar %v", icalSettings.Uid, calendar.GetName()).
+				Append(errors.LvlDebug, "Could not parse event %v in calendar %v (%v)", targetSettings.Uid, calendar.GetName(), calendar.GetId()).
+				AltStr(errors.LvlWordy, "Could not parse event %v in calendar %v", targetSettings.Uid, calendar.GetName()).
 				Append(errors.LvlDebug, "Could not get event in calendar %v (%v)", calendar.GetName(), calendar.GetId()).
 				AltStr(errors.LvlPlain, "Could not get event in calendar %v", calendar.GetName())
 		}
 
-		if event.GetSettings().(*IcalEventSettings).Uid == targetUid {
+		eventSettings := event.GetSettings().(*IcalEventSettings)
+		if eventSettings.Uid != targetSettings.Uid {
+			continue
+		}
+
+		if eventSettings.RecurrenceId == targetSettings.RecurrenceId {
 			return event, nil
+		} else if len(eventSettings.RecurrenceId) == 0 {
+			master = event
+		}
+	}
+
+	// If the specific recurrence ID was not found, but the master event is present, expand the recurrence to a matching id
+	if master != nil {
+		// Since recurrence IDs refer to the start date of the event instance, we can easily compute bounds for the expansion
+		parsedTime, err := types.ParseIcalTimestampAtLocation(targetSettings.RecurrenceId, master.GetDate().Timezone())
+		if err != nil {
+			return nil, errors.New().Status(http.StatusInternalServerError).
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlWordy, "Invalid recurrence ID %s for event %s", targetSettings.RecurrenceId, master.GetId()).
+				AltStr(errors.LvlWordy, "Invalid recurrence ID").
+				Append(errors.LvlBroad, "Could not get event")
+		}
+
+		// Search for the instance using its recurrence ID
+		end := parsedTime.Add(24 * time.Hour)
+		expanded, tr := types.ExpandRecurrence(master, parsedTime, &end)
+		if tr != nil {
+			return nil, errors.New().Status(http.StatusInternalServerError).
+				AddErr(errors.LvlDebug, err).
+				AltStr(errors.LvlWordy, "Could not expand recurrence to derive event instance").
+				Append(errors.LvlBroad, "Could not get event")
+		}
+
+		// Check if the expansion includes the instance
+		for _, event := range expanded {
+			if event.GetSettings().(*IcalEventSettings).RecurrenceId == targetSettings.RecurrenceId {
+				return event, nil
+			}
 		}
 	}
 
 	return nil, errors.New().Status(http.StatusNotFound).
-		Append(errors.LvlWordy, "Event %v not found", icalSettings.Uid).
+		Append(errors.LvlWordy, "Event %v not found", targetSettings.Uid).
 		AltStr(errors.LvlPlain, "Event not found")
 }
 
@@ -225,7 +262,7 @@ func (calendar *IcalCalendar) AddEvent(name string, desc string, color *types.Co
 	return nil, errors.New().Status(http.StatusMethodNotAllowed)
 }
 
-func (calendar *IcalCalendar) EditEvent(event types.Event, name *string, desc *string, color *types.Color, date *types.EventDate, override bool, q types.DatabaseQueries) (types.Event, *errors.ErrorTrace) {
+func (calendar *IcalCalendar) EditEvent(event types.Event, name *string, desc *string, color *types.Color, date *types.EventDate, override bool, affect string, q types.DatabaseQueries) (types.Event, *errors.ErrorTrace) {
 	if override {
 		anyOverrides := false
 		if name != nil {
@@ -239,7 +276,7 @@ func (calendar *IcalCalendar) EditEvent(event types.Event, name *string, desc *s
 		}
 
 		if anyOverrides {
-			q.SetEventOverrides(event.GetId(), name, desc, color)
+			q.SetEventOverrides(event.GetId(), name, desc, color, affect != "this")
 			return event, nil
 		} else {
 			q.DeleteEventOverrides(event.GetId())
