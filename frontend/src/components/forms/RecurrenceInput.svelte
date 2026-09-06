@@ -227,9 +227,10 @@
       }
 
       // Initialize COUNT/UNTIL
-      if (options.count !== null) {
+      console.log(options.count, options.until);
+      if (options.count !== null && options.count !== undefined) {
         endType = "count";
-      } else if (options.until !== null) {
+      } else if (options.until !== null && options.until !== undefined) {
         endType = "date";
       } else {
         endType = "forever";

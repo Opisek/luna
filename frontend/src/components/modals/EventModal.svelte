@@ -168,6 +168,8 @@
         RDATE: serializeTimestampList("RDATE", event.date.allDay, "UTC", [...eventRecurrenceRdate.values()]),
         EXDATE: serializeTimestampList("EXDATE", event.date.allDay, "UTC", [...eventRecurrenceExdate.values()]),
       };
+      if (event.date.recurrence.RDATE === undefined) delete event.date.recurrence.RDATE;
+      if (event.date.recurrence.EXDATE === undefined) delete event.date.recurrence.EXDATE;
     } else {
       event.date.recurrence = undefined;
     }
