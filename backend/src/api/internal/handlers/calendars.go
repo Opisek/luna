@@ -188,6 +188,11 @@ func PatchCalendar(c *gin.Context, body *struct {
 		body.Name = &oldName
 	}
 
+	if body.Desc == nil {
+		oldDesc := calendar.GetDesc()
+		body.Desc = &oldDesc
+	}
+
 	if body.Color == nil {
 		oldColor := calendar.GetColor()
 		body.Color = oldColor
