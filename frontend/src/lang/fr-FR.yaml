@@ -1,0 +1,896 @@
+branding:
+  name: "Luna"
+  copyright: "Copyright © 2026 Kacper Darowski (Opisek)\nLicensed under TBD"
+
+button:
+  settings: "Paramètres"
+  add:
+    generic: "Ajouter"
+    event: "Créer un événement"
+    calendar: "Créer un calendrier"
+    source: "Ajouter une source"
+  theme:
+    dark: "Thème sombre"
+    light: "Thème clair"
+  credits: "Crédits"
+  refresh: "Actualiser"
+  upload: "Télécharger"
+  download: "Télécharger"
+  clear: "Effacer"
+  submit: "Soumettre"
+  save: "Enregistrer"
+  copy: "Copier"
+  close: "Fermer"
+  month:
+    previous: "Mois précédent"
+    next: "Mois suivant"
+  hide: "Cacher"
+  show: "Afficher"
+  confirm: "Confirmer"
+  cancel: "Annuler"
+  reset: "Réinitialiser"
+  details: "Détails"
+  increment: "Incrémenter"
+  decrement: "Decrémenter"
+
+credits:
+  title: "Crédits"
+  repository: "Dépôt Luna"
+  stack:
+    display: "Stack technique"
+    subtitle: "Stack technique et langages"
+  frontend:
+    display: "Frontend"
+    subtitle: "Bibliothèques frontend"
+  backend:
+    display: "Backend"
+    subtitle: "Bibliothèques backend"
+  themes:
+    display: "Thèmes"
+    subtitle: "Palettes de couleurs des thèmes"
+  fonts:
+    display: "Polices"
+    subtitle: "Polices préinstallées"
+  source: "Source"
+
+notification:
+  hover: "Survolez pour voir les détails"
+  success:
+    save: "Enregistré"
+    delete: "Supprimé"
+    clipboard: "Copié dans le presse-papiers"
+  error:
+    clipboard: "Impossible de copier dans le presse-papiers"
+
+confirmation:
+  title: "Confirmation"
+  notice: "Avertissement"
+  irreversible: "Cette action est irréversible."
+  password:
+    title: "Authentification"
+    prompt: "Pour effectuer cette action, vous devez vous authentifier avec votre mot de passe."
+  
+login:
+  title:
+    login: "Connexion"
+    register: "Inscription"
+  password: "Mot de passe"
+  repeat: "Confirmez le mot de passe"
+  invite: "Code d'invitation"
+  remember: "Se souvenir de moi"
+  link:
+    login: "Vous avez déjà un compte ?"
+    register: "Pas encore de compte ?"
+    recover: "Mot de passe oublié ?"
+  closed: "Pour vous inscrire, veuillez saisir un code d'invitation.\nContactez l'administrateur si vous n'en avez pas."
+
+form:
+  desc: "Description"
+  name: "Nom"
+  wizard:
+    location: "Que voulez-vous ajouter ?"
+  advanced: "Cliquez pour passer en mode avancé"
+
+recurrence:
+  repeats: "Répétition"
+  presets:
+    custom: "Personnalisé"
+    daily: |
+      .input {$interval :integer}
+      .match $interval
+        1 {{Tous les jours}}
+        2 {{Tous les deux jours}}
+        * {{Tous les {$interval} jours}}
+    dailyweekdays: |
+      .input {$interval :integer}
+      .match $interval
+        1 {{Tous les jours en semaine}}
+        2 {{Tous les deux jours en semaine}}
+        * {{Tous les {$interval} jours en semaine}}
+    monthlydate: |
+      .input {$interval :integer}
+      .input {$day :ordinal}
+      .match $interval
+        1 {{Tous les mois le {$day}}}
+        2 {{Tous les deux mois le {$day}}}
+        * {{Tous les {$interval} mois le {$day}}}
+    monthlyday: |
+      .input {$interval :integer}
+      .input {$date :integer}
+      .input {$nth :ordinal}
+      .local $weekday = {$date :weekday weekday=long}
+      .match $interval
+        1 {{Tous les mois le {$nth} {$weekday}}}
+        2 {{Tous les deux mois le {$nth} {$weekday}}}
+        * {{Tous les {$interval} mois le {$nth} {$weekday}}}
+    monthlydayreverse: |
+      .input {$interval :integer}
+      .input {$date :integer}
+      .input {$nthrev :ordinal order=reverse}
+      .local $weekday = {$date :weekday weekday=long}
+      .match $interval
+        1 {{Tous les mois le {$nthrev} {$weekday}}}
+        2 {{Tous les deux mois le {$nthrev} {$weekday}}}
+        * {{Tous les {$interval} mois le {$nthrev} {$weekday}}}
+    yearlydate: |
+      .input {$interval :integer}
+      .input {$date :integer}
+      .input {$day :ordinal}
+      .local $month = {$date :month month=long}
+      .match $interval
+        1 {{Tous les ans le {$day} {$month}}}
+        2 {{Tous les deux ans le {$day} {$month}}}
+        * {{Tous les {$interval} ans le {$day} {$month}}}
+    yearlymonthday: |
+      .input {$interval :integer}
+      .input {$date :integer}
+      .input {$nth :ordinal}
+      .local $weekday = {$date :weekday weekday=long}
+      .local $month = {$date :month month=long}
+      .match $interval
+        1 {{Tous les ans le {$nth} {$weekday} de {$month}}}
+        2 {{Tous les deux ans le {$nth} {$weekday} de {$month}}}
+        * {{Tous les {$interval} ans le {$nth} {$weekday} de {$month}}}
+    yearlymonthdayreverse: |
+      .input {$interval :integer}
+      .input {$date :integer}
+      .input {$nthrev :ordinal order=reverse}
+      .local $weekday = {$date :weekday weekday=long}
+      .local $month = {$date :month month=long}
+      .match $interval
+        1 {{Tous les ans le {$nthrev} {$weekday} de {$month}}}
+        2 {{Tous les deux ans le {$nthrev} {$weekday} de {$month}}}
+        * {{Tous les {$interval} ans le {$nthrev} {$weekday} de {$month}}}
+    weekly: |
+      .input {$interval :integer}
+      .match $interval
+        1 {{Toutes les semaines}}
+        2 {{Toutes les deux semaines}}
+        * {{Toutes les {$interval} semaines}}
+  props:
+    freq:
+      name: "Fréquence"
+      vals:
+        secondly: "Toutes les secondes"
+        minutely: "Toutes les minutes"
+        hourly: "Toutes les heures"
+        daily: "Quotidienne"
+        weekly: "Hebdomadaire"
+        monthly: "Mensuelle"
+        yearly: "Annuelle"
+    interval:
+      name: "Intervalle"
+    duration:
+      name: "Durée"
+      vals:
+        date:
+          name: "Jusqu'à une date précise"
+          param: "Fin de la récurrence"
+        count:
+          name: "Nombre de répétitions"
+          param: "Nombre d'événements"
+        forever: "Indéfiniment"
+    rrule: "RRULE"
+    rdate: "RDATE"
+    exdate: "EXDATE"
+    by:
+      month:
+        limit:
+          enable: "Uniquement pendant certains mois"
+          name: "Mois"
+        expand:
+          enable: "Spécifier des mois de l'année"
+          name: "Mois"
+      weekno:
+        expand:
+          enable: "Spécifier des semaines de l'année"
+          name: "Numéros de semaine"
+      yearday:
+        limit:
+          enable: "Uniquement certains jours de l'année"
+          name: "Jours de l'année"
+        expand:
+          enable: "Spécifier des jours de l'année"
+          name: "Jours de l'année"
+      monthday:
+        limit:
+          enable: "Uniquement certains jours du mois"
+          name: "Jours du mois"
+        expand:
+          enable: "Spécifier des jours du mois"
+          name: "Jours du mois"
+      day:
+        dayname:
+          limit:
+            enable: "Uniquement certains jours de la semaine"
+            name: "Jours de la semaine"
+          expand:
+            enable: "Spécifier des jours de la semaine"
+            name: "Jours de la semaine"
+        numeric:
+          limit:
+            enable: "Uniquement certains jours de la semaine"
+            name: "Jours de la semaine"
+          expand:
+            enable: "Spécifier des jours de la semaine"
+            name: "Jours de la semaine"
+      hour:
+        limit:
+          enable: "Uniquement à certaines heures de la journée"
+          name: "Heures de la journée"
+        expand:
+          enable: "Spécifier des heures de la journée"
+          name: "Heures de la journée"
+      minute:
+        limit:
+          enable: "Uniquement à certaines minutes de l'heure"
+          name: "Minutes de l'heure"
+        expand:
+          enable: "Spécifier des minutes de l'heure"
+          name: "Minutes de l'heure"
+      second:
+        limit:
+          enable: "Uniquement à certaines secondes de la minute"
+          name: "Secondes de la minute"
+        expand:
+          enable: "Spécifier des secondes de la minute"
+          name: "Secondes de la minute"
+
+date:
+  title: "Choisir une date"
+  allDay: "Toute la journée"
+  start: "Début"
+  end: "Fin"
+  date: "Date"
+
+time:
+  title: "Choisir une heure"
+  am: "AM"
+  pm: "PM"
+  ampm: "AM/PM"
+
+color:
+  display: "Couleur"
+  code: "Code couleur"
+  title: "Choisir une couleur"
+  preset:
+    default: "Couleur par défaut"
+    red: "Rouge"
+    orange: "Orange"
+    yellow: "Jaune"
+    green: "Vert"
+    blue: "Bleu"
+    purple: "Violet"
+    pink: "Rose"
+
+nav:
+  home: "Accueil"
+  back: "Retour"
+  continue: "Continuer"
+
+error:
+  code: "Erreur {$code}"
+  generic: "Une erreur est survenue."
+  unknown: "Erreur inconnue"
+  retry: "Veuillez réessayer"
+  unavailable: "Fonctionnalité pas encore disponible"
+  unimplemented: "Non implémenté"
+  empty: "Rien à afficher"
+
+user:
+  username: "Nom d'utilisateur"
+  email: "Adresse e-mail"
+  id:
+    display: "ID utilisateur"
+    inline: "ID : {$id}"
+  creation: "Inscription le {$date :date length=short} à {$date :time precision=minute}"
+  action:
+    enable: "Activer le compte"
+    disable: "Désactiver le compte"
+  status:
+    admin: "Administrateur"
+    disabled: "Compte désactivé"
+    verified: "Adresse e-mail vérifiée"
+  pfp:
+    alt: "Photo de profil de {$name}"
+
+invite:
+  title:
+    view: "Invitation d'inscription"
+    create: "Inviter un utilisateur"
+  confirm:
+    delete: "Voulez-vous vraiment supprimer l'invitation d'inscription ?"
+  error:
+    create: "Impossible de créer l'invitation d'inscription : {$msg}"
+    delete: "Impossible de supprimer l'invitation d'inscription : {$msg}"
+  qr: "QR Code"
+  code: "Code d'invitation"
+  link: "Lien d'invitation"
+  id:
+    label: "ID d'invitation"
+    inline: "ID : {$id}"
+  date:
+    creation:
+      display: "Date de création"
+      inline: "Créée le {$date :date length=short} à {$date :time precision=minute} par {$name}"
+    expiry:
+      display: "Date d'expiration"
+      today: |
+        .input {$date}
+        .input {$hours :integer}
+        .input {$minutes :integer}
+
+        .match $hours $minutes
+          0 1 {{Expire à {$date :time precision=minute} (il reste {$minutes} minute)}}
+          0 * {{Expire à {$date :time precision=minute} (il reste {$minutes} minutes)}}
+          1 * {{Expire à {$date :time precision=minute} (il reste {$hours} heure)}}
+          * * {{Expire à {$date :time precision=minute} (il reste {$hours} heures)}}
+      elsewhen: "Expire le {$date :date length=short} à {$date :time precision=minute}"
+  expiry:
+    display: "Expiration de l'invitation"
+    preset:
+      1h: "1 heure"
+      3h: "3 heures"
+      1d: "1 jour"
+      3d: "3 jours"
+      7d: "7 jours"
+
+session:
+  title:
+    view:
+      user: "Détails de la session"
+      api: "Jeton d'API"
+    create:
+      api: "Créer un jeton d'API"
+    edit:
+      api: "Modifier le jeton d'API"
+  confirm:
+    delete:
+      user: "Voulez-vous vraiment révoquer cette session ?"
+      api: "Voulez-vous vraiment supprimer le jeton d'API {$name} ?"
+  agent:
+    user: "User agent"
+    api: "Nom"
+  date:
+    creation: "Date de création"
+    latest: "Dernière activité"
+  ip:
+    initial: "Adresse IP initiale"
+    latest: "Dernière adresse IP"
+  id:
+    display: "ID de session"
+    inline: "ID : {:id}"
+  permissions:
+    subtitle: "Permissions"
+  error:
+    permissions: "Impossible de récupérer les permissions du jeton d'API {$name} : {$msg}"
+    create: "Impossible de créer le jeton d'API {$name} : {$msg}"
+    clipboard: "Impossible de copier le jeton d'API {$name} dans le presse-papiers : {$msg}"
+    edit: "Impossible de modifier le jeton d'API {$name} : {$msg}"
+    delete: "Impossible de supprimer le jeton d'API {$name} : {$msg}"
+    password: "Vous devez fournir votre mot de passe pour créer un jeton d'API."
+  clipboard: "Jeton d'API copié dans le presse-papiers"
+  current: "Session actuelle"
+  location:
+    host: "Hôte local"
+    lan: "Réseau local"
+    unknown: "Emplacement inconnu"
+  active:
+    today: "Dernière activité à {$date :time precision=second}"
+    elsewhen: "Dernière activité le {$date :date length=short} à {$date :time precision=second}"
+
+file:
+  display: "Fichier"
+  id: "ID du fichier"
+  error:
+    fetch: "Impossible de récupérer le fichier : {$msg}"
+
+caldav:
+  display: "CalDav"
+  url: "URL CalDav"
+
+ical:
+  display: "iCal"
+  location:
+    remote: "Lien internet"
+    database: "Importer un fichier"
+    local: "Chemin sur le serveur"
+  url: "URL iCal"
+  file: "Fichier iCal"
+  path: "Chemin iCal"
+
+google:
+  display: "Google Calendar"
+
+auth:
+  type: "Type d'authentification"
+  none:
+    display: "Aucune"
+  basic:
+    display: "Mot de passe"
+    username: "Nom d'utilisateur"
+    password: "Mot de passe"
+  bearer:
+    display: "Jeton"
+    token: "Jeton"
+  oauth:
+    display: "OAuth 2.0"
+    different: "Choisir un autre compte"
+    abort: "Autorisation annulée"
+    success: "Connecté à {$client}"
+    google:
+      unconfigured: "L'administrateur de cette instance Luna n'a pas encore configuré l'intégration Google Calendar."
+    tokens:
+      title: "Choisir un compte"
+      list: "Comptes autorisés"
+      id: "ID : {$id}"
+      use: "Utiliser ce compte"
+      exists: "Vous êtes déjà connecté avec {$client}.\nVous pouvez choisir un de vos comptes existants ou autoriser un nouveau compte."
+      new: "Se connecter avec un autre compte"
+    client:
+      title:
+        create: "Enregistrer un client OAuth 2.0"
+        edit: "Modifier le client OAuth 2.0"
+      display: "Fournisseur d'autorisation"
+      extid: "Client ID"
+      secret: "Client secret"
+      base: "URL de base"
+      scope: "Scope"
+      id:
+        label: "ID client interne"
+        inline: "ID : {$id}"
+      confirm:
+        delete: "Voulez-vous vraiment supprimer le client OAuth 2.0 ?"
+      error:
+        create: "Impossible d'enregistrer le client OAuth 2.0 {$name} : {$msg}"
+        edit: "Impossible de modifier le client OAuth 2.0 {$name} : {$msg}"
+        delete: "Impossible de supprimer le client OAuth 2.0 {$name} : {$msg}"
+        details: "Impossible de récupérer les détails du client OAuth 2.0 {$name} : {$msg}"
+
+source:
+  display: "Source"
+  id: "ID de la source"
+  title:
+    view: "Source"
+    create: "Ajouter une source"
+    wizard: "Assistant de source"
+    edit: "Modifier la source"
+  confirm:
+    delete: "Voulez-vous vraiment supprimer la source {$name} ?"
+  error:
+    create: "Impossible d'ajouter la source {$name} : {$msg}"
+    edit: "Impossible de modifier la source {$name} : {$msg}"
+    delete: "Impossible de supprimer la source {$name} : {$msg}"
+    details: "Impossible de récupérer les détails de la source : {$msg}"
+    url:
+      empty: "L'URL est requise."
+      credentials:
+        empty: "Des identifiants sont requis pour accéder à cette URL."
+        incorrect: "Les identifiants fournis sont incorrects."
+      calendars: "Impossible de trouver des calendriers. Êtes-vous sûr que cette URL est correcte ?"
+    calendars:
+      find: "Impossible de trouver des calendriers : {$msg}"
+      tooltip: "Une erreur est survenue lors de la récupération des calendriers depuis cette source."
+
+calendar:
+  display: "Calendrier"
+  id: "ID du calendrier"
+  title:
+    view: "Calendrier"
+    create: "Créer un calendrier"
+    edit: "Modifier le calendrier"
+  confirm:
+    delete: "Voulez-vous vraiment supprimer le calendrier {$name} ?"
+  error:
+    create: "Impossible de créer le calendrier {$name} : {$msg}"
+    edit: "Impossible de modifier le calendrier {$name} : {$msg}"
+    delete: "Impossible de supprimer le calendrier {$name} : {$msg}"
+    move: "Impossible de déplacer le calendrier {$name} : {$msg}"
+    reset: "Impossible de réinitialiser le calendrier {$name} : {$msg}"
+    events:
+      tooltip: "Une erreur est survenue lors de la récupération des événements de ce calendrier."
+  events:
+    count:
+      all: |
+        .input {$count :integer}
+        .match $count
+          0 {{Aucun événement}}
+          1 {{{$count} événement}}
+          * {{{$count} événements}}
+      more: |
+        .input {$count :integer}
+        .match $count
+          * {{et {$count} de plus}}
+
+event:
+  display: "Événement"
+  id: "ID de l'événement"
+  title:
+    view: "Événement"
+    create: "Créer un événement"
+    edit: "Modifier l'événement"
+    copy: "Copier l'événement"
+  copy:
+    instruction: "Sélectionnez les jours où l'événement doit avoir lieu."
+  confirm:
+    delete: "Voulez-vous vraiment supprimer l'événement {$name} ?"
+  error:
+    create: "Impossible de créer l'événement {$name} : {$msg}"
+    edit: "Impossible de modifier l'événement {$name} : {$msg}"
+    delete: "Impossible de supprimer l'événement {$name} : {$msg}"
+    move: "Impossible de déplacer l'événement {$name} : {$msg}"
+    reset: "Impossible de réinitialiser l'événement {$name} : {$msg}"
+    copy: "Impossible de copier l'événement {$name} : {$msg}"
+  recurrence:
+    affect:
+      this: "Cet événement"
+      thisandfuture: "Cet événement et les suivants"
+      all: "Tous les événements"
+    edit:
+      title: "Modification d'un événement récurrent"
+    delete:
+      title: "Suppression d'un événement récurrent"
+
+reachability:
+  database: "La base de données est injoignable."
+  backend: "Le serveur backend est injoignable."
+  frontend: "Le serveur backend est injoignable."
+  compatibility: "Le serveur frontend et le serveur backend ne sont pas compatibles."
+  unknown: "Erreur réseau inconnue"
+
+weekdays:
+  full:
+    monday: "lundi"
+    tuesday: "mardi"
+    wednesday: "mercredi"
+    thursday: "jeudi"
+    friday: "vendredi"
+    saturday: "samedi"
+    sunday: "dimanche"
+  short:
+    monday: "lun"
+    tuesday: "mar"
+    wednesday: "mer"
+    thursday: "jeu"
+    friday: "ven"
+    saturday: "sam"
+    sunday: "dim"
+
+months:
+  full:
+    january: "janvier"
+    february: "février"
+    march: "mars"
+    april: "avril"
+    may: "mai"
+    june: "juin"
+    july: "juillet"
+    august: "août"
+    september: "septembre"
+    october: "octobre"
+    november: "novembre"
+    december: "décembre"
+  short:
+    january: "janv"
+    february: "févr"
+    march: "mars"
+    april: "avr"
+    may: "mai"
+    june: "juin"
+    july: "juil"
+    august: "août"
+    september: "sept"
+    october: "oct"
+    november: "nov"
+    december: "déc"
+
+scope:
+  today: "Aujourd'hui"
+  day: "Jour"
+  week: "Semaine"
+  month: "Mois"
+
+settings:
+  title: "Paramètres"
+  account:
+    title: "Compte"
+    pfp:
+      display: "Photo de profil"
+      type:
+        gravatar: "Gravatar"
+        database: "Importer un fichier"
+        remote: "Lien internet"
+        luna: "Illustration Luna"
+      file: "Fichier de la photo de profil"
+      link: "Lien de la photo de profil"
+      gravatar:
+        default: "Utiliser la photo de profil Gravatar par défaut"
+    searchable: "Autoriser les autres utilisateurs à me trouver"
+    password:
+      new: "Nouveau mot de passe"
+      confirm: "Confirmer le nouveau mot de passe"
+    delete:
+      confirm: "Voulez-vous vraiment supprimer votre compte ?"
+      details: "Toutes vos données seront supprimées."
+      error: "Impossible de supprimer votre compte : {$msg}"
+      success: "Compte supprimé."
+  appearance:
+    title: "Apparence"
+    calendar:
+      subtitle: "Apparence du calendrier"
+      fill:
+        allDay: "Remplir les événements sur toute la journée"
+        nonAllDay: "Remplir les événements ponctuels"
+      small: "Afficher le petit calendrier"
+      dynamic:
+        main: "Nombre de lignes dynamique"
+        small: "Nombre de lignes dynamique (petit calendrier)"
+      week:
+        numbers: "Afficher les numéros de semaine"
+        first: "Premier jour de la semaine"
+    site:
+      subtitle: "Apparence du site"
+      frosted: "Fenêtres translucides"
+      rounded: "Coins arrondis"
+      buttons: "Boutons avec texte"
+      scaling: "Mise à l'échelle"
+      theme:
+        light: "Thème clair"
+        dark: "Thème sombre"
+        sync: "Synchroniser le thème avec le système"
+      font:
+        text: "Police du texte"
+        mono: "Police à chasse fixe"
+    animations:
+      subtitle: "Animations"
+      duration:
+        display: "Durée des animations"
+        info: "Pour désactiver les animations, réglez la durée sur 0 %."
+      calendar:
+        main: "Animer le calendrier"
+        small: "Animer le petit calendrier"
+      month: "Animer la sélection du mois"
+  language:
+    title: "Langue"
+    display: "Langue d'affichage"
+    default: "Par défaut ({$default})"
+  dev:
+    title: "Développeur"
+    deauthorize: "Révoquer"
+    ids: "Afficher les ID"
+    api:
+      list: "Jetons d'API"
+      new: "Créer un jeton d'API"
+  users:
+    title: "Utilisateurs"
+    list:
+      users: "Utilisateurs inscrits"
+      invites: "Invitations actives"
+    action:
+      invite:
+        new: "Inviter un utilisateur"
+        delete: "Supprimer toutes les invitations"
+    confirm:
+      delete: "Voulez-vous vraiment supprimer ce compte ?"
+      enable: "Voulez-vous vraiment activer ce compte ?\nL'utilisateur pourra se reconnecter."
+      disable: "Voulez-vous vraiment désactiver ce compte ?\nL'utilisateur ne pourra plus se connecter."
+    info:
+      preserve: "Le compte de l'utilisateur restera intact."
+      delete: "Toutes les données de l'utilisateur seront supprimées."
+    success:
+      delete: "Compte de l'utilisateur supprimé."
+    error:
+      enable: "Impossible d'activer le compte : {$msg}"
+      disable: "Impossible de désactiver le compte : {$msg}"
+      delete: "Impossible de supprimer le compte : {$msg}"
+  themes:
+    title: "Thèmes"
+    list: "Thèmes installés"
+    current: "Vous souhaitez changer de thème ? Rendez-vous dans l'onglet « Apparence »."
+    new: "Installer un thème"
+    upload: "Importer un thème"
+    success:
+      install: "Thème installé"
+      uninstall: "Thème désinstallé"
+    error:
+      install: "Impossible d'installer le thème : {$msg}"
+      uninstall: "Impossible de désinstaller le thème : {$msg}"
+      file: "Fichier de thème manquant ou corrompu"
+    confirm:
+      uninstall: "Voulez-vous vraiment désinstaller le thème {$name} ?"
+      overwrite: "Un thème portant le même nom de fichier existe déjà.\nContinuer écrasera ce thème.\nVoulez-vous vraiment continuer ?"
+  fonts:
+    title: "Polices"
+    list: "Polices installées"
+    current: "Vous souhaitez changer de police ? Rendez-vous dans l'onglet « Apparence »."
+    new: "Installer une police"
+    upload: "Importer une police"
+    success:
+      install: "Police installée"
+      uninstall: "Police désinstallée"
+    error:
+      install: "Impossible d'installer la police : {$msg}"
+      uninstall: "Impossible de désinstaller la police : {$msg}"
+      file: "Fichier de police manquant ou corrompu"
+    confirm:
+      uninstall: "Voulez-vous vraiment désinstaller la police {$name} ?"
+      overwrite: "Une police portant le même nom de fichier existe déjà.\nContinuer écrasera cette police.\nVoulez-vous vraiment continuer ?"
+  oauth:
+    title: "OAuth 2.0"
+    new: "Enregistrer un client OAuth 2.0"
+    list: "Clients OAuth 2.0 enregistrés"
+  backups:
+    title: "Sauvegardes"
+    create: "Créer une sauvegarde"
+    file: "Importer un fichier de sauvegarde"
+    restore: "Restaurer depuis une sauvegarde"
+    restart: "La restauration a réussi.\nIl est recommandé de redémarrer le backend et la base de données maintenant."
+    confirm: "Voulez-vous vraiment restaurer depuis ce fichier de sauvegarde ?\nTout sera écrasé."
+    error:
+      file: "Fichier de sauvegarde manquant ou corrompu"
+      restore: "Impossible de restaurer depuis la sauvegarde : {$msg}"
+    encryption:
+      title: "Chiffrement de la sauvegarde"
+      desc:
+        create: "Pour des raisons de sécurité, il est recommandé de protéger la sauvegarde avec une phrase secrète."
+        restore: "Si la sauvegarde a été chiffrée lors de sa création, vous devez saisir la phrase secrète."
+      enable:
+        create: "Activer le chiffrement de la sauvegarde"
+        restore: "La sauvegarde est chiffrée"
+      password: "Phrase secrète"
+  admin:
+    title: "Administration"
+    confirm:
+      reset: "Voulez-vous vraiment réinitialiser tous les paramètres globaux ?"
+    registration:
+      display: "Activer l'inscription ouverte"
+      info: "Permet à n'importe qui de créer un compte.\nSi vous souhaitez seulement inviter quelques personnes, rendez-vous dans l'onglet « Utilisateurs »."
+    geolocation:
+      display: "Déterminer la géolocalisation des adresses IP"
+      info: "Ce paramètre permet au frontend d'afficher une localisation approximative des sessions de l'utilisateur sur sa page de paramètres. Cette fonctionnalité vise à aider les utilisateurs à détecter si des acteurs malveillants ont accès à leur compte. Comme déterminer la géolocalisation d'une adresse IP nécessite le recours à un service tiers, son utilisation soulève des questions de confidentialité. Si vous préférez ne pas utiliser cette fonctionnalité, elle peut être désactivée ici. Notez que les adresses IP elles-mêmes resteront stockées dans la base de données à des fins de sécurité et d'audit, mais elles ne sont jamais partagées avec un tiers en dehors du comportement contrôlé par cette option."
+    pfp:
+      gravatar:
+        display: "Activer les photos de profil Gravatar"
+        info: "Gravatar est un service tiers qui permet aux utilisateurs de définir leur photo de profil une seule fois et de l'associer à leur adresse e-mail. Cela fonctionne en interrogeant ce serveur avec un hachage MD5 de l'adresse e-mail de l'utilisateur. Cela peut être vu comme un problème de confidentialité, car cela permet à Gravatar de suivre les utilisateurs à travers différents services. Si vous préférez ne pas utiliser les photos de profil Gravatar, vous pouvez les désactiver ici. Ce paramètre désactive l'utilisation de Gravatar sur l'ensemble du site."
+      cache:
+        display: "Mettre en cache les photos de profil"
+        info: "Détermine si les photos de profil provenant de sites distants (y compris Gravatar) doivent être mises en cache localement. Mettre en cache les photos de profil peut améliorer les performances et la confidentialité, mais cela introduit le risque d'héberger du contenu illicite si un utilisateur malveillant l'utilise comme photo de profil. Le même risque existe si les utilisateurs importent directement leur photo de profil."
+      upload:
+        display: "Activer l'import des photos de profil"
+        info: "Permet aux utilisateurs d'importer leur propre photo de profil directement sur le serveur. Cela introduit le risque d'héberger du contenu illicite si un utilisateur malveillant importe une telle image comme photo de profil. Le même risque existe si la mise en cache des photos de profil distantes est activée."
+    verbosity:
+      display: "Niveau de détail des messages d'erreur"
+      info: "Quantité d'informations sur les erreurs renvoyée à l'utilisateur.\nCe paramètre s'applique à tous les utilisateurs.\n« Debug » ne devrait jamais être utilisé en production."
+      lvl:
+        broad: "Sommaire"
+        plain: "Simple"
+        wordy: "Détaillé"
+        debug: "Debug"
+    reset: "Réinitialiser tous les paramètres globaux"
+  danger:
+    title: "Zone de danger"
+    reset:
+      button: "Réinitialiser toutes mes préférences"
+      confirmation: "Voulez-vous vraiment réinitialiser toutes vos préférences ?"
+      details: "Votre compte restera intact."
+    delete: "Supprimer mon compte"
+  logout:
+    title: "Déconnexion"
+    button:
+      current: "Me déconnecter de mon compte"
+      all: "Me déconnecter de tous les appareils"
+      single: "Se déconnecter"
+    confirm:
+      current: "Voulez-vous vraiment vous déconnecter ?"
+      all:
+        display: "Voulez-vous vraiment révoquer toutes les sessions ?\nVous serez déconnecté de tous vos appareils."
+        info: "Vos jetons d'API resteront valides.\nPour les révoquer, rendez-vous dans l'onglet « Développeur »."
+    sessions:
+      display: "Sessions actives"
+      info: "Pour voir vos sessions d'API, rendez-vous dans l'onglet « Développeur »."
+  error:
+    save:
+      global: "Impossible d'enregistrer les paramètres globaux : {$msg}"
+      preferences: "Impossible d'enregistrer les paramètres utilisateur : {$msg}"
+      profile: "Impossible d'enregistrer les données utilisateur : {$msg}"
+
+validation:
+  username:
+    short: "Le nom d'utilisateur doit contenir au moins {$len :integer} caractères."
+    long: "Le nom d'utilisateur ne doit pas dépasser {$len :integer} caractères."
+    characters: "Le nom d'utilisateur ne doit contenir que des lettres et des chiffres."
+  password:
+    short: "Le mot de passe doit contenir au moins {$len :integer} caractères."
+    long: "Le mot de passe ne doit pas dépasser {$len :integer} caractères."
+    match: "Les mots de passe ne correspondent pas."
+  url:
+    proto: "L'URL doit commencer par « http:// » ou « https:// »."
+    invalid: "L'URL contient des caractères non autorisés ou n'est pas valide."
+  email:
+    invalid: "L'adresse e-mail n'est pas valide."
+  path:
+    empty: "Le chemin ne doit pas être vide."
+  invite:
+    invalid: "Le code d'invitation n'est pas valide."
+  file:
+    empty: "Aucun fichier sélectionné"
+    multiple: "Trop de fichiers sélectionnés"
+    null: "Le fichier est nul"
+    size: "Le fichier ne doit pas dépasser {$size}."
+    type: "Le fichier doit être de type « {$type} »"
+    invalid: "Format de fichier non valide"
+  auth:
+    unknown: "Type d'authentification non pris en charge"
+  source:
+    unknown: "Type de source non pris en charge"
+    location:
+      unknown: "Emplacement de fichier iCal non pris en charge"
+
+repository:
+  error:
+    event:
+      fetch: "Impossible de récupérer les événements depuis {$name} : {$msg}"
+    calendar:
+      fetch: "Impossible de récupérer les calendriers depuis {$name} : {$msg}"
+    reorder:
+      source: "Impossible de réorganiser la source en cache"
+      calendar: "Impossible de réorganiser le calendrier en cache"
+  info:
+    hidden: "L'événement {$name} a été ajouté à un calendrier masqué."
+
+perms:
+  read_events: "Consulter les événements"
+  add_events: "Créer des événements"
+  edit_events: "Modifier les événements"
+  delete_events: "Supprimer les événements"
+  read_calendars: "Consulter les calendriers"
+  add_calendars: "Créer des calendriers"
+  edit_calendars: "Modifier les calendriers"
+  delete_calendars: "Supprimer les calendriers"
+  read_sources: "Consulter les sources"
+  add_sources: "Ajouter des sources"
+  edit_sources: "Modifier les sources"
+  delete_sources: "Supprimer les sources"
+  manage_invites: "Gérer les invitations d'inscription"
+  manage_users: "Gérer les utilisateurs"
+  manage_oauth_clients: "Gérer les clients OAuth 2.0"
+  manage_global_settings: "Gérer les paramètres globaux"
+  manage_user_settings: "Gérer les préférences utilisateur"
+  manage_sessions: "Gérer les sessions"
+  manage_resources: "Gérer les polices et les thèmes"
+  create_backups: "Créer des sauvegardes"
+  restore_backups: "Restaurer des sauvegardes"
+  administrative: "Administration"
+
+numbers:
+  ordinal:
+    normal: |
+      .input {$num :integer select=ordinal}
+      .match $num
+        one {{{$num}er}}
+        * {{{$num}e}}
+    reverse: |
+      .input {$num :integer select=ordinal}
+      .match $num
+        1 {{dernier}}
+        * {{{$num}e en partant de la fin}}
