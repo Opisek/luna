@@ -966,12 +966,13 @@ export class Repository {
     const oldId = event.id;
 
     // add to the new calendar
+    // TODO: for recurring event, we need to create the first recurrence => original dtstart(?)
     await this.createEvent(event).catch((err) => { throw err; });
 
     // remove from the old calendar
-    await this.deleteEvent(oldId).catch((err) => {
+    await this.deleteEvent(oldId, "all").catch((err) => {
       // undo changes
-      this.deleteEvent(event.id).catch(NoOp);
+      this.deleteEvent(event.id, "all").catch(NoOp);
       event.id = oldId;
       throw err;
     });
