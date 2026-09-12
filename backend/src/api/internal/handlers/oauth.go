@@ -53,8 +53,8 @@ func GetOauthClients(c *gin.Context) {
 
 func PutOauthClient(c *gin.Context, body *struct {
 	Name         string     `json:"name" form:"name" binding:"required,alphanumunicode"`
-	ClientId     string     `json:"client_id" form:"client_id" binding:"required,alphanumunicode"`
-	ClientSecret string     `json:"client_secret" form:"client_secret" binding:"required,alphanumunicode"`
+	ClientId     string     `json:"client_id" form:"client_id" binding:"required"`
+	ClientSecret string     `json:"client_secret" form:"client_secret" binding:"required"`
 	BaseUrl      *types.Url `json:"base_url" form:"base_url" binding:"required"`
 	Scope        string     `json:"scope" form:"scope" binding:"required"`
 }) {
@@ -91,8 +91,8 @@ func PutOauthClient(c *gin.Context, body *struct {
 
 func PatchOauthClient(c *gin.Context, body *struct {
 	Name         string     `json:"name" form:"name" binding:"required,alphanumunicode"`
-	ClientId     string     `json:"client_id" form:"client_id" binding:"required,alphanumunicode"`
-	ClientSecret string     `json:"client_secret" form:"client_secret" binding:"required,alphanumunicode"`
+	ClientId     string     `json:"client_id" form:"client_id" binding:"required"`
+	ClientSecret string     `json:"client_secret" form:"client_secret" binding:"required"`
 	BaseUrl      *types.Url `json:"base_url" form:"base_url" binding:"required"`
 	Scope        string     `json:"scope" form:"scope" binding:"required"`
 }) {

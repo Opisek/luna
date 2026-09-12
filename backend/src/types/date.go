@@ -484,7 +484,10 @@ func (er EventRecurrence) RruleString() string {
 	if !er.Repeats() || er.ruleSet.GetRRule() == nil || er.ruleSet.GetRRule().String() == "" {
 		return ""
 	}
-	return fmt.Sprintf("RRULE:%s", er.ruleSet.GetRRule().Options.RRuleString())
+
+	rruleLine := fmt.Sprintf("RRULE:%s", er.ruleSet.GetRRule().Options.RRuleString())
+
+	return rruleLine
 }
 
 func (er EventRecurrence) RdateString() string {

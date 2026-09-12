@@ -400,6 +400,7 @@ func PatchEvent(c *gin.Context, body *struct {
 
 			ruleSet := parentEvent.GetDate().Recurrence().RuleSet()
 			ruleSet.GetRRule().Options.Until = event.GetDate().Start().Add(-time.Second)
+			ruleSet.GetRRule().Options.Count = 0
 			parentEvent.GetDate().Recurrence().SetRuleSet(ruleSet)
 			_, tr = parentEvent.GetCalendar().EditEvent(parentEvent, nil, nil, nil, parentEvent.GetDate(), false, "thisandfuture", u.Tx.Queries())
 			if tr != nil {
@@ -491,6 +492,7 @@ func DeleteEvent(c *gin.Context, query *struct {
 		// Removing just one instance of a recurrence equates to changing the recurrence end date
 		ruleSet := parentEvent.GetDate().Recurrence().RuleSet()
 		ruleSet.GetRRule().Options.Until = event.GetDate().Start().Add(-time.Second)
+		ruleSet.GetRRule().Options.Count = 0
 		parentEvent.GetDate().Recurrence().SetRuleSet(ruleSet)
 		_, err = parentEvent.GetCalendar().EditEvent(parentEvent, nil, nil, nil, parentEvent.GetDate(), false, "thisandfuture", u.Tx.Queries())
 		if err != nil {

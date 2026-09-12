@@ -195,7 +195,7 @@ func (q *Queries) OverrideCalendars(cals []types.Calendar) ([]types.Calendar, *e
 	err = q.insertCalendars(cals)
 	if err != nil {
 		return nil, err.
-			Append(errors.LvlWordy, "Could not cache events").
+			Append(errors.LvlWordy, "Could not cache calendars").
 			Append(errors.LvlPlain, "Database error")
 	}
 

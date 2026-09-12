@@ -164,7 +164,7 @@
       eventRecurrenceRruleOptions.dtstart = event.date.start;
 
       event.date.recurrence = {
-        RRULE: `RRULE:${RRule.optionsToString(new RRule(eventRecurrenceRruleOptions).options).split("RRULE:")[1]}`,
+        RRULE: `RRULE:${RRule.optionsToString(new RRule(eventRecurrenceRruleOptions).origOptions).split("RRULE:")[1]}`,
         RDATE: serializeTimestampList("RDATE", event.date.allDay, "UTC", [...eventRecurrenceRdate.values()]),
         EXDATE: serializeTimestampList("EXDATE", event.date.allDay, "UTC", [...eventRecurrenceExdate.values()]),
       };

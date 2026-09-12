@@ -249,8 +249,6 @@ func (calendar *GoogleCalendar) GetEvent(settings types.EventSettings, q types.D
 			Append(errors.LvlBroad, "Could not get event")
 	}
 
-	converted.settings.IsFirstRecurrence = googleSettings.IsFirstRecurrence
-
 	casted := (types.Event)(converted)
 
 	return casted, nil

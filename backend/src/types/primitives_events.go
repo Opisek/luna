@@ -56,6 +56,10 @@ func ExpandRecurrence(event Event, start *time.Time, end *time.Time) ([]Event, *
 	events := make([]Event, len(timeSlices))
 	actualEventCount := 0
 	for _, timeSlice := range timeSlices {
+		if event.GetDate().allDay {
+			timeSlice = time.Date(timeSlice.Year(), timeSlice.Month(), timeSlice.Day(), 0, 0, 0, 0, timeSlice.Location())
+		}
+
 		_, originalOffset := timeSlice.Zone()
 		timeSlice = timeSlice.In(timezone)
 		_, timezoneOffset := timeSlice.Zone()
