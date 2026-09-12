@@ -272,20 +272,23 @@ func (calendar *GoogleCalendar) AddEvent(name string, desc string, color *types.
 
 	var start google.TimeDefinition
 	var end google.TimeDefinition
-	// TODO: timezones
 	if date.AllDay() {
 		start = google.TimeDefinition{
-			Date: date.Start().Format("2006-01-02"),
+			Date:     date.Start().Format("2006-01-02"),
+			TimeZone: date.Timezone().String(),
 		}
 		end = google.TimeDefinition{
-			Date: date.End().Format("2006-01-02"),
+			Date:     date.End().Format("2006-01-02"),
+			TimeZone: date.Timezone().String(),
 		}
 	} else {
 		start = google.TimeDefinition{
 			DateTime: date.Start().Local().Format(time.RFC3339),
+			TimeZone: date.Timezone().String(),
 		}
 		end = google.TimeDefinition{
 			DateTime: date.End().Local().Format(time.RFC3339),
+			TimeZone: date.Timezone().String(),
 		}
 	}
 
