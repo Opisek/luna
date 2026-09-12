@@ -263,6 +263,20 @@ func (er *EventRecurrence) MarkModification(modifiedTime *time.Time) {
 	er.modifiedInstances = append(er.modifiedInstances, *modifiedTime)
 }
 
+func (er *EventRecurrence) GetOccurrencesBefore(end *time.Time) int {
+	if !er.Repeats() {
+		return 0
+	}
+
+	occurrences := er.EffectiveRuleSet().Between(er.ruleSet.GetRRule().Options.Dtstart, *end, true)
+
+	if len(occurrences) != 0 && occurrences[len(occurrences)-1].Equal(*end) {
+		return len(occurrences) - 1
+	}
+
+	return len(occurrences)
+}
+
 func EmptyEventRecurrence() *EventRecurrence {
 	return &EventRecurrence{
 		ruleSet: nil,

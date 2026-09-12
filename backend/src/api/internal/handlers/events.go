@@ -374,8 +374,16 @@ func PatchEvent(c *gin.Context, body *struct {
 			// Editing this and future instances means we transform this event into a master event and shorten the original one
 			if newEventDate.Recurrence().Repeats() {
 				ruleSet := parentEvent.GetDate().Recurrence().RuleSet()
-				ruleSet.GetRRule().Options.Dtstart = parentEvent.GetDate().Recurrence().RuleSet().GetDTStart()
-				parentEvent.GetDate().Recurrence().SetRuleSet(ruleSet)
+				dtstart := parentEvent.GetDate().Recurrence().RuleSet().GetDTStart()
+				if dtstart.Unix() <= 0 {
+					dtstart = *parentEvent.GetDate().Start()
+					parentEvent.GetDate().Recurrence().RuleSet().GetRRule().Options.Dtstart = dtstart
+				}
+				ruleSet.GetRRule().Options.Dtstart = dtstart
+				if ruleSet.GetRRule().Options.Count != 0 {
+					ruleSet.GetRRule().Options.Count = max(ruleSet.GetRRule().Options.Count-parentEvent.GetDate().Recurrence().GetOccurrencesBefore(newEventDate.Start()), 1)
+				}
+				newEventDate.Recurrence().SetRuleSet(ruleSet)
 			}
 			if body.Name != nil {
 				event.SetName(*body.Name)
