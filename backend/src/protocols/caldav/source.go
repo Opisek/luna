@@ -178,47 +178,23 @@ func (source *CaldavSource) AddCalendar(name string, desc string, color *types.C
 }
 
 func (source *CaldavSource) EditCalendar(calendar types.Calendar, name string, desc string, color *types.Color, override bool, q types.DatabaseQueries) (types.Calendar, *errors.ErrorTrace) {
-	if override {
-		anyOverrides := false
-		if name != "" {
-			calendar.SetName(name)
-			anyOverrides = true
-		}
-		if desc != "" {
-			calendar.SetDesc(desc)
-			anyOverrides = true
-		}
-		if color != nil && !color.IsEmpty() {
-			calendar.SetColor(color)
-			anyOverrides = true
-		}
+	caldavCalendarSettings := calendar.GetSettings().(*CaldavCalendarSettings)
 
-		if anyOverrides {
-			q.SetCalendarOverrides(calendar.GetId(), name, desc, color)
-			return calendar, nil
-		} else {
-			q.DeleteCalendarOverrides(calendar.GetId())
-			return source.GetCalendar(calendar.GetSettings(), q)
-		}
-	} else {
-		caldavCalendarSettings := calendar.GetSettings().(*CaldavCalendarSettings)
-
-		tr := supplementary_caldav.PropPatch(source.settings.Url, caldavCalendarSettings.Url, name, desc, color, source.auth, source.ctx)
-		if tr != nil {
-			return nil, tr.
-				Append(errors.LvlBroad, "Could not update calendar %v", calendar.GetId()).
-				Append(errors.LvlBroad, "Could not update calendar")
-		}
-
-		cal, tr := source.GetCalendar(caldavCalendarSettings, q)
-		if tr != nil {
-			return nil, tr.
-				Append(errors.LvlBroad, "Could not fetch updated calendar %v", calendar.GetId()).
-				AltStr(errors.LvlDebug, "Could not fetch updated calendar")
-		}
-
-		return cal, nil
+	tr := supplementary_caldav.PropPatch(source.settings.Url, caldavCalendarSettings.Url, name, desc, color, source.auth, source.ctx)
+	if tr != nil {
+		return nil, tr.
+			Append(errors.LvlBroad, "Could not update calendar %v", calendar.GetId()).
+			Append(errors.LvlBroad, "Could not update calendar")
 	}
+
+	cal, tr := source.GetCalendar(caldavCalendarSettings, q)
+	if tr != nil {
+		return nil, tr.
+			Append(errors.LvlBroad, "Could not fetch updated calendar %v", calendar.GetId()).
+			AltStr(errors.LvlDebug, "Could not fetch updated calendar")
+	}
+
+	return cal, nil
 }
 
 func (source *CaldavSource) DeleteCalendar(calendar types.Calendar, q types.DatabaseQueries) *errors.ErrorTrace {

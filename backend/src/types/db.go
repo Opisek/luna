@@ -62,9 +62,4 @@ type DatabaseQueries interface {
 	SetFilecacheWithoutId(file File, content io.Reader, user ID) (ID, *errors.ErrorTrace)
 	UpdateFileCache(file File, content io.Reader) *errors.ErrorTrace
 	DeleteFilecache(file File, user ID) *errors.ErrorTrace
-
-	SetCalendarOverrides(calendarId ID, name string, desc string, color *Color) *errors.ErrorTrace
-	DeleteCalendarOverrides(calendarId ID) *errors.ErrorTrace
-	SetEventOverrides(eventId ID, name *string, desc *string, color *Color, future bool) *errors.ErrorTrace
-	DeleteEventOverrides(eventId ID) *errors.ErrorTrace
 }

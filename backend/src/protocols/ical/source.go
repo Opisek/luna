@@ -186,31 +186,7 @@ func (source *IcalSource) AddCalendar(name string, desc string, color *types.Col
 }
 
 func (source *IcalSource) EditCalendar(calendar types.Calendar, name string, desc string, color *types.Color, override bool, q types.DatabaseQueries) (types.Calendar, *errors.ErrorTrace) {
-	if override {
-		anyOverrides := false
-		if name != "" {
-			calendar.SetName(name)
-			anyOverrides = true
-		}
-		if desc != "" {
-			calendar.SetDesc(desc)
-			anyOverrides = true
-		}
-		if color != nil && !color.IsEmpty() {
-			calendar.SetColor(color)
-			anyOverrides = true
-		}
-
-		if anyOverrides {
-			q.SetCalendarOverrides(calendar.GetId(), name, desc, color)
-			return calendar, nil
-		} else {
-			q.DeleteCalendarOverrides(calendar.GetId())
-			return source.GetCalendar(calendar.GetSettings(), q)
-		}
-	} else {
-		return nil, errors.New().Status(http.StatusMethodNotAllowed)
-	}
+	return nil, errors.New().Status(http.StatusMethodNotAllowed)
 }
 
 func (source *IcalSource) DeleteCalendar(calendar types.Calendar, q types.DatabaseQueries) *errors.ErrorTrace {

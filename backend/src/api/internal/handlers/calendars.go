@@ -198,10 +198,38 @@ func PatchCalendar(c *gin.Context, body *struct {
 		body.Color = oldColor
 	}
 
-	_, err = calendar.GetSource().EditCalendar(calendar, *body.Name, *body.Desc, body.Color, body.Overridden, u.Tx.Queries())
-	if err != nil {
-		u.Error(err)
-		return
+	if calendar.CanEdit() {
+		// Update directly in the upstream
+		_, err = calendar.GetSource().EditCalendar(calendar, *body.Name, *body.Desc, body.Color, body.Overridden, u.Tx.Queries())
+		if err != nil {
+			u.Error(err)
+			return
+		}
+	} else {
+		// Apply an override
+		anyOverrides := false
+		if *body.Name != "" {
+			calendar.SetName(*body.Name)
+			anyOverrides = true
+		}
+		if *body.Desc != "" {
+			calendar.SetDesc(*body.Desc)
+			anyOverrides = true
+		}
+		if body.Color != nil && !body.Color.IsEmpty() {
+			calendar.SetColor(body.Color)
+			anyOverrides = true
+		}
+
+		if anyOverrides {
+			err = u.Tx.Queries().SetCalendarOverrides(calendar.GetId(), *body.Name, *body.Desc, body.Color)
+		} else {
+			err = u.Tx.Queries().DeleteCalendarOverrides(calendar.GetId())
+		}
+		if err != nil {
+			u.Error(err)
+			return
+		}
 	}
 
 	u.Success(nil)

@@ -361,16 +361,18 @@ func PatchEvent(c *gin.Context, body *struct {
 		}
 	}
 
-	switch query.Affect {
-	case "this":
-		// Editing just one instance
-		_, tr = event.GetCalendar().EditEvent(event, body.Name, body.Desc, body.Color, newEventDate, body.Overridden, "this", u.Tx.Queries())
-		if tr != nil {
-			u.Error(tr)
-			return
-		}
-	case "thisandfuture":
-		if event.CanDelete() {
+	// Distinction between whether we can modify the event in the upstream or not
+	if event.CanEdit() && (query.Affect != "thisandfuture" || event.CanDelete()) {
+		// Modify directly in the upstream
+		switch query.Affect {
+		case "this":
+			// Editing just one instance
+			_, tr = event.GetCalendar().EditEvent(event, body.Name, body.Desc, body.Color, newEventDate, u.Tx.Queries())
+			if tr != nil {
+				u.Error(tr)
+				return
+			}
+		case "thisandfuture":
 			// Editing this and future instances means we transform this event into a master event and shorten the original one
 			if newEventDate.Recurrence().Repeats() {
 				ruleSet := parentEvent.GetDate().Recurrence().RuleSet()
@@ -410,37 +412,52 @@ func PatchEvent(c *gin.Context, body *struct {
 			ruleSet.GetRRule().Options.Until = event.GetDate().Start().Add(-time.Second)
 			ruleSet.GetRRule().Options.Count = 0
 			parentEvent.GetDate().Recurrence().SetRuleSet(ruleSet)
-			_, tr = parentEvent.GetCalendar().EditEvent(parentEvent, nil, nil, nil, parentEvent.GetDate(), false, "thisandfuture", u.Tx.Queries())
+			_, tr = parentEvent.GetCalendar().EditEvent(parentEvent, nil, nil, nil, parentEvent.GetDate(), u.Tx.Queries())
 			if tr != nil {
 				u.Error(tr)
 				return
 			}
+		case "all":
+			// Editing all instances = editing parent event
+
+			// If we edit all events, we have to be careful about how we treat changes to the time
+			if parentEvent.GetId() != eventId {
+				// First, get the relative shift in start/end timestamps
+				deltaStart := newEventDate.Start().Sub(*event.GetDate().Start())
+				deltaEnd := newEventDate.End().Sub(*event.GetDate().End())
+
+				// Use these offsets to calculate when the master event should starte
+				newStart := parentEvent.GetDate().Start().Add(deltaStart)
+				newEnd := parentEvent.GetDate().End().Add(deltaEnd)
+				newEventDate.SetStart(&newStart)
+				newEventDate.SetEnd(&newEnd)
+			}
+
+			// Edit parent event
+			_, tr = parentEvent.GetCalendar().EditEvent(parentEvent, body.Name, body.Desc, body.Color, newEventDate, u.Tx.Queries())
+			if tr != nil {
+				u.Error(tr)
+				return
+			}
+		}
+	} else {
+		// Use overrides instead
+		anyOverrides := false
+		if body.Name != nil {
+			anyOverrides = true
+		}
+		if body.Desc != nil {
+			anyOverrides = true
+		}
+		if body.Color != nil && !body.Color.IsEmpty() {
+			anyOverrides = true
+		}
+
+		if anyOverrides {
+			tr = u.Tx.Queries().SetEventOverrides(event.GetId(), body.Name, body.Desc, body.Color, query.Affect != "this")
 		} else {
-			// In case we cannot delete events (e.g., ical), we use overrides instead
-			_, tr = event.GetCalendar().EditEvent(event, body.Name, body.Desc, body.Color, newEventDate, body.Overridden, "thisandfuture", u.Tx.Queries())
-			if tr != nil {
-				u.Error(tr)
-				return
-			}
+			tr = u.Tx.Queries().DeleteEventOverrides(event.GetId())
 		}
-	case "all":
-		// Editing all instances = editing parent event
-
-		// If we edit all events, we have to be careful about how we treat changes to the time
-		if parentEvent.GetId() != eventId {
-			// First, get the relative shift in start/end timestamps
-			deltaStart := newEventDate.Start().Sub(*event.GetDate().Start())
-			deltaEnd := newEventDate.End().Sub(*event.GetDate().End())
-
-			// Use these offsets to calculate when the master event should starte
-			newStart := parentEvent.GetDate().Start().Add(deltaStart)
-			newEnd := parentEvent.GetDate().End().Add(deltaEnd)
-			newEventDate.SetStart(&newStart)
-			newEventDate.SetEnd(&newEnd)
-		}
-
-		// Edit parent event
-		_, tr = parentEvent.GetCalendar().EditEvent(parentEvent, body.Name, body.Desc, body.Color, newEventDate, body.Overridden, "all", u.Tx.Queries())
 		if tr != nil {
 			u.Error(tr)
 			return
@@ -490,7 +507,7 @@ func DeleteEvent(c *gin.Context, query *struct {
 	case "this":
 		// Removing just one instance of a recurrence equates to adding that event to EXDATE
 		parentEvent.GetDate().Recurrence().AddException(event.GetDate().Start())
-		_, err = parentEvent.GetCalendar().EditEvent(parentEvent, nil, nil, nil, parentEvent.GetDate(), false, "this", u.Tx.Queries())
+		_, err = parentEvent.GetCalendar().EditEvent(parentEvent, nil, nil, nil, parentEvent.GetDate(), u.Tx.Queries())
 		if err != nil {
 			u.Error(err)
 			return
@@ -502,7 +519,7 @@ func DeleteEvent(c *gin.Context, query *struct {
 		ruleSet.GetRRule().Options.Until = event.GetDate().Start().Add(-time.Second)
 		ruleSet.GetRRule().Options.Count = 0
 		parentEvent.GetDate().Recurrence().SetRuleSet(ruleSet)
-		_, err = parentEvent.GetCalendar().EditEvent(parentEvent, nil, nil, nil, parentEvent.GetDate(), false, "thisandfuture", u.Tx.Queries())
+		_, err = parentEvent.GetCalendar().EditEvent(parentEvent, nil, nil, nil, parentEvent.GetDate(), u.Tx.Queries())
 		if err != nil {
 			u.Error(err)
 			return

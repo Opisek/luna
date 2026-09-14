@@ -83,7 +83,7 @@ func (calendar *CaldavCalendar) eventsFromCaldav(obj *caldav.CalendarObject, q t
 		}
 
 		if mustUpdate {
-			calendar.EditEvent(event, &parsedProps.Name, &parsedProps.Desc, parsedProps.Color, parsedProps.EventDate, false, "this", q)
+			calendar.EditEvent(event, &parsedProps.Name, &parsedProps.Desc, parsedProps.Color, parsedProps.EventDate, q)
 			// TODO: we might want to catch errors and display them as notifications here
 		}
 

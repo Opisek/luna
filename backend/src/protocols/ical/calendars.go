@@ -262,29 +262,8 @@ func (calendar *IcalCalendar) AddEvent(name string, desc string, color *types.Co
 	return nil, errors.New().Status(http.StatusMethodNotAllowed)
 }
 
-func (calendar *IcalCalendar) EditEvent(event types.Event, name *string, desc *string, color *types.Color, date *types.EventDate, override bool, affect string, q types.DatabaseQueries) (types.Event, *errors.ErrorTrace) {
-	if override {
-		anyOverrides := false
-		if name != nil {
-			anyOverrides = true
-		}
-		if desc != nil {
-			anyOverrides = true
-		}
-		if color != nil && !color.IsEmpty() {
-			anyOverrides = true
-		}
-
-		if anyOverrides {
-			q.SetEventOverrides(event.GetId(), name, desc, color, affect != "this")
-			return event, nil
-		} else {
-			q.DeleteEventOverrides(event.GetId())
-			return calendar.GetEvent(event.GetSettings(), q)
-		}
-	} else {
-		return nil, errors.New().Status(http.StatusMethodNotAllowed)
-	}
+func (calendar *IcalCalendar) EditEvent(event types.Event, name *string, desc *string, color *types.Color, date *types.EventDate, q types.DatabaseQueries) (types.Event, *errors.ErrorTrace) {
+	return nil, errors.New().Status(http.StatusMethodNotAllowed)
 }
 
 func (calendar *IcalCalendar) DeleteEvent(event types.Event, q types.DatabaseQueries) *errors.ErrorTrace {
