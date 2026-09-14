@@ -247,6 +247,10 @@ file:
   error:
     fetch: "Nie udało się pobrać pliku: {$msg}"
 
+font:
+  error:
+    fetch: "Nie udało się pobrać czcionki: {$msg}"
+
 caldav:
   display: "CalDav"
   url: "Adres CalDav"

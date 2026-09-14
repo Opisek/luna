@@ -407,6 +407,10 @@ file:
   error:
     fetch: "Could not get file: {$msg}"
 
+font:
+  error:
+    fetch: "Could not get font: {$msg}"
+
 caldav:
   display: "CalDav"
   url: "CalDav URL"

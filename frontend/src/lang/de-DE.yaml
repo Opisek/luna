@@ -244,6 +244,10 @@ file:
   error:
     fetch: "Datei konnte nicht abgerufen werden: {$msg}"
 
+font:
+  error:
+    fetch: "Schriftart konnte nicht abgerufen werden: {$msg}"
+
 caldav:
   display: "CalDav"
   url: "CalDav URL"
