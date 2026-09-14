@@ -298,7 +298,13 @@
     <SmallCalendar date={date} smaller={true} onDayClick={(clickedDate) => smallCalendarClick(clickedDate)}></SmallCalendar>
   {/if}
 
-  <div class="sources" aria-live="polite" aria-relevant="all">
+  <div
+    class="sources"
+    aria-live="polite"
+    aria-relevant="all"
+    aria-busy={isLoading}
+    role="tree"
+  >
     {@render sourceEntries(repository.sources)}
   </div>
 
@@ -384,9 +390,10 @@
 
 {#snippet sourceEntries(sources: SourceModel[])}
   {#each sources as source, i (source.id)}
-    <SourceEntry bind:source={repository.sources[i]}/>
+    {@const calendars = repository.calendars.filter(cal => cal.source === source.id) || []}
+    <SourceEntry bind:source={repository.sources[i]} calendars={calendars}/>
     {#if !metadata.collapsedSources.has(repository.sources[i].id)}
-      {@render calendarEntries(repository.calendars.filter(cal => cal.source === source.id) || [])}
+        {@render calendarEntries(calendars)}
     {/if}
   {/each}
 {/snippet}

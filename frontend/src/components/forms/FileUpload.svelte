@@ -66,6 +66,10 @@
   // This is still considered an error, but we don't want to display it.
   let empty = $derived(files === null);
 
+  // UI/ARIA-relevant validity variables
+  const errorMessageId = $state(`error-${Math.floor(Math.random() * 100000000)}`);
+  let isValid = $derived(validity.valid || empty);
+
   // Update validity when the file changes
   async function internalOnChange() {
     if (files) {
@@ -160,9 +164,9 @@
 <!-- TODO: use the Label component instead -->
 <span class="label">
     <Label name={name} ownPositioning={false}>{placeholder}</Label>
-{#if !validity?.valid && !empty}
-    <span class="errorMessage">
-    {validity.message}
+{#if !valid}
+    <span class="errorMessage" id={errorMessageId}>
+      {validity.message}
     </span>
 {/if}
 </span>
@@ -173,7 +177,7 @@
   class:noneditable={!editable} 
   tabindex="-1"
   use:focusIndicator
-  class:error={!validity.valid && !empty}
+  class:error={!valid}
   bind:this={wrapper}
 >
 <input
@@ -185,6 +189,8 @@
     class:editable={editable}
     class:empty={files === null}
     tabindex={editable ? 0 : -1}
+    aria-invalid={!isValid}
+    aria-errormessage={errorMessageId}
     bind:this={fileInput}
     bind:files
 />

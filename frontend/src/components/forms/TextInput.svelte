@@ -102,6 +102,10 @@
     })(validation);
   });
 
+  // UI/ARIA-relevant validity variables
+  const errorMessageId = $state(`error-${Math.floor(Math.random() * 100000000)}`);
+  let isValid = $derived(validity.valid || empty);
+
   // Copy text
   function copy() {
     navigator.clipboard.writeText(value || "").then(() => {
@@ -185,14 +189,14 @@
   }
 </style>
 
-{#if label || (!validity?.valid && !empty)}
+{#if label || !isValid}
   <!-- TODO: use the Label component instead -->
   <span class="label">
     {#if label}
       <Label name={name} ownPositioning={false}>{placeholder}</Label>
     {/if}
-    {#if !validity?.valid && !empty}
-      <span class="errorMessage">
+    {#if !isValid}
+      <span class="errorMessage" id={errorMessageId}>
         {validity.message}
       </span>
     {/if}
@@ -205,7 +209,7 @@
   class:mono={mono}
   tabindex="-1"
   use:focusIndicator
-  class:error={!validity.valid && !empty}
+  class:error={!isValid}
   bind:this={wrapper}
 >
   {#if multiline}
@@ -221,6 +225,8 @@
       disabled={!editable}
       use:focusIndicator
       tabindex={editable ? 0 : -1}
+      aria-invalid={!isValid}
+      aria-errormessage={errorMessageId}
     ></textarea>
   {:else if password && !passwordVisible}
     <input
@@ -236,6 +242,8 @@
       class:editable={editable}
       tabindex={editable ? 0 : -1}
       type="password"
+      aria-invalid={!isValid}
+      aria-errormessage={errorMessageId}
     />
   {:else}
     <input
@@ -251,6 +259,8 @@
       class:editable={editable}
       tabindex={editable ? 0 : -1}
       type={type}
+      aria-invalid={!isValid}
+      aria-errormessage={errorMessageId}
     />
   {/if}
   {#if type === "number"}

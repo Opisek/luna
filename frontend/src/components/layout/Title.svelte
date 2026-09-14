@@ -3,9 +3,13 @@
 
   interface Props {
     children?: Snippet;
+    id?: string;
   }
 
-  let { children }: Props = $props();
+  let {
+    children,
+    id
+  }: Props = $props();
 </script>
 
 <style lang="scss">
@@ -20,6 +24,6 @@
   }
 </style>
 
-<h1>
+<h1 id={id}>
   {@render children?.()}
 </h1>

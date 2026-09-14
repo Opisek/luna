@@ -39,6 +39,8 @@
   let showPopup = $state(AsyncNoOp);
   let hidePopup = $state(NoOp);
 
+  const dialogId = $state(`dialog-${Math.floor(Math.random() * 100000000)}`);
+
   let visible = $state(false);
   let anchor: HTMLElement | undefined = $state()
   let popup = $derived(anchor != undefined);
@@ -162,6 +164,9 @@
     closedby="any"
     onclose={modalHideInternal}
     tabindex="-1"
+    id={dialogId}
+    aria-describedby={`title-${dialogId}`}
+    aria-modal="true"
   >
     {@render content()}
   </dialog>
@@ -172,7 +177,7 @@
     <form onsubmit={submitInternal} class:popup>
       {#if !popup}
         <Horizontal>
-          <Title>
+          <Title id={`title-${dialogId}`}>
             {title}
           </Title>
           {#if topButtons}

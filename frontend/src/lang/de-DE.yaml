@@ -7,7 +7,7 @@ button:
   add:
     generic: "Hinzufügen"
     event: "Ereignis erstellen"
-    calendar: "Kalendar erstellen"
+    calendar: "Kalender erstellen"
     source: "Quelle hinzufügen"
   edit: "Bearbeiten"
   delete: "Löschen"
@@ -89,7 +89,7 @@ form:
   desc: "Beschreibung"
   name: "Name"
   wizard:
-    location: "Auf welche Weise möchten Sie Ihre Kalendar importieren?"
+    location: "Auf welche Weise möchten Sie Ihre Kalender importieren?"
   advanced: "Fortgeschrittener Modus"
 
 recurrence:
@@ -263,7 +263,7 @@ ical:
   path: "iCal-Pfad"
 
 google:
-  display: "Google Kalendar"
+  display: "Google Kalender"
 
 auth:
   type: "Authentifikationstyp"
@@ -312,6 +312,7 @@ auth:
 
 source:
   display: "Quelle"
+  aria: "Quelle \"{$name}\""
   id: "Quellen-ID"
   title:
     view: "Quelle"
@@ -330,26 +331,27 @@ source:
       credentials:
         empty: "Für diesen Link sind Anmeldedaten erforderlich."
         incorrect: "Die bereitgestellten Anmeldedaten sind nicht korrekt."
-      calendars: "Es konnten keine Kalendar gefunden werden. Ist der Link korrekt?"
+      calendars: "Es konnten keine Kalender gefunden werden. Ist der Link korrekt?"
     calendars:
-      find: "Es konnten keine Kalendar gefunden werden: {$msg}"
-      tooltip: "Ein Fehler ist aufgetreten beim Abrufen von Kalendar."
+      find: "Es konnten keine Kalender gefunden werden: {$msg}"
+      tooltip: "Ein Fehler ist aufgetreten beim Abrufen von Kalender."
 
 calendar:
-  display: "Kalendar"
+  display: "Kalender"
+  aria: "Kalendar \"{$name}\""
   id: "Kalendar-ID"
   title:
-    view: "Kalendar"
-    create: "Kalendar Erstellen"
+    view: "Kalender"
+    create: "Kalender Erstellen"
     edit: "Kalender Bearbeiten"
   confirm:
-    delete: "Möchten sie den Kalendar {$name} wirklich löschen?"
+    delete: "Möchten sie den Kalender {$name} wirklich löschen?"
   error:
-    create: "Der Kalendar {$name} konnte nicht erstellt werden: {$msg}"
-    edit: "Der Kalendar {$name} konnte nicht bearbeitet werden: {$msg}"
-    delete: "Der Kalendar {$name} konnte nicht gelöscht werden: {$msg}"
-    move: "Der Kalendar {$name} konnte nicht bewegt werden: {$msg}"
-    reset: "Der Kalendar {$name} konnte nicht zurückgesetzt werden: {$msg}"
+    create: "Der Kalender {$name} konnte nicht erstellt werden: {$msg}"
+    edit: "Der Kalender {$name} konnte nicht bearbeitet werden: {$msg}"
+    delete: "Der Kalender {$name} konnte nicht gelöscht werden: {$msg}"
+    move: "Der Kalender {$name} konnte nicht bewegt werden: {$msg}"
+    reset: "Der Kalender {$name} konnte nicht zurückgesetzt werden: {$msg}"
     events:
       tooltip: "Ein Fehler ist aufgetreten beim Abrufen von Ereignissen."
   events:
@@ -368,6 +370,7 @@ calendar:
 
 event:
   display: "Ereignis"
+  aria: "Ereignis \"{$name}\""
   id: "Ereignis-ID"
   title:
     view: "Ereignis"
@@ -481,14 +484,14 @@ settings:
   appearance:
     title: "Darstellung"
     calendar:
-      subtitle: "Kalendardarstellung"
+      subtitle: "Kalenderdarstellung"
       fill:
         allDay: "Ganztägige Ereignisse ausfüllen"
         nonAllDay: "Nicht-ganztägige Ereignisse ausfüllen"
-      small: "Kleinen Kalendar anzeigen"
+      small: "Kleinen Kalender anzeigen"
       dynamic:
-        main: "Dynamische Spaltenanzahl im Kalendar"
-        small: "Dynamische Spaltenanzahl im kleinen Kalendar"
+        main: "Dynamische Spaltenanzahl im Kalender"
+        small: "Dynamische Spaltenanzahl im kleinen Kalender"
       week:
         numbers: "Wochennummer anzeigen"
         first: "Erster Wochentag"
@@ -512,7 +515,7 @@ settings:
         info: "Um Animationen zu deaktivieren, setzen Sie die Dauer auf 0%."
       calendar:
         main: "Kalender animieren"
-        small: "Kleinen Kalendar animieren"
+        small: "Kleinen Kalender animieren"
       month: "Monatsauswahl animieren"
       reduced: "Animationen sind durch eine Browserpräferenz ausgeschaltet."
   language:
@@ -696,22 +699,22 @@ repository:
     event:
       fetch: "Es konnten keine Ereignisse aus {$name} abgerufen werden: {$msg}"
     calendar:
-      fetch: "Es konnten keine Kalendar aus {$name} abgerufen werden: {$msg}"
+      fetch: "Es konnten keine Kalender aus {$name} abgerufen werden: {$msg}"
     reorder:
       source: "Die Quellen konnten nicht umsortiert werden"
-      calendar: "Die Kalendar konnten nicht umsortiert werden"
+      calendar: "Die Kalender konnten nicht umsortiert werden"
   info:
-    hidden: "Das Ereignis {$name} wurde zu einem verborgenen Kalendar hinzugefügt."
+    hidden: "Das Ereignis {$name} wurde zu einem verborgenen Kalender hinzugefügt."
 
 perms:
   read_events: "Ereignisse lesen"
   add_events: "Ereignesse erstellen"
   edit_events: "Ereignisse bearbeiten"
   delete_events: "Ereignisse löschen"
-  read_calendars: "Kalendar lesen"
-  add_calendars: "Kalendar erstellen"
-  edit_calendars: "Kalendar bearbeiten"
-  delete_calendars: "Kalendar löschen"
+  read_calendars: "Kalender lesen"
+  add_calendars: "Kalender erstellen"
+  edit_calendars: "Kalender bearbeiten"
+  delete_calendars: "Kalender löschen"
   read_sources: "Quellen lesen"
   add_sources: "Quellen hinzufügen"
   edit_sources: "Quellen bearbeiten"

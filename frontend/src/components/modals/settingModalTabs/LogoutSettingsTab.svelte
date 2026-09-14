@@ -124,7 +124,11 @@
   {@const deviceName=`${userAgent.os.name || ""} ${userAgent.browser.name || ""}`.trim()}
   {@const isActive=s.id === sessions.currentSession}
 
-  <div class="session" class:active={isActive} class:showId={settings.userSettings[UserSettingKeys.DebugMode]}>
+  <div class="session"
+    class:active={isActive}
+    aria-current={isActive}
+    class:showId={settings.userSettings[UserSettingKeys.DebugMode]}
+  >
     <div class="device">
       {#if s.is_api}
         <Bot size={20}/>
@@ -140,7 +144,8 @@
         <Tablet size={20}/>
       {:else if userAgent.device.type === UAParser.DEVICE.WEARABLE}
         <Watch size={20}/>
-      {:else if userAgent.device.type === UAParser.DEVICE.XR}
+      <!--{:else if userAgent.device.type === UAParser.DEVICE.XR}-->
+      {:else if userAgent.device.type === "xr"}
         <RectangleGoggles size={20}/>
       {:else if deviceName === ""}
         <Bot size={20}/>

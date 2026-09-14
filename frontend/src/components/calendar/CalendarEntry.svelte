@@ -96,6 +96,10 @@
   class="calendarEntry"
   use:draggable={{ ownClass: "calendarEntry", childClasses: [], callback: reorderCalendar}}
   id={`calendar-${calendar.id}`}
+  aria-label={t("calendar.aria", { values: { name: calendar.name } })}
+  aria-level="2"
+  role="treeitem"
+  aria-selected={document.activeElement?.id === `calendar-${calendar.id}`}
 >
   <span class="name">
     <ColorCircle

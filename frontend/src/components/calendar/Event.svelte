@@ -10,7 +10,7 @@
   import { getSettings } from "$lib/client/data/settings.svelte";
   import { UserSettingKeys } from "../../types/settings";
   import { getDayIndex } from "$lib/common/date";
-  import { time } from "@sveltia/i18n";
+  import { t, time } from "@sveltia/i18n";
 
   interface Props {
     visible?: boolean;
@@ -216,6 +216,7 @@
       z-index: {16 - getDayIndex(date)};
       anchor-name: --anchor-{id};
     "
+    aria-label={t("event.aria", { values: { name: event.name } })}
   >
     {#if showOnlyCircle}
       <ColorCircle

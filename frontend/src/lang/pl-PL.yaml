@@ -315,6 +315,7 @@ auth:
 
 source:
   display: "Źródło"
+  aria: "Źródło \"{$name}\""
   id: "ID źródła"
   title:
     view: "Źródło"
@@ -340,6 +341,7 @@ source:
 
 calendar:
   display: "Kalendarz"
+  aria: "Kalendarz \"{$name}\""
   id: "ID kalendarza"
   title:
     view: "Kalendarz"
@@ -372,6 +374,7 @@ calendar:
 
 event:
   display: "Wydarzenie"
+  aria: "Wydarzenie \"{$name}\""
   id: "ID wydarzenia"
   title:
     view: "Wydarzenie"

@@ -16,11 +16,15 @@
 
   interface Props {
     source: SourceModel;
+    calendars: CalendarModel[];
   }
 
   let {
-    source = $bindable()
+    source = $bindable(),
+    calendars,
   }: Props = $props();
+
+  let ariaControls = $derived(calendars.map(x => `calendar-${x.id}`).join(" "));
 
   const metadata = getMetadata();
   const repository = getRepository();
@@ -95,6 +99,11 @@
   class="sourceEntry"
   use:draggable={{ ownClass: "sourceEntry", childClasses: ["calendarEntry"], callback: reorderSource}}
   id={`source-${source.id}`}
+  aria-label={t("source.aria", { values: { name: source.name } })}
+  aria-owns={ariaControls}
+  aria-level="1"
+  role="treeitem"
+  aria-selected={document.activeElement?.id === `source-${source.id}`}
 >
   <button onclick={showModalInternal} use:focusIndicator={{ type: "underline" }}>
     {source.name}
@@ -104,7 +113,7 @@
       <Spinner/>
     {/if}
     {#if hasCals}
-      <CollapseToggle bind:collapsed={sourceCollapsed}/>
+      <CollapseToggle bind:collapsed={sourceCollapsed} ariaControls={ariaControls}/>
     {/if}
     {#if hasErrored}
       <Tooltip error={true}>{t("source.error.calendars.tooltip")}</Tooltip>

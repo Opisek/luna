@@ -6,10 +6,12 @@
 
   interface Props {
     collapsed: boolean;
+    ariaControls: string;
   }
 
   let {
-    collapsed = $bindable()
+    collapsed = $bindable(),
+    ariaControls,
   }: Props = $props();
 
   function toggleCollapse() {
@@ -17,6 +19,12 @@
   }
 </script>
 
-<IconButton onClick={toggleCollapse} style="transform: rotate({collapsed ? "-90deg" : "0deg"})" alt={collapsed ? t("button.hide") : t("button.show")}>
+<IconButton
+  onClick={toggleCollapse}
+  style="transform: rotate({collapsed ? "-90deg" : "0deg"})"
+  alt={collapsed ? t("button.hide") : t("button.show")}
+  ariaControls={ariaControls}
+  ariaExpanded={!collapsed}
+>
   <ChevronDown size={16}/>
 </IconButton>

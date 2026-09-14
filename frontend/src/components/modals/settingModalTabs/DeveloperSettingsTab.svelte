@@ -114,7 +114,12 @@
   {@const deviceName=`${userAgent.os.name || ""} ${userAgent.browser.name || ""}`.trim()}
   {@const isActive=s.id === sessions.currentSession}
 
-  <div class="session" class:active={isActive} class:showId={settings.userSettings[UserSettingKeys.DebugMode]}>
+  <div
+    class="session"
+    class:active={isActive}
+    aria-current={isActive}
+    class:showId={settings.userSettings[UserSettingKeys.DebugMode]}
+  >
     <div class="device">
       {#if s.is_api}
         <Bot size={20}/>

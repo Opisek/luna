@@ -121,6 +121,7 @@
     class:compact={compact}
     onmouseleave={(e) => {(e.target as HTMLButtonElement).blur()}}
     class:disabled={!enabled}
+    aria-busy={loading}
     href={enabled ? href : "#"}
     onmousedown={addRipple}
     use:focusIndicator
@@ -141,6 +142,7 @@
     onmouseleave={(e) => {(e.target as HTMLButtonElement).blur()}}
     type={type}
     disabled={!enabled}
+    aria-busy={loading}
     class:disabled={!enabled}
     onmousedown={addRipple}
     use:focusIndicator

@@ -20,6 +20,8 @@
     tabindex?: number;
     href?: string;
     type?: "button" | "submit";
+    ariaControls?: string;
+    ariaExpanded?: boolean;
     enabled?: boolean;
     color?: ColorKeys;
     canRenderAsButton?: boolean;
@@ -38,6 +40,8 @@
     tabindex = 0,
     href = "",
     type = "button",
+    ariaControls = "",
+    ariaExpanded,
     enabled = true,
     color = ColorKeys.Neutral,
     canRenderAsButton = false,
@@ -232,6 +236,10 @@
       class:danger={color == ColorKeys.Danger}
       class:neutral={color == ColorKeys.Neutral}
       class:inherit={color == ColorKeys.Inherit}
+      aria-label={alt}
+      aria-controls={ariaControls}
+      aria-expanded={ariaExpanded}
+      aria-busy={loading}
     >
       {@render children?.()}
     </a>
@@ -259,6 +267,9 @@
       disabled={!enabled}
       class:loading
       aria-label={alt}
+      aria-controls={ariaControls}
+      aria-expanded={ariaExpanded}
+      aria-busy={loading}
     >
       {@render children?.()}
       {#if loading}
