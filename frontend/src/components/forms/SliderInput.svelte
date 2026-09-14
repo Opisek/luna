@@ -199,7 +199,6 @@
     --detentWidth: 0.2rem;
     --backgroundBase: #{colors.$backgroundSecondary};
     --backgroundFilled: #{colors.$backgroundAccent};
-    --baseAnimationSpeeed: #{animations.$animationSpeed};
 
     height: var(--detentSize);
     margin-top: 1.25rem;
@@ -325,7 +324,7 @@
     ontransitionend={transitionEnd}
     ontransitioncancel={transitionEnd}
     style={`
-      transition: left max(${mouseDownSince == 0 ? animationLength : animationMultiplier * (animationLength - mouseDownFor)}s, 0s) ease-in-out;
+      transition: left calc(max(${mouseDownSince == 0 ? animationLength : animationMultiplier * (animationLength - mouseDownFor)}s, 0s) * var(--animationSpeedMultiplier)) ease-in-out;
       left: calc((100% - var(--handleSize)) * ${(rawValue - min) / (max - min)});
     `}
   >

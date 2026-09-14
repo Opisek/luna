@@ -113,6 +113,8 @@
   type="button"
   class:disabled={!enabled}
   class:check={checked}
+  aria-checked={checked}
+  role="radio"
   onclick={toggle}
   use:focusIndicator
 >

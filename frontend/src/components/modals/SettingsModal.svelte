@@ -35,6 +35,7 @@
   import { getDefaultLanguage, loadLanguage } from "$lib/common/i18n";
   import BackupsSettingsTab from "./settingModalTabs/BackupsSettingsTab.svelte";
   import LanguageSettingsTab from "./settingModalTabs/LanguageSettingsTab.svelte";
+  import { prefersReducedMotion } from "$lib/client/animations";
 
   interface Props {
     showModal: () => void;
@@ -52,6 +53,7 @@
   const oauthClients = getOauthClients();
 
   const today = new Date();
+  let reduceAnimation = $state(prefersReducedMotion());
 
   // Functions and props exported by individual tabs
   let accountSettingsSubmittable = $state(false);
@@ -66,6 +68,8 @@
   let loaderAnimation = $state(false);
   function forceRefresh() {
     loaderAnimation = true;
+
+    reduceAnimation = prefersReducedMotion();
     fetchThemes();
     fetchFonts();
     sessions.fetch();
@@ -507,7 +511,7 @@
       bind:value={selectedCategory}
       options={settings.userData.admin ? categoriesAdmin : categories} 
     />
-    <main tabindex="-1">
+    <main tabindex="-1" aria-live="polite">
       {#if selectedCategory === "account"}
         <AccountSettingsTab
           settings={settings} 
@@ -526,6 +530,7 @@
           lightThemes={lightThemes}
           darkThemes={darkThemes}
           fonts={fonts} 
+          prefersReducedMotion={reduceAnimation}
         />
       {:else if selectedCategory === "language"}
         <LanguageSettingsTab

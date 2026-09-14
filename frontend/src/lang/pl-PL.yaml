@@ -518,6 +518,7 @@ settings:
         main: "Animuj kalendarz"
         small: "Animuj mały kalendarz"
       month: "Animuj wybór miesiąca"
+      reduced: "Animacje są wyłączone przez preferencję przeglądarki."
   language:
     title: Język
     display: Język Wyświetlania

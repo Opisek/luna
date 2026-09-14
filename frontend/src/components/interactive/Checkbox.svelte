@@ -77,6 +77,8 @@
 <button
   type="button"
   class:check={value}
+  aria-checked={value}
+  role="checkbox"
   class:disabled={!enabled}
   onclick={toggle}
   use:focusIndicator

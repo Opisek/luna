@@ -178,11 +178,11 @@
     </span>
   </div>
   {#if isFirstDay}
-    <div class="events" bind:offsetHeight={containerHeight}>
+    <div class="events" bind:offsetHeight={containerHeight} aria-live="polite" aria-relevant="all">
       {@render eventEntries()}
     </div>
   {:else}
-    <div class="events">
+    <div class="events" aria-live="polite" aria-relevant="all">
       {@render eventEntries()}
     </div>
   {/if}

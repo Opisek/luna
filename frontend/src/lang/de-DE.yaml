@@ -514,6 +514,7 @@ settings:
         main: "Kalender animieren"
         small: "Kleinen Kalendar animieren"
       month: "Monatsauswahl animieren"
+      reduced: "Animationen sind durch eine Browserpräferenz ausgeschaltet."
   language:
     title: "Sprache"
     display: "Anzeigesprache"

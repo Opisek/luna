@@ -159,7 +159,7 @@
 </style>
 
 <Popup bind:showPopup={internalShow} bind:hidePopup={internalClose} tooltip={false} anchor={anchor}>
-  <div class="topRow">
+  <div class="topRow" aria-live="polite" aria-relevant="text">
     <IconButton onClick={prev} alt={t("button.month.previous")} color={ColorKeys.Accent}>
       <ChevronLeft/>
     </IconButton>

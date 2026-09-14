@@ -137,6 +137,10 @@
         --fontFamilyTime: ${currentFontTimeName};
 
         --animationSpeedMultiplier: ${settings.userSettings[UserSettingKeys.AnimationDuration]};
+
+        @media (prefers-reduced-motion: reduce) {
+          --animationSpeedMultiplier: 0;
+        }
       }
     </style> 
   `);
@@ -204,6 +208,8 @@
   class="notifications"
   style="--notificationExpireTime: {notificationExpireTime}ms"
   popover="manual"
+  aria-live="polite"
+  aria-relevant="additions"
 >
   {#each $notifications as notification, i (notification.created.getTime())}
     <Notification

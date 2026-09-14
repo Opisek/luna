@@ -13,6 +13,7 @@
     lightThemes: Option<string>[];
     darkThemes: Option<string>[];
     fonts: Option<string>[];
+    prefersReducedMotion: boolean;
   }
 
   let {
@@ -20,6 +21,7 @@
     lightThemes,
     darkThemes,
     fonts,
+    prefersReducedMotion,
   }: Props = $props();
 </script>
 
@@ -125,32 +127,36 @@
   options={fonts}
 />
 <SectionDivider title={t("settings.appearance.animations.subtitle")}/>
-<SliderInput
-  name={UserSettingKeys.AnimationDuration}
-  title={t("settings.appearance.animations.duration.display")}
-  info={t("settings.appearance.animations.duration.info")}
-  bind:value={settings.userSettings[UserSettingKeys.AnimationDuration]}
-  min={0}
-  max={2}
-  step={0.1}
-  detentTransform={(value) => number(value, { format: "percent" })}
-/>
-{#if settings.userSettings[UserSettingKeys.AnimationDuration] != 0}
-  <ToggleInput
-    name={UserSettingKeys.AnimateCalendarSwipe}
-    description={t("settings.appearance.animations.calendar.main")}
-    bind:value={settings.userSettings[UserSettingKeys.AnimateCalendarSwipe]}
+{#if prefersReducedMotion}
+  {t("settings.appearance.animations.reduced")}
+{:else}
+  <SliderInput
+    name={UserSettingKeys.AnimationDuration}
+    title={t("settings.appearance.animations.duration.display")}
+    info={t("settings.appearance.animations.duration.info")}
+    bind:value={settings.userSettings[UserSettingKeys.AnimationDuration]}
+    min={0}
+    max={2}
+    step={0.1}
+    detentTransform={(value) => number(value, { format: "percent" })}
   />
-  {#if settings.userSettings[UserSettingKeys.DisplaySmallCalendar]}
+  {#if settings.userSettings[UserSettingKeys.AnimationDuration] != 0}
     <ToggleInput
-      name={UserSettingKeys.AnimateSmallCalendarSwipe}
-      description={t("settings.appearance.animations.calendar.small")}
-      bind:value={settings.userSettings[UserSettingKeys.AnimateSmallCalendarSwipe]}
+      name={UserSettingKeys.AnimateCalendarSwipe}
+      description={t("settings.appearance.animations.calendar.main")}
+      bind:value={settings.userSettings[UserSettingKeys.AnimateCalendarSwipe]}
+    />
+    {#if settings.userSettings[UserSettingKeys.DisplaySmallCalendar]}
+      <ToggleInput
+        name={UserSettingKeys.AnimateSmallCalendarSwipe}
+        description={t("settings.appearance.animations.calendar.small")}
+        bind:value={settings.userSettings[UserSettingKeys.AnimateSmallCalendarSwipe]}
+      />
+    {/if}
+    <ToggleInput
+      name={UserSettingKeys.AnimateMonthSelectionSwipe}
+      description={t("settings.appearance.animations.month")}
+      bind:value={settings.userSettings[UserSettingKeys.AnimateMonthSelectionSwipe]}
     />
   {/if}
-  <ToggleInput
-    name={UserSettingKeys.AnimateMonthSelectionSwipe}
-    description={t("settings.appearance.animations.month")}
-    bind:value={settings.userSettings[UserSettingKeys.AnimateMonthSelectionSwipe]}
-  />
 {/if}

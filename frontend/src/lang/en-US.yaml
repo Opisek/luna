@@ -676,6 +676,7 @@ settings:
         main: "Animate calendar"
         small: "Animate small calendar"
       month: "Animate month selection"
+      reduced: "Animations are disabled by a browser preference."
   language:
     title: "Language"
     display: "Display Language"

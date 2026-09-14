@@ -1,6 +1,7 @@
 <!-- based on https://github.com/GeekLaunch/button-ripple-effect/ -->
 <script lang="ts">
   import { browser } from "$app/environment";
+  import { prefersReducedMotion } from "$lib/client/animations";
   import { getSettings } from "../../lib/client/data/settings.svelte";
   import { UserSettingKeys } from "../../types/settings";
 
@@ -11,7 +12,7 @@
 
   let { event, parent }: Props = $props();
 
-  const animationsEnabled = getSettings().userSettings[UserSettingKeys.AnimationDuration] > 0;
+  const animationsEnabled = $derived(getSettings().userSettings[UserSettingKeys.AnimationDuration] > 0);
 
   let circle: HTMLDivElement;
   let mouseLeft = $state(true);
@@ -23,7 +24,7 @@
     window.removeEventListener("mouseout", mouseUp);
     window.removeEventListener("blur", mouseUp);
     mouseLeft = true;
-    if (!animationsEnabled) transitionEnd();
+    if (!animationsEnabled || prefersReducedMotion()) transitionEnd();
     else setTimeout(() => {
       if (!circle.checkVisibility()) circle.remove();
     }, 10);

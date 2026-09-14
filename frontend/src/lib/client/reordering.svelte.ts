@@ -40,10 +40,12 @@ export const draggable = (node: HTMLElement, data: { ownClass: string, childClas
     addDragEventListeners();
     moved = false;
     down = true;
+    node.setAttribute("aria-grabbed", "true");
   }
 
   const mouseUp = async () => {
     down = false;
+    node.setAttribute("aria-grabbed", "false");
     removeDragEventListeners();
 
     if (moved) {

@@ -298,7 +298,7 @@
     <SmallCalendar date={date} smaller={true} onDayClick={(clickedDate) => smallCalendarClick(clickedDate)}></SmallCalendar>
   {/if}
 
-  <div class="sources">
+  <div class="sources" aria-live="polite" aria-relevant="all">
     {@render sourceEntries(repository.sources)}
   </div>
 

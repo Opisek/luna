@@ -39,7 +39,10 @@
     </Tooltip>
   {/if}
 </Label>
-<div>
+<div
+  aria-live="polite"
+  aria-relevant="all"
+>
   {#each items as item (id(item))}
     {@render template(item)}
   {:else}
