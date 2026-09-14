@@ -86,10 +86,10 @@
   class:inheritColor={inheritColor}
   class:pointerCursor={pointerCursor}
   role={role}
-  tabindex="-1"
+  tabindex="0"
   onmouseenter={() => showPopover().catch(NoOp)}
   onmouseleave={hidePopover}
-  onfocus={hidePopover}
+  onfocus={() => showPopover().catch(NoOp)}
   onblur={hidePopover}
 >
   {#if icon}

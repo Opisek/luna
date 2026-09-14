@@ -242,6 +242,8 @@
       onmousedown={down}
       onmouseleave={leaveInternal}
       onmouseenter={enterInternal}
+      onfocus={enterInternal}
+      onblur={leaveInternal}
       onmouseup={upInternal}
       class:hidden={!visible}
       type={type}
