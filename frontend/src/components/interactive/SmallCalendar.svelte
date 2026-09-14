@@ -131,7 +131,7 @@
   }
 </style>
 
-{#if settings.userSettings[UserSettingKeys.AnimateSmallCalendarSwipe]}
+{#if settings.userSettings[UserSettingKeys.DynamicSmallCalendarRows]}
   <div class="animation">
     {#each [ displayDays ] as currentDays (viewIteration)}
       {@render grid(currentDays, amountOfRows, true)}
