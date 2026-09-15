@@ -48,7 +48,7 @@ jobs:
       - name: Compare commits hashes
         id: check-hash-compare
         run: |
-          if [ "${{ github.sha }}" = "${{ steps.read.outputs.last_commit }}" ] && [ "${{ github.event_name }}" != "workflow_dispatch" ]; then
+          if [ "${{ github.sha }}" = "${{ steps.check-prev-hash-parse.outputs.last_commit }}" ] && [ "${{ github.event_name }}" != "workflow_dispatch" ]; then
             echo "No new commit. Skipping build."
             echo "skip=true" >> $GITHUB_OUTPUT
           else
@@ -58,12 +58,12 @@ jobs:
 
       - name: Serialize the current commit hash
         id: check-hash-serialize
-        if: steps.compare.outputs.skip == 'false'
+        if: steps.check-hash-compare.outputs.skip == 'false'
         run: echo "${{ github.sha }}" > last_commit.txt
 
       - name: Save the current commit hash
         id: check-hash-save
-        if: steps.compare.outputs.skip == 'false'
+        if: steps.check-hash-compare.outputs.skip == 'false'
         uses: actions/cache/save@v6
         with:
           path: last_commit.txt
