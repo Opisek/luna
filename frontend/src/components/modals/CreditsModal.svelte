@@ -111,12 +111,13 @@
       <ButtonList
         bind:value={selectedCategory}
         options={categories} 
+        label={t("credits.sidebar")}
       />
       <IconButton href="https://github.com/Opisek/luna" alt={t("credits.repository")}>
         <Github/>
       </IconButton>
     </Vertical>
-    <main tabindex="-1">
+    <main tabindex="-1" aria-label={categories.flatMap(x => x).find(x => x.value === selectedCategory)?.name}>
       {#if selectedCategory === "languages"}
         <List
           label={t("credits.stack.subtitle")}
@@ -205,7 +206,11 @@
 </Modal>
 
 {#snippet creditTemplate(c: Credit)}
-  <div class="credit">
+  <div
+    class="credit"
+    role="listitem"
+    aria-label={c.name}
+  >
     <span class="name">
       {c.name}
     </span>

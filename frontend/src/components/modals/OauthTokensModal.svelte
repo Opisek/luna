@@ -185,7 +185,12 @@
 </Modal>
 
 {#snippet tokensTemplate(tokens: OauthTokensModel)}
-  <div class="tokens" class:showId={settings.userSettings[UserSettingKeys.DebugMode]}>
+  <div
+    class="tokens"
+    class:showId={settings.userSettings[UserSettingKeys.DebugMode]}
+    role="listitem"
+    aria-label={tokens.account_name}
+  >
     <span class="name">
       {tokens.account_name}
     </span>

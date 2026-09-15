@@ -36,6 +36,7 @@
   import BackupsSettingsTab from "./settingModalTabs/BackupsSettingsTab.svelte";
   import LanguageSettingsTab from "./settingModalTabs/LanguageSettingsTab.svelte";
   import { prefersReducedMotion } from "$lib/client/animations";
+  import { generateUniqueElementId } from "$lib/common/dom";
 
   interface Props {
     showModal: () => void;
@@ -44,6 +45,7 @@
   let {
     showModal = $bindable(),
   }: Props = $props();
+  let uniqueId = $props.id();
 
   // Global data structures
   const settings = getSettings();
@@ -128,6 +130,7 @@
       { name: t("settings.logout.title"), value: "logout", icon: LogOut, color: ColorKeys.Danger },
     ],
   ]);
+  let effectiveCategories = $derived(settings.userData.admin ? categoriesAdmin : categories);
 
   let selectedCategory = $state("account");
   let previousCategory = $state("account");
@@ -424,6 +427,7 @@
   // Dialogs
   let showSessionModal: (initial?: Session, edit?: boolean) => Promise<Session> = $state(Promise.reject);
 
+  let confirmationId = $derived(generateUniqueElementId(["confirmation"], uniqueId));
   let internalShowConfirmation: () => Promise<void> = $state(Promise.reject);
   let confirmationMessage = $state("");
   let confirmationDetails = $state("");
@@ -509,9 +513,10 @@
   <div class="container">
     <ButtonList
       bind:value={selectedCategory}
-      options={settings.userData.admin ? categoriesAdmin : categories} 
+      options={effectiveCategories} 
+      label={t("settings.sidebar")}
     />
-    <main tabindex="-1" aria-live="polite">
+    <main tabindex="-1" aria-live="polite" aria-label={effectiveCategories.flatMap(x => x).find(x => x.value === selectedCategory)?.name}>
       {#if selectedCategory === "account"}
         <AccountSettingsTab
           settings={settings} 
@@ -613,10 +618,13 @@
 {/if}
 
 <ConfirmationModal bind:showModal={internalShowConfirmation} isNotice={confirmationNotice}>
-  <span class="confirmation">
+  <span
+    class="confirmation"
+    aria-describedby={confirmationDetails != "" ? `tooltip-${confirmationId}` : undefined}
+  >
     {confirmationMessage}
     {#if confirmationDetails != ""}
-      <Tooltip inline>{confirmationDetails}</Tooltip>
+      <Tooltip describes={confirmationId} inline>{confirmationDetails}</Tooltip>
     {/if}
   </span>
 </ConfirmationModal>

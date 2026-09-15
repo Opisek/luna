@@ -136,7 +136,11 @@
   {@const Icon = theme.icon}
   {@const isLightTheme = theme.icon === Sun}
 
-  <div class="installedResource">
+  <div
+    class="installedResource"
+    role="listitem"
+    aria-label={theme.name}
+  >
     <span class="name">
       {theme.name}
 

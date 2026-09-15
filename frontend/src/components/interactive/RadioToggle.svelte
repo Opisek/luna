@@ -1,8 +1,10 @@
 <script lang="ts" generics="T">
   import { focusIndicator } from "$lib/client/decoration";
+  import { extendUniqueElementId, generateUniqueElementId } from "$lib/common/dom";
 
   interface Props {
-    name: string;
+    groupName: string;
+    id: string;
     value: T;
     selected: T | null;
     enabled?: boolean;
@@ -10,7 +12,8 @@
   }
 
   let {
-    name,
+    groupName,
+    id,
     value,
     selected = $bindable(),
     enabled = true,
@@ -108,13 +111,14 @@
 </style>
 
 <!-- Components that use this toggle all implement for={name} -->
-<!-- svelte-ignore a11y_consider_explicit_label -->
 <button
   type="button"
   class:disabled={!enabled}
   class:check={checked}
   aria-checked={checked}
   role="radio"
+  id={id}
+  aria-labelledby={extendUniqueElementId(["label"], id)}
   onclick={toggle}
   use:focusIndicator
 >
@@ -123,5 +127,10 @@
     class:check={checked}
   >
   </div>
-  <input type="radio" id={`${name}-${value}`} name={name} value={value} bind:group={selected}>
+  <input
+    type="radio"
+    name={groupName}
+    value={value}
+    bind:group={selected}
+  >
 </button>

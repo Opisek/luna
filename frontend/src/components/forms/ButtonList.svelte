@@ -1,4 +1,5 @@
 <script lang="ts" generics="T">
+  import { extendUniqueElementId, generateUniqueElementId } from "$lib/common/dom";
   import { addRipple, focusIndicator } from "../../lib/client/decoration";
   import { EmptyOption } from "../../lib/client/placeholders";
   import { ColorKeys } from "../../types/colors";
@@ -9,14 +10,18 @@
   interface Props {
     value: T;
     options: Option<T>[][];
+    label: string;
   }
 
   let {
     value = $bindable(),
-    options
+    options,
+    label
   }: Props = $props();
 
   let selected: Option<T> = $derived(options.flat().filter(option => option.value === value)[0] || options[0] || EmptyOption);
+  let uniqueId = $props.id();
+  let buttonListId = $derived(generateUniqueElementId(["buttonlist"], uniqueId));
 </script>
 
 <style lang="scss">
@@ -25,7 +30,7 @@
   @use "../../styles/colors.scss";
   @use "../../styles/dimensions.scss";
 
-  aside {
+  div {
     display: flex;
     flex-direction: column;
     overflow: auto;
@@ -80,7 +85,7 @@
     pointer-events: none;
   }
 
-  p {
+  label {
     margin: 0;
     padding: 0;
     flex-grow: 1;
@@ -88,10 +93,13 @@
   }
 </style>
 
-<aside>
+<div aria-label={label} role="radiogroup">
   {#each options as block}
     {#each block as option, i}
       {@const Icon = option.icon}
+      {@const entryId = extendUniqueElementId(option.name.toLowerCase().split(" "), buttonListId)}
+      {@const labelId = extendUniqueElementId(["label"], entryId)}
+      {@const buttonId = extendUniqueElementId(["button"], entryId)}
       <button
         class="option"
         class:first={i === 0}
@@ -106,12 +114,16 @@
         onclick={() => value = option.value}
         onmousedown={addRipple}
         use:focusIndicator
+        role="radio"
+        aria-checked={option.value === value}
+        aria-labelledby={labelId}
+        id={buttonId}
       >
         <Icon size={20}/>
-        <p>
+        <label id={labelId} for={buttonId}>
           {option.name}
-        </p>
+        </label>
       </button>
     {/each}
   {/each}
-</aside>
+</div>

@@ -11,6 +11,7 @@
   import { ColorKeys } from "../../types/colors";
 
   import { t } from "@sveltia/i18n";
+  import { extendUniqueElementId, generateUniqueElementId } from "$lib/common/dom";
 
   let passwordVisible: boolean = $state(false);
 
@@ -54,6 +55,9 @@
     formatting = (value, _) => value,
     validity = $bindable(valid)
   }: Props = $props();
+  let uniqueId = $props.id();
+  let inputId = $derived(generateUniqueElementId(["input", type, name], uniqueId));
+  let labelId = $derived(extendUniqueElementId(["label"], inputId))
 
   let element: HTMLInputElement | HTMLTextAreaElement | null = $state(null);
 
@@ -103,7 +107,7 @@
   });
 
   // UI/ARIA-relevant validity variables
-  const errorMessageId = $state(`error-${Math.floor(Math.random() * 100000000)}`);
+  const errorMessageId = $derived(extendUniqueElementId(["error"], inputId));
   let isValid = $derived(validity.valid || empty);
 
   // Copy text
@@ -193,7 +197,7 @@
   <!-- TODO: use the Label component instead -->
   <span class="label">
     {#if label}
-      <Label name={name} ownPositioning={false}>{placeholder}</Label>
+      <Label describes={inputId} ownPositioning={false}>{placeholder}</Label>
     {/if}
     {#if !isValid}
       <span class="errorMessage" id={errorMessageId}>
@@ -214,6 +218,7 @@
 >
   {#if multiline}
     <textarea
+      id={inputId}
       bind:this={element}
       bind:value={value}
       onchange={internalOnChange}
@@ -227,9 +232,11 @@
       tabindex={editable ? 0 : -1}
       aria-invalid={!isValid}
       aria-errormessage={errorMessageId}
+      aria-labelledby={labelId}
     ></textarea>
   {:else if password && !passwordVisible}
     <input
+      id={inputId}
       bind:this={element}
       bind:value={value}
       onchange={internalOnChange}
@@ -244,9 +251,11 @@
       type="password"
       aria-invalid={!isValid}
       aria-errormessage={errorMessageId}
+      aria-labelledby={labelId}
     />
   {:else}
     <input
+      id={inputId}
       bind:this={element}
       bind:value={value}
       onchange={internalOnChange}
@@ -261,6 +270,7 @@
       type={type}
       aria-invalid={!isValid}
       aria-errormessage={errorMessageId}
+      aria-labelledby={labelId}
     />
   {/if}
   {#if type === "number"}

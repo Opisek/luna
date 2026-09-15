@@ -14,6 +14,7 @@
   import RegistrationInviteModal from "../RegistrationInviteModal.svelte";
   import { NoOp } from "../../../lib/client/placeholders";
   import { t } from "@sveltia/i18n";
+  import { extendUniqueElementId, generateUniqueElementId } from "$lib/common/dom";
 
   interface Props {
     today: Date;
@@ -32,6 +33,7 @@
     showConfirmation,
     deleteAccount
   }: Props = $props();
+  let uniqueId = $props.id();
 
   let showRegistrationInviteModal: (initial?: RegistrationInvite, edit?: boolean) => Promise<RegistrationInvite> = $state(Promise.reject);
 
@@ -200,7 +202,12 @@
   {@const hoursRemaining = Math.floor((invite.expires_at.getTime() - today.getTime()) / (1000 * 60 * 60))}
   {@const minutesRemaining = Math.floor((invite.expires_at.getTime() - today.getTime()) / (1000 * 60)) % 60}
 
-  <div class="invite" class:showId={settings.userSettings[UserSettingKeys.DebugMode]}>
+  <div
+    class="invite"
+    class:showId={settings.userSettings[UserSettingKeys.DebugMode]}
+    role="listitem"
+    aria-label={invite.code}
+  >
     <span class="expiry">
       {t(`invite.date.expiry.${expiresToday ? "today" : "elsewhen"}`, { values: { date: invite.expires_at, hours: hoursRemaining, minutes: minutesRemaining } })}
     </span>
@@ -230,20 +237,38 @@
 
 {#snippet userTemplate(u: UserData)}
   {@const isActive=u.id === users.currentUser}
+  {@const userEntryId = generateUniqueElementId(["userentry", u.id], uniqueId)}
+  {@const ariaDetails =
+    [u.admin && "admin", u.verified && "verified", !u.enabled && "disabled"]
+      .filter(x => x !== false)
+      .map(x => extendUniqueElementId(["tooltip"], extendUniqueElementId([x], userEntryId)))
+      .join(" ")
+    ?? undefined
+  }
 
-  <div class="user" class:active={isActive} class:showId={settings.userSettings[UserSettingKeys.DebugMode]}>
+  <div
+    class="user"
+    class:active={isActive}
+    class:showId={settings.userSettings[UserSettingKeys.DebugMode]}
+    role="listitem"
+    aria-label={u.username}
+    aria-describedby={ariaDetails}
+  >
     <div class="profilePicture">
       <Image
         src={u.profile_picture}
-        alt={t("user.pfp.alt", { values: { name: u.profile_picture } })}
+        alt={t("user.pfp.alt", { values: { name: u.username } })}
         small={true}
       />
     </div>
 
-    <span class="username">
+    <span
+      class="username"
+      id={userEntryId}
+    >
       {u.username}
       {#if u.admin}
-        <Tooltip inheritColor={true} tight={true}>
+        <Tooltip inheritColor={true} tight={true} describes={extendUniqueElementId(["admin"], userEntryId)}>
           {#snippet icon()}
             <Shield size={12}/>
           {/snippet}
@@ -251,7 +276,7 @@
         </Tooltip>
       {/if}
       {#if u.verified}
-        <Tooltip inheritColor={true} tight={true}>
+        <Tooltip inheritColor={true} tight={true} describes={extendUniqueElementId(["verified"], userEntryId)}>
           {#snippet icon()}
             <BadgeCheck size={12}/>
           {/snippet}
@@ -259,7 +284,7 @@
         </Tooltip>
       {/if}
       {#if !u.enabled}
-        <Tooltip inheritColor={true} tight={true}>
+        <Tooltip inheritColor={true} tight={true} describes={extendUniqueElementId(["disabled"], userEntryId)}>
           {#snippet icon()}
             <Ban size={12}/>
           {/snippet}

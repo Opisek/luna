@@ -1,5 +1,3 @@
 export function passIfEnter(e: KeyboardEvent, callback: () => any) {
-  if (e.key === "Enter") {
-    callback();
-  }
+  if (["Enter", " "].includes(e.key)) callback();
 }

@@ -15,12 +15,15 @@
   import { ColorKeys } from "../../types/colors";
   import { getRepository } from "../../lib/client/data/repository.svelte";
   import { t } from "@sveltia/i18n";
+  import { extendUniqueElementId, generateUniqueElementId } from "$lib/common/dom";
 
   interface Props {
     calendar: CalendarModel;
   }
 
   let { calendar = $bindable() }: Props = $props();
+  let uniqueId = $props.id();
+  let calendarEntryId = $derived(generateUniqueElementId(["calendarentry", calendar.id], uniqueId));
 
   const metadata = getMetadata();
   const repository = getRepository();
@@ -95,11 +98,12 @@
 <div
   class="calendarEntry"
   use:draggable={{ ownClass: "calendarEntry", childClasses: [], callback: reorderCalendar}}
-  id={`calendar-${calendar.id}`}
+  id={calendarEntryId}
   aria-label={t("calendar.aria", { values: { name: calendar.name } })}
   aria-level="2"
   role="treeitem"
-  aria-selected={document.activeElement?.id === `calendar-${calendar.id}`}
+  aria-selected={document.activeElement?.id === calendarEntryId}
+  aria-details={hasErrored ? extendUniqueElementId(["tooltip"], calendarEntryId) : undefined}
 >
   <span class="name">
     <ColorCircle
@@ -116,7 +120,7 @@
     {/if}
     <VisibilityToggle bind:visible={calendarVisible} onClick={setVisible}/>
     {#if hasErrored}
-      <Tooltip error={true}>{t("calendar.error.events.tooltip")}</Tooltip>
+      <Tooltip error={true} describes={calendarEntryId}>{t("calendar.error.events.tooltip")}</Tooltip>
     {/if}
   </span>
 </div>

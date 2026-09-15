@@ -1,6 +1,7 @@
 <script lang="ts">
   import { type Snippet } from "svelte";
   import { NoOp } from "../../lib/client/placeholders";
+  import { extendUniqueElementId, generateUniqueElementId } from "$lib/common/dom";
 
   interface Props {
     tooltip?: boolean;
@@ -10,6 +11,7 @@
     triangle?: boolean;
     dialog?: boolean;
     visible?: boolean;
+    describes?: string;
     children?: Snippet;
     showPopup?: () => Promise<void>;
     hidePopup?: () => void;
@@ -23,14 +25,17 @@
     triangle = true,
     dialog = false,
     visible = $bindable(false),
+    describes,
     children,
     showPopup = $bindable(),
     hidePopup = $bindable(NoOp),
   }: Props = $props();
+  let uniqueId = $props.id();
 
   let popover: (HTMLElement | undefined) = $state();
   let anchorElement = $derived(anchor || (!popover ? undefined : popover.parentElement))
-  let anchorName = $state();
+  let anchorName = $state<string | undefined>(undefined);
+  let tooltipId = $derived(extendUniqueElementId(tooltip ? ["tooltip"] : ["popup"], describes ?? anchorName));
 
   let promiseResolve: () => void = $state(NoOp);
   let promiseReject: (reason?: any) => void = $state(NoOp);
@@ -42,12 +47,15 @@
     if (currentAnchor.startsWith("--anchor-") && !currentAnchor.includes("undefined")) {
       anchorName = currentAnchor.substring(9);
     } else {
-      anchorName = anchorElement.id || `${Math.floor(Math.random() * 100000000)}-${anchorElement?.classList.values().toArray().join("-")}`;
+      anchorName = anchorElement.id || generateUniqueElementId(anchorElement ? anchorElement.classList.values().toArray() : [], uniqueId);
       Object.assign(anchorElement.style, {
         "anchor-name": `--anchor-${anchorName}`,
       });
-      if (tooltip) anchorElement.setAttribute("aria-describedby", `tooltip-${anchorName}`);
     }
+  })
+
+  $effect(() => {
+    if (anchorElement && tooltip) anchorElement.setAttribute("aria-describedby", tooltipId);
   })
 
   let openTimeout = $state<ReturnType<typeof setTimeout>>();
@@ -235,9 +243,9 @@
 <div
   bind:this={popover}
   class="popup"
-  popover={(tooltip ? "hint" : "auto") as "auto"}
+  popover={tooltip ? "hint" : "auto"}
   style={`--anchor: --anchor-${anchorName}; position-anchor: var(--anchor);`}
-  id={`${tooltip ? "tooltip" : "popup"}-${anchorName}`}
+  id={tooltipId}
   class:visible
   class:tooltip
   class:matchWidth

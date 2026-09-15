@@ -36,9 +36,11 @@ button:
   details: "Details"
   increment: "Increment"
   decrement: "Decrement"
+  tooltip: "Tooltip"
 
 credits:
   title: "Credits"
+  sidebar: "Categories"
   repository: "Luna Repository"
   stack:
     display: "Tech Stack"
@@ -623,6 +625,7 @@ scope:
 
 settings:
   title: "Settings"
+  sidebar: "Categories"
   account:
     title: "Account"
     pfp:

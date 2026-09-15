@@ -95,7 +95,12 @@
 {/if}
 
 {#snippet clientTemplate(client: OauthClientModel)}
-  <div class="client" class:showId={settings.userSettings[UserSettingKeys.DebugMode]}>
+  <div
+    class="client"
+    class:showId={settings.userSettings[UserSettingKeys.DebugMode]}
+    role="listitem"
+    aria-label={client.name}
+  >
     <span class="name">
       {client.name}
     </span>

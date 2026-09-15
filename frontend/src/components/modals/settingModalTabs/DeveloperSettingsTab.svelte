@@ -11,6 +11,7 @@
   import IconButton from "../../interactive/IconButton.svelte";
   import { queueNotification } from "../../../lib/client/notifications";
   import { t } from "@sveltia/i18n";
+  import { extendUniqueElementId, generateUniqueElementId } from "$lib/common/dom";
 
   interface Props {
     settings: Settings;
@@ -25,6 +26,7 @@
     today,
     showSessionModal,
   }: Props = $props();
+  let uniqueId = $props.id();
 
   function deauthorizeSession(id: string) {
     sessions.deauthorizeSession(id);
@@ -110,6 +112,8 @@
 
 <!-- TODO: reduce code duplication by putting templates in separate files as well -->
 {#snippet sessionTemplate(s: Session)}
+  {@const entryId=generateUniqueElementId(["apientry", s.id], uniqueId)}
+  {@const labelId=extendUniqueElementId(["label", "agent"], entryId)}
   {@const userAgent=UAParser(s.is_api ? "" : s.user_agent)}
   {@const deviceName=`${userAgent.os.name || ""} ${userAgent.browser.name || ""}`.trim()}
   {@const isActive=s.id === sessions.currentSession}
@@ -119,6 +123,8 @@
     class:active={isActive}
     aria-current={isActive}
     class:showId={settings.userSettings[UserSettingKeys.DebugMode]}
+    role="listitem"
+    aria-labelledby={labelId}
   >
     <div class="device">
       {#if s.is_api}
@@ -145,7 +151,7 @@
       {/if}
     </div>
 
-    <span class="agent">
+    <span class="agent" id={labelId}>
       {#if deviceName === ""}
         {s.user_agent}
       {:else}

@@ -1,16 +1,17 @@
 <script lang="ts">
   import type { Snippet } from "svelte";
   import Tooltip from "../interactive/Tooltip.svelte";
+  import { extendUniqueElementId } from "$lib/common/dom";
 
   interface Props {
-    name: string;
+    describes: string;
     info?: string;
     ownPositioning?: boolean;
     children?: Snippet;
   }
 
   let {
-    name,
+    describes,
     info = "",
     ownPositioning = true,
     children
@@ -38,10 +39,10 @@
   }
 </style>
 
-<label for={name} tabindex="-1" class:ownPositioning={ownPositioning}>
+<label for={describes} id={extendUniqueElementId(["label"], describes)} tabindex="-1" class:ownPositioning={ownPositioning}>
   {@render children?.()}
-  {#if info}
-    <Tooltip tight tiny>
+  {#if info !== undefined && info.trim().length != 0}
+    <Tooltip tight tiny describes={describes}>
       {info}
     </Tooltip>
   {/if}

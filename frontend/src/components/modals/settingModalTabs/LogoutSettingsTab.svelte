@@ -12,6 +12,7 @@
   import { queueNotification } from "../../../lib/client/notifications";
   import { NoOp } from "../../../lib/client/placeholders";
   import { t } from "@sveltia/i18n";
+  import { extendUniqueElementId, generateUniqueElementId } from "$lib/common/dom";
 
   interface Props {
     settings: Settings;
@@ -28,6 +29,7 @@
     editApiToken,
     showConfirmation
   }: Props = $props();
+  let uniqueId = $props.id();
 
   function logout() {
     showConfirmation(t("settings.logout.confirm.current")).then(async () => {
@@ -120,6 +122,8 @@
 />
 
 {#snippet sessionTemplate(s: Session)}
+  {@const entryId=generateUniqueElementId(["sessionentry", s.id], uniqueId)}
+  {@const labelId=extendUniqueElementId(["label", "agent"], entryId)}
   {@const userAgent=UAParser(s.is_api ? "" : s.user_agent)}
   {@const deviceName=`${userAgent.os.name || ""} ${userAgent.browser.name || ""}`.trim()}
   {@const isActive=s.id === sessions.currentSession}
@@ -128,6 +132,7 @@
     class:active={isActive}
     aria-current={isActive}
     class:showId={settings.userSettings[UserSettingKeys.DebugMode]}
+    role="listitem"
   >
     <div class="device">
       {#if s.is_api}

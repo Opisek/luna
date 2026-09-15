@@ -8,6 +8,7 @@
   import { AsyncNoOp, NoOp } from "$lib/client/placeholders";
   import { redrawNotifications } from "$lib/client/notifications";
   import Popup from "../popups/Popup.svelte";
+  import { extendUniqueElementId, generateUniqueElementId } from "$lib/common/dom";
 
   interface Props {
     title: string;
@@ -39,7 +40,9 @@
   let showPopup = $state(AsyncNoOp);
   let hidePopup = $state(NoOp);
 
-  const dialogId = $state(`dialog-${Math.floor(Math.random() * 100000000)}`);
+  let uniqueId = $props.id();
+  let dialogId = $derived(generateUniqueElementId(["dialog"], uniqueId));
+  let titleId = $derived(extendUniqueElementId(["title"], dialogId))
 
   let visible = $state(false);
   let anchor: HTMLElement | undefined = $state()
@@ -165,7 +168,7 @@
     onclose={modalHideInternal}
     tabindex="-1"
     id={dialogId}
-    aria-describedby={`title-${dialogId}`}
+    aria-labelledby={titleId}
     aria-modal="true"
   >
     {@render content()}
@@ -174,10 +177,14 @@
 
 {#snippet content()}
   {#if visible}
-    <form onsubmit={submitInternal} class:popup>
+    <form
+      onsubmit={submitInternal}
+      class:popup
+      aria-labelledby={titleId}
+    >
       {#if !popup}
         <Horizontal>
-          <Title id={`title-${dialogId}`}>
+          <Title id={titleId}>
             {title}
           </Title>
           {#if topButtons}

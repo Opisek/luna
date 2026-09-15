@@ -552,7 +552,7 @@
   {#if mappedPresetsAndCustom.length > 1}
     <RadioInput
       bind:value={chosenRecurrencePreset}
-      name="recurrence_preset"
+      groupName="recurrence_preset"
       options={mappedPresetsAndCustom}
       onClick={applyPreset}
     />

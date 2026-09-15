@@ -8,6 +8,7 @@
   import { downloadFileToClient } from "../../lib/client/net";
   import { ColorKeys } from "../../types/colors";
   import { t } from "@sveltia/i18n";
+  import { extendUniqueElementId, generateUniqueElementId } from "$lib/common/dom";
 
   let wrapper: HTMLDivElement | null = $state(null);
   let fileInput: HTMLInputElement | null = $state(null);
@@ -33,6 +34,8 @@
     validation = alwaysValidFile,
     validity = $bindable(valid)
   }: Props = $props();
+  let uniqueId = $props.id();
+  let fileUploadId = $derived(generateUniqueElementId(["fileupload"], uniqueId));
 
   function select() {
     if (!editable) return;
@@ -67,7 +70,7 @@
   let empty = $derived(files === null);
 
   // UI/ARIA-relevant validity variables
-  const errorMessageId = $state(`error-${Math.floor(Math.random() * 100000000)}`);
+  const errorMessageId = $derived(extendUniqueElementId(["tooltip"], fileUploadId));
   let isValid = $derived(validity.valid || empty);
 
   // Update validity when the file changes
@@ -163,12 +166,12 @@
 
 <!-- TODO: use the Label component instead -->
 <span class="label">
-    <Label name={name} ownPositioning={false}>{placeholder}</Label>
-{#if !valid}
+  <Label describes={fileUploadId} ownPositioning={false}>{placeholder}</Label>
+  {#if !valid}
     <span class="errorMessage" id={errorMessageId}>
       {validity.message}
     </span>
-{/if}
+  {/if}
 </span>
 
 <div
@@ -181,18 +184,20 @@
   bind:this={wrapper}
 >
 <input
-    type="file"
-    accept={accept}
-    onchange={internalOnChange}
-    name={name}
-    disabled={!editable}
-    class:editable={editable}
-    class:empty={files === null}
-    tabindex={editable ? 0 : -1}
-    aria-invalid={!isValid}
-    aria-errormessage={errorMessageId}
-    bind:this={fileInput}
-    bind:files
+  id={fileUploadId}
+  type="file"
+  accept={accept}
+  onchange={internalOnChange}
+  name={name}
+  disabled={!editable}
+  class:editable={editable}
+  class:empty={files === null}
+  tabindex={editable ? 0 : -1}
+  aria-invalid={!isValid}
+  aria-errormessage={errorMessageId}
+  aria-labelledby={extendUniqueElementId(["label", fileUploadId])}
+  bind:this={fileInput}
+  bind:files
 />
   {#if editable}
     {#if empty}

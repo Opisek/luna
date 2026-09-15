@@ -3,10 +3,11 @@
   import { NoOp } from "$lib/client/placeholders";
   import RadioToggle from "../interactive/RadioToggle.svelte";
   import type { Option } from "../../types/options";
+  import { extendUniqueElementId, generateUniqueElementId } from "$lib/common/dom";
 
   interface Props {
     value: T | null;
-    name: string;
+    groupName: string;
     editable?: boolean;
     options: Option<T>[];
     onClick?: (selected: T) => any;
@@ -14,18 +15,24 @@
 
   let {
     value = $bindable(),
-    name,
+    groupName,
     editable = true,
     options,
     onClick = NoOp,
   }: Props = $props();
+  let uniqueId = $props.id();
+  let radioGroupId = $derived(generateUniqueElementId(["radio"].concat(groupName.toLocaleLowerCase().split(" ")), uniqueId))
 </script>
 
 <style lang="scss">
   @use "../../styles/colors.scss";
   @use "../../styles/dimensions.scss";
 
-  div {
+  div.group {
+    display: contents;
+  }
+
+  div.radio {
     display: flex;
     align-items: start;
     flex-direction: row;
@@ -45,22 +52,21 @@
   }
 </style>
 
-<!-- svelte-ignore a11y_click_events_have_key_events -->
-{#each options as option (option.value)}
-  <div
-    role="radio"
-    tabindex="-1"
-    aria-checked={value == option.value}
-  >
-    <RadioToggle
-      name={name}
-      value={option.value}
-      bind:selected={value}
-      enabled={editable}
-      onChange={(x) => { if (x !== null) onClick(x); }}
-    />
-    <label for={`${name}-${option.value}`}>
-      {option.name}
-    </label>
-  </div>
-{/each}
+<div class="group" role="radiogroup">
+  {#each options as option (option.value)}
+    {@const radioId = extendUniqueElementId(option.name.toLocaleLowerCase().split(" "), radioGroupId)}
+    <div class="radio">
+      <RadioToggle
+        bind:selected={value}
+        groupName={groupName}
+        id={radioId}
+        value={option.value}
+        enabled={editable}
+        onChange={(x) => { if (x !== null) onClick(x); }}
+      />
+      <label for={radioId} id={extendUniqueElementId(["label"], radioId)}>
+        {option.name}
+      </label>
+    </div>
+  {/each}
+</div>

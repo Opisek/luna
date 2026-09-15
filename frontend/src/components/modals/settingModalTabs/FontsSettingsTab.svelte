@@ -131,7 +131,11 @@
 />
 
 {#snippet fontTemplate(font: Option<string>)}
-  <div class="installedResource">
+  <div
+    class="installedResource"
+    role="listitem"
+    aria-label={font.name}
+  >
     <span class="name">
       {font.name}
     </span>

@@ -1,10 +1,12 @@
 <script lang="ts">
   import { focusIndicator } from "$lib/client/decoration";
+  import { extendUniqueElementId } from "$lib/common/dom";
 
   interface Props {
     value: boolean;
     name: string;
     id: string
+    hasDetails?: boolean;
     enabled?: boolean;
     onChange?: (value: boolean) => any;
   }
@@ -13,6 +15,7 @@
     value = $bindable(),
     name,
     id,
+    hasDetails = false,
     enabled = true,
     onChange = () => {},
   }: Props = $props();
@@ -104,7 +107,6 @@
 </style>
 
 <!-- Components that use this toggle all implement for={name} -->
-<!-- svelte-ignore a11y_consider_explicit_label -->
 <button
   type="button"
   class:disabled={!enabled}
@@ -112,7 +114,8 @@
   id={id}
   role="checkbox"
   aria-checked={value}
-  aria-describedby={`label-${id}`}
+  aria-labelledby={extendUniqueElementId(["label"], id)}
+  aria-describedby={hasDetails ? extendUniqueElementId(["tooltip"], id) : undefined}
   onclick={toggle}
   use:focusIndicator
 >

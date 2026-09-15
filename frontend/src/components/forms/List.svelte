@@ -3,6 +3,7 @@
   import Label from './Label.svelte';
   import Tooltip from '../interactive/Tooltip.svelte';
   import { t } from '@sveltia/i18n';
+  import { extendUniqueElementId, generateUniqueElementId } from '$lib/common/dom';
 
   interface Props {
     label: string;
@@ -19,6 +20,9 @@
     template,
     id,
   }: Props = $props();
+
+  let uniqueId = $props.id();
+  let listId = $derived(generateUniqueElementId(["list"], uniqueId));
 </script>
 
 <style lang="scss">
@@ -31,17 +35,15 @@
   }
 </style>
 
-<Label name={label.toLowerCase().replaceAll(" ", "-")}>
+<Label describes={listId} info={info}>
   {label}
-  {#if info != ""}
-    <Tooltip>
-      {info}
-    </Tooltip>
-  {/if}
 </Label>
 <div
   aria-live="polite"
   aria-relevant="all"
+  id={listId}
+  aria-labelledby={extendUniqueElementId(["label"], listId)}
+  role="list"
 >
   {#each items as item (id(item))}
     {@render template(item)}

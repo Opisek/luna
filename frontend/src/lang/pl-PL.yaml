@@ -4,6 +4,7 @@ branding:
 
 button:
   settings: "Ustawienia"
+  sidebar: "Kategorie"
   add:
     generic: "Dodaj"
     event: "Stwórz wydarzenie"
@@ -34,6 +35,7 @@ button:
   cancel: "Anuluj"
   reset: "Resetuj"
   details: "Szczegóły"
+  tooltip: "Podpowiedź"
 
 credits:
   title: "Credits"

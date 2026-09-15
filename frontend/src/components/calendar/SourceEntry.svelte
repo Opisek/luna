@@ -13,6 +13,7 @@
   import { queueNotification } from "../../lib/client/notifications";
   import { ColorKeys } from "../../types/colors";
   import { t } from "@sveltia/i18n";
+  import { extendUniqueElementId, generateUniqueElementId } from "$lib/common/dom";
 
   interface Props {
     source: SourceModel;
@@ -23,6 +24,8 @@
     source = $bindable(),
     calendars,
   }: Props = $props();
+  let uniqueId = $props.id();
+  let sourceEntryId = $derived(generateUniqueElementId(["sourceentry", source.id], uniqueId));
 
   let ariaControls = $derived(calendars.map(x => `calendar-${x.id}`).join(" "));
 
@@ -104,6 +107,7 @@
   aria-level="1"
   role="treeitem"
   aria-selected={document.activeElement?.id === `source-${source.id}`}
+  aria-details={hasErrored ? extendUniqueElementId(["tooltip"], sourceEntryId) : undefined}
 >
   <button onclick={showModalInternal} use:focusIndicator={{ type: "underline" }}>
     {source.name}
@@ -116,7 +120,7 @@
       <CollapseToggle bind:collapsed={sourceCollapsed} ariaControls={ariaControls}/>
     {/if}
     {#if hasErrored}
-      <Tooltip error={true}>{t("source.error.calendars.tooltip")}</Tooltip>
+      <Tooltip describes={sourceEntryId} error={true}>{t("source.error.calendars.tooltip")}</Tooltip>
     {/if}
   </span>
   <!--

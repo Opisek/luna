@@ -3,6 +3,7 @@
   import Tooltip from "../interactive/Tooltip.svelte";
 
   import { NoOp } from "$lib/client/placeholders";
+  import { extendUniqueElementId, generateUniqueElementId } from "$lib/common/dom";
 
   interface Props {
     value?: boolean;
@@ -22,7 +23,8 @@
     onChange = NoOp,
   }: Props = $props();
 
-  let checkboxId = $derived(`checkbox-${name}-${Math.floor(Math.random() * 100000000)}`);
+  let uniqueId = $props.id();
+  let checkboxId = $derived(generateUniqueElementId(["checkbox", name], uniqueId));
 </script>
 
 <style lang="scss">
@@ -49,7 +51,6 @@
   }
 </style>
 
-<!-- svelte-ignore a11y_click_events_have_key_events -->
 <div tabindex="-1">
   <Toggle
     bind:value
@@ -57,12 +58,19 @@
     id={checkboxId}
     onChange={onChange}
     enabled={editable}
+    hasDetails={info !== undefined}
   />
-  <label for={checkboxId} id={`label-${checkboxId}`}>
+  <label
+    for={checkboxId}
+    id={extendUniqueElementId(["label"], checkboxId)}
+  >
     {description}
   </label>
   {#if info}
-    <Tooltip tight={true}>
+    <Tooltip
+      tight={true}
+      describes={checkboxId}
+    >
       {info}
     </Tooltip>
   {/if}
