@@ -93,7 +93,11 @@
   }
 </style>
 
-<div aria-label={label} role="radiogroup">
+<div
+  aria-label={label}
+  role="radiogroup"
+  tabindex=-1
+>
   {#each options as block}
     {#each block as option, i}
       {@const Icon = option.icon}
