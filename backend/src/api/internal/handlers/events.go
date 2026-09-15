@@ -360,6 +360,9 @@ func PatchEvent(c *gin.Context, body *struct {
 			query.Affect = "all"
 		}
 	}
+	if query.Affect == "thisandfuture" && (parentEvent.GetId() == event.GetId() || parentEvent.GetDate().Start().Equal(*event.GetDate().Start())) {
+		query.Affect = "all"
+	}
 
 	// Distinction between whether we can modify the event in the upstream or not
 	if event.CanEdit() && (query.Affect != "thisandfuture" || event.CanDelete()) {
@@ -420,18 +423,15 @@ func PatchEvent(c *gin.Context, body *struct {
 		case "all":
 			// Editing all instances = editing parent event
 
-			// If we edit all events, we have to be careful about how we treat changes to the time
-			if parentEvent.GetId() != eventId {
-				// First, get the relative shift in start/end timestamps
-				deltaStart := newEventDate.Start().Sub(*event.GetDate().Start())
-				deltaEnd := newEventDate.End().Sub(*event.GetDate().End())
+			// First, get the relative shift in start/end timestamps
+			deltaStart := newEventDate.Start().Sub(*event.GetDate().Start())
+			deltaEnd := newEventDate.End().Sub(*event.GetDate().End())
 
-				// Use these offsets to calculate when the master event should starte
-				newStart := parentEvent.GetDate().Start().Add(deltaStart)
-				newEnd := parentEvent.GetDate().End().Add(deltaEnd)
-				newEventDate.SetStart(&newStart)
-				newEventDate.SetEnd(&newEnd)
-			}
+			// Use these offsets to calculate when the master event should start
+			newStart := parentEvent.GetDate().Start().Add(deltaStart)
+			newEnd := parentEvent.GetDate().End().Add(deltaEnd)
+			newEventDate.SetStart(&newStart)
+			newEventDate.SetEnd(&newEnd)
 
 			// Edit parent event
 			_, tr = parentEvent.GetCalendar().EditEvent(parentEvent, body.Name, body.Desc, body.Color, newEventDate, u.Tx.Queries())

@@ -182,10 +182,6 @@ func (event *CaldavEvent) Clone() types.Event {
 }
 
 func (event *CaldavEvent) SetParent(masterEvent types.Event) {
-	if masterEvent.GetDate().Start().Equal(*event.eventDate.Start()) {
-		return
-	}
-
 	event.settings.RecurrenceId = types.SerializeIcalTime(event.eventDate.Start(), event.eventDate.AllDay(), false)
 	parentId := masterEvent.GetId()
 	event.parentEvent = &parentId

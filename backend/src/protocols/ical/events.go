@@ -149,11 +149,8 @@ func (event *IcalEvent) Clone() types.Event {
 
 func (event *IcalEvent) SetParent(masterEvent types.Event) {
 	event.settings.RecurrenceId = types.SerializeIcalTime(event.eventDate.Start(), event.eventDate.AllDay(), true)
-
-	if !masterEvent.GetDate().Start().Equal(*event.eventDate.Start()) {
-		parentId := masterEvent.GetId()
-		event.parentEvent = &parentId
-	}
+	parentId := masterEvent.GetId()
+	event.parentEvent = &parentId
 }
 
 func (event *IcalEvent) IsRecurrenceInstance() bool {
