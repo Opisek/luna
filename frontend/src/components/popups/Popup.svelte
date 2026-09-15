@@ -47,7 +47,7 @@
     if (currentAnchor.startsWith("--anchor-") && !currentAnchor.includes("undefined")) {
       anchorName = currentAnchor.substring(9);
     } else {
-      anchorName = anchorElement.id || generateUniqueElementId(anchorElement ? anchorElement.classList.values().toArray() : [], uniqueId);
+      anchorName = anchorElement.id || uniqueId;
       Object.assign(anchorElement.style, {
         "anchor-name": `--anchor-${anchorName}`,
       });

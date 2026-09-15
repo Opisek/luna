@@ -7,6 +7,7 @@
   import { focusIndicator } from "$lib/client/decoration";
   import type { Option } from "../../types/options";
   import { AsyncNoOp, NoOp } from "$lib/client/placeholders";
+  import { extendUniqueElementId, generateUniqueElementId } from "$lib/common/dom";
 
   let active = $state(false);
 
@@ -29,6 +30,8 @@
     showLabel = true,
     click = NoOp,
   }: Props = $props();
+  let uniqueId = $props.id();
+  let selectionId = $derived(generateUniqueElementId(["select"], uniqueId));
 
   let selectedOption: Option<T> | null = $derived(options.filter(x => x.value === value)[0] || null);
 
@@ -126,7 +129,7 @@
 </style>
 
 {#if showLabel}
-  <Label name={name}>{placeholder}</Label>
+  <Label describes={selectionId}>{placeholder}</Label>
 {/if}
 <div class="wrapper" class:editable={editable}>
   <select
@@ -136,12 +139,14 @@
     disabled={!editable}
   ></select>
   <button
+    id={selectionId}
     bind:this={selectWrapper}
     class="select"
     class:editable={editable}
     onclick={selectClick}
     type="button"
     use:focusIndicator={{ type: "bar" }}
+    aria-labelledby={extendUniqueElementId(["label", selectionId])}
   >
     {#if selectedOption !== null}
       {selectedOption.name}

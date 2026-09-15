@@ -91,6 +91,7 @@
         overridden: false,
         can_edit: true,
         can_delete: true,
+        parent_id: ""
       };
 
       eventRepeats = false;
@@ -114,6 +115,7 @@
         overridden: initial.overridden,
         can_edit: initial.can_edit,
         can_delete: initial.can_delete,
+        parent_id: initial.parent_id,
       }
       if (event.date.allDay && event.date.end.getTime() !== event.date.start.getTime() && event.date.end.getHours() === 0 && event.date.end.getMinutes() === 0 && event.date.end.getSeconds() === 0 && event.date.end.getMilliseconds() === 0) {
         event.date.end.setDate(event.date.end.getDate() - 1);
