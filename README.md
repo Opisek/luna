@@ -5,7 +5,7 @@
 - Differerent calendar protocols like **CalDav**, **iCal**, and **Google Calendar**
 - User management
 
-![Screenshot of luna in light and dark mode](./documentation/pictures/light-dark.png)
+![Screenshot of Luna in light and dark mode](./documentation/pictures/light-dark.png)
 
 🎨 Luna is **infinitely customizable**, so your calendar can be as unique as you!
 - Completely customizable themes and fonts
@@ -13,7 +13,7 @@
 - Simple installation of additional themes and fonts
 - Many ways to customize the look of the calendar
 
-![Screenshot of luna with different themes](./documentation/pictures/themes.png)
+![Screenshot of Luna with different themes](./documentation/pictures/themes.png)
 
 # Disclaimer
 Luna is an ambitious and large project. As such, development takes a long time.
