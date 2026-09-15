@@ -4,6 +4,7 @@
   interface Props {
     value: boolean;
     name: string;
+    id: string
     enabled?: boolean;
     onChange?: (value: boolean) => any;
   }
@@ -11,6 +12,7 @@
   let {
     value = $bindable(),
     name,
+    id,
     enabled = true,
     onChange = () => {},
   }: Props = $props();
@@ -107,6 +109,10 @@
   type="button"
   class:disabled={!enabled}
   class:check={value}
+  id={id}
+  role="checkbox"
+  aria-checked={value}
+  aria-describedby={`label-${id}`}
   onclick={toggle}
   use:focusIndicator
 >

@@ -21,6 +21,8 @@
     editable = true,
     onChange = NoOp,
   }: Props = $props();
+
+  let checkboxId = $derived(`checkbox-${name}-${Math.floor(Math.random() * 100000000)}`);
 </script>
 
 <style lang="scss">
@@ -48,18 +50,15 @@
 </style>
 
 <!-- svelte-ignore a11y_click_events_have_key_events -->
-<div
-  role="checkbox"
-  tabindex="-1"
-  aria-checked={value}
->
+<div tabindex="-1">
   <Toggle
     bind:value
     name={name}
+    id={checkboxId}
     onChange={onChange}
     enabled={editable}
   />
-  <label for={name}>
+  <label for={checkboxId} id={`label-${checkboxId}`}>
     {description}
   </label>
   {#if info}
