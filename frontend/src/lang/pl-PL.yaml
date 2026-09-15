@@ -615,7 +615,7 @@ settings:
         restore: "Kopia zapasowa jest zabezpieczona"
       password: "Hasło zabezpieczające"
   admin:
-    title: "Administratywne"
+    title: "Administracyjne"
     confirm:
       reset: "Czy na pewno chcesz zresetować wszystkie ustawienia globalne?"
     registration:
@@ -736,4 +736,4 @@ perms:
   manage_resources: "Zarządzanie czcionek i motywów"
   create_backups: "Tworzenie kopii zapasowych"
   restore_backups: "Przywracanie kopii zapasowych"
-  administrative: "Administratywne"
+  administrative: "Administracyjne"
