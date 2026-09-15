@@ -99,10 +99,6 @@
   button :global(*) {
     pointer-events: none;
   }
-
-  input {
-    display: none;
-  }
 </style>
 
 <!-- Components that use this toggle all implement for={name} -->
@@ -119,5 +115,5 @@
     class:check={value}
   >
   </div>
-  <input type="button" name={name} value={value}>
+  <input type="hidden" name={name} value={value}>
 </button>

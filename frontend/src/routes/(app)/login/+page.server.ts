@@ -7,6 +7,7 @@ import { getRedirectPage } from "$lib/common/parsing";
 export const actions = {
   default: async ({cookies, request, getClientAddress}) => {
     const formData = await request.formData();
+    const remember = formData.get("remember");
 
     const res = await apiProxy(request, getClientAddress, "login", { method: "POST", body: formData }, false).catch(() => null);
     if (!res) return fail(500, { error: "The backend server cannot be reached." });
