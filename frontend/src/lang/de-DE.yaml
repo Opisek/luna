@@ -28,6 +28,8 @@ button:
     next: "Vorheriger Monat"
   hide: "Ausblenden"
   show: "Einblenden"
+  collapse: "Einklappen"
+  expand: "Ausklappen"
   confirm: "Bestätigen"
   cancel: "Abbrechen"
   reset: "Zurücksetzen"

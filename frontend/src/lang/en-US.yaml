@@ -28,6 +28,8 @@ button:
     next: "Next month"
   hide: "Hide"
   show: "Show"
+  collapse: "Collapse"
+  expand: "Expand"
   confirm: "Confirm"
   cancel: "Cancel"
   reset: "Reset"

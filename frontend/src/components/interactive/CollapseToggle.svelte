@@ -22,7 +22,7 @@
 <IconButton
   onClick={toggleCollapse}
   style="transform: rotate({collapsed ? "-90deg" : "0deg"})"
-  alt={collapsed ? t("button.hide") : t("button.show")}
+  alt={collapsed ? t("button.expand") : t("button.collapse")}
   ariaControls={ariaControls}
   ariaExpanded={!collapsed}
 >

@@ -28,6 +28,8 @@ button:
     next: "Następny miesiąc"
   hide: "Ukryj"
   show: "Pokaż"
+  collapse: "Zwiń"
+  expand: "Rozwiń"
   confirm: "Zatwierdź"
   cancel: "Anuluj"
   reset: "Resetuj"
