@@ -10,33 +10,33 @@
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
   },
   "devDependencies": {
-    "@sveltejs/vite-plugin-svelte": "^7.0.0",
-    "@types/node": "^25.5.0",
+    "@sveltejs/vite-plugin-svelte": "^7.3.0",
+    "@types/node": "^25.9.6",
     "@types/sha1": "^1.1.5",
     "@types/sha256": "^0.2.2",
     "lucide-svelte": "^1.0.1",
-    "sass": "^1.98.0",
-    "svelte": "^5.55.0",
+    "sass": "^1.104.1",
+    "svelte": "^5.57.0",
     "svelte-adapter-bun": "^1.0.1",
-    "svelte-check": "^4.4.5",
-    "svelte-preprocess": "^6.0.3",
+    "svelte-check": "^4.7.6",
+    "svelte-preprocess": "^6.0.5",
     "svelte-simples": "^1.0.3",
     "tslib": "^2.8.1",
-    "typescript": "^6.0.2",
-    "vite": "^8.0.3"
+    "typescript": "^6.0.3",
+    "vite": "^8.3.0"
   },
   "type": "module",
   "dependencies": {
-    "@sveltejs/kit": "^2.55.0",
-    "@sveltia/i18n": "^1.2.3",
-    "dayjs": "^1.11.20",
-    "dotenv": "^17.3.1",
+    "@sveltejs/kit": "^2.70.3",
+    "@sveltia/i18n": "^1.4.0",
+    "dayjs": "^1.11.23",
+    "dotenv": "^17.4.2",
     "iplocation": "^7.2.0",
     "messageformat": "^4.0.0",
     "rrule": "^2.8.1",
     "sha1": "^1.1.1",
     "sha256": "^0.2.0",
     "ua-parser-js": "^2.0.10",
-    "yaml": "^2.8.3"
+    "yaml": "^2.9.1"
   }
 }
