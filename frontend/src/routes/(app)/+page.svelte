@@ -391,7 +391,7 @@
 {#snippet sourceEntries(sources: SourceModel[])}
   {#each sources as source, i (source.id)}
     {@const calendars = repository.calendars.filter(cal => cal.source === source.id) || []}
-    <SourceEntry bind:source={repository.sources[i]} calendars={calendars}/>
+    <SourceEntry bind:source={repository.sources[i]} calendars={calendars} idSeed="main"/>
     {#if !metadata.collapsedSources.has(repository.sources[i].id)}
         {@render calendarEntries(calendars)}
     {/if}
@@ -401,6 +401,6 @@
 {#snippet calendarEntries(calendars: CalendarModel[])}
   {#each calendars as cal (cal.id)}
     {@const index = repository.calendars.findIndex((calendar) => calendar.id === cal.id)}
-    <CalendarEntry bind:calendar={repository.calendars[index]}/>
+    <CalendarEntry bind:calendar={repository.calendars[index]} idSeed="main"/>
   {/each}
 {/snippet}

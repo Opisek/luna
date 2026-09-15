@@ -19,11 +19,14 @@
 
   interface Props {
     calendar: CalendarModel;
+    idSeed: string;
   }
 
-  let { calendar = $bindable() }: Props = $props();
-  let uniqueId = $props.id();
-  let calendarEntryId = $derived(generateUniqueElementId(["calendarentry", calendar.id], uniqueId));
+  let {
+    calendar = $bindable(),
+    idSeed,
+  }: Props = $props();
+  let calendarEntryId = $derived(generateUniqueElementId(["calendarentry", calendar.id], idSeed));
 
   const metadata = getMetadata();
   const repository = getRepository();

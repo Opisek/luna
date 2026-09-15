@@ -18,16 +18,17 @@
   interface Props {
     source: SourceModel;
     calendars: CalendarModel[];
+    idSeed: string;
   }
 
   let {
     source = $bindable(),
     calendars,
+    idSeed,
   }: Props = $props();
-  let uniqueId = $props.id();
-  let sourceEntryId = $derived(generateUniqueElementId(["sourceentry", source.id], uniqueId));
+  let sourceEntryId = $derived(generateUniqueElementId(["sourceentry", source.id], idSeed));
 
-  let ariaControls = $derived(calendars.map(x => `calendar-${x.id}`).join(" "));
+  let ariaControls = $derived(calendars.map(x => generateUniqueElementId(["calendarentry", x.id], idSeed)).join(" "));
 
   const metadata = getMetadata();
   const repository = getRepository();
@@ -101,12 +102,12 @@
 <div
   class="sourceEntry"
   use:draggable={{ ownClass: "sourceEntry", childClasses: ["calendarEntry"], callback: reorderSource}}
-  id={`source-${source.id}`}
+  id={sourceEntryId}
   aria-label={t("source.aria", { values: { name: source.name } })}
   aria-owns={ariaControls}
   aria-level="1"
   role="treeitem"
-  aria-selected={document.activeElement?.id === `source-${source.id}`}
+  aria-selected={document.activeElement?.id === sourceEntryId}
   aria-details={hasErrored ? extendUniqueElementId(["tooltip"], sourceEntryId) : undefined}
 >
   <button onclick={showModalInternal} use:focusIndicator={{ type: "underline" }}>
