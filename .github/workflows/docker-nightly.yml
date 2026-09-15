@@ -10,7 +10,7 @@ permissions: read-all
 jobs:
   check:
     runs-on: self-hosted
-    if: github.ref == "refs/heads/dev"
+    if: github.ref == 'refs/heads/dev'
 
     permissions:
       contents: read
