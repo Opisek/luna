@@ -154,6 +154,7 @@
   <Popup
     tooltip={false}
     anchor={anchor}
+    labelled={titleId}
     dialog={true}
     bind:visible
     bind:showPopup

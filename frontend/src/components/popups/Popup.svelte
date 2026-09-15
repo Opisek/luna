@@ -12,6 +12,7 @@
     dialog?: boolean;
     visible?: boolean;
     describes?: string;
+    labelled?: string;
     children?: Snippet;
     showPopup?: () => Promise<void>;
     hidePopup?: () => void;
@@ -26,6 +27,7 @@
     dialog = false,
     visible = $bindable(false),
     describes,
+    labelled,
     children,
     showPopup = $bindable(),
     hidePopup = $bindable(NoOp),
@@ -255,6 +257,7 @@
   ontransitionend={transitionEnd}
   role={tooltip ? "tooltip" : "dialog"}
   ontoggle={popoverToggled}
+  aria-labelledby={labelled}
 >
   {@render children?.()}
 </div>

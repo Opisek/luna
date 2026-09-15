@@ -7,6 +7,8 @@
   import { focusIndicator } from "$lib/client/decoration";
   import type { Option } from "../../types/options";
   import { AsyncNoOp, NoOp } from "$lib/client/placeholders";
+  import { extendUniqueElementId, generateUniqueElementId } from "$lib/common/dom";
+  import { passIfEnter } from "$lib/common/inputs";
 
   let active = $state(false);
 
@@ -29,9 +31,15 @@
     showLabel = true,
     click = NoOp,
   }: Props = $props();
+  let uniqueId = $props.id();
+  let selectionId = $derived(generateUniqueElementId(["select"], uniqueId));
+  let labelId = $derived(extendUniqueElementId(["label"], selectionId));
+  let listId = $derived(extendUniqueElementId(["listbox"], selectionId));
+  let optionEntryIdFn = (option: Option<T>) => extendUniqueElementId(["option"].concat(`${option.value}`.toLocaleLowerCase().split(" ")), selectionId);
 
   let valuesSet = $derived(new Set(values));
   let selectedOptions: Option<T>[] = $derived(options.filter(x => valuesSet.has(x.value)));
+  let focusedOption: Option<T> | null = $state(null);
 
   let selectWrapper: HTMLElement | undefined = $state();
 
@@ -41,14 +49,59 @@
   function selectClick() {
     if (!editable) return;
 
-    if (!active) showPopup();
-    else hidePopup();
+    if (!active) {
+      showPopup();
+      let focusOption = focusedOption ?? selectedOptions.find(() => true) ?? (options.length != 0 ? options[1] : null)
+      if (focusOption !== null) {
+        setTimeout(() => {
+          document.getElementById(optionEntryIdFn(focusOption))?.focus();
+        }, 0);
+      }
+    } else hidePopup();
   }
 
   function optionClick(option: Option<T>) {
     if (valuesSet.has(option.value)) values = values.filter(x => x != option.value);
     else values.push(option.value);
     click(option.value);
+  }
+
+  function optionPress(event: KeyboardEvent, option: Option<T>) {
+    passIfEnter(event, () => optionClick(option))
+  }
+
+  function optionFocus(option: Option<T>) {
+    focusedOption = option;
+  }
+
+  $effect(() => {
+    if (active) addEventListener("keydown", arrowKeyListener);
+    else removeEventListener("keydown", arrowKeyListener);
+  })
+
+  function arrowKeyListener(event: KeyboardEvent) {
+    if (focusedOption === null) return;
+
+    const currentlyFocusedElement = document.getElementById(optionEntryIdFn(focusedOption));
+    if (currentlyFocusedElement === null) return;
+
+    const index = options.findIndex(x => x.value === focusedOption?.value);
+
+    let newlyFocusedOption = null;
+    if (event.key == "ArrowUp" && index > 0) {
+      newlyFocusedOption = options[index - 1];
+    }
+    else if (event.key == "ArrowDown" && index < options.length-1) {
+      newlyFocusedOption = options[index + 1];
+    }
+    if (newlyFocusedOption === null) return;
+
+    focusedOption = newlyFocusedOption;
+    let newlyFocusedElement = document.getElementById(optionEntryIdFn(newlyFocusedOption));
+    if (newlyFocusedElement === null) return;
+
+    newlyFocusedElement.focus();
+    event.preventDefault();
   }
 </script>
 
@@ -94,7 +147,7 @@
     transform: rotate(-180deg);
   }
   
-  button.option {
+  .option {
     all: unset;
     transition: linear animations.$animationSpeedFast;
     width: 100%;
@@ -102,12 +155,12 @@
     cursor: pointer;
   }
 
-  button.option.selected {
+  .option.selected {
     color: colors.$foregroundAccent;
     background-color: colors.$backgroundAccent;
   }
 
-  button.option:hover, button.option:focus {
+  .option:hover, .option:focus {
     color: colors.$foregroundTertiary;
     background-color: colors.$backgroundTertiary;
   }
@@ -124,10 +177,14 @@
   .placeholder {
     color: color-mix(in srgb, colors.$foregroundSecondary 50%, transparent);
   }
+
+  .list {
+    display: contents;
+  }
 </style>
 
 {#if showLabel}
-  <Label name={name}>{placeholder}</Label>
+  <Label describes={selectionId}>{placeholder}</Label>
 {/if}
 <div class="wrapper" class:editable={editable}>
   <select
@@ -143,6 +200,11 @@
     onclick={selectClick}
     type="button"
     use:focusIndicator={{ type: "bar" }}
+    aria-labelledby={labelId}
+    aria-expanded={active}
+    aria-controls={listId}
+    aria-activedescendant={focusedOption !== null ? optionEntryIdFn(focusedOption) : undefined}
+    role="combobox"
   >
     {#if selectedOptions.length != 0}
       {selectedOptions.map(x => x.name).join(", ")}
@@ -160,16 +222,40 @@
       </span>
     {/if}
   </button>
-  <Popup anchor={selectWrapper} matchWidth={true} tooltip={false} triangle={false} bind:showPopup bind:hidePopup --padding="0" bind:visible={active}>
-    {#each options as option (option.value)}
-      <button
-        class="option" 
-        onclick={() => optionClick(option)}
-        type="button"
-        class:selected={valuesSet.has(option.value)}
-      >
-        {option.name}
-      </button>
-    {/each}
+  <Popup
+    anchor={selectWrapper}
+    matchWidth={true}
+    tooltip={false}
+    triangle={false}
+    bind:showPopup
+    bind:hidePopup
+    bind:visible={active}
+    --padding="0"
+    labelled={labelId}
+  >
+    <div
+      id={listId}
+      class="list"
+      role="listbox"
+      aria-multiselectable="true"
+      aria-labelledby={labelId}
+    >
+      {#each options as option (option.value)}
+        {@const optionEntryId = optionEntryIdFn(option)}
+        <div
+          id={optionEntryId}
+          class="option" 
+          class:selected={valuesSet.has(option.value)}
+          aria-selected={valuesSet.has(option.value)}
+          onclick={() => optionClick(option)}
+          onkeypress={(e) => optionPress(e, option)}
+          onfocusin={() => optionFocus(option)}
+          role="option"
+          tabindex=0
+        >
+          {option.name}
+        </div>
+      {/each}
+    </div>
   </Popup>
 </div>
