@@ -94,9 +94,13 @@ jobs:
         with:
           ref: dev
 
-      #- name: Set up Docker Buildx
-      #  id: build-setup-buildx
-      #  uses: docker/setup-buildx-action@v4
+      - name: Set up QEMU
+        id: build-setup-qemu
+        uses: docker/setup-qemu-action@v4
+
+      - name: Set up Docker Buildx
+        id: build-setup-buildx
+        uses: docker/setup-buildx-action@v4
 
       - name: Log in to Docker Hub
         id: build-setup-login
