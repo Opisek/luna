@@ -25,6 +25,7 @@ type exposedEvent struct {
 	CanEdit    bool             `json:"can_edit"` // TODO: might exclude from here and add to "detailed" view instead
 	CanDelete  bool             `json:"can_delete"`
 	Settings   any              `json:"settings,omitempty"` // TODO: delete, this is temporary for debugging recurrences
+	Parent     *types.ID        `json:"parent_id,omitempty"`
 }
 
 func GetEvents(c *gin.Context) {
@@ -132,6 +133,7 @@ func GetEvents(c *gin.Context) {
 			CanEdit:    event.CanEdit(),
 			CanDelete:  event.CanDelete(),
 			Settings:   event.GetSettings(),
+			Parent:     event.GetParentId(),
 		}
 	}
 
@@ -175,6 +177,7 @@ func GetEvent(c *gin.Context) {
 		CanEdit:   event.CanEdit(),
 		CanDelete: event.CanDelete(),
 		Settings:  event.GetSettings(),
+		Parent:    event.GetParentId(),
 	}
 
 	u.Success(&gin.H{"event": convertedCal})

@@ -305,6 +305,9 @@
     {/if}
     {#if event.id && settings.userSettings[UserSettingKeys.DebugMode]}
       <TextInput value={event.id} name="id" placeholder={t("event.id")} editable={false} />
+      {#if event.parent_id}
+        <TextInput value={event.parent_id} name="parent_id" placeholder={t("event.parent.id")} editable={false} />
+      {/if}
     {/if}
   {/if}
   {#snippet extraButtonsLeft()}

@@ -946,16 +946,33 @@ export class Repository {
     const url = `/api/events/${id}${affectRecurrence == "this" ? "" : `?affect=${affectRecurrence}`}`;
     await fetchResponse(url, { method: "DELETE" }).catch((err) => { throw err; });
 
-    const event = this.eventsMap.get(id);
-    if (!event) return;
+    const originalEvent = this.eventsMap.get(id);
+    if (!originalEvent) return;
     this.eventsMap.delete(id);
 
     // remove from cache
-    const months = this.determineEventMonths(event);
-    for (const month of months) this.removeEventFromCache(event, month);
+    // TODO: affectRecurrence for removeEventFromCache too!
+    const months = this.determineEventMonths(originalEvent);
+    for (const month of months) this.removeEventFromCache(originalEvent, month);
 
     // remove from display
-    this.events.splice(this.events.findIndex((event) => event.id === id), 1);
+    switch (affectRecurrence) {
+      case "this":
+        this.events.splice(this.events.findIndex((event) => event.id === id), 1);
+        break;
+      case "thisandfuture":
+        this.events = this.events.filter((event) => !(
+          event.id === id ||
+          (event.parent_id != "" && event.parent_id == originalEvent.parent_id && event.date.start.getTime() > originalEvent.date.start.getTime())
+        ))
+        break
+      case "all":
+        this.events = this.events.filter((event) => !(
+          event.id === id ||
+          (event.parent_id != "" && event.parent_id == originalEvent.parent_id)
+        ))
+        break
+    }
 
     this.saveCache();
   }

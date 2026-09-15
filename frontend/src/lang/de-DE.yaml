@@ -376,6 +376,8 @@ event:
   display: "Ereignis"
   aria: "Ereignis \"{$name}\""
   id: "Ereignis-ID"
+  parent:
+    id: "Elternereignis-ID"
   title:
     view: "Ereignis"
     create: "Ereignis Erstellen"

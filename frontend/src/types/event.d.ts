@@ -17,6 +17,7 @@ type EventModel = {
   overridden: boolean;
   can_edit: boolean;
   can_delete: boolean;
+  parent_id: string;
 };
 
 type EventModelChanges = {

@@ -380,6 +380,8 @@ event:
   display: "Wydarzenie"
   aria: "Wydarzenie \"{$name}\""
   id: "ID wydarzenia"
+  parent:
+    id: "ID wydarzenia rodzica"
   title:
     view: "Wydarzenie"
     create: "Tworzenie Wydarzenia"
