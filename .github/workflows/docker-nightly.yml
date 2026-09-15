@@ -1,0 +1,120 @@
+name: Build and Push Docker Images [Nightly]
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+permissions: read-all
+
+jobs:
+  check:
+    runs-on: self-hosted
+    if: github.ref == "refs/heads/dev"
+
+    permissions:
+      contents: read
+      actions: read
+
+    outputs:
+      skip: ${{ steps.check-hash-compare.outputs.skip }}
+      hash: ${{ steps.check-meta.outputs.hash }}
+      branch: ${{ steps.check-meta.outputs.branch }}
+
+    steps:
+      - name: Extract commit hash and branch name
+        id: check-meta
+        run: |
+          echo "hash=${GITHUB_SHA}" >> $GITHUB_OUTPUT
+          echo "branch=${GITHUB_REF_NAME//\//-}" >> $GITHUB_OUTPUT
+
+      - name: Fetch commit hash of previously built nightly image
+        id: check-prev-hash-fetch
+        uses: actions/cache/restore@v6
+        with:
+          path: last_commit.txt
+          key: last-commit-${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: last-commit-${{ github.ref_name }}-
+
+      - name: Parse commit hash of previously built nigthly image
+        id: check-prev-hash-parse
+        run: |
+          if [ -f last_commit.txt ]; then
+            echo "last_commit=$(cat last_commit.txt)" >> $GITHUB_OUTPUT
+          else
+            echo "last_commit=none" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Compare commits hashes
+        id: check-hash-compare
+        run: |
+          if [ "${{ github.sha }}" = "${{ steps.read.outputs.last_commit }}" ] && [ "${{ github.event_name }}" != "workflow_dispatch" ]; then
+            echo "No new commit. Skipping build."
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "New commit detected or manual trigger."
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Serialize the current commit hash
+        id: check-hash-serialize
+        if: steps.compare.outputs.skip == 'false'
+        run: echo "${{ github.sha }}" > last_commit.txt
+
+      - name: Save the current commit hash
+        id: check-hash-save
+        if: steps.compare.outputs.skip == 'false'
+        uses: actions/cache/save@v6
+        with:
+          path: last_commit.txt
+          key: last-commit-${{ github.ref_name }}-${{ github.run_id }}
+
+  build:
+    runs-on: self-hosted
+    needs: check
+    if: needs.check.outputs.skip == 'false'
+
+    permissions:
+      contents: read
+
+    strategy:
+      matrix:
+        include:
+          - image: luna-backend
+            context: ./backend
+            dockerfile: ./backend/Dockerfile
+          - image: luna-frontend
+            context: ./frontend
+            dockerfile: ./frontend/Dockerfile
+
+    steps:
+      - name: Checkout repository
+        id: build-checkout
+        uses: actions/checkout@v6
+        with:
+          ref: dev
+
+      - name: Set up Docker Buildx
+        id: build-setup-buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to Docker Hub
+        id: build-setup-login
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push
+        id: build-run
+        uses: docker/build-push-action@v7
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/${{ matrix.image }}:nightly
+            ${{ secrets.DOCKER_USERNAME }}/${{ matrix.image }}:${{ needs.check.outputs.branch }}-${{ needs.check.outputs.hash }}
+          platforms: linux/amd64
+          cache-from: type=gha,scope=${{ matrix.image }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.image }}
