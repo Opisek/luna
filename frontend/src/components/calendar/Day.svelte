@@ -9,6 +9,7 @@
   import { NoOp } from "$lib/client/placeholders";
   import { ColorKeys } from "../../types/colors";
   import { t } from "@sveltia/i18n";
+  import { getDayName } from "$lib/common/humanization";
 
   interface Props {
     date: Date;
@@ -168,7 +169,7 @@
   <div class="background" class:otherMonth={!isCurrentMonth}>
     <span class="top">
       <span class="date" class:sunday={date.getDay() === 0} class:today={isToday}>
-        {date.getDate()}
+        {getDayName(date.getDate(), true)}
       </span>
       <span class="add">
         <IconButton onClick={createEventButtonClick} tabindex={-1} alt={t("button.add.event")}>

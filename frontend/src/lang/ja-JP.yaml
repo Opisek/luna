@@ -18,8 +18,8 @@ button:
   refresh: "更新"
   upload: "アップロード"
   download: "ダウンロード"
-  clear: "Clear"
-  submit: "Submit"
+  clear: "クリア"
+  submit: "送信"
   save: "保存"
   copy: "コピー"
   close: "閉じる"
@@ -31,28 +31,28 @@ button:
   confirm: "確認"
   cancel: "キャンセル"
   reset: "リセット"
-  details: "Details"
-  increment: "Increment"
-  decrement: "Decrement"
+  details: "詳細"
+  increment: "増やす"
+  decrement: "減らす"
 
 credits:
   title: "クレジット"
   repository: "ルーナのレポジトリ"
   stack:
     display: "テックスタック"
-    subtitle: "Tech Stack and Languages"
+    subtitle: "使用技術"
   frontend:
     display: "フロントエンド"
-    subtitle: "Frontend Libraries"
+    subtitle: "フロントエンドライブラリ"
   backend:
     display: "バックエンド"
-    subtitle: "Backend Libraries"
+    subtitle: "バックエンドライブラリ"
   themes:
     display: "テーマ"
-    subtitle: "Theme Color Palettes"
+    subtitle: "テーマのカラーパレット"
   fonts:
     display: "フォント"
-    subtitle: "Pre-installed Fonts"
+    subtitle: "プリインストール済みのフォント"
   source: "プロバイダー"
 
 notification:
@@ -60,9 +60,9 @@ notification:
   success:
     save: "Saved successfully"
     delete: "Deleted successfully"
-    clipboard: "Copied to clipboard"
+    clipboard: "クリップボードにコピーしました。"
   error:
-    clipboard: "Could not copy to clipboard"
+    clipboard: "クリップボードにコピーすることができませんでした。"
 
 confirmation:
   title: "確認"
@@ -291,10 +291,10 @@ nav:
   continue: "次へ"
 
 error:
-  code: "Error {$code}"
+  code: "エラー{$code}"
   generic: "An error occurred."
   unknown: "Unknown error"
-  retry: "Please try again"
+  retry: "もう一度試してください"
   unavailable: "Feature not yet available"
   unimplemented: "Not implemented"
   empty: "Nothing to show"
@@ -333,7 +333,7 @@ invite:
     inline: "ID: {$id}"
   date:
     creation:
-      display: "Creation Date"
+      display: "作成の日付"
       inline: "Created on {$date :date length=short} at {$date :time precision=minute} by {$name}"
     expiry:
       display: "Expiry Date"
@@ -360,7 +360,7 @@ invite:
 session:
   title: 
     view:
-      user: "Session details"
+      user: "セッションの詳細"
       api: "APIトーケン"
     create:
       api: "APIトーケンを作成"
@@ -374,7 +374,7 @@ session:
     user: "User agent"
     api: "名前"
   date:
-    creation: "Creation date"
+    creation: "作成の日付"
     latest: "Latest activity"
   ip:
     initial: "Initial IP address"
@@ -560,6 +560,12 @@ reachability:
   compatibility: "The frontend server and the backend server are not compatible."
   unknown: "Unknown network error"
 
+days:
+  full: |
+    {{{$day :number numberingSystem=fullwide}日}}
+  short: |
+    {{{$day :number}}}
+
 weekdays:
   full:
     monday: "月曜日"
@@ -593,18 +599,26 @@ months:
     november: "１１月"
     december: "１２月"
   short:
-    january: "１"
-    february: "２"
-    march: "３"
-    april: "４"
-    may: "５"
-    june: "６"
-    july: "７"
-    august: "８"
-    september: "９"
-    october: "１０"
-    november: "１１"
-    december: "１２"
+    january: "1"
+    february: "2"
+    march: "3"
+    april: "4"
+    may: "5"
+    june: "6"
+    july: "7"
+    august: "8"
+    september: "9"
+    october: "10"
+    november: "11"
+    december: "12"
+
+years:
+  full: |
+    {{{$year :number numberingSystem=fullwide}年}}
+  short: |
+    {{{$year :number}}}
+  range: |
+    {{{$start :number numberingSystem=fullwide}年〜{$end :number numberingSystem=fullwide}年}}
 
 scope:
   today: "今日"

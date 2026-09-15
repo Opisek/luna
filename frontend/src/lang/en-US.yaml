@@ -560,6 +560,12 @@ reachability:
   compatibility: "The frontend server and the backend server are not compatible."
   unknown: "Unknown network error"
 
+days:
+  full: |
+    {{{$day :number}}}
+  short: |
+    {{{$day :number}}}
+
 weekdays:
   full:
     monday: "Monday"
@@ -605,6 +611,14 @@ months:
     october: "Oct"
     november: "Nov"
     december: "Dec"
+
+years:
+  full: |
+    {{{$year :number}}}
+  short: |
+    {{{$year :number}}}
+  range: |
+    {{{$start :number}–{$end :number}}}
 
 scope:
   today: "Today"

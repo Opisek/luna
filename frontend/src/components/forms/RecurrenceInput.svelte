@@ -7,7 +7,7 @@
   import SelectButtons from "./SelectButtons.svelte";
   import SelectButtonsMulti from "./SelectButtonsMulti.svelte";
   import { t } from "@sveltia/i18n";
-  import { getDayName, getMonthName } from "$lib/common/humanization";
+  import { getWeekdayName, getMonthName } from "$lib/common/humanization";
   import { getSettings } from "$lib/client/data/settings.svelte";
   import { UserSettingKeys } from "../../types/settings";
   import SelectInputMulti from "./SelectInputMulti.svelte";
@@ -708,7 +708,7 @@
           placeholder={t("recurrence.props.by.day.numeric.limit.name")}
           options={
             [RRule.SU, RRule.MO, RRule.TU, RRule.WE, RRule.TH, RRule.FR, RRule.SA]
-              .map((x, i) => ({ value: x, name: getDayName(i, false), index: (i + 7 - settings.userSettings[UserSettingKeys.FirstDayOfWeek]) % 7 }))
+              .map((x, i) => ({ value: x, name: getWeekdayName(i, false), index: (i + 7 - settings.userSettings[UserSettingKeys.FirstDayOfWeek]) % 7 }))
               .sort((a, b) =>  a.index-b.index)
               .flatMap(x =>
                 [{ value: x.value, name: `Every ${x.name}`}].concat(
@@ -728,7 +728,7 @@
           placeholder={t("recurrence.props.by.day.dayname.limit.name")}
           options={
             [RRule.SU, RRule.MO, RRule.TU, RRule.WE, RRule.TH, RRule.FR, RRule.SA]
-              .map((x, i) => ({ value: x, name: getDayName(i, true), index: (i + 7 - settings.userSettings[UserSettingKeys.FirstDayOfWeek]) % 7 }))
+              .map((x, i) => ({ value: x, name: getWeekdayName(i, true), index: (i + 7 - settings.userSettings[UserSettingKeys.FirstDayOfWeek]) % 7 }))
               .sort((a, b) =>  a.index-b.index)
               .map(x => ({ value: x.value.toString(), name: x.name }))
           }
@@ -751,7 +751,7 @@
           placeholder={t("recurrence.props.by.day.numeric.expand.name")}
           options={
             [RRule.SU, RRule.MO, RRule.TU, RRule.WE, RRule.TH, RRule.FR, RRule.SA]
-              .map((x, i) => ({ value: x, name: getDayName(i, false), index: (i + 7 - settings.userSettings[UserSettingKeys.FirstDayOfWeek]) % 7 }))
+              .map((x, i) => ({ value: x, name: getWeekdayName(i, false), index: (i + 7 - settings.userSettings[UserSettingKeys.FirstDayOfWeek]) % 7 }))
               .sort((a, b) =>  a.index-b.index)
               .flatMap(x =>
                 [{ value: x.value, name: `Every ${x.name}`}].concat(
@@ -771,7 +771,7 @@
           placeholder={t("recurrence.props.by.day.dayname.expand.name")}
           options={
             [RRule.SU, RRule.MO, RRule.TU, RRule.WE, RRule.TH, RRule.FR, RRule.SA]
-              .map((x, i) => ({ value: x, name: getDayName(i, true), index: (i + 7 - settings.userSettings[UserSettingKeys.FirstDayOfWeek]) % 7 }))
+              .map((x, i) => ({ value: x, name: getWeekdayName(i, true), index: (i + 7 - settings.userSettings[UserSettingKeys.FirstDayOfWeek]) % 7 }))
               .sort((a, b) =>  a.index-b.index)
               .map(x => ({ value: x.value.toString(), name: x.name }))
           }

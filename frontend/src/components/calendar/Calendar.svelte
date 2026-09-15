@@ -2,7 +2,7 @@
   import Day from "./Day.svelte";
 
   import { compareEventsByStartDate } from "$lib/common/comparators";
-  import { getDayName } from "$lib/common/humanization";
+  import { getWeekdayName } from "$lib/common/humanization";
 
   import { getContext, setContext, untrack } from "svelte";
   import { getDayIndex, getWeekNumber, getWeekMonth, isSameDay } from "$lib/common/date";
@@ -253,12 +253,12 @@
     {#if view === "month" || view === "week"}
       {#each Array(7) as _, weekDay}
         <div class="weekday">
-          {getDayName((weekDay + settings.userSettings[UserSettingKeys.FirstDayOfWeek]) % 7)}
+          {getWeekdayName((weekDay + settings.userSettings[UserSettingKeys.FirstDayOfWeek]) % 7)}
         </div>
       {/each}
     {:else}
       <div class="weekday">
-        {getDayName(date.getDay())}
+        {getWeekdayName(date.getDay())}
       </div>
     {/if}
   </div>

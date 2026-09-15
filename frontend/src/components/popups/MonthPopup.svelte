@@ -7,7 +7,7 @@
 
   import { AsyncNoOp, NoOp } from '$lib/client/placeholders';
   import { focusIndicator } from "$lib/client/decoration";
-  import { getMonthName } from "$lib/common/humanization";
+  import { getMonthName, getYearName } from "$lib/common/humanization";
   import { svelteFlyInHorizontal, svelteFlyOutHorizontal } from "$lib/client/animations";
   import { getSettings } from "../../lib/client/data/settings.svelte";
   import { UserSettingKeys } from "../../types/settings";
@@ -170,9 +170,9 @@
       use:focusIndicator={{ type: "underline" }}
     >
       {#if selectingMonth}
-        {selectedYear}
+        {getYearName(selectedYear)}
       {:else}
-        {decadeStart} - {decadeStart + 9}
+        {t("years.range", { values: { start: decadeStart, end: decadeStart + 9 } })}
       {/if}
     </button>
     <IconButton onClick={next} alt={t("button.month.next")} color={ColorKeys.Accent}>
@@ -235,7 +235,7 @@
         onclick={(e) => clickYear(e, i)}
         use:focusIndicator
       >
-        {decadeStart + i}
+        {getYearName(decadeStart + i, true)}
       </button>
     {/each}
   </div>

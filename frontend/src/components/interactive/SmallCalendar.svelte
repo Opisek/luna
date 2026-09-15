@@ -7,6 +7,7 @@
   import { setContext } from "svelte";
   import { svelteFlyInHorizontal, svelteFlyOutHorizontal } from "$lib/client/animations";
   import { SvelteSet } from "svelte/reactivity";
+  import { getDayName } from "$lib/common/humanization";
 
   const today = new Date();
 
@@ -161,7 +162,7 @@
         onclick={() => (onDayClick(day))}
         use:focusIndicator
       >
-        {day.getDate()}
+        {getDayName(day.getDate(), true)}
       </button>
     {/each}
   </div>

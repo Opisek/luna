@@ -47,6 +47,22 @@ registerMessageFunction('ordinal', (ctx, options, operand) => {
   };
 });
 
+registerMessageFunction('number', (ctx, options, operand) => {
+    // @ts-ignore
+  const dtf = new Intl.NumberFormat(ctx.locales, {
+    numberingSystem: options.numberingSystem ?? 'native',
+    style: options.style ?? "decimal",
+    useGrouping: options.useGrouping ?? false,
+  });
+
+  return {
+    type: 'string',
+    dir: getLocaleDir(dtf.resolvedOptions().locale),
+    // @ts-ignore
+    toString: () => dtf.format(operand),
+  };
+});
+
 export async function loadLanguage(userChoice: string | null | undefined) {
   await locale.set(await getCurrentLanguage(userChoice));
   await waitLocale("en-DE");

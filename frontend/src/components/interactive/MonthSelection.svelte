@@ -7,7 +7,7 @@
 
   import { NoOp } from "$lib/client/placeholders";
   import { focusIndicator } from "$lib/client/decoration";
-  import { getMonthName } from "$lib/common/humanization";
+  import { getMonthName, getYearName } from "$lib/common/humanization";
 
   import { t } from "@sveltia/i18n";
 
@@ -88,7 +88,7 @@
     {@render buttons(previousDay, nextDay)}
   {/if}
   <button bind:this={popupButton} onclick={() => showPopup().catch(NoOp)} type="button" use:focusIndicator={{ type: "underline" }}>
-    {`${getMonthName(date.getMonth())} ${date.getFullYear()}`}
+    {`${getMonthName(date.getMonth())} ${getYearName(date.getFullYear())}`}
   </button>
   <MonthPopup bind:showPopup bind:date={date} onSelect={onSelect} anchor={popupButton}/>
 </div>

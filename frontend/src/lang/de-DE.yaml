@@ -398,6 +398,12 @@ reachability:
   compatibility: "Die Frontend-Server und Backend-Server sind nicht kompatibel."
   unknown: "Unbekannter Netzwerkfehler"
 
+days:
+  full: |
+    {{{$day :number}}}
+  short: |
+    {{{$day :number}}}
+
 weekdays:
   full:
     monday: "Montag"
@@ -443,6 +449,14 @@ months:
     october: "Okt"
     november: "Nov"
     december: "Dez"
+
+years:
+  full: |
+    {{{$year :number}}}
+  short: |
+    {{{$year :number}}}
+  range: |
+    {{{$start :number}–{$end :number}}}
 
 scope:
   today: "Heute"
