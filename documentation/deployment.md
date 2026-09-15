@@ -7,7 +7,9 @@ Keep in mind that Luna is provided with absolutely no warranty or liability from
 Currently, no first-party docker images are available. Instead, you can generate and run the images simply by typing `make` in the root directory of this repository.
 Make sure you have **make** and **docker** installed.
 
-Until docker images are generated officially, you can also use community-compiled images for the [frontend](https://hub.docker.com/r/tiritibambix/lunafrontend) and the [backend](https://hub.docker.com/r/tiritibambix/lunabackend). These images are provided with no warranty or liability from the main author.
+Nightly images of the `dev` branch are provided at [opisek/luna-frontend:nightly](https://hub.docker.com/r/opisek/luna-frontend) and [opisek/luna-backend:nightly](https://hub.docker.com/r/opisek/luna-backend). Further community-compiled images for other braches can be found at [tiritibambix/lunafrontend](https://hub.docker.com/r/tiritibambix/lunafrontend) and [tiritibambix/lunabackend](https://hub.docker.com/r/tiritibambix/lunabackend). As with the code, the images are provided with no warranty or liability from the authors.
+
+Once 1.0.0 version is released, stable first-party images will be provided.
 
 A sample `docker-compose.yml` file is provided in the root directory of the project and below:
 ```yaml
