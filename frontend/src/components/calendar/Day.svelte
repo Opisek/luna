@@ -217,7 +217,6 @@
   //}
 </style>
 
-<!-- TODO: we will want a full date desc. instead of just the "day name" for the aria label -->
 <div
   class="day"
   ondragover={dragOver}
@@ -225,7 +224,7 @@
   onkeypress={(e) => passIfEnter(e, createEventButtonClick)}
   role="gridcell"
   tabindex="0"
-  aria-label={t("days.full", { values: { day: date.getDate() } })}
+  aria-label={t("scope.selected.day", { values: { date: date } })}
   draggable="false"
 >
   <div class="background" class:otherMonth={!isCurrentMonth}>

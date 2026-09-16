@@ -638,6 +638,11 @@ scope:
   day: "Day"
   week: "Week"
   month: "Month"
+  selected:
+    day: |
+      {{{$date :date dataStyle=long}}}
+    month: |
+      {{{$date :date month=long year=numeric}}}
 
 settings:
   title: "Settings"

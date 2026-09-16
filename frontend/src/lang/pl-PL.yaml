@@ -480,6 +480,11 @@ scope:
   day: "Dzień"
   week: "Tydzień"
   month: "Miesąc"
+  selected:
+    day: |
+      {{{$date :date dataStyle=long}}}
+    month: |
+      {{{$date :date month=long year=numeric}}}
 
 settings:
   title: "Ustawienia"

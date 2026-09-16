@@ -614,17 +614,22 @@ months:
 
 years:
   full: |
-    {{{$year :number numberingSystem=fullwide}年}}
+    {{{$year :number}年}}
   short: |
     {{{$year :number}}}
   range: |
-    {{{$start :number numberingSystem=fullwide}年〜{$end :number numberingSystem=fullwide}年}}
+    {{{$start :number}年〜{$end :number}年}}
 
 scope:
   today: "今日"
   day: "日"
   week: "週"
   month: "月"
+  selected:
+    day: |
+      {{{$date :date dateStyle=full}}}
+    month: |
+      {{{$date :date month=long year=numeric}}}
 
 settings:
   title: "設定"
