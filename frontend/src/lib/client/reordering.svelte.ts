@@ -1,5 +1,5 @@
 import { tick } from "svelte";
-import { effectiveBackgroundColor as getEffectiveBackground } from "../common/misc";
+import { effectiveBackgroundColor as getEffectiveBackground, parentModal } from "../common/misc";
 
 export const draggable = (node: HTMLElement, data: { ownClass: string, childClasses: string[], callback: (newIndex: number) => Promise<any> }) => {
   let down = false;
@@ -11,6 +11,7 @@ export const draggable = (node: HTMLElement, data: { ownClass: string, childClas
 
   let parent: HTMLElement;
   let phantom: HTMLElement;
+  let placeholders: HTMLElement[];
   let wrapper: HTMLElement;
 
   let mouseOffsetY: number;
@@ -50,9 +51,13 @@ export const draggable = (node: HTMLElement, data: { ownClass: string, childClas
 
     if (moved) {
       // Move the elements back into the DOM
-      similarElements[ownIndexInArray].forEach(x => {
-        parent.insertBefore(x, phantom);
+      parent.replaceChild(placeholders[0], phantom);
+      similarElements[ownIndexInArray].forEach((x, i) => {
+        if (i >= placeholders.length) return;
+        parent.replaceChild(x, placeholders[i]);
+        placeholders[i].remove();
       })
+      placeholders = [];
 
       // Remove helper items
       phantom.remove();
@@ -212,8 +217,9 @@ export const draggable = (node: HTMLElement, data: { ownClass: string, childClas
       lowestY = similarElements[0][0].getBoundingClientRect().top;
       const lastElementGroup = similarElements[similarElements.length - 1]
       highestY = lastElementGroup[lastElementGroup.length - 1].getBoundingClientRect().bottom;
+      const height = `${lastChildBoundingRect.bottom - boundingRect.top}px`
 
-      // Make the original element following the mouse
+      // Make the original element follow the mouse
       wrapper = document.createElement("div");
       wrapper.style.position = "fixed";
       wrapper.style.height = `${lastChildBoundingRect.bottom - boundingRect.top}px`;
@@ -226,17 +232,23 @@ export const draggable = (node: HTMLElement, data: { ownClass: string, childClas
       wrapper.style.background = getEffectiveBackground(node);
       document.body.appendChild(wrapper);
 
+      // Placeholders where the elements will be put back
+      placeholders = new Array(myElementGroup.length);
+      myElementGroup.forEach((x, i) => {
+        const placeholder = document.createElement("div");
+        placeholder.style.display = "none";
+        parent.replaceChild(placeholder, x);
+        wrapper.appendChild(x);
+        placeholders[i] = placeholder;
+      })
+
       // Put a phantom element where the original was
       phantom = document.createElement("div");
       phantom.style.order = node.style.order;
-      phantom.style.height = `${lastChildBoundingRect.bottom - boundingRect.top}px`;
+      phantom.style.height = height;
       phantom.style.width = `${boundingRect.width}px`;
       phantom.style.flexShrink = "0";
-      parent.replaceChild(phantom, node);
-
-      myElementGroup.forEach(x => {
-        wrapper.appendChild(x);
-      })
+      parent.replaceChild(phantom, placeholders[0]);
 
       // Change the cursor
       node.style.cursor = "ns-resize";
