@@ -16,15 +16,18 @@ registerMessageFunction('date', (ctx, options, operand) => {
   let locale: Intl.LocalesArgument = ctx.locales;
 
   if ("format" in options && options.format === "custom") {
-    const customLocale = getSettings().userSettings[UserSettingKeys.DateLocale];
+    const settings = getSettings().userSettings;
+
+    const customLocale = settings[UserSettingKeys.DateLocale];
     if (customLocale !== "default") locale = customLocale;
 
-    const customHourCycle = getSettings().userSettings[UserSettingKeys.HourCycle];
+    const customHourCycle = settings[UserSettingKeys.HourCycle];
     if (customHourCycle !== "default") options.hourCycle = customHourCycle;
   }
   delete options.format;
 
   // @ts-ignore
+  console.log(locale);
   const dtf = new Intl.DateTimeFormat(locale, options);
 
   return {

@@ -18,25 +18,16 @@
     dateLocales
   }: Props = $props();
 
-  const exampleTwentythree = new Date("1990-01-01T23:00");
   const exampleMidnight = new Date("1990-01-01T24:00");
-  let defaultHourCycle = $derived.by(() => {
-    const format = Intl.DateTimeFormat(locale.current, {
-      numberingSystem: "arabic",
-      timeStyle: "short",
-    });
-    return `h${
-      Number.parseInt(format.format(exampleTwentythree).substring(0,2))
-      +
-      (format.format(exampleMidnight).startsWith("0") ? 0 : 1)
-    }`;
-  });
+
   let effectiveDateLocale = $derived.by(() => {
     let loc = locale.current;
     const userLoc = settings.userSettings[UserSettingKeys.DateLocale];
     if (userLoc !== "default") loc = userLoc;
     return loc;
   });
+
+  let defaultHourCycle = $derived(new Intl.DateTimeFormat(effectiveDateLocale, { hour: "numeric" }).resolvedOptions().hourCycle || "h23");
   let defaultHourCycleOption: Option<string> = $derived({
     name: t("settings.language.time.default", {
       values: {
@@ -58,6 +49,15 @@
     }),
   })));
   let combinedHourCycleOptions = $derived([defaultHourCycleOption].concat(hourCycleOptions));
+  
+  let defaultDigitCounts = $derived.by(() => {
+    const opts = new Intl.DateTimeFormat(effectiveDateLocale, { hour: "numeric" }).resolvedOptions();
+    return {
+      hour: (opts.hour === "2-digit" ? 2 : 1),
+      minute: (opts.minute === "2-digit" ? 2 : 1),
+      second: (opts.second === "2-digit" ? 2 : 1),
+    };
+  })
 </script>
 
 <SelectInput
@@ -81,3 +81,9 @@
   bind:value={settings.userSettings[UserSettingKeys.HourCycle]}
   options={combinedHourCycleOptions}
 />
+
+<!--<ToggleInput
+  name={UserSettingKeys.ForceTwoTimeDigits}
+  description={t("settings.language.digits.label")}
+  bind:value={settings.userSettings[UserSettingKeys.ForceTwoTimeDigits]}
+/>-->

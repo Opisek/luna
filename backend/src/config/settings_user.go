@@ -32,6 +32,7 @@ const (
 	KeyLanguage                     = "language"
 	KeyDateLocale                   = "language_date"
 	KeyHourCycle                    = "time_format_hour_cycle"
+	KeyForceTwoTimeDigits           = "time_format_force_two_digits"
 )
 
 func AllDefaultUserSettings() []SettingsEntry {
@@ -60,6 +61,7 @@ func AllDefaultUserSettings() []SettingsEntry {
 		&Language{},
 		&DateLocale{},
 		&HourCycle{},
+		&ForceTwoTimeDigits{},
 	}
 
 	for _, setting := range settings {
@@ -119,6 +121,8 @@ func GetMatchingUserSettingStruct(key string) (SettingsEntry, *errors.ErrorTrace
 		return &DateLocale{}, nil
 	case KeyHourCycle:
 		return &HourCycle{}, nil
+	case KeyForceTwoTimeDigits:
+		return &ForceTwoTimeDigits{}, nil
 	default:
 		return nil, errors.New().Status(http.StatusBadRequest).
 			Append(errors.LvlWordy, "Invalid setting key %s", key).
@@ -213,7 +217,7 @@ func (entry *FirstDayOfWeek) UnmarshalJSON(data []byte) error {
 		return fmt.Errorf("could not parse day of the week: %v", err)
 	}
 	if day < 0 || day > 6 {
-		return fmt.Errorf("invalid day of the week: %d", entry.Day)
+		return fmt.Errorf("invalid day of the week: %d", day)
 	}
 	entry.Day = day
 	return nil
@@ -648,5 +652,25 @@ func (entry *HourCycle) MarshalJSON() ([]byte, error) {
 }
 func (entry *HourCycle) UnmarshalJSON(data []byte) (err error) {
 	entry.Cycle, err = common.UnmarshalString(data)
+	return err
+}
+
+// Whether to use 12h/24h clock and if midnight is 00:00 or 24:00
+// Should default to "default"
+type ForceTwoTimeDigits struct {
+	Enabled bool `json:"value"`
+}
+
+func (entry *ForceTwoTimeDigits) Key() string {
+	return KeyForceTwoTimeDigits
+}
+func (entry *ForceTwoTimeDigits) Default() {
+	entry.Enabled = false
+}
+func (entry *ForceTwoTimeDigits) MarshalJSON() ([]byte, error) {
+	return common.MarshalBool(entry.Enabled), nil
+}
+func (entry *ForceTwoTimeDigits) UnmarshalJSON(data []byte) (err error) {
+	entry.Enabled, err = common.UnmarshalBool(data)
 	return err
 }

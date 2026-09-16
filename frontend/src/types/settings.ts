@@ -23,6 +23,7 @@ export enum UserSettingKeys {
   Language = "language",
   DateLocale = "language_date",
   HourCycle = "time_format_hour_cycle",
+  ForceTwoTimeDigits = "time_format_force_two_digits",
 }
 
 export enum GlobalSettingKeys {
@@ -60,6 +61,7 @@ export type UserSettings = {
   [UserSettingKeys.Language]: string;
   [UserSettingKeys.DateLocale]: string;
   [UserSettingKeys.HourCycle]: string;
+  [UserSettingKeys.ForceTwoTimeDigits]: boolean;
 };
 
 export type GlobalSettings = {

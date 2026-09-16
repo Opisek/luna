@@ -46,6 +46,7 @@ export class Settings {
     [UserSettingKeys.Language]: "default",
     [UserSettingKeys.DateLocale]: "default",
     [UserSettingKeys.HourCycle]: "default",
+    [UserSettingKeys.ForceTwoTimeDigits]: false,
   });
   public globalSettings: GlobalSettings = $state({
     [GlobalSettingKeys.LoggingVerbosity]: 2,
