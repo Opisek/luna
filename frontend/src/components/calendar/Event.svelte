@@ -96,6 +96,16 @@
       element?.blur();
     });
   }
+
+  function dragStart(e: DragEvent) {
+    if (e.dataTransfer === null || event === null) return;
+    e.dataTransfer.setData("application/json", JSON.stringify({
+      "app": "luna",
+      "element": "event",
+      "id": event.id
+    }))
+    e.dataTransfer.dropEffect = "move";
+  }
 </script>
 
 <style lang="scss">
@@ -207,6 +217,7 @@
     onfocusin={mouseEnter}
     onfocusout={mouseLeave}
     onkeypress={keyPress}
+    ondragstart={dragStart}
     role="button"
     tabindex={isFirstDisplay ? 0 : -1}
     id={id}
@@ -217,6 +228,7 @@
       anchor-name: --anchor-{id};
     "
     aria-label={t("event.aria", { values: { name: event.name } })}
+    draggable={event.can_edit}
   >
     {#if showOnlyCircle}
       <ColorCircle

@@ -22,12 +22,12 @@
   import { Frequency, RRule, type Options } from "rrule";
   import { parseTimestampList, serializeTimestampList } from "../../lib/common/ical";
   import { SvelteSet } from "svelte/reactivity";
-  import AffectedRecurrencesModal from "./AffectedRecurrencesModal.svelte";
   import { t } from "@sveltia/i18n";
   import RecurrenceInput from "../forms/RecurrenceInput.svelte";
   import Link from "../forms/Link.svelte";
   import RecurrenceRuleModal from "./RecurrenceRuleModal.svelte";
   import Title from "../layout/Title.svelte";
+  import { getContext } from "svelte";
 
   interface Props {
     showModal?: (initial?: EventModel, date?: Date, anchor?: HTMLElement) => Promise<EventModel>;
@@ -43,7 +43,7 @@
   let showModalInternal: (initial?: EventModel, edit?: boolean, anchor?: HTMLElement) => Promise<EventModel> = $state(Promise.reject);
   let showCopyModal: (event: EventModel) => Promise<EventModel> = $state(Promise.reject);
   let showRecurrenceRuleModal: (initial: Partial<Options>) => Promise<Partial<Options>> = $state(Promise.reject);
-  let selectAffectedRecurrences: (edit: boolean) => Promise<"this" | "thisandfuture" | "all"> = $state(Promise.reject);
+  let selectAffectedRecurrences: (edit: boolean) => Promise<"this" | "thisandfuture" | "all"> = getContext("selectAffectedRecurrences");
   let editMode: boolean = $state(false);
 
   let event: EventModel = $state(EmptyEvent);
@@ -325,4 +325,3 @@
 </EditableModal>
 
 <EventCopyModal bind:copy={showCopyModal}/>
-<AffectedRecurrencesModal bind:showModal={selectAffectedRecurrences}/>

@@ -47,7 +47,12 @@ func ParseIcalEvent(props *ical.Props) (*IcalEventProps, bool, error) {
 	// Basic info
 	uid := props.Get(ical.PropUID)
 	summary := props.Get(ical.PropSummary)
-	summaryStr := UnespaceIcalString(summary.Value)
+	var summaryStr string
+	if summary != nil {
+		summaryStr = UnespaceIcalString(summary.Value)
+	} else {
+		summaryStr = ""
+	}
 	description := props.Get(ical.PropDescription)
 	var descStr string
 	if description != nil {

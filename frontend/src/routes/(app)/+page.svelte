@@ -18,7 +18,7 @@
   import { browser } from "$app/environment";
 
   import SmallCalendar from "../../components/interactive/SmallCalendar.svelte";
-  import { NoOp } from "$lib/client/placeholders";
+  import { AsyncNoOp, NoOp } from "$lib/client/placeholders";
   import { getMetadata } from "$lib/client/data/metadata.svelte";
   import { getRepository } from "$lib/client/data/repository.svelte";
   import { queueNotification } from "$lib/client/notifications";
@@ -37,6 +37,7 @@
   import CreditsModal from "../../components/modals/CreditsModal.svelte";
   import CreatePopup from "../../components/popups/CreatePopup.svelte";
   import { locale, t } from "@sveltia/i18n";
+  import AffectedRecurrencesModal from "../../components/modals/AffectedRecurrencesModal.svelte";
 
   /* Singletons */
   const settings = getSettings();
@@ -184,6 +185,10 @@
   const showEventModal = (initial?: EventModel, date?: Date, anchor?: HTMLElement) => { return showEventModalInternal(initial, date, anchor); };
   setContext("showEventModal", showEventModal);
 
+  let selectAffectedRecurrencesModalInternal: (edit: boolean) => Promise<"all" | "thisandfuture" | "this"> = $state(Promise.reject);
+  const selectAffectedRecurrences = (edit: boolean) => { return selectAffectedRecurrencesModalInternal(edit); };
+  setContext("selectAffectedRecurrences", selectAffectedRecurrences);
+
   let showDateModalInternal: (date: Date, events: (EventModel | null)[]) => any = $state(NoOp);
   const showDateModal = (date: Date, events: (EventModel | null)[]) => { return showDateModalInternal(date, events); };
   setContext("showDateModal", showDateModal);
@@ -287,6 +292,7 @@
 <SourceModal bind:showModal={showSourceModalInternal}/>
 <CalendarModal bind:showModal={showCalendarModalInternal}/>
 <EventModal bind:showModal={showEventModalInternal}/>
+<AffectedRecurrencesModal bind:showModal={selectAffectedRecurrencesModalInternal}/>
 <DayViewModal bind:showModal={showDateModalInternal}/>
 <SettingsModal bind:showModal={showSettingsModalInternal}/>
 <CreditsModal bind:showModal={showCreditsModalInternal}/>

@@ -10,6 +10,8 @@
   import { ColorKeys } from "../../types/colors";
   import { t } from "@sveltia/i18n";
   import { getDayName } from "$lib/common/humanization";
+  import { passIfEnter } from "$lib/common/inputs";
+  import { getRepository } from "$lib/client/data/repository.svelte";
 
   interface Props {
     date: Date;
@@ -42,7 +44,49 @@
     });
   };
 
+  let selectAffectedRecurrences: (edit: boolean) => Promise<"this" | "thisandfuture" | "all"> = getContext("selectAffectedRecurrences");
+
   let actualMaxEvents: number = $derived(maxEvents <= events.length - 1 ? maxEvents - 1 : maxEvents);
+
+  function dragOver(e: DragEvent) {
+    if (e.dataTransfer === null) return;
+    const data = JSON.parse(e.dataTransfer.getData("application/json"));
+    if (!("app" in data) && data.app !== "luna") return;
+    if (!("element" in data) && data.element !== "event") return;
+    e.preventDefault();
+  }
+
+  async function dragDrop(e: DragEvent) {
+    if (e.dataTransfer === null) return;
+    const data = JSON.parse(e.dataTransfer.getData("application/json"));
+    if (!("app" in data) && data.app !== "luna") return;
+    if (!("element" in data) && data.element !== "event") return;
+    if (!("id" in data) && data.element !== "id") return;
+    e.preventDefault();
+
+    const repository = getRepository();
+    const event = await repository.getEvent(data.id);
+
+    if (!event.can_edit) return;
+
+    if (
+      event.date.start.getDate() === date.getDate() &&
+      event.date.start.getMonth() === date.getMonth() &&
+      event.date.start.getFullYear() == date.getFullYear()
+    ) return;
+
+    const delta = event.date.end.getTime() - event.date.start.getTime();
+
+    event.date.start.setDate(date.getDate());
+    event.date.start.setMonth(date.getMonth());
+    event.date.start.setFullYear(date.getFullYear());
+
+    event.date.end.setTime(event.date.start.getTime() + delta);
+
+    const affectedRecurrences = event.date.recurrence === null ? "this" : await selectAffectedRecurrences(true);
+
+    repository.editEvent(event, { date: true }, false, affectedRecurrences);
+  }
 </script>
 
 <style lang="scss">
@@ -112,8 +156,14 @@
     opacity: 0;
     transition: opacity animations.$animationSpeed;
   }
-  div.day:hover span.add {
+  div.day:hover span.add,
+  div.day:focus-visible span.add {
     opacity: 1;
+  }
+
+  div.day:focus-visible {
+    border: 0;
+    outline: 0;
   }
 
   button.more {
@@ -165,7 +215,17 @@
   //}
 </style>
 
-<div class="day">
+<!-- TODO: we will want a full date desc. instead of just the "day name" for the aria label -->
+<div
+  class="day"
+  ondragover={dragOver}
+  ondrop={dragDrop}
+  onkeypress={(e) => passIfEnter(e, createEventButtonClick)}
+  role="gridcell"
+  tabindex="0"
+  aria-label={t("days.full", { values: { day: date.getDate() } })}
+  draggable="false"
+>
   <div class="background" class:otherMonth={!isCurrentMonth}>
     <span class="top">
       <span class="date" class:sunday={date.getDay() === 0} class:today={isToday}>
