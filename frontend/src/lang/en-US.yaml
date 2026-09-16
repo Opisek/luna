@@ -115,7 +115,7 @@ recurrence:
         * {{Every {$interval} days on weekdays}}
     monthlydate: |
       .input {$interval :integer}
-      .input {$day :ordinal}
+      .input {$day :integer}
       .match $interval
         1 {{Every month on the {$day}}}
         2 {{Every other monh on the {$day}}}
@@ -123,8 +123,8 @@ recurrence:
     monthlyday: |
       .input {$interval :integer}
       .input {$date :integer}
-      .input {$nth :ordinal}
-      .local $weekday = {$date :weekday weekday=long}
+      .input {$nth :integer}
+      .local $weekday = {$date :date weekday=long}
       .match $interval
         1 {{Every month on the {$nth} {$weekday}}}
         2 {{Every other monh on the {$nth} {$weekday}}}
@@ -132,8 +132,8 @@ recurrence:
     monthlydayreverse: |
       .input {$interval :integer}
       .input {$date :integer}
-      .input {$nthrev :ordinal order=reverse}
-      .local $weekday = {$date :weekday weekday=long}
+      .input {$nthrev :integer order=reverse}
+      .local $weekday = {$date :date weekday=long}
       .match $interval
         1 {{Every month on the {$nthrev} {$weekday}}}
         2 {{Every other monh on the {$nthrev} {$weekday}}}
@@ -141,8 +141,8 @@ recurrence:
     yearlydate: |
       .input {$interval :integer}
       .input {$date :integer}
-      .input {$day :ordinal}
-      .local $month = {$date :month month=long}
+      .input {$day :number}
+      .local $month = {$date :date month=long}
       .match $interval
         1 {{Every year on the {$day} of {$month}}}
         2 {{Every other year on the {$day} of {$month}}}
@@ -150,9 +150,9 @@ recurrence:
     yearlymonthday: |
       .input {$interval :integer}
       .input {$date :integer}
-      .input {$nth :ordinal}
-      .local $weekday = {$date :weekday weekday=long}
-      .local $month = {$date :month month=long}
+      .input {$nth :integer}
+      .local $weekday = {$date :date weekday=long}
+      .local $month = {$date :date month=long}
       .match $interval
         1 {{Every year on the {$nth} {$weekday} of {$month}}}
         2 {{Every other year on the {$nth} {$weekday} of {$month}}}
@@ -160,9 +160,9 @@ recurrence:
     yearlymonthdayreverse: |
       .input {$interval :integer}
       .input {$date :integer}
-      .input {$nthrev :ordinal order=reverse}
-      .local $weekday = {$date :weekday weekday=long}
-      .local $month = {$date :month month=long}
+      .input {$nthrev :integer order=reverse}
+      .local $weekday = {$date :date weekday=long}
+      .local $month = {$date :date month=long}
       .match $interval
         1 {{Every year on the {$nthrev} {$weekday} of {$month}}}
         2 {{Every other year on the {$nthrev} {$weekday} of {$month}}}
@@ -268,6 +268,11 @@ date:
   start: "Start"
   end: "End"
   date: "Date"
+  formatted:
+    date: |
+      {{{$date :date dateStyle=short format=custom}}}
+    time: |
+      {{{$date :date timeStyle=short format=custom}}}
 
 time:
   title: "Pick Time"
@@ -309,7 +314,7 @@ user:
   id:
     display: "User ID"
     inline: "ID: {$id}"
-  creation: "Registered on {$date :date length=short} at {$date :time precision=minute}"
+  creation: "Registered on {$date :date dateStyle=short format=custom} at {$date :date timeStyle=short format=custom}"
   action:
     enable: "Enable account"
     disable: "Disable account"
@@ -338,7 +343,7 @@ invite:
   date:
     creation:
       display: "Creation Date"
-      inline: "Created on {$date :date length=short} at {$date :time precision=minute} by {$name}"
+      inline: "Created on {$date :date dateStyle=short format=custom} at {$date :date timeStyle=short format=custom} by {$name}"
     expiry:
       display: "Expiry Date"
       today: |
@@ -347,11 +352,11 @@ invite:
         .input {$minutes :integer}
 
         .match $hours $minutes
-          0 1 {{Expires at {$date :time precision=minute} ({$minutes} minute left)}}
-          0 * {{Expires at {$date :time precision=minute} ({$minutes} minutes left)}}
-          1 * {{Expires at {$date :time precision=minute} ({$hours} hour left)}}
-          * * {{Expires at {$date :time precision=minute} ({$hours} hours left)}}
-      elsewhen: "Expires on {$date :date length=short} at {$date :time precision=minute}"
+          0 1 {{Expires at {$date :date timeStyle=short format=custom} ({$minutes} minute left)}}
+          0 * {{Expires at {$date :date timeStyle=short format=custom} ({$minutes} minutes left)}}
+          1 * {{Expires at {$date :date timeStyle=short format=custom} ({$hours} hour left)}}
+          * * {{Expires at {$date :date timeStyle=short format=custom} ({$hours} hours left)}}
+      elsewhen: "Expires on {$date :date dateStyle=short format=custom} at {$date :date timeStyle=short format=custom}"
   expiry:
     display: "Invite expiration"
     preset:
@@ -402,8 +407,8 @@ session:
     lan: "Local network"
     unknown: "Unknown location"
   active:
-    today: "Last active at {$date :time precision=second}"
-    elsewhen: "Last active on {$date :date length=short} at {$date :time precision=second}"
+    today: "Last active at {$date :date timeStyle=short format=custom}"
+    elsewhen: "Last active on {$date :date dateStyle=short forma=custom} at {$date :date timeStyle=short format=custom}"
 
 file:
   display: "File"
@@ -708,8 +713,20 @@ settings:
       reduced: "Animations are disabled by a browser preference."
   language:
     title: "Language"
-    display: "Display Language"
-    default: "Default ({$default})"
+    display:
+      label: "Display Language"
+      default: "Default ({$default})"
+    date:
+      label: "Date format"
+      default: "Default ({$default})"
+    time:
+      label: "Time format"
+      default: "Default ({$default})"
+      options:
+        h11: "12-hour, midnight at {$midnight}"
+        h12: "12-hour, midnight at {$midnight}"
+        h23: "24-hour, midnight at {$midnight}"
+        h24: "24-hour, midnight at {$midnight}"
   dev:
     title: "Developer"
     deauthorize: "Deauthorize"

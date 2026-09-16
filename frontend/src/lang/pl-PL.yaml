@@ -145,7 +145,7 @@ user:
   id:
     display: "ID użytkownika"
     inline: "ID: {$id}"
-  creation: "Zarejestrowano {$date :date length=short} o {$date :time precision=minute}"
+  creation: "Zarejestrowano {$date :date dateStyle=short format=custom} o {$date :date timeStyle=short format=custom}"
   action:
     enable: "Włącz konto"
     disable: "Wyłącz konto"
@@ -174,7 +174,7 @@ invite:
   date:
     creation:
       display: "Data utworzenia"
-      inline: "Utworzono {$date :date length=short} o {$date :time precision=minute} przez użytkownika {$name}"
+      inline: "Utworzono {$date :date dateStyle=short format=custom} o {$date :date timeStyle=short format=custom} przez użytkownika {$name}"
     expiry:
       display: "Data wygasnięcia"
       today: |
@@ -183,15 +183,15 @@ invite:
         .input {$minutes :integer}
 
         .match $hours $minutes
-          0 one {{Wygasa o {$date :time precision=minute} (jeszcze {$minutes} minuta)}}
-          0 few {{Wygasa o {$date :time precision=minute} (jeszcze {$minutes} minuty)}}
-          0 many {{Wygasa o {$date :time precision=minute} (jeszcze {$minutes} minut)}}
-          0 * {{Wygasa o {$date :time precision=minute} (jeszcze {$minutes} minuty)}}
-          one * {{Wygasa o {$date :time precision=minute} (jeszcze {$hours} godzina)}}
-          few * {{Wygasa o {$date :time precision=minute} (jeszcze {$hours} godziny)}}
-          many * {{Wygasa o {$date :time precision=minute} (jeszcze {$hours} godzin)}}
-          * * {{Wygasa o {$date :time precision=minute} (jeszcze {$hours} godziny)}}
-      elsewhen: "Wygasa {$date :date length=short} o {$date :time precision=minute}"
+          0 one  {{Wygasa o {$date :date timeStyle=short format=custom} (jeszcze {$minutes} minuta)}}
+          0 few  {{Wygasa o {$date :date timeStyle=short format=custom} (jeszcze {$minutes} minuty)}}
+          0 many {{Wygasa o {$date :date timeStyle=short format=custom} (jeszcze {$minutes} minut)}}
+          0 *    {{Wygasa o {$date :date timeStyle=short format=custom} (jeszcze {$minutes} minuty)}}
+          one *  {{Wygasa o {$date :date timeStyle=short format=custom} (jeszcze {$hours} godzina)}}
+          few *  {{Wygasa o {$date :date timeStyle=short format=custom} (jeszcze {$hours} godziny)}}
+          many * {{Wygasa o {$date :date timeStyle=short format=custom} (jeszcze {$hours} godzin)}}
+          * *    {{Wygasa o {$date :date timeStyle=short format=custom} (jeszcze {$hours} godziny)}}
+      elsewhen: "Wygasa {$date :date dateStyle=short} o {$date :date timeStyle=short format=custom}"
   expiry:
     display: "Czas ważności"
     preset:
@@ -242,8 +242,8 @@ session:
     lan: "Sieć lokalna"
     unknown: "Nieznana lokalizacja"
   active:
-    today: "Ostatnio aktywny o {$date :time precision=second}"
-    elsewhen: "Ostatnio aktywny {$date :date length=short} o {$date :time precision=second}"
+    today: "Ostatnio aktywny o {$date :date timeStyle=short format=custom}"
+    elsewhen: "Ostatnio aktywny {$date :date dateStyle=short format=custom} o {$date :date timeStyle=short format=custom}"
 
 file:
   display: "Plik"
@@ -549,8 +549,20 @@ settings:
       reduced: "Animacje są wyłączone przez preferencję przeglądarki."
   language:
     title: Język
-    display: Język Wyświetlania
-    default: "Domyślny ({$default})"
+    display:
+      label: Język Wyświetlania
+      default: "Domyślny ({$default})"
+    date:
+      label: "Format dat"
+      default: "Domyślny ({$default})"
+    time:
+      label: "Format godzin"
+      default: "Domyślny ({$default})"
+      options:
+        h11: "12-godzinny, północ o {$midnight}"
+        h12: "12-godzinny, północ o {$midnight}"
+        h23: "24-godzinny, północ o {$midnight}"
+        h24: "24-godzinny, północ o {$midnight}"
   dev:
     title: "Programista"
     deauthorize: "Odbierz zezwolenia"

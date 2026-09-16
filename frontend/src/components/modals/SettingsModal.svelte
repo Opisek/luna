@@ -31,8 +31,8 @@
   import { getDatabaseFileIdFromUrl } from "../../lib/common/parsing";
   import OauthSettingsTab from "./settingModalTabs/OauthSettingsTab.svelte";
   import { getOauthClients } from "../../lib/client/data/oauth.svelte";
-  import { locale, locales, t } from "@sveltia/i18n";
-  import { getDefaultLanguage, loadLanguage } from "$lib/common/i18n";
+  import { date, locale, locales, t } from "@sveltia/i18n";
+  import { getDateLocaleCalculationExampleDate, getDefaultLanguage, getUniqueDateLocaleOptions, loadLanguage } from "$lib/common/i18n";
   import BackupsSettingsTab from "./settingModalTabs/BackupsSettingsTab.svelte";
   import LanguageSettingsTab from "./settingModalTabs/LanguageSettingsTab.svelte";
   import { prefersReducedMotion } from "$lib/client/animations";
@@ -203,7 +203,7 @@
 
   let languageNames = $derived(Object.fromEntries(locales.map(x => [x, getLanguageName(x, x)])));
   let defaultLanguage = await getDefaultLanguage();
-  let defaultLanguageOption = $derived({ name: t("settings.language.default", { values: { default: languageNames[defaultLanguage] } }), value: "default" });
+  let defaultLanguageOption = $derived({ name: t("settings.language.display.default", { values: { default: languageNames[defaultLanguage] } }), value: "default" });
   let languages = $derived<Option<string>[]>(
     [defaultLanguageOption]
       .concat(
@@ -213,6 +213,10 @@
           .toSorted((a, b) => a.name.localeCompare(b.name))
       )
   );
+
+  const dateLocaleOptions = await getUniqueDateLocaleOptions();
+  let defaultDateLocaleOption = $derived({ name: t("settings.language.date.default", { values: { default: date(getDateLocaleCalculationExampleDate(), { dateStyle: "short" }) } }), value: "default" });
+  let allDateLocaleOptions = $derived([defaultDateLocaleOption].concat(dateLocaleOptions));
 
   // Static data change tracking
   let userDataSnapshot = $state<UserData | null>(null);
@@ -541,6 +545,7 @@
         <LanguageSettingsTab
           settings={settings}
           languages={languages} 
+          dateLocales={allDateLocaleOptions}
         />
       {:else if selectedCategory === "developer"}
         <DeveloperSettingsTab

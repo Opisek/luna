@@ -44,6 +44,8 @@ export class Settings {
     [UserSettingKeys.AppearenceFrostedGlass]: false,
     [UserSettingKeys.AnimationDuration]: 1,
     [UserSettingKeys.Language]: "default",
+    [UserSettingKeys.DateLocale]: "default",
+    [UserSettingKeys.HourCycle]: "default",
   });
   public globalSettings: GlobalSettings = $state({
     [GlobalSettingKeys.LoggingVerbosity]: 2,

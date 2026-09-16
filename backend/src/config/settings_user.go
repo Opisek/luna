@@ -30,6 +30,8 @@ const (
 	KeyAppearanceFrostedGlass       = "appearance_frosted_glass"
 	KeyAnimationDuration            = "animation_duration"
 	KeyLanguage                     = "language"
+	KeyDateLocale                   = "language_date"
+	KeyHourCycle                    = "time_format_hour_cycle"
 )
 
 func AllDefaultUserSettings() []SettingsEntry {
@@ -56,6 +58,8 @@ func AllDefaultUserSettings() []SettingsEntry {
 		&AppearenceFrostedGlass{},
 		&AnimationDuration{},
 		&Language{},
+		&DateLocale{},
+		&HourCycle{},
 	}
 
 	for _, setting := range settings {
@@ -111,6 +115,10 @@ func GetMatchingUserSettingStruct(key string) (SettingsEntry, *errors.ErrorTrace
 		return &AnimationDuration{}, nil
 	case KeyLanguage:
 		return &Language{}, nil
+	case KeyDateLocale:
+		return &DateLocale{}, nil
+	case KeyHourCycle:
+		return &HourCycle{}, nil
 	default:
 		return nil, errors.New().Status(http.StatusBadRequest).
 			Append(errors.LvlWordy, "Invalid setting key %s", key).
@@ -586,19 +594,59 @@ func (entry *AnimationDuration) UnmarshalJSON(data []byte) (err error) {
 // Which language to use
 // Should default to "default"
 type Language struct {
-	Font string `json:"value"`
+	Locale string `json:"value"`
 }
 
 func (entry *Language) Key() string {
 	return KeyLanguage
 }
 func (entry *Language) Default() {
-	entry.Font = "default"
+	entry.Locale = "default"
 }
 func (entry *Language) MarshalJSON() ([]byte, error) {
-	return common.MarshalString(entry.Font), nil
+	return common.MarshalString(entry.Locale), nil
 }
 func (entry *Language) UnmarshalJSON(data []byte) (err error) {
-	entry.Font, err = common.UnmarshalString(data)
+	entry.Locale, err = common.UnmarshalString(data)
+	return err
+}
+
+// Which locale should be used for formatting date
+// Should default to "default"
+type DateLocale struct {
+	Locale string `json:"value"`
+}
+
+func (entry *DateLocale) Key() string {
+	return KeyDateLocale
+}
+func (entry *DateLocale) Default() {
+	entry.Locale = "default"
+}
+func (entry *DateLocale) MarshalJSON() ([]byte, error) {
+	return common.MarshalString(entry.Locale), nil
+}
+func (entry *DateLocale) UnmarshalJSON(data []byte) (err error) {
+	entry.Locale, err = common.UnmarshalString(data)
+	return err
+}
+
+// Whether to use 12h/24h clock and if midnight is 00:00 or 24:00
+// Should default to "default"
+type HourCycle struct {
+	Cycle string `json:"value"`
+}
+
+func (entry *HourCycle) Key() string {
+	return KeyHourCycle
+}
+func (entry *HourCycle) Default() {
+	entry.Cycle = "default"
+}
+func (entry *HourCycle) MarshalJSON() ([]byte, error) {
+	return common.MarshalString(entry.Cycle), nil
+}
+func (entry *HourCycle) UnmarshalJSON(data []byte) (err error) {
+	entry.Cycle, err = common.UnmarshalString(data)
 	return err
 }

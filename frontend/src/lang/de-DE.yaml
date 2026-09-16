@@ -146,7 +146,7 @@ user:
   id:
     display: "Benutzer-ID"
     inline: "ID: {$id}"
-  creation: "Registriert am {$date :date length=short} um {$date :time precision=minute}"
+  creation: "Registriert am {$date :date dateStyle=short format=custom} um {$date :date timeStyle=short format=custom}"
   action:
     enable: "Konto aktivieren"
     disable: "Konto deaktivieren"
@@ -175,7 +175,7 @@ invite:
   date:
     creation:
       display: "Erstellungsdatum"
-      inline: "Erstellt am {$date :date length=short} um {$date :time precision=minute} von {$name}"
+      inline: "Erstellt am {$date :date dateStyle=short format=custom} um {$date :date timeStyle=short format=custom} von {$name}"
     expiry:
       display: "Ablaufdatum"
       today: |
@@ -184,11 +184,11 @@ invite:
         .input {$minutes :integer}
       
         .match $hours $minutes
-          0 1 {{Läuft um {$date :time precision=minute} ab (noch {$minutes} Minute übrig)}}
-          0 * {{Läuft um {$date :time precision=minute} ab (noch {$minutes} Minuten übrig)}}
-          1 * {{Läuft um {$date :time precision=minute} ab (noch {$hours} Stunde übrig)}}
-          * * {{Läuft um {$date :time precision=minute} ab (noch {$hours} Stunden übrig)}}
-      elsewhen: "Läuft am {$date :date length=short} um {$date :time precision=minute} ab"
+          0 1 {{Läuft um {$date :date timeStyle=short format=custom} ab (noch {$minutes} Minute übrig)}}
+          0 * {{Läuft um {$date :date timeStyle=short format=custom} ab (noch {$minutes} Minuten übrig)}}
+          1 * {{Läuft um {$date :date timeStyle=short format=custom} ab (noch {$hours} Stunde übrig)}}
+          * * {{Läuft um {$date :date timeStyle=short format=custom} ab (noch {$hours} Stunden übrig)}}
+      elsewhen: "Läuft am {$date :date dateStyle=short format=custom} um {$date :date timeStyle=short format=custom} ab"
   expiry:
     display: "Ablauf"
     preset:
@@ -239,8 +239,8 @@ session:
     lan: "Lokales Netzwerk"
     unknown: "Unbekanntes Ort"
   active:
-    today: "Zuletzt aktiv am {$date :time precision=second}"
-    elsewhen: "Zuletzt aktiv am {$date :date length=short} um {$date :time precision=second}"
+    today: "Zuletzt aktiv am {$date :date timeStyle=short format=custom}"
+    elsewhen: "Zuletzt aktiv am {$date :date dateStyle=short format=custom} um {$date :date timeStyle=short format=custom}"
 
 file:
   display: "Datei"
@@ -478,7 +478,7 @@ scope:
   month: "Monat"
   selected:
     day: |
-      {{{$date :date dataStyle=long}}}
+      {{{$date :date dateStyle=long}}}
     month: |
       {{{$date :date month=long year=numeric}}}
 
@@ -545,8 +545,20 @@ settings:
       reduced: "Animationen sind durch eine Browserpräferenz ausgeschaltet."
   language:
     title: "Sprache"
-    display: "Anzeigesprache"
-    default: "Browsereinstellung ({$default})"
+    display:
+      label: "Anzeigesprache"
+      default: "Browsereinstellung ({$default})"
+    date:
+      label: "Datumformat"
+      default: "Browsereinstellung ({$default})"
+    time:
+      label: "Uhrzeitformat"
+      default: "Browsereinstellung ({$default})"
+      options:
+        h11: "12-Stunden, Mitternacht um {$midnight}"
+        h12: "12-Stunden, Mitternacht um {$midnight}"
+        h23: "24-Stunden, Mitternacht um {$midnight}"
+        h24: "24-Stunden, Mitternacht um {$midnight}"
   dev:
     title: "Entwickler"
     deauthorize: "Authorisierung entnehmen"

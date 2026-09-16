@@ -21,6 +21,8 @@ export enum UserSettingKeys {
   AppearenceFrostedGlass = "appearance_frosted_glass",
   AnimationDuration = "animation_duration",
   Language = "language",
+  DateLocale = "language_date",
+  HourCycle = "time_format_hour_cycle",
 }
 
 export enum GlobalSettingKeys {
@@ -56,6 +58,8 @@ export type UserSettings = {
   [UserSettingKeys.AppearenceFrostedGlass]: boolean;
   [UserSettingKeys.AnimationDuration]: number;
   [UserSettingKeys.Language]: string;
+  [UserSettingKeys.DateLocale]: string;
+  [UserSettingKeys.HourCycle]: string;
 };
 
 export type GlobalSettings = {

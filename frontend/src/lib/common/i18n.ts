@@ -2,48 +2,36 @@ import { browser } from "$app/environment";
 import { register, init, getLocaleFromNavigator, locales, locale, waitLocale, registerMessageFunction, t } from "@sveltia/i18n";
 import { getLocaleDir } from "messageformat/functions";
 import { parse } from "yaml";
+import type { Option } from "../../types/options";
+import { getSettings } from "$lib/client/data/settings.svelte";
+import { UserSettingKeys } from "../../types/settings";
 
 const languages = [ "en-US", "de-DE", "pl-PL", "ja-JP" ];
 
 languages.forEach(x => register(x, () => import(`../../lang/${x}.yaml?raw`).then(m => parse(m.default))));
-register("en-DE", () => import(`../../lang/en-US.yaml?raw`).then(m => parse(m.default))); // This is a cheat to get a DD/MM/YYYY format with English. It will be removed once a better method is developed.
 
-init({ fallbackLocale: "en-DE" });
+init({ fallbackLocale: "en-US" });
 
-registerMessageFunction('weekday', (ctx, options, operand) => {
+registerMessageFunction('date', (ctx, options, operand) => {
+  let locale: Intl.LocalesArgument = ctx.locales;
+
+  if ("format" in options && options.format === "custom") {
+    const customLocale = getSettings().userSettings[UserSettingKeys.DateLocale];
+    if (customLocale !== "default") locale = customLocale;
+
+    const customHourCycle = getSettings().userSettings[UserSettingKeys.HourCycle];
+    if (customHourCycle !== "default") options.hourCycle = customHourCycle;
+  }
+  delete options.format;
+
   // @ts-ignore
-  const dtf = new Intl.DateTimeFormat(ctx.locales, { weekday: options.weekday ?? 'short' });
+  const dtf = new Intl.DateTimeFormat(locale, options);
 
   return {
     type: 'string',
     dir: getLocaleDir(dtf.resolvedOptions().locale),
     // @ts-ignore
     toString: () => dtf.format(operand),
-  };
-});
-
-registerMessageFunction('month', (ctx, options, operand) => {
-    // @ts-ignore
-  const dtf = new Intl.DateTimeFormat(ctx.locales, { month: options.month ?? 'short' });
-
-  return {
-    type: 'string',
-    dir: getLocaleDir(dtf.resolvedOptions().locale),
-    // @ts-ignore
-    toString: () => dtf.format(operand),
-  };
-});
-
-registerMessageFunction('ordinal', (ctx, options, operand) => {
-    // @ts-ignore
-  const dtf = new Intl.DateTimeFormat(ctx.locales);
-  const locale = getLocaleDir(dtf.resolvedOptions().locale)
-
-  return {
-    type: 'string',
-    dir: getLocaleDir(dtf.resolvedOptions().locale),
-    // @ts-ignore
-    toString: () => t(`numbers.ordinal.${options.order ?? "normal"}`, { values: { num: operand }, locale: locale }),
   };
 });
 
@@ -65,7 +53,6 @@ registerMessageFunction('number', (ctx, options, operand) => {
 
 export async function loadLanguage(userChoice: string | null | undefined) {
   await locale.set(await getCurrentLanguage(userChoice));
-  await waitLocale("en-DE");
   await waitLocale();
 }
 
@@ -75,5 +62,35 @@ export async function getCurrentLanguage(userChoice: string | null | undefined) 
 }
 
 export async function getDefaultLanguage() {
-  return (browser ? getLocaleFromNavigator() : null) ?? "en-DE";
+  return (browser ? getLocaleFromNavigator() : null) ?? "en-US";
+}
+
+// Many locales share the same date format
+// The following set has been determined experimentally
+const dateLocaleOptions = [ "ar-SA", "bg-BG", "bn-IN", "de-DE", "en-AU", "en-CA", "en-GB", "en-US", "fa-IR", "fi-FI", "he-IL", "hr-HR", "hu-HU", "ja-JP", "ko-KR", "mk-MK", "mn-MN", "mr-IN", "nl-NL", "pl-PL", "pt-PT", "sk-SK", "sq-AL", "sr-RS", "te-IN", "zh-CN", "zh-HK" ];
+
+// The following is a date in which 
+
+export function getDateLocaleCalculationExampleDate() {
+  const exampleDate = new Date("2000-01-31T00:00:00");
+  exampleDate.setFullYear(new Date().getFullYear());
+  return exampleDate;
+}
+export async function getUniqueDateLocaleOptions(): Promise<Option<string>[]> {
+  const exampleDate = getDateLocaleCalculationExampleDate();
+
+  // Map different date formats to ONE example locale that provides it
+  const uniqueDateFormats = Object.fromEntries(dateLocaleOptions.map(locale => [
+    new Intl.DateTimeFormat(locale, { dateStyle: "short" }).format(exampleDate),
+    locale
+  ]));
+
+  // Format these into options that work in our codebase
+  const uniqueOptions = Object.entries(uniqueDateFormats).map(x => ({
+    value: x[1],
+    name: x[0]
+  }));
+
+  // Sort and return
+  return uniqueOptions.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
 }

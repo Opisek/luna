@@ -5,7 +5,9 @@
 
   import { NoOp } from "$lib/client/placeholders";
   import { focusIndicator } from "$lib/client/decoration";
-  import { date, time } from "@sveltia/i18n";
+  import { t } from "@sveltia/i18n";
+  import { getSettings } from "$lib/client/data/settings.svelte";
+  import { UserSettingKeys } from "../../types/settings";
 
   interface Props {
     value: Date | null | undefined;
@@ -26,6 +28,8 @@
     wrap = false,
     onChange = NoOp
   }: Props = $props();
+
+  let dateLocale = $derived(getSettings().userSettings[UserSettingKeys.DateLocale]);
 
   let dateButton: HTMLButtonElement | null = $state(null);
   let timeButton: HTMLButtonElement | null = $state(null);
@@ -119,7 +123,7 @@
       tabindex={editable ? 0 : -1}
       use:focusIndicator
     >
-      {date(value || new Date())}
+      {t("date.formatted.date", { values: { date: value || new Date() } })}
     </button>
     {#if !allDay}
       <button
@@ -129,7 +133,7 @@
         tabindex={editable ? 0 : -1}
         use:focusIndicator
       >
-        {time(value || new Date(), { hour: "2-digit", minute: "2-digit" })}
+        {t("date.formatted.time", { values: { date: value || new Date() } })}
       </button>
     {/if}
   </div>

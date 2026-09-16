@@ -97,166 +97,6 @@ recurrence:
   repeats: "繰り返し"
   presets:
     custom: "カスタム"
-    daily: |
-      .input {$interval :integer}
-      .match $interval
-        1 {{Every day}}
-        2 {{Every other day}}
-        * {{Every {$interval} days}}
-    dailyweekdays: |
-      .input {$interval :integer}
-      .match $interval
-        1 {{Every weekday}}
-        2 {{Every other day on weekdays}}
-        * {{Every {$interval} days on weekdays}}
-    monthlydate: |
-      .input {$interval :integer}
-      .input {$day :ordinal}
-      .match $interval
-        1 {{Every month on the {$day}}}
-        2 {{Every other monh on the {$day}}}
-        * {{Every {$interval} months on the {$day}}}
-    monthlyday: |
-      .input {$interval :integer}
-      .input {$date :integer}
-      .input {$nth :ordinal}
-      .local $weekday = {$date :weekday weekday=long}
-      .match $interval
-        1 {{Every month on the {$nth} {$weekday}}}
-        2 {{Every other monh on the {$nth} {$weekday}}}
-        * {{Every {$interval} months on the {$nth} {$weekday}}}
-    monthlydayreverse: |
-      .input {$interval :integer}
-      .input {$date :integer}
-      .input {$nthrev :ordinal order=reverse}
-      .local $weekday = {$date :weekday weekday=long}
-      .match $interval
-        1 {{Every month on the {$nthrev} {$weekday}}}
-        2 {{Every other monh on the {$nthrev} {$weekday}}}
-        * {{Every {$interval} months on the {$nthrev} {$weekday}}}
-    yearlydate: |
-      .input {$interval :integer}
-      .input {$date :integer}
-      .input {$day :ordinal}
-      .local $month = {$date :month month=long}
-      .match $interval
-        1 {{Every year on the {$day} of {$month}}}
-        2 {{Every other year on the {$day} of {$month}}}
-        * {{Every {$interval} years on the {$day} of {$month}}}
-    yearlymonthday: |
-      .input {$interval :integer}
-      .input {$date :integer}
-      .input {$nth :ordinal}
-      .local $weekday = {$date :weekday weekday=long}
-      .local $month = {$date :month month=long}
-      .match $interval
-        1 {{Every year on the {$nth} {$weekday} of {$month}}}
-        2 {{Every other year on the {$nth} {$weekday} of {$month}}}
-        * {{Every {$interval} years on the {$nth} {$weekday} of {$month}}}
-    yearlymonthdayreverse: |
-      .input {$interval :integer}
-      .input {$date :integer}
-      .input {$nthrev :ordinal order=reverse}
-      .local $weekday = {$date :weekday weekday=long}
-      .local $month = {$date :month month=long}
-      .match $interval
-        1 {{Every year on the {$nthrev} {$weekday} of {$month}}}
-        2 {{Every other year on the {$nthrev} {$weekday} of {$month}}}
-        * {{Every {$interval} years on the {$nthrev} {$weekday} of {$month}}}
-    weekly: |
-      .input {$interval :integer}
-      .match $interval
-        1 {{Every week}}
-        2 {{Every other week}}
-        * {{Every {$interval} weeks}}
-  props:
-    freq:
-      name: "Frequency"
-      vals:
-        secondly: "Secondly"
-        minutely: "Minutely"
-        hourly: "Hourly"
-        daily: "Daily"
-        weekly: "Weekly"
-        monthly: "Monthly"
-        yearly: "Yearly"
-    interval:
-      name: "Interval"
-    duration:
-      name: "Duration"
-      vals:
-        date:
-          name: "Until specified date"
-          param: "End of recurrence"
-        count:
-          name: "Repetition count"
-          param: "Amount of events"
-        forever: "Forever"
-    rrule: "RRULE"
-    rdate: "RDATE"
-    exdate: "EXDATE"
-    by:
-      month:
-        limit:
-          enable: "Only during specific months"
-          name: "Months"
-        expand:
-          enable: "Specify month(s) of the year"
-          name: "Months"
-      weekno:
-        expand:
-          enable: "Specify weeks(s) of the year"
-          name: "Week numbers"
-      yearday:
-        limit:
-          enable: "Only on specific days of the year"
-          name: "Days of the year"
-        expand:
-          enable: "Specify day(s) of the year"
-          name: "Days of the year"
-      monthday:
-        limit:
-          enable: "Only on specific days of the month"
-          name: "Days of the month"
-        expand:
-          enable: "Specify day(s) of the month"
-          name: "Days of the month"
-      day:
-        dayname:
-          limit:
-            enable: "Only on specific days of the week"
-            name: "Weekdays"
-          expand:
-            enable: "Specify day(s) of the week"
-            name: "Weekdays"
-        numeric:
-          limit:
-            enable: "Only on specific days of the week"
-            name: "Weekdays"
-          expand:
-            enable: "Specify weekday(s)"
-            name: "Weekdays"
-      hour:
-        limit:
-          enable: "Only during specific hours of the day"
-          name: "Hours of the day"
-        expand:
-          enable: "Specify hour(s) of the day"
-          name: "Hours of the day"
-      minute:
-        limit:
-          enable: "Only during specific minutes of the hour"
-          name: "Minutes of the hour"
-        expand:
-          enable: "Specify minute(s) of the hour"
-          name: "Minutes of the hour"
-      second:
-        limit:
-          enable: "Only during specific seconds of the minute"
-          name: "Seconds of the minute"
-        expand:
-          enable: "Specify seconds(s) of the minute"
-          name: "Seconds of the minute"
 
 date:
   title: "日付を選択"
@@ -305,7 +145,7 @@ user:
   id:
     display: "ユーザーのID"
     inline: "ID: {$id}"
-  creation: "Registered on {$date :date length=short} at {$date :time precision=minute}"
+  creation: "Registered on {$date :date dateStyle=short format=custom} at {$date :date timeStyle=short format=custom}"
   action:
     enable: "Enable account"
     disable: "Disable account"
@@ -334,7 +174,7 @@ invite:
   date:
     creation:
       display: "作成の日付"
-      inline: "Created on {$date :date length=short} at {$date :time precision=minute} by {$name}"
+      inline: "Created on {$date :date dateStyle=short format=custom} at {$date :date timeStyle=short format=custom} by {$name}"
     expiry:
       display: "Expiry Date"
       today: |
@@ -343,11 +183,11 @@ invite:
         .input {$minutes :integer}
 
         .match $hours $minutes
-          0 1 {{Expires at {$date :time precision=minute} ({$minutes} minute left)}}
-          0 * {{Expires at {$date :time precision=minute} ({$minutes} minutes left)}}
-          1 * {{Expires at {$date :time precision=minute} ({$hours} hour left)}}
-          * * {{Expires at {$date :time precision=minute} ({$hours} hours left)}}
-      elsewhen: "Expires on {$date :date length=short} at {$date :time precision=minute}"
+          0 1 {{Expires at {$date :date timeStyle=short format=custom} ({$minutes} minute left)}}
+          0 * {{Expires at {$date :date timeStyle=short format=custom} ({$minutes} minutes left)}}
+          1 * {{Expires at {$date :date timeStyle=short format=custom} ({$hours} hour left)}}
+          * * {{Expires at {$date :date timeStyle=short format=custom} ({$hours} hours left)}}
+      elsewhen: "Expires on {$date :date dateStyle=short format=custom} at {$date :date timeStyle=short format=custom}"
   expiry:
     display: "Invite expiration"
     preset:
@@ -398,8 +238,8 @@ session:
     lan: "ローカルローカルネットワーク"
     unknown: "Unknown location"
   active:
-    today: "Last active at {$date :time precision=second}"
-    elsewhen: "Last active on {$date :date length=short} at {$date :time precision=second}"
+    today: "Last active at {$date :date timeStyle=short format=custom}"
+    elsewhen: "Last active on {$date :date dateStyle=short format=custom} at {$date :date timeStyle=short format=custom}"
 
 file:
   display: "ファイル"
@@ -693,8 +533,20 @@ settings:
       month: "Animate month selection"
   language:
     title: "言語"
-    display: "表示言語"
-    default: "デフォルト（{$default}）"
+    display:
+      label: "表示言語"
+      default: "デフォルト（{$default}）"
+    date:
+      label: "日付フォーマット"
+      default: "デフォルト（{$default}）"
+    time:
+      label: "時刻フォーマット"
+      default: "デフォルト（{$default}）"
+      options:
+        h11: "12時制、{$midnight}の深夜"
+        h12: "12時制、{$midnight}の深夜"
+        h23: "24時制、{$midnight}の深夜"
+        h24: "24時制、{$midnight}の深夜"
   dev:
     title: "デベロッパー"
     deauthorize: "Deauthorize"

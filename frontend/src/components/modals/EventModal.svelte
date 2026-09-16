@@ -1,5 +1,4 @@
 <script lang="ts">
-  import Button from "../interactive/Button.svelte";
   import ColorInput from "../forms/ColorInput.svelte";
   import DateTimeInput from "../forms/DateTimeInput.svelte";
   import EditableModal from "./EditableModal.svelte";
