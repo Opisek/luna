@@ -279,7 +279,7 @@
     {/each}
   </div>
   {#snippet buttons()}
-      <IconButton onClick={() => success(currentColor)} color={ColorKeys.Success} alt={t("button.confirm")}><Check/></IconButton>
-      <IconButton onClick={failure} color={ColorKeys.Danger} alt={t("button.cancel")}><X/></IconButton>
+      <IconButton onClick={() => success(currentColor)} color={ColorKeys.Success} alt={t("button.confirm")} canRenderAsButton={true}><Check/></IconButton>
+      <IconButton onClick={failure} color={ColorKeys.Danger} alt={t("button.cancel")} canRenderAsButton={true}><X/></IconButton>
   {/snippet}
 </Modal>

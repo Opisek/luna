@@ -217,7 +217,7 @@
         },
         {
           value: "local",
-          name: t("ical.location.path"),
+          name: t("ical.location.local"),
         },
       ]}/>
     {/if}

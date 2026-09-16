@@ -276,7 +276,7 @@
     abortOauthAuthorization();
   }}
 >
-  <TextInput bind:value={name} name="name" placeholder="Name"/>
+  <TextInput bind:value={name} name="name" placeholder={t("form.name")}/>
   <SelectButtons bind:value={inputType} name="ical_location" placeholder={t("form.wizard.location")} options={[
     {
       value: "link",

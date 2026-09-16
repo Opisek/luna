@@ -1,87 +1,83 @@
 branding:
-  name: "Luna"
+  name: "ルーナ"
   copyright: "Copyright © 2026 Kacper Darowski (Opisek)\nLicensed under TBD"
 
 button:
-  settings: "Settings"
+  settings: "設定"
   add:
-    generic: "Add"
-    event: "Create Event"
-    calendar: "Create Calendar"
-    source: "Add Source"
-  edit: "Edit"
-  delete: "Delete"
+    generic: "作成"
+    event: "予定を作成"
+    calendar: "カレンダーを作成"
+    source: "プロバイダーを追加"
+  edit: "編集"
+  delete: "削除"
   theme:
-    dark: "Toggle dark mode"
-    light: "Toggle light mode"
-  credits: "Credits"
-  refresh: "Refresh"
-  upload: "Upload"
-  download: "Download"
-  clear: "Clear"
-  submit: "Submit"
-  save: "Save"
-  copy: "Copy"
-  close: "Close"
+    dark: "ダークモードに切り替え"
+    light: "ライトモードに切り替え"
+  credits: "クレジット"
+  refresh: "更新"
+  upload: "アップロード"
+  download: "ダウンロード"
+  clear: "クリア"
+  submit: "送信"
+  save: "保存"
+  copy: "コピー"
+  close: "閉じる"
   month:
-    previous: "Previous month"
-    next: "Next month"
-  hide: "Hide"
-  show: "Show"
-  collapse: "Collapse"
-  expand: "Expand"
-  confirm: "Confirm"
-  cancel: "Cancel"
-  reset: "Reset"
-  details: "Details"
-  increment: "Increment"
-  decrement: "Decrement"
-  tooltip: "Tooltip"
+    previous: "前の月"
+    next: "次の月"
+  hide: "非表示"
+  show: "表示"
+  confirm: "確認"
+  cancel: "キャンセル"
+  reset: "リセット"
+  details: "詳細"
+  increment: "増やす"
+  decrement: "減らす"
 
 credits:
-  title: "Credits"
-  sidebar: "Categories"
-  repository: "Luna Repository"
+  title: "クレジット"
+  repository: "ルーナのレポジトリ"
   stack:
-    display: "Tech Stack"
-    subtitle: "Tech Stack and Languages"
+    display: "テックスタック"
+    subtitle: "使用技術"
   frontend:
-    display: "Frontend"
-    subtitle: "Frontend Libraries"
+    display: "フロントエンド"
+    subtitle: "フロントエンドライブラリ"
   backend:
-    display: "Backend"
-    subtitle: "Backend Libraries"
+    display: "バックエンド"
+    subtitle: "バックエンドライブラリ"
   themes:
-    display: "Themes"
-    subtitle: "Theme Color Palettes"
+    display: "テーマ"
+    subtitle: "テーマのカラーパレット"
   fonts:
-    display: "Fonts"
-    subtitle: "Pre-installed Fonts"
-  source: "Source"
+    display: "フォント"
+    subtitle: "プリインストール済みのフォント"
+  source: "プロバイダー"
 
 notification:
   hover: "Hover to view details"
   success:
     save: "Saved successfully"
     delete: "Deleted successfully"
-    clipboard: "Copied to clipboard"
+    clipboard: "クリップボードにコピーしました。"
   error:
-    clipboard: "Could not copy to clipboard"
+    clipboard: "クリップボードにコピーすることができませんでした。"
 
 confirmation:
-  title: "Confirmation"
+  title: "確認"
   notice: "Notice"
   irreversible: "This action is irreversible."
   password:
-    title: "Authentication"
+    title: "認証"
     prompt: "To perform this action, you must authenticate yourself with your password."
   
 login:
   title:
-    login: "Login"
-    register: "Register"
-  password: "Password"
-  repeat: "Repeat password"
+    login: "ログイン"
+    register: "レジスター"
+  password: "パスワード"
+  repeat: "パスワード確認"
   invite: "Invite code"
   remember: "Remember me"
   link:
@@ -91,16 +87,16 @@ login:
   closed: "To register, please input an invite code.\nPlease contact the administrator if you don't have one."
 
 form:
-  desc: "Description"
-  name: "Name"
+  desc: "説明"
+  name: "名前"
   wizard:
-    location: "What do you want to add?"
+    location: "どのプロバイダーを追加したいですか？"
   advanced: "Click to enter advanced mode"
 
 recurrence:
-  repeats: "Repeats"
+  repeats: "繰り返し"
   presets:
-    custom: "Custom"
+    custom: "カスタム"
     daily: |
       .input {$interval :integer}
       .match $interval
@@ -263,58 +259,58 @@ recurrence:
           name: "Seconds of the minute"
 
 date:
-  title: "Pick Date"
-  allDay: "All-day"
-  start: "Start"
-  end: "End"
-  date: "Date"
+  title: "日付を選択"
+  allDay: "終日"
+  start: "開始日"
+  end: "終了日"
+  date: "日付"
 
 time:
-  title: "Pick Time"
-  am: "AM"
-  pm: "PM"
-  ampm: "AM/PM"
+  title: "時刻を選択"
+  am: "午前"
+  pm: "午後"
+  ampm: "午前／午後"
 
 color:
-  display: "Color"
-  code: "Color code"
-  title: "Pick Color"
+  display: "色"
+  code: "カラーコード"
+  title: "色を選択"
   preset:
-    default: "Default color"
-    red: "Red"
-    orange: "Orange"
-    yellow: "Yellow"
-    green: "Green"
-    blue: "Blue"
-    purple: "Purple"
-    pink: "Pink"
+    default: "デフォルトの色"
+    red: "赤"
+    orange: "オレンジ"
+    yellow: "黄色"
+    green: "緑"
+    blue: "青"
+    purple: "紫"
+    pink: "ピンク"
 
 nav:
-  home: "Home"
-  back: "Go Back"
-  continue: "Continue"
+  home: "ホーム"
+  back: "前へ"
+  continue: "次へ"
 
 error:
-  code: "Error {$code}"
+  code: "エラー{$code}"
   generic: "An error occurred."
   unknown: "Unknown error"
-  retry: "Please try again"
+  retry: "もう一度試してください"
   unavailable: "Feature not yet available"
   unimplemented: "Not implemented"
   empty: "Nothing to show"
 
 user:
-  username: "Username"
-  email: "E-Mail address"
+  username: "ユーザー名"
+  email: "メール"
   id:
-    display: "User ID"
+    display: "ユーザーのID"
     inline: "ID: {$id}"
   creation: "Registered on {$date :date length=short} at {$date :time precision=minute}"
   action:
     enable: "Enable account"
     disable: "Disable account"
   status:
-    admin: "Administrator"
+    admin: "アドミニストレーター"
     disabled: "Account disabled"
     verified: "Verified E-Mail address"
   pfp:
@@ -337,7 +333,7 @@ invite:
     inline: "ID: {$id}"
   date:
     creation:
-      display: "Creation Date"
+      display: "作成の日付"
       inline: "Created on {$date :date length=short} at {$date :time precision=minute} by {$name}"
     expiry:
       display: "Expiry Date"
@@ -355,36 +351,36 @@ invite:
   expiry:
     display: "Invite expiration"
     preset:
-      1h: "1 hour"
-      3h: "3 hours"
-      1d: "1 day"
-      3d: "3 days"
-      7d: "7 days"
+      1h: "１時間"
+      3h: "３時間"
+      1d: "１日間"
+      3d: "３日間"
+      7d: "７日か"
 
 session:
   title: 
     view:
-      user: "Session details"
-      api: "API Token"
+      user: "セッションの詳細"
+      api: "APIトーケン"
     create:
-      api: "Create API Token"
+      api: "APIトーケンを作成"
     edit:
-      api: "Edit API Token"
+      api: "APIトーケンを編集"
   confirm:
     delete:
       user: "Are you sure you want to deauthorize this session?"
       api: "Are you sure you want to delete API token {$name}?"
   agent:
     user: "User agent"
-    api: "Name"
+    api: "名前"
   date:
-    creation: "Creation date"
+    creation: "作成の日付"
     latest: "Latest activity"
   ip:
     initial: "Initial IP address"
     latest: "Latest IP address"
   id:
-    display: "Session ID"
+    display: "セッションのID"
     inline: "ID: {$id}"
   permissions:
     subtitle: "Permissions"
@@ -396,53 +392,49 @@ session:
     delete: "Could not delete API token {$name}: {$msg}"
     password: "You must provide your password to create an API token."
   clipboard: "API token copied to clipboard"
-  current: "Current session"
+  current: "現在のセッション"
   location:
-    host: "Local host"
-    lan: "Local network"
+    host: "ローカルホスト"
+    lan: "ローカルローカルネットワーク"
     unknown: "Unknown location"
   active:
     today: "Last active at {$date :time precision=second}"
     elsewhen: "Last active on {$date :date length=short} at {$date :time precision=second}"
 
 file:
-  display: "File"
-  id: "File ID"
+  display: "ファイル"
+  id: "ファイルのID"
   error:
     fetch: "Could not get file: {$msg}"
 
-font:
-  error:
-    fetch: "Could not get font: {$msg}"
-
 caldav:
   display: "CalDav"
-  url: "CalDav URL"
+  url: "CalDavのURL"
 
 ical:
   display: "iCal"
   location:
-    remote: "Internet link"
-    database: "Upload file"
-    local: "Server filepath"
-  url: "iCal URL"
-  file: "iCal File"
-  path: "iCal Path"
+    remote: "トリンク"
+    database: "ファイル"
+    local: "サーバー上のファイルパス"
+  url: "iCalのURL"
+  file: "iCalのファイル"
+  path: "iCalのパス"
 
 google:
-  display: "Google Calendar"
+  display: "Googleカレンダー"
 
 auth:
-  type: "Authentication type"
+  type: "認証タイプ"
   none:
-    display: "None"
+    display: "なし"
   basic:
-    display: "Password"
-    username: "Username"
-    password: "Password"
+    display: "パスワード"
+    username: "ユーザー名"
+    password: "パスワード"
   bearer:
-    display: "Token"
-    token: "Token"
+    display: "トーケン"
+    token: "トーケン"
   oauth:
     display: "OAuth 2.0"
     different: "Choose a different account"
@@ -451,7 +443,7 @@ auth:
     google:
       unconfigured: "The administrator of this Luna instance has not set up Google Calendar integration yet."
     tokens:
-      title: "Choose account"
+      title: "アカウントを選択"
       list: "Authorized accounts"
       id: "ID: {$id}"
       use: "Use account"
@@ -478,14 +470,13 @@ auth:
         details: "Could not get details for OAuth 2.0 client {$name}: {$msg}"
 
 source:
-  display: "Source"
-  aria: "Source \"{$name}\""
-  id: "Source ID"
+  display: "プロバイダー"
+  id: "プロバイダーのID"
   title:
-    view: "Source"
-    create: "Add Source"
-    wizard: "Source Wizard"
-    edit: "Edit Source"
+    view: "プロバイダー"
+    create: "プロバイダーを追加"
+    wizard: "プロバイダーウィザード"
+    edit: "プロバイダー編集"
   confirm:
     delete: "Are you sure you want to delete source {$name}?"
   error:
@@ -504,13 +495,12 @@ source:
       tooltip: "An error occurred trying to retrieve calendars from this source."
 
 calendar:
-  display: "Calendar"
-  aria: "Calendar \"{$name}\""
-  id: "Calendar ID"
+  display: "カレンダー"
+  id: "カレンダーのID"
   title:
-    view: "Calendar"
-    create: "Create Calendar"
-    edit: "Edit Calendar"
+    view: "カレンダー"
+    create: "カレンダーを作成"
+    edit: "カレンダーを編集"
   confirm:
     delete: "Are you sure you want to delete calendar {$name}?"
   error:
@@ -535,16 +525,13 @@ calendar:
           * {{and {$count} more}}
 
 event:
-  display: "Event"
-  aria: "Event \"{$name}\""
-  id: "Event ID"
-  parent:
-    id: "Parent event ID"
+  display: "予定"
+  id: "予定のID"
   title:
-    view: "Event"
-    create: "Create Event"
-    edit: "Edit Event"
-    copy: "Copy Event"
+    view: "予定"
+    create: "予定を作成"
+    edit: "予定を編集"
+    copy: "予定をコピー"
   copy:
     instruction: "Select on which days the event should take place."
   confirm:
@@ -558,13 +545,13 @@ event:
     copy: "Could not copy event {$name}: {$msg}"
   recurrence:
     affect:
-      this: "This event"
-      thisandfuture: "This and future events"
-      all: "All events"
+      this: "この予定"
+      thisandfuture: "以降全ての予定"
+      all: "全ての予定"
     edit:
-      title: "Editing recurring event"
+      title: "繰り返しの予定を編集"
     delete:
-      title: "Deleting recurring event"
+      title: "繰り返しの予定を削除"
 
 reachability:
   database: "The database cannot be reached."
@@ -575,145 +562,143 @@ reachability:
 
 days:
   full: |
-    {{{$day :number}}}
+    {{{$day :number numberingSystem=fullwide}日}}
   short: |
     {{{$day :number}}}
 
 weekdays:
   full:
-    monday: "Monday"
-    tuesday: "Tuesday"
-    wednesday: "Wednesday"
-    thursday: "Thursday"
-    friday: "Friday"
-    saturday: "Saturday"
-    sunday: "Sunday"
+    monday: "月曜日"
+    tuesday: "火曜日"
+    wednesday: "水曜日"
+    thursday: "木曜日"
+    friday: "金曜日"
+    saturday: "土曜日"
+    sunday: "日曜日"
   short:
-    monday: "Mon"
-    tuesday: "Tue"
-    wednesday: "Wed"
-    thursday: "Thu"
-    friday: "Fri"
-    saturday: "Sat"
-    sunday: "Sun"
+    monday: "月"
+    tuesday: "火"
+    wednesday: "水"
+    thursday: "木"
+    friday: "金"
+    saturday: "土"
+    sunday: "日"
 
 months:
   full:
-    january: "January"
-    february: "February"
-    march: "March"
-    april: "April"
-    may: "May"
-    june: "June"
-    july: "July"
-    august: "August"
-    september: "September"
-    october: "October"
-    november: "November"
-    december: "December"
+    january: "１月"
+    february: "２月"
+    march: "３月"
+    april: "４月"
+    may: "５月"
+    june: "６月"
+    july: "７月"
+    august: "８月"
+    september: "９月"
+    october: "１０月"
+    november: "１１月"
+    december: "１２月"
   short:
-    january: "Jan"
-    february: "Feb"
-    march: "Mar"
-    april: "Apr"
-    may: "May"
-    june: "Jun"
-    july: "Jul"
-    august: "Aug"
-    september: "Sep"
-    october: "Oct"
-    november: "Nov"
-    december: "Dec"
+    january: "1"
+    february: "2"
+    march: "3"
+    april: "4"
+    may: "5"
+    june: "6"
+    july: "7"
+    august: "8"
+    september: "9"
+    october: "10"
+    november: "11"
+    december: "12"
 
 years:
   full: |
-    {{{$year :number}}}
+    {{{$year :number numberingSystem=fullwide}年}}
   short: |
     {{{$year :number}}}
   range: |
-    {{{$start :number}–{$end :number}}}
+    {{{$start :number numberingSystem=fullwide}年〜{$end :number numberingSystem=fullwide}年}}
 
 scope:
-  today: "Today"
-  day: "Day"
-  week: "Week"
-  month: "Month"
+  today: "今日"
+  day: "日"
+  week: "週"
+  month: "月"
 
 settings:
-  title: "Settings"
-  sidebar: "Categories"
+  title: "設定"
   account:
-    title: "Account"
+    title: "アカウント"
     pfp:
-      display: "Profile Picture"
+      display: "プロフィール画像"
       type:
         gravatar: "Gravatar"
-        database: "Upload file"
-        remote: "Internet link"
-        luna: "Luna art"
-      file: "Profile picture file"
-      link: "Profile picture link"
+        database: "アップロード"
+        remote: "トリンク"
+        luna: "ルナの美術"
+      file: "プロフィール画像のファイル"
+      link: "プロフィール画像のリンク"
       gravatar:
-        default: "Use default gravatar profile picture"
+        default: "デフォルトのGravatar画像を使用"
     searchable: "Allow other users to find me"
     password:
-      new: "New Password"
-      confirm: "Confirm New Password"
+      new: "新しいパスワード"
+      confirm: "新しいパスワード確認"
     delete:
       confirm: "Are you sure you want to delete your account?"
       details: "All your data will be deleted."
       error: "Could not delete your account: {$msg}"
       success: "Successfully deleted your account."
   appearance:
-    title: "Appearance"
+    title: "表示"
     calendar:
-      subtitle: "Calendar Appearance"
+      subtitle: "カレンダーの表示"
       fill:
         allDay: "Fill all-day events"
         nonAllDay: "Fill non-all-day events"
-      small: "Display small calendar"
+      small: "小さいカレンダーを表示"
       dynamic:
         main: "Dynamic calendar row count"
         small: "Dynamic small calendar row count"
       week:
-        numbers: "Display week numbers"
-        first: "First day of the week"
+        numbers: "週数を表示"
+        first: "週の始まり"
     site:
-      subtitle: "Site Appearance"
+      subtitle: "サイトの表示"
       frosted: "Translucent windows"
-      rounded: "Rounded corners"
-      buttons: "Use textual buttons"
-      scaling: "Scaling"
+      rounded: "丸角"
+      buttons: "テクストのボタンを使用"
+      scaling: "ズーム"
       theme:
-        light: "Light theme"
-        dark: "Dark theme"
-        sync: "Synchronize theme with system"
+        light: "ライトテーマ"
+        dark: "ダークテーマ"
+        sync: "システムのモードを使用"
       font:
-        text: "Text font"
-        mono: "Monospaced font"
+        text: "テクストのフォント"
+        mono: "等幅フォント"
     animations:
-      subtitle: "Animations"
+      subtitle: "アニメーション"
       duration:
         display: "Animation duration"
         info: "To disable animations, set the animation duration to 0%."
       calendar:
-        main: "Animate calendar"
-        small: "Animate small calendar"
+        main: "カレンダーのアニメーション"
+        small: "小さいカレンダーのアニメーション"
       month: "Animate month selection"
-      reduced: "Animations are disabled by a browser preference."
   language:
-    title: "Language"
-    display: "Display Language"
-    default: "Default ({$default})"
+    title: "言語"
+    display: "表示言語"
+    default: "デフォルト（{$default}）"
   dev:
-    title: "Developer"
+    title: "デベロッパー"
     deauthorize: "Deauthorize"
-    ids: "Display IDs"
+    ids: "IDを表示"
     api:
-      list: "API tokens"
-      new: "Create an API token"
+      list: "APIトーケン"
+      new: "APIトーケンを作成"
   users:
-    title: "Users"
+    title: "ユーザー"
     list:
       users: "Registered users"
       invites: "Active invites"
@@ -735,11 +720,11 @@ settings:
       disable: "Could not disable acount: {$msg}"
       delete: "Could not delete account: {$msg}"
   themes:
-    title: "Themes"
-    list: "Installed themes"
+    title: "テーマ"
+    list: "インストール済みのテーマ"
     current: "Looking to change your current theme? Head to the \"Appearance\" tab."
-    new: "Install a theme"
-    upload: "Upload theme"
+    new: "テーマをインストール"
+    upload: "テーマをアップロード"
     success:
       install: "Theme installed successfully"
       uninstall: "Theme uninstalled successfully"
@@ -751,11 +736,11 @@ settings:
       uninstall: "Are you sure you want to uninstall the theme {$name}?"
       overwrite: "A theme with the same file name already exists.\nContinuing will overwrite that the.\nAre you sure you want to proceed?"
   fonts:
-    title: "Fonts"
-    list: "Installed fonts"
+    title: "フォント"
+    list: "インストール済みのフォント"
     current: "Looking to change your current font? Head to the \"Appearance\" tab."
-    new: "Install a font"
-    upload: "Upload font"
+    new: "フォントをインストール"
+    upload: "フォントをアップロード"
     success:
       install: "Font installed successfully"
       uninstall: "Font uninstalled successfully"
@@ -771,26 +756,26 @@ settings:
     new: "Register an OAuth 2.0 client"
     list: "Registered OAuth 2.0 clients"
   backups:
-    title: "Backups"
-    create: "Create a backup"
-    file: "Upload a backup file"
-    restore: "Restore from a backup"
+    title: "バックアップ"
+    create: "バックアップを作成"
+    file: "バックアップのファイルをアップロード"
+    restore: "バクアップから復元"
     restart: "The restore operation was performed successfully.\nIt is recommended to restart the backend and database now."
     confirm: "Are you sure you want to restore from the backup file?\nEverything will be overwritten."
     error:
       file: "Missing or corrupted backup file"
       restore: "Failed to restore from the backup: {$msg}"
     encryption:
-      title: "Backup encryption"
+      title: "バックアップの暗号化"
       desc:
         create: "For security purposes, it is recommended to protect the backup using a passphrase."
         restore: "If the backup has been encrypted during its creation, you need to input the passphrase."
       enable:
         create: "Enable backup encryption"
         restore: "The backup is encrypted"
-      password: "Encryption passphrase"
+      password: "暗号化のパスワード"
   admin:
-    title: "Administrative"
+    title: "アドミニストレーション"
     confirm:
       reset: "Are you sure you want to reset all global settings?"
     registration:
@@ -819,18 +804,18 @@ settings:
         debug: "Debug"
     reset: "Reset all global settings"
   danger:
-    title: "Danger Zone"
+    title: "危険な操作"
     reset:
-      button: "Reset all my preferences"
+      button: "自分の設定をリセット"
       confirmation: "Are you sure you want to reset all your preferences?"
       details: "Your account will remain intact."
-    delete: "Delete my account"
+    delete: "自分のアカウントを削除"
   logout:
-    title: "Logout"
+    title: "ログアウト"
     button:
-      current: "Log out of my account"
-      all: "Log out from all devices"
-      single: "Log out"
+      current: "このデバイスからログアウト"
+      all: "全てのデバイスからログアウト"
+      single: "ログアウト"
     confirm:
       current: "Are you sure you want to log out?"
       all:
@@ -866,7 +851,7 @@ validation:
   file:
     empty: "No files selected"
     multiple: "Too many files selected"
-    null: "File is null"
+    null: "ファイルはヌルです。"
     size: "File must not be larger than {$size}."
     type: "File must be of type \"{$type}\""
     invalid: "Invalid file format"
@@ -890,28 +875,28 @@ repository:
     hidden: "Event {$name} was added to a hidden calendar."
 
 perms:
-  read_events: "Read events"
-  add_events: "Create events"
-  edit_events: "Edit events"
-  delete_events: "Delete events"
-  read_calendars: "Read calendars"
-  add_calendars: "Create calendars"
-  edit_calendars: "Edit calendars"
-  delete_calendars: "Delete calendars"
-  read_sources: "Read sources"
-  add_sources: "Add sources"
-  edit_sources: "Edit sources"
-  delete_sources: "Delete sources"
+  read_events: "予定を表示"
+  add_events: "予定を作成"
+  edit_events: "予定を編集"
+  delete_events: "予定を削除"
+  read_calendars: "カレンダーを表示"
+  add_calendars: "カレンダーを作成"
+  edit_calendars: "カレンダーを編集"
+  delete_calendars: "カレンダーを削除"
+  read_sources: "プロバイダーを表示"
+  add_sources: "プロバイダーを追加"
+  edit_sources: "プロバイダーを編集"
+  delete_sources: "プロバイダーを削除"
   manage_invites: "Manage registration invites"
-  manage_users: "Manage users"
+  manage_users: "ユーザーを管理"
   manage_oauth_clients: "Manage OAuth 2.0 clients"
   manage_global_settings: "Manage global settings"
-  manage_user_settings: "Manage user preferences"
-  manage_sessions: "Manage sessions"
-  manage_resources: "Manage fonts and themes"
-  create_backups: "Create backups"
-  restore_backups: "Restore backups"
-  administrative: "Administrative"
+  manage_user_settings: "ユーザー設定を管理"
+  manage_sessions: "セッションを管理"
+  manage_resources: "フォントとテーマを管理"
+  create_backups: "バックアップを作成"
+  restore_backups: "バックアップから復元"
+  administrative: "アドミニストレーション"
 
 numbers:
   ordinal:

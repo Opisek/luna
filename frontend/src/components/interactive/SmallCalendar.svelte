@@ -6,6 +6,7 @@
   import { getSettings } from "$lib/client/data/settings.svelte";
   import { svelteFlyInHorizontal, svelteFlyOutHorizontal } from "$lib/client/animations";
   import { SvelteSet } from "svelte/reactivity";
+  import { getDayName } from "$lib/common/humanization";
 
   const today = new Date();
 
@@ -130,7 +131,7 @@
   }
 </style>
 
-{#if settings.userSettings[UserSettingKeys.AnimateSmallCalendarSwipe]}
+{#if settings.userSettings[UserSettingKeys.DynamicSmallCalendarRows]}
   <div class="animation">
     {#each [ displayDays ] as currentDays (viewIteration)}
       {@render grid(currentDays, amountOfRows, true)}
@@ -160,7 +161,7 @@
         onclick={() => (onDayClick(day))}
         use:focusIndicator
       >
-        {day.getDate()}
+        {getDayName(day.getDate(), true)}
       </button>
     {/each}
   </div>

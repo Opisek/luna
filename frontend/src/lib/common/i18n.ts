@@ -3,7 +3,7 @@ import { register, init, getLocaleFromNavigator, locales, locale, waitLocale, re
 import { getLocaleDir } from "messageformat/functions";
 import { parse } from "yaml";
 
-const languages = [ "en-US", "de-DE", "pl-PL" ];
+const languages = [ "en-US", "de-DE", "pl-PL", "ja-JP" ];
 
 languages.forEach(x => register(x, () => import(`../../lang/${x}.yaml?raw`).then(m => parse(m.default))));
 register("en-DE", () => import(`../../lang/en-US.yaml?raw`).then(m => parse(m.default))); // This is a cheat to get a DD/MM/YYYY format with English. It will be removed once a better method is developed.
@@ -44,6 +44,22 @@ registerMessageFunction('ordinal', (ctx, options, operand) => {
     dir: getLocaleDir(dtf.resolvedOptions().locale),
     // @ts-ignore
     toString: () => t(`numbers.ordinal.${options.order ?? "normal"}`, { values: { num: operand }, locale: locale }),
+  };
+});
+
+registerMessageFunction('number', (ctx, options, operand) => {
+    // @ts-ignore
+  const dtf = new Intl.NumberFormat(ctx.locales, {
+    numberingSystem: options.numberingSystem ?? 'native',
+    style: options.style ?? "decimal",
+    useGrouping: options.useGrouping ?? false,
+  });
+
+  return {
+    type: 'string',
+    dir: getLocaleDir(dtf.resolvedOptions().locale),
+    // @ts-ignore
+    toString: () => dtf.format(operand),
   };
 });
 
