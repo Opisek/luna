@@ -231,6 +231,7 @@ export const draggable = (node: HTMLElement, data: { ownClass: string, childClas
       phantom.style.order = node.style.order;
       phantom.style.height = `${lastChildBoundingRect.bottom - boundingRect.top}px`;
       phantom.style.width = `${boundingRect.width}px`;
+      phantom.style.flexShrink = "0";
       parent.replaceChild(phantom, node);
 
       myElementGroup.forEach(x => {
