@@ -950,29 +950,30 @@ export class Repository {
     if (!originalEvent) return;
     this.eventsMap.delete(id);
 
-    // remove from cache
-    // TODO: affectRecurrence for removeEventFromCache too!
-    const months = this.determineEventMonths(originalEvent);
-    for (const month of months) this.removeEventFromCache(originalEvent, month);
-
-    // remove from display
+    // find all events that need to be removed locally (relevant in case of recurrences)
+    let allAffectedEvents: EventModel[];
     switch (affectRecurrence) {
-      case "this":
-        this.events.splice(this.events.findIndex((event) => event.id === id), 1);
+      default:
+        allAffectedEvents = this.events.filter(event => event.id === id);
         break;
       case "thisandfuture":
-        this.events = this.events.filter((event) => !(
-          event.id === id ||
-          (event.parent_id != "" && event.parent_id == originalEvent.parent_id && event.date.start.getTime() > originalEvent.date.start.getTime())
-        ))
+        allAffectedEvents = this.events.filter(event => event.id === id || (event.parent_id != "" && event.parent_id == originalEvent.parent_id && event.date.start.getTime() > originalEvent.date.start.getTime()));
         break
       case "all":
-        this.events = this.events.filter((event) => !(
-          event.id === id ||
-          (event.parent_id != "" && event.parent_id == originalEvent.parent_id)
-        ))
+        allAffectedEvents = this.events.filter(event => event.id === id || (event.parent_id != "" && event.parent_id == originalEvent.parent_id));
         break
     }
+    const allAffectedEventIdsSet = new Set(allAffectedEvents.map(event => event.id));
+
+    // remove from cache
+    allAffectedEvents.forEach(event => {
+      const months = this.determineEventMonths(event);
+      for (const month of months) this.removeEventFromCache(event, month);
+      this.eventsMap.delete(event.id);
+    })
+
+    // remove from display
+    this.events = this.events.filter(event => !allAffectedEventIdsSet.has(event.id));
 
     this.saveCache();
   }
