@@ -75,6 +75,8 @@
       event.date.start.getFullYear() == date.getFullYear()
     ) return;
 
+    const affectedRecurrences = event.date.recurrence === null ? "this" : await selectAffectedRecurrences(true);
+
     const delta = event.date.end.getTime() - event.date.start.getTime();
 
     event.date.start.setDate(date.getDate());
@@ -83,9 +85,9 @@
 
     event.date.end.setTime(event.date.start.getTime() + delta);
 
-    const affectedRecurrences = event.date.recurrence === null ? "this" : await selectAffectedRecurrences(true);
-
-    repository.editEvent(event, { date: true }, false, affectedRecurrences);
+    repository.editEvent(event, { date: true }, false, affectedRecurrences).catch((err) => {
+      queueNotification(ColorKeys.Danger, err);
+    })
   }
 </script>
 
