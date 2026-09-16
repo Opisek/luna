@@ -179,6 +179,7 @@
     if (event.date.allDay) {
       event.date.end.setDate(event.date.end.getDate() + 1);
     }
+    console.log("edit!");
     if (event.id === "") {
       return await getRepository().createEvent(event).then(() => event).catch(err => {
         throw new Error(t("event.error.create", { values: { name: event.name, msg: err.message } }));

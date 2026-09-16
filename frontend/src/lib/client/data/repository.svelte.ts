@@ -983,7 +983,10 @@ export class Repository {
     const oldId = event.id;
 
     // add to the new calendar
-    // TODO: for recurring event, we need to create the first recurrence => original dtstart(?)
+    if (event.parent_id !== null) {
+      const parent = await this.getEvent(event.parent_id);
+      event.date = parent.date;
+    }
     await this.createEvent(event).catch((err) => { throw err; });
 
     // remove from the old calendar
