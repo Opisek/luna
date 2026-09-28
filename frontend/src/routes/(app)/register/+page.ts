@@ -1,5 +1,5 @@
-import type { PageLoad } from "./$types";
-import { fetchJsonFromEvent } from "$lib/client/net";
+import type { PageLoad } from "$lib/types";
+import { fetchJsonFromEvent } from "$lib/scripts/client/net";
 import type { LoadEvent } from "@sveltejs/kit";
 
 export const load: PageLoad = async (event: LoadEvent) => {

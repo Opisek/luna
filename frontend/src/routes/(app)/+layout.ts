@@ -1,24 +1,24 @@
 import { redirect, type LoadEvent } from "@sveltejs/kit";
-import { fetchJsonFromEvent } from "../../lib/client/net";
+import { fetchJsonFromEvent } from "$lib/scripts/client/net";
 import type { PageLoad } from "./register/$types";
-import { unprivilegedPaths } from "$lib/common/paths";
-import { NoOp } from "$lib/client/placeholders";
-import { isCompatibleWithBackend, VersionCompatibility } from "$lib/common/version";
+import { unprivilegedPaths } from "$lib/scripts/common/paths";
+import { NoOp } from "$lib/scripts/client/placeholders";
+import { isCompatibleWithBackend, VersionCompatibility } from "$lib/scripts/common/version";
 
-import { ActiveSessions } from "$lib/client/data/sessions.svelte";
-import { Connectivity } from "$lib/client/data/connectivity.svelte";
-import { Metadata } from "$lib/client/data/metadata.svelte";
-import { RegistrationInvites } from "$lib/client/data/invites.svelte";
-import { Repository } from "$lib/client/data/repository.svelte";
-import { Theme } from "$lib/client/data/theme.svelte";
-import { Users } from "$lib/client/data/users.svelte";
-import { Settings } from "$lib/client/data/settings.svelte";
-import { OauthClients } from "$lib/client/data/oauth.svelte";
+import { ActiveSessions } from "$lib/scripts/client/data/sessions.svelte";
+import { Connectivity } from "$lib/scripts/client/data/connectivity.svelte";
+import { Metadata } from "$lib/scripts/client/data/metadata.svelte";
+import { RegistrationInvites } from "$lib/scripts/client/data/invites.svelte";
+import { Repository } from "$lib/scripts/client/data/repository.svelte";
+import { Theme } from "$lib/scripts/client/data/theme.svelte";
+import { Users } from "$lib/scripts/client/data/users.svelte";
+import { Settings } from "$lib/scripts/client/data/settings.svelte";
+import { OauthClients } from "$lib/scripts/client/data/oauth.svelte";
 
-import "$lib/common/i18n";
-import { UserSettingKeys } from "../../types/settings";
-import { loadLanguage } from "$lib/common/i18n";
-import { encodeRedirectUrl } from "../../lib/common/url";
+import "$lib/scripts/common/i18n";
+import { UserSettingKeys } from "$lib/types/settings";
+import { loadLanguage } from "$lib/scripts/common/i18n";
+import { encodeRedirectUrl } from "$lib/scripts/common/url";
 
 function getSingletons(version: string, preloadedSettings: { userData: any, userSettings: any, globalSettings: any } | null = null): {
   connectivity: Connectivity;

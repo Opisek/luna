@@ -1,4 +1,4 @@
-import { apiProxy } from '$lib/server/api.server.js';
+import { apiProxy } from '$lib/scripts/server/api.server.js';
 import type { PageServerLoad } from './$types.js';
 
 // This could also be in client's load, but the API call has to travel through

@@ -1,0 +1,298 @@
+<script lang="ts">
+  import EditableModal from "./EditableModal.svelte";
+  import SelectButtons from "../forms/SelectButtons.svelte";
+  import TextInput from "../forms/TextInput.svelte";
+
+  import { EmptySource, NoOp } from "$lib/scripts/client/placeholders";
+  import { getRepository } from "$lib/scripts/client/data/repository.svelte";
+  import { deepCopy, deepEquality, sleep } from "$lib/scripts/common/misc";
+  import { isValidIcalFile, isValidPath, isValidUrl, valid } from "$lib/scripts/client/validation";
+  import { queueNotification } from "$lib/scripts/client/notifications";
+  import FileUpload from "../forms/FileUpload.svelte";
+  import { fetchFileById } from "$lib/scripts/client/net";
+  import { UserSettingKeys } from "$lib/types/settings";
+  import { getSettings } from "$lib/scripts/client/data/settings.svelte";
+  import { ColorKeys } from "$lib/types/colors";
+  import { getOauthClients } from "$lib/scripts/client/data/oauth.svelte";
+  import SelectInput from "../forms/SelectInput.svelte";
+  import Button from "../interactive/Button.svelte";
+  import Spinner from "../decoration/Spinner.svelte";
+  import OauthTokensModal from "./OauthTokensModal.svelte";
+  import Horizontal from "../layout/Horizontal.svelte";
+  import Link from "../forms/Link.svelte";
+  import { t } from "@sveltia/i18n";
+
+  interface Props {
+    showModal?: (source?: SourceModel, anchor?: HTMLElement) => Promise<SourceModel>;
+  }
+
+  let {
+    showModal = $bindable(),
+  }: Props = $props();
+
+  const settings = getSettings();
+  const oauthClients = getOauthClients();
+
+  let showModalInternal: (initial?: SourceModel, edit?: boolean, anchor?: HTMLElement) => Promise<SourceModel> = $state(Promise.reject);
+
+  let sourceDetailed: SourceModel = $state(EmptySource);
+  let originalSource: SourceModel;
+
+  showModal = async (source?: SourceModel, anchor?: HTMLElement): Promise<SourceModel> => {
+    oauthClients.fetch();
+    oauthClients.fetchTokens();
+
+    if (!source) {
+      sourceDetailed = {
+        id: "",
+        name: "",
+        type: "caldav",
+        settings: {
+          location: "remote",
+          file: null,
+          fileId: "",
+        },
+        auth_type: "none",
+        auth: {},
+        can_add_calendars: true,
+      };
+    } else {
+      sourceDetailed = await getRepository().getSourceDetails(source.id, true).catch(err => {
+        queueNotification(ColorKeys.Danger, t("source.error.details", { values: { msg: err.message } }));
+        return Promise.reject();
+      });
+
+      // so that when we edit a caldav source into an ical source, the location selection will default to some value (remote):
+      if (sourceDetailed.type !== "ical") sourceDetailed.settings.location = "remote";
+
+      if (sourceDetailed.type === "ical" && sourceDetailed.settings.location === "database" && sourceDetailed.settings.file !== null) {
+        const fileId = sourceDetailed.settings.file;
+        sourceDetailed.settings.fileId = fileId;
+
+        await fetchFileById(fileId).then(fileList => {
+          sourceDetailed.settings.file = fileList;
+        }).catch(err => {
+          queueNotification(ColorKeys.Danger, t("file.error.fetch", { values: { msg: err.message } }));
+          sourceDetailed.settings.file = null;
+        });
+      } else {
+        sourceDetailed.settings.file = null;
+        sourceDetailed.settings.fileId = "";
+      }
+
+      originalSource = await deepCopy(sourceDetailed);
+      if (sourceDetailed.settings.file !== null) originalSource.settings.file = sourceDetailed.settings.file;
+    }
+
+    return showModalInternal(sourceDetailed, false, anchor);
+  };
+
+  let editMode: boolean = $state(false);
+  let title: string = $derived(sourceDetailed.id ? (editMode ? t("source.title.edit") : t("source.title.view")) : t("source.title.create"));
+
+  const onDelete = async () => {
+    return await getRepository().deleteSource(sourceDetailed.id).then(() => sourceDetailed).catch(err => {
+      throw new Error(t("source.error.delete", { values: { name: sourceDetailed.name, msg: err.message } }));
+    });
+  };
+  const onEdit = async () => {
+    if (sourceDetailed.id === "") {
+      return await getRepository().createSource(sourceDetailed).then(() => sourceDetailed).catch(err => {
+        throw new Error(t("source.error.create", { values: { name: sourceDetailed.name, msg: err.message } }));
+      });
+    } else {
+      if (originalSource.settings.file instanceof String && sourceDetailed.settings.file instanceof FileList && sourceDetailed.settings.file.length === 1 && sourceDetailed.settings.file[0].name === originalSource.settings.file) {
+        sourceDetailed.settings.file = sourceDetailed.settings.file[0];
+      }
+      const changes = {
+        name: sourceDetailed.name != originalSource.name,
+        type: sourceDetailed.type != originalSource.type || !deepEquality(sourceDetailed.settings, originalSource.settings),
+        settings: !deepEquality(sourceDetailed.settings, originalSource.settings),
+        auth: sourceDetailed.auth_type != originalSource.auth_type || !deepEquality(sourceDetailed.auth, originalSource.auth)
+      }
+      return await getRepository().editSource(sourceDetailed, changes).then(() => sourceDetailed).catch(err => {
+        throw new Error(t("source.error.edit", { values: { name: sourceDetailed.name, msg: err.message } }));
+      });
+    }
+  };
+
+  let caldavLinkValidity: Validity = $state(valid);
+  let icalLinkValidity: Validity = $state(valid);
+  let icalFileValidity: Validity = $state(valid);
+  let icalPathValidity: Validity = $state(valid);
+
+  let selectedOauthClient: OauthClientModel | null = $derived(oauthClients.clients.find(client => client.id === sourceDetailed.auth.client_id) ?? null);
+  let selectedOauthClientAuthorized: boolean = $derived(
+    sourceDetailed.auth.tokens_id &&
+    sourceDetailed.auth.tokens_id != "" &&
+    oauthClients.tokenClients.get(sourceDetailed.auth.tokens_id) == sourceDetailed.auth.client_id
+  );
+
+  let oauthPending = $state(false);
+  let performOauthAuhorization: (clientId: string) => Promise<string> = $state(async () => "");
+  let abortOauthAuthorization: () => void = $state(NoOp);
+  async function startOauthAuthorization() {
+    if (!selectedOauthClient) return;
+    if (oauthPending) return;
+    oauthPending = true;
+
+    await sleep(0);
+    
+    await performOauthAuhorization(sourceDetailed.auth.client_id).then((id) => {
+      sourceDetailed.auth.tokens_id = id;
+    }).catch(() => {
+      queueNotification(ColorKeys.Danger, t("auth.oauth.abort"));
+    }).finally(() => {
+      oauthPending = false;
+    });
+  }
+
+  // Whether to enable the submit button
+  let canSubmit: boolean = $derived(
+    sourceDetailed &&
+    sourceDetailed.name !== "" &&
+    sourceDetailed.type !== "" &&
+    (
+      (sourceDetailed.type === "caldav" && caldavLinkValidity?.valid) ||
+      (
+        sourceDetailed.type === "ical" &&
+        (
+          (sourceDetailed.settings.location === "remote"   && icalLinkValidity?.valid) ||
+          (sourceDetailed.settings.location === "database" && icalFileValidity?.valid) ||
+          (sourceDetailed.settings.location === "local"    && icalPathValidity?.valid)
+        )
+      ) ||
+      sourceDetailed.type === "google"
+    ) &&
+    (
+      (sourceDetailed.auth_type === "oauth" && !oauthPending && selectedOauthClientAuthorized) ||
+      (sourceDetailed.auth_type !== "oauth")
+    )
+  );
+</script>
+
+<EditableModal
+  title={title}
+  deleteConfirmation={t("source.confirm.delete", { values: { name: sourceDetailed.name } })}
+  bind:editMode={editMode}
+  bind:showModal={showModalInternal}
+  onModalHide={abortOauthAuthorization}
+  onDelete={onDelete}
+  onEdit={onEdit}
+  submittable={canSubmit}
+>
+  {#if sourceDetailed}
+    <TextInput bind:value={sourceDetailed.name} name="name" placeholder={t("form.name")} editable={editMode} />
+
+    <SelectButtons bind:value={sourceDetailed.type} name="type" placeholder={"Type"} editable={editMode}
+      options={[
+        {
+          value: "caldav",
+          name: t("caldav.display")
+        },
+        {
+          value: "ical",
+          name: t("ical.display")
+        },
+        {
+          value: "google",
+          name: t("google.display")
+        }
+      ]}
+      onClick={(value) => {
+        if (value === "google") sourceDetailed.auth_type = "oauth";
+      }}
+    />
+
+
+    {#if sourceDetailed.type === "ical"}
+      <SelectButtons bind:value={sourceDetailed.settings.location} name="ical_location" placeholder={"File Location"} editable={editMode} options={[
+        {
+          value: "remote",
+          name: t("ical.location.remote"),
+        },
+        {
+          value: "database",
+          name: t("ical.location.database"),
+        },
+        {
+          value: "local",
+          name: t("ical.location.local"),
+        },
+      ]}/>
+    {/if}
+
+    {#if sourceDetailed.type === "caldav"}
+      <TextInput bind:value={sourceDetailed.settings.url} name="caldav_url" placeholder={t("caldav.url")} editable={editMode} validation={isValidUrl} bind:validity={caldavLinkValidity} />
+    {/if}
+    {#if sourceDetailed.type === "ical"}
+      {#if sourceDetailed.settings.location === "remote"}
+        <TextInput bind:value={sourceDetailed.settings.url} name="ical_url" placeholder={t("ical.url")} editable={editMode} validation={isValidUrl} bind:validity={icalLinkValidity} />
+      {:else if sourceDetailed.settings.location === "database"}
+        <FileUpload bind:files={sourceDetailed.settings.file} bind:fileId={sourceDetailed.settings.fileId} name="ical_file" placeholder={t("ical.file")} accept=".ical,.ics,.ifb,.icalendar" editable={editMode} validation={isValidIcalFile} bind:validity={icalFileValidity} />
+        {#if sourceDetailed.settings.fileId && sourceDetailed.settings.file && settings.userSettings[UserSettingKeys.DebugMode]}
+          <TextInput value={sourceDetailed.settings.fileId} name="id" placeholder={t("file.id")} editable={false} />
+        {/if}
+      {:else if sourceDetailed.settings.location === "local"}
+        <TextInput bind:value={sourceDetailed.settings.path} name="ical_path" placeholder={t("ical.path")} editable={editMode} validation={isValidPath} bind:validity={icalPathValidity} />
+      {/if}
+    {/if}
+    
+    {#if !(sourceDetailed.type === "ical" && sourceDetailed.settings.location !== "remote")}
+      {#if sourceDetailed.type !== "google"}
+        <SelectButtons bind:value={sourceDetailed.auth_type} name="auth_type" placeholder={t("auth.type")} editable={editMode} options={[
+          {
+            value: "none",
+            name: t("auth.none.display"),
+          },
+          {
+            value: "basic",
+            name: t("auth.basic.display"),
+          },
+          {
+            value: "bearer",
+            name: t("auth.bearer.display"),
+          },
+          {
+            value: "oauth",
+            name: t("auth.oauth.display"),
+          },
+        ]}/>
+      {/if}
+      {#if sourceDetailed.auth_type === "basic"}
+        <TextInput bind:value={sourceDetailed.auth.username} name="auth_username" placeholder={t("auth.basic.username")} editable={editMode} />
+        <TextInput bind:value={sourceDetailed.auth.password} name="auth_password" placeholder={t("auth.basic.password")} editable={editMode} password={true} />
+      {/if}
+      {#if sourceDetailed.auth_type === "bearer"}
+        <TextInput bind:value={sourceDetailed.auth.token} name="auth_token" placeholder={t("auth.bearer.token")} editable={editMode} password={true} />
+      {/if}
+      {#if sourceDetailed.auth_type === "oauth"}
+          <SelectInput bind:value={sourceDetailed.auth.client_id} name="oauth_client" placeholder={t("auth.oauth.client.display")} editable={editMode} options={oauthClients.clients.map(client => ({ value: client.id, name: client.name }))}/>
+        {#if editMode && sourceDetailed.auth.client_id != "" && selectedOauthClient?.name}
+          <Button color={selectedOauthClientAuthorized ? ColorKeys.Success : ColorKeys.Accent} onClick={startOauthAuthorization} enabled={!oauthPending && !selectedOauthClientAuthorized}>
+            {#if oauthPending}
+              <Spinner/>
+            {:else if selectedOauthClientAuthorized}
+              Authorized
+            {:else}
+              Sign in with {selectedOauthClient?.name}
+            {/if}
+          </Button>
+          {#if selectedOauthClientAuthorized}
+            <Horizontal position="right">
+              <Link onClick={startOauthAuthorization}>{t("auth.oauth.different")}</Link>
+            </Horizontal>
+          {/if}
+        {/if}
+      {/if}
+    {/if}
+
+    {#if sourceDetailed.id && settings.userSettings[UserSettingKeys.DebugMode]}
+      <TextInput value={sourceDetailed.id} name="id" placeholder={t("source.id")} editable={false} />
+    {/if}
+  {/if}
+</EditableModal>
+
+{#if oauthPending}
+  <OauthTokensModal bind:authorize={performOauthAuhorization} bind:abort={abortOauthAuthorization} />
+{/if}

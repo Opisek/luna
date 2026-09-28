@@ -1,0 +1,302 @@
+<script lang="ts">
+  import Label from "./Label.svelte";
+  import VisibilityToggle from "../interactive/VisibilityToggle.svelte";
+
+  import { alwaysValid, valid } from "$lib/scripts/client/validation";
+  import { focusIndicator } from "$lib/scripts/client/decoration";
+  import { NoOp } from "$lib/scripts/client/placeholders";
+  import IconButton from "../interactive/IconButton.svelte";
+  import { Copy, Minus, Plus } from "lucide-svelte";
+  import { queueNotification } from "$lib/scripts/client/notifications";
+  import { ColorKeys } from "$lib/types/colors";
+
+  import { t } from "@sveltia/i18n";
+  import { extendUniqueElementId, generateUniqueElementId } from "$lib/scripts/common/dom";
+
+  let passwordVisible: boolean = $state(false);
+
+  let wrapper: HTMLDivElement | null = $state(null);
+
+  let lastValidationFunction = $state(alwaysValid); // TODO: check if still needed in svelte 5
+  interface Props {
+    value?: string | undefined;
+    placeholder: string;
+    name: string;
+    editable?: boolean;
+    multiline?: boolean;
+    password?: boolean;
+    type?: string;
+    mono?: boolean;
+    displayCopyButton?: boolean;
+    label?: boolean;
+    onChange?: (value: string, event: Event | null) => any;
+    onInput?: (value: string, event: Event | null) => any;
+    onFocus?: () => any;
+    validation?: InputValidation;
+    formatting?: (value: string, event: Event | null) => string;
+    validity?: Validity;
+  }
+
+  let {
+    value = $bindable(),
+    placeholder,
+    name,
+    editable = true,
+    multiline = false,
+    password = false,
+    type = "text",
+    mono = false,
+    displayCopyButton = false,
+    label = true,
+    onChange = NoOp,
+    onInput = NoOp,
+    onFocus = NoOp,
+    validation = alwaysValid,
+    formatting = (value, _) => value,
+    validity = $bindable(valid)
+  }: Props = $props();
+  let uniqueId = $props.id();
+  let inputId = $derived(generateUniqueElementId(["input", type, name], uniqueId));
+  let labelId = $derived(extendUniqueElementId(["label"], inputId))
+
+  let element: HTMLInputElement | HTMLTextAreaElement | null = $state(null);
+
+  // If the value is set programmatically, update the validity.
+  // For example when opening a new form
+  let lastValue: string | null = $state(null); // TODO: check if still needed in svelte 5
+  $effect(() => {
+    (async (value) => {
+      if (!value || value === lastValue) return; // prevents some infinite loop that i don't understand, might be a svelte bug
+      lastValue = value;
+      if (wrapper != null && (document.activeElement === wrapper || wrapper.contains(document.activeElement))) return;
+      validity = value ? await validation(value) : valid;
+    })(value);
+  });
+
+  // This determines whether input has errored due to empty value.
+  // This is still considered an error, but we don't want to display it.
+  let empty = $state(value === "");
+
+  // Once the user has finished typing, update the validity.
+  async function internalOnChange(event: Event | null) {
+    if (!value) return;
+    value = formatting(value, event);
+    validity = await validation(value);
+    empty = value === "";
+    onChange(value, event);
+  }
+
+  // Immediately tell the user if the input becomes valid,
+  // but not if it becomes invalid, as they are not done typing yet.
+  async function internalOnInput(event: Event | null) {
+    if (!value) return;
+    value = formatting(value, event);
+    const res = await validation(value);
+    if (res.valid) validity = res;
+    onInput(value, event);
+  }
+
+  // If the validation function changes, like for the repeat password field,
+  // rerun the validation function.
+  $effect(() => {
+    ((_) => {
+      if (validation === lastValidationFunction) return;
+      lastValidationFunction = validation;
+      internalOnChange(null);
+    })(validation);
+  });
+
+  // UI/ARIA-relevant validity variables
+  const errorMessageId = $derived(extendUniqueElementId(["error"], inputId));
+  let isValid = $derived(validity.valid || empty);
+
+  // Copy text
+  function copy() {
+    navigator.clipboard.writeText(value || "").then(() => {
+      queueNotification(ColorKeys.Success, t("notification.success.clipboard"));
+    }).catch(() => {
+      queueNotification(ColorKeys.Danger, t("notification.error.clipboard"));
+    });
+  }
+</script>
+
+<style lang="scss">
+  @use "$lib/styles/animations.scss";
+  @use "$lib/styles/colors.scss";
+  @use "$lib/styles/dimensions.scss";
+  @use "$lib/styles/text.scss";
+
+  div.wrapper {
+    display: flex;
+    flex-direction: row;
+    gap: dimensions.$gapTiny;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+
+    border-radius: calc(dimensions.$borderRadius + 0.1rem);
+    padding: 0 dimensions.$gapSmall;
+    width: 100%;
+    overflow: hidden;
+
+    color: color-mix(in srgb, colors.$foregroundSecondary 50%, transparent);
+  }
+
+  input, textarea {
+    all: unset;
+    flex-grow: 1;
+    margin: dimensions.$gapSmall 0;
+    padding: 0;
+  }
+
+  input::-webkit-inner-spin-button, 
+  input::-webkit-outer-spin-button { 
+    -webkit-appearance: none; 
+    margin: 0; 
+  }
+  input[type=number] {
+    appearance: textfield;
+  }
+
+  div.wrapper.editable {
+    background: colors.$backgroundSecondary;
+  }
+  div.wrapper.editable > input, div.wrapper.editable > textarea {
+    color: colors.$foregroundSecondary;
+  }
+  div.noneditable {
+    --barFocusIndicatorColor: transparent;
+  }
+
+  textarea {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-y: hidden;
+    min-height: text.$fontSize;
+    field-sizing: content;
+  }
+
+  div.wrapper.mono > input, div.wrapper.mono > textarea {
+    font-family: text.$fontFamilyTime;
+  }
+
+  span.label {
+    font-size: text.$fontSizeSmall;
+    margin-bottom: -(dimensions.$gapMiddle);
+    display: flex;
+    justify-content: space-between;
+  }
+
+  span.errorMessage {
+    color: colors.$backgroundFailure;
+    font-size: text.$fontSizeSmall;
+  }
+</style>
+
+{#if label || !isValid}
+  <!-- TODO: use the Label component instead -->
+  <span class="label">
+    {#if label}
+      <Label describes={inputId} ownPositioning={false}>{placeholder}</Label>
+    {/if}
+    {#if !isValid}
+      <span class="errorMessage" id={errorMessageId}>
+        {validity.message}
+      </span>
+    {/if}
+  </span>
+{/if}
+<div
+  class="wrapper"
+  class:editable={editable} 
+  class:noneditable={!editable} 
+  class:mono={mono}
+  tabindex="-1"
+  use:focusIndicator
+  class:error={!isValid}
+  bind:this={wrapper}
+>
+  {#if multiline}
+    <textarea
+      id={inputId}
+      bind:this={element}
+      bind:value={value}
+      onchange={internalOnChange}
+      oninput={internalOnInput}
+      onfocusout={internalOnChange}
+      onfocusin={onFocus}
+      name={name}
+      placeholder={placeholder}
+      disabled={!editable}
+      use:focusIndicator
+      tabindex={editable ? 0 : -1}
+      aria-invalid={!isValid}
+      aria-errormessage={errorMessageId}
+      aria-labelledby={labelId}
+    ></textarea>
+  {:else if password && !passwordVisible}
+    <input
+      id={inputId}
+      bind:this={element}
+      bind:value={value}
+      onchange={internalOnChange}
+      oninput={internalOnInput}
+      onfocusout={internalOnChange}
+      onfocusin={onFocus}
+      name={name}
+      placeholder={placeholder}
+      disabled={!editable}
+      class:editable={editable}
+      tabindex={editable ? 0 : -1}
+      type="password"
+      aria-invalid={!isValid}
+      aria-errormessage={errorMessageId}
+      aria-labelledby={labelId}
+    />
+  {:else}
+    <input
+      id={inputId}
+      bind:this={element}
+      bind:value={value}
+      onchange={internalOnChange}
+      oninput={internalOnInput}
+      onfocusout={internalOnChange}
+      onfocusin={onFocus}
+      name={name}
+      placeholder={placeholder}
+      disabled={!editable}
+      class:editable={editable}
+      tabindex={editable ? 0 : -1}
+      type={type}
+      aria-invalid={!isValid}
+      aria-errormessage={errorMessageId}
+      aria-labelledby={labelId}
+    />
+  {/if}
+  {#if type === "number"}
+    <IconButton alt={t("button.increment")} onClick={() => {
+      onChange(((Number.parseInt(value || "") || 0) + 1).toString(), null);
+    }}>
+      <Plus size={16}/>
+    </IconButton>
+    <IconButton alt={t("button.decrement")} onClick={() => {
+      onChange(((Number.parseInt(value || "") || 0) - 1).toString(), null);
+    }}>
+      <Minus size={16}/>
+    </IconButton>
+  {/if}
+  {#if password &&editable}
+    <VisibilityToggle bind:visible={passwordVisible} momentary={true} />
+  {/if}
+  {#if displayCopyButton}
+    {@render copyButton()}
+  {/if}
+</div>
+
+{#snippet copyButton()}
+  <IconButton alt={t("button.copy")} onClick={copy}>
+    <Copy size={16}/>
+  </IconButton>
+{/snippet}
+
+<!-- TODO: snippets and svelte:element in conjuction with {...otherProps} to reduce amount of rewritten code -->

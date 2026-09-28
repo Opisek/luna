@@ -1,0 +1,255 @@
+<script lang="ts">
+  import { TextAlignStart, TextIcon } from "lucide-svelte";
+
+  import { GetEventColor, GetEventHoverColor, GetEventRGB, isDark } from "$lib/scripts/common/colors";
+  import { passIfEnter } from "$lib/scripts/common/inputs";
+
+  import { getContext } from "svelte";
+  import { NoOp } from "$lib/scripts/client/placeholders";
+  import ColorCircle from "../misc/ColorCircle.svelte";
+  import { getSettings } from "$lib/scripts/client/data/settings.svelte";
+  import { UserSettingKeys } from "$lib/types/settings";
+  import { getDayIndex } from "$lib/scripts/common/date";
+  import { t, time } from "@sveltia/i18n";
+
+  interface Props {
+    visible?: boolean;
+    event: EventModel | null;
+    isFirstDay: boolean;
+    date: Date;
+    view: "month" | "week" | "day";
+  }
+
+  let {
+    visible = true,
+    event,
+    isFirstDay,
+    date,
+    view
+  }: Props = $props();
+
+  const settings = getSettings();
+  let showOnlyCircle = $derived(event && (
+    (event.date.allDay && !settings.userSettings[UserSettingKeys.DisplayAllDayEventsFilled]) || 
+    (!event.date.allDay && !settings.userSettings[UserSettingKeys.DisplayNonAllDayEventsFilled])
+  ));
+
+  let remainingDays = $derived.by(() => {
+    if (!date || !event) return 0;
+    if (view === "day") return 1;
+
+    const remainingTime = event.date.end.getTime() - date.getTime();
+    const remainingDays = Math.ceil(remainingTime / (1000 * 60 * 60 * 24));
+
+    return Math.max(remainingDays, 1);
+  })
+
+  let remainingDaysThisWeek = $derived.by(() => {
+    const remainingDaysThisWeek = Math.min(remainingDays, 7 - getDayIndex(date));
+
+    return Math.max(remainingDaysThisWeek, 1);
+  })
+
+  let eventEndsThisWeek = $derived(remainingDays == remainingDaysThisWeek);
+
+  let mouseCalendarInteraction = getContext<{ hoveredEvent: string, clickedEvent: string }>("mouseCalendarInteraction");
+
+  let showModal: ((initial?: EventModel, date?: Date, anchor?: HTMLElement) => Promise<EventModel>) = getContext("showEventModal");
+
+  let element: HTMLDivElement | undefined = $state();
+
+  let isEventStart = $derived(event !== null && event.date.start.getTime() >= date.getTime());
+  let isFirstDisplay = $derived(isFirstDay || isEventStart);
+
+  let isBackgroundDark: boolean = $derived(event ? isDark(GetEventRGB(event)) : false);
+
+  function mouseEnter() {
+    if (event == null) return;
+
+    mouseCalendarInteraction.hoveredEvent = event.id;
+  }
+  function mouseLeave() {
+    if (event == null) return;
+
+    if (mouseCalendarInteraction.hoveredEvent == event.id)
+      mouseCalendarInteraction.hoveredEvent = "";
+    if (mouseCalendarInteraction.clickedEvent == event.id)
+      mouseCalendarInteraction.clickedEvent = "";
+  }
+  function mouseDown() {
+    if (event == null) return;
+
+    mouseCalendarInteraction.clickedEvent = event.id;
+  }
+  function mouseUp() {
+    if (event == null) return;
+
+    if (mouseCalendarInteraction.clickedEvent == event.id) {
+      mouseCalendarInteraction.clickedEvent = "";
+      showModal(event, new Date(), element).then(newEvent => event = newEvent).catch(NoOp);
+      element?.blur();
+    }
+  }
+  function keyPress(e: KeyboardEvent) {
+    passIfEnter(e, () => {
+      if (event) showModal(event).then(newEvent => event = newEvent).catch(NoOp);
+      element?.blur();
+    });
+  }
+
+  function dragStart(e: DragEvent) {
+    if (e.dataTransfer === null || event === null) return;
+    e.dataTransfer.setData("application/json", JSON.stringify({
+      "app": "luna",
+      "element": "event",
+      "id": event.id
+    }))
+    e.dataTransfer.dropEffect = "move";
+  }
+</script>
+
+<style lang="scss">
+  @use "$lib/styles/animations.scss";
+  @use "$lib/styles/colors.scss";
+  @use "$lib/styles/dimensions.scss";
+  @use "$lib/styles/text.scss";
+
+  div {
+    padding: dimensions.$gapSmaller;
+    padding-left: calc(var(--gapBetweenDays) + dimensions.$gapSmaller);
+    font-size: text.$fontSizeSmall;
+    margin: 0;
+
+    display: flex;
+    gap: dimensions.$gapTiny;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+
+    user-select: none;
+    cursor: pointer;
+
+    white-space: nowrap;
+    overflow: visible;
+
+    flex-shrink: 0;
+
+    transition: background-color linear animations.$animationSpeedFast;
+  }
+
+  div:focus {
+    outline: none;
+  }
+
+  div::after {
+    content: ".";
+    visibility: hidden;
+  }
+  div.placeholder {
+    visibility: hidden;
+  }
+  div.start {
+    border-top-left-radius: dimensions.$borderRadius;
+    border-bottom-left-radius: dimensions.$borderRadius;
+    margin-left: var(--gapBetweenDays);
+    padding-left: dimensions.$gapSmaller;
+  }
+  div.end {
+    border-top-right-radius: dimensions.$borderRadius;
+    border-bottom-right-radius: dimensions.$borderRadius;
+    margin-right: var(--gapBetweenDays);
+  }
+
+  div.hidden {
+    display: none;
+  }
+
+  div.foregroundBright {
+    color: colors.$foregroundBright;
+  }
+  div.foregroundDark {
+    color: colors.$foregroundDark;
+  }
+
+  span.name {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    min-width: 0;
+    flex-shrink: 1;
+  }
+  span.time {
+    flex-shrink: 0;
+    text-align: center;
+    font-weight: text.$fontWeightLight;
+    font-family: text.$fontFamilyTime;
+    font-size: text.$fontSizeSmaller;
+  }
+  span.icons {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+  }
+
+  div.onlyCircle {
+    background-color: transparent !important;
+    color: colors.$foregroundSecondary !important;
+  }
+</style>
+
+<!-- TODO: the following reduced the amount of divs we need to render but was prone to some edge-case bugs (no.116) -->
+<!--{#if event && (isFirstDisplay || getDayIndex(date) == 0 || showOnlyCircle)}-->
+{#if event}
+  {@const id = `event-${event.id}-${date.getTime()}`}
+  <div
+    bind:this={element}
+    class:start={isEventStart}
+    class:end={eventEndsThisWeek}
+    class:hover={mouseCalendarInteraction.hoveredEvent == event.id}
+    class:active={mouseCalendarInteraction.clickedEvent == event.id}
+    class:hidden={!visible}
+    class:foregroundBright={isBackgroundDark}
+    class:foregroundDark={!isBackgroundDark}
+    class:onlyCircle={showOnlyCircle}
+    onmouseenter={mouseEnter}
+    onmouseleave={mouseLeave}
+    onmousedown={mouseDown}
+    onmouseup={mouseUp}
+    onfocusin={mouseEnter}
+    onfocusout={mouseLeave}
+    onkeypress={keyPress}
+    ondragstart={dragStart}
+    role="button"
+    tabindex={isFirstDisplay ? 0 : -1}
+    id={id}
+    style="
+      background-color:{mouseCalendarInteraction.hoveredEvent == event.id ? GetEventHoverColor(event) : GetEventColor(event)};
+      width: calc({(showOnlyCircle ? 1 : remainingDaysThisWeek) * 100}% - {((isEventStart ? 1 : 0) + (eventEndsThisWeek ? 1 : 0)) * (showOnlyCircle ? 0 : 1)} * var(--gapBetweenDays) - {showOnlyCircle ? 2 : 0} * var(--gapBetweenDays));
+      z-index: {16 - getDayIndex(date)};
+      anchor-name: --anchor-{id};
+    "
+    aria-label={t("event.aria", { values: { name: event.name } })}
+    draggable={event.can_edit}
+  >
+    {#if showOnlyCircle}
+      <ColorCircle
+        color={GetEventColor(event)}
+        size="small"
+      />
+    {/if}
+    {#if !event.date.allDay && event.date.start >= date}
+      <span class="time">
+        {time(event.date.start, { hour: "2-digit", minute: "2-digit" })}
+      </span>
+    {/if}
+    <span class="name">
+      {event.name}
+    </span>
+    {#if (event.desc && event.desc != "")}
+      <span class="icons">
+        <TextAlignStart size={12}/>
+      </span>
+    {/if}
+  </div>
+{:else}
+  <div class="placeholder" class:hidden={!visible}></div>
+{/if}

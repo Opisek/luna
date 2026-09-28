@@ -1,0 +1,120 @@
+<script lang="ts" generics="T">
+  import Label from "./Label.svelte";
+
+  import { addRipple, focusIndicator } from "$lib/scripts/client/decoration";
+  import { EmptyOption, NoOp } from "$lib/scripts/client/placeholders";
+  import type { Option } from "$lib/types/options";
+
+  interface Props {
+    value: T | null;
+    name: string;
+    placeholder?: string;
+    info?: string;
+    label?: boolean;
+    editable?: boolean;
+    compact?: boolean;
+    options: Option<T>[];
+    onClick?: (selected: T) => any;
+  }
+
+  let {
+    value = $bindable(),
+    name,
+    placeholder = "",
+    info = "",
+    label = true,
+    editable = true,
+    compact = false,
+    options,
+    onClick = NoOp,
+  }: Props = $props();
+
+  let selected: Option<T> = $derived(options.filter(option => option.value === value)[0] || options[0] || EmptyOption);
+</script>
+
+<style lang="scss">
+  @use "$lib/styles/animations.scss";
+  @use "$lib/styles/colors.scss";
+  @use "$lib/styles/dimensions.scss";
+
+  div.display {
+    margin: dimensions.$gapSmall;
+  }
+
+  div.buttons {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    width: 100%; 
+    gap: dimensions.$gapSmaller;
+    user-select: none;
+  }
+
+  div.compact {
+    width: max-content;
+    gap: 0;
+  }
+  div.compact > button {
+    min-width: dimensions.$buttonMinWidthCompact;
+    padding: dimensions.$gapSmall;
+  }
+
+  button {
+    all: unset;
+    background-color: colors.$backgroundSecondary;
+    color: colors.$foregroundSecondary;
+    padding: dimensions.$gapSmall;
+    cursor: pointer;
+    flex: 1;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  button.first {
+    border-top-left-radius: dimensions.$borderRadius;
+    border-bottom-left-radius: dimensions.$borderRadius;
+  }
+
+  button.last {
+    border-top-right-radius: dimensions.$borderRadius;
+    border-bottom-right-radius: dimensions.$borderRadius;
+  }
+
+  button.selected {
+    background-color: colors.$backgroundAccent;
+    color: colors.$foregroundAccent;
+    --barFocusIndicatorColor: #{colors.$barFocusIndicatorColorAlt};
+  }
+</style>
+
+{#if label && placeholder}
+  <Label name={name} info={info}>{placeholder}</Label>
+{/if}
+{#if editable}
+  <div
+    class="buttons"
+    class:compact={compact} 
+  >
+    {#each options as option, i}
+      <button
+        type="button"
+        class:selected={option.value === value}
+        class:first={i === 0}
+        class:last={i === options.length - 1}
+        onclick={() => {
+          value = option.value;
+          onClick(option.value);
+        }}
+        onmousedown={addRipple}
+        use:focusIndicator
+      >
+        {option.name}
+      </button>
+    {/each}
+  </div>
+{:else}
+  <div class="display">
+    {selected.name}
+  </div>
+{/if}

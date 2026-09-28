@@ -1,9 +1,9 @@
 import type { Handle } from "@sveltejs/kit";
-import { getRedirectPage } from "./lib/common/parsing";
+import { getRedirectPage } from "$lib/scripts/common/parsing";
 
 import "dotenv/config"
-import { loginPaths, unprivilegedPaths } from "./lib/common/paths";
-import { encodeRedirectUrl } from "./lib/common/url";
+import { loginPaths, unprivilegedPaths } from "$lib/scripts/common/paths";
+import { encodeRedirectUrl } from "$lib/scripts/common/url";
 import { locale } from "@sveltia/i18n";
 
 export const handle: Handle = async ({ event, resolve }) => {

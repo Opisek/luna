@@ -1,12 +1,12 @@
 <script lang="ts">
-  import Notification from "../../components/interactive/Notification.svelte";
+  import Notification from "$lib/components/interactive/Notification.svelte";
 
-  import { notificationExpireTime, notifications } from "$lib/client/notifications";
-  import { getSettings } from "$lib/client/data/settings.svelte";
-  import { UserSettingKeys, type GlobalSettings, type UserData, type UserSettings } from "../../types/settings";
-  import { getTheme } from "$lib/client/data/theme.svelte";
-  import type { NotificationModel } from "../../types/notification";
-  import { getConnectivity } from "$lib/client/data/connectivity.svelte";
+  import { notificationExpireTime, notifications } from "$lib/scripts/client/notifications";
+  import { getSettings } from "$lib/scripts/client/data/settings.svelte";
+  import { UserSettingKeys, type GlobalSettings, type UserData, type UserSettings } from "$lib/types/settings";
+  import { getTheme } from "$lib/scripts/client/data/theme.svelte";
+  import type { NotificationModel } from "$lib/types/notification";
+  import { getConnectivity } from "$lib/scripts/client/data/connectivity.svelte";
   import { browser } from "$app/environment";
 
   interface PageProps {
@@ -147,9 +147,9 @@
 </script>
 
 <style lang="scss">
-  @use "../../styles/colors.scss";
-  @use "../../styles/dimensions.scss";
-  @use "../../styles/text.scss";
+  @use "$lib/styles/colors.scss";
+  @use "$lib/styles/dimensions.scss";
+  @use "$lib/styles/text.scss";
   
   :global(*) {
     box-sizing: border-box;

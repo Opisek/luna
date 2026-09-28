@@ -2,11 +2,11 @@
   import { browser } from "$app/environment";
   import { page } from "$app/state";
 
-  import Box from "../../components/layout/Box.svelte";
-  import Button from "../../components/interactive/Button.svelte";
-  import Horizontal from "../../components/layout/Horizontal.svelte";
-  import SimplePage from "../../components/layout/SimplePage.svelte";
-  import Title from "../../components/layout/Title.svelte";
+  import Box from "$lib/components/layout/Box.svelte";
+  import Button from "$lib/components/interactive/Button.svelte";
+  import Horizontal from "$lib/components/layout/Horizontal.svelte";
+  import SimplePage from "$lib/components/layout/SimplePage.svelte";
+  import Title from "$lib/components/layout/Title.svelte";
 
   import { t } from "@sveltia/i18n";
 </script>

@@ -2,42 +2,42 @@
   import { Copyleft, PlusIcon, RefreshCw, Settings, WifiOff } from "lucide-svelte";
   import { setContext, untrack } from "svelte";
 
-  import Calendar from "../../components/calendar/Calendar.svelte";
-  import CalendarEntry from "../../components/calendar/CalendarEntry.svelte";
-  import CalendarModal from "../../components/modals/CalendarModal.svelte";
-  import EventModal from "../../components/modals/EventModal.svelte";
-  import Horizontal from "../../components/layout/Horizontal.svelte";
-  import IconButton from "../../components/interactive/IconButton.svelte";
-  import MonthSelection from "../../components/interactive/MonthSelection.svelte";
-  import SelectButtons from "../../components/forms/SelectButtons.svelte";
-  import SourceEntry from "../../components/calendar/SourceEntry.svelte";
-  import SourceModal from "../../components/modals/SourceModal.svelte";
-  import Title from "../../components/layout/Title.svelte";
+  import Calendar from "$lib/components/calendar/Calendar.svelte";
+  import CalendarEntry from "$lib/components/calendar/CalendarEntry.svelte";
+  import CalendarModal from "$lib/components/modals/CalendarModal.svelte";
+  import EventModal from "$lib/components/modals/EventModal.svelte";
+  import Horizontal from "$lib/components/layout/Horizontal.svelte";
+  import IconButton from "$lib/components/interactive/IconButton.svelte";
+  import MonthSelection from "$lib/components/interactive/MonthSelection.svelte";
+  import SelectButtons from "$lib/components/forms/SelectButtons.svelte";
+  import SourceEntry from "$lib/components/calendar/SourceEntry.svelte";
+  import SourceModal from "$lib/components/modals/SourceModal.svelte";
+  import Title from "$lib/components/layout/Title.svelte";
 
   import { afterNavigate, beforeNavigate, replaceState } from "$app/navigation";
   import { browser } from "$app/environment";
 
-  import SmallCalendar from "../../components/interactive/SmallCalendar.svelte";
-  import { AsyncNoOp, NoOp } from "$lib/client/placeholders";
-  import { getMetadata } from "$lib/client/data/metadata.svelte";
-  import { getRepository } from "$lib/client/data/repository.svelte";
-  import { queueNotification } from "$lib/client/notifications";
-  import { getConnectivity, Reachability } from "$lib/client/data/connectivity.svelte";
-  import Button from "../../components/interactive/Button.svelte";
-  import DayViewModal from "../../components/modals/DayViewModal.svelte";
-  import { getDayIndex, isInRange } from "../../lib/common/date";
-  import { compareEventsByStartDate } from "../../lib/common/comparators";
-  import SourceWizardModal from "../../components/modals/SourceWizardModal.svelte";
-  import SettingsModal from "../../components/modals/SettingsModal.svelte";
-  import { getSettings } from "$lib/client/data/settings.svelte";
-  import { UserSettingKeys } from "../../types/settings";
-  import ThemeToggle from "../../components/interactive/ThemeToggle.svelte";
-  import { ColorKeys } from "../../types/colors";
+  import SmallCalendar from "$lib/components/interactive/SmallCalendar.svelte";
+  import { AsyncNoOp, NoOp } from "$lib/scripts/client/placeholders";
+  import { getMetadata } from "$lib/scripts/client/data/metadata.svelte";
+  import { getRepository } from "$lib/scripts/client/data/repository.svelte";
+  import { queueNotification } from "$lib/scripts/client/notifications";
+  import { getConnectivity, Reachability } from "$lib/scripts/client/data/connectivity.svelte";
+  import Button from "$lib/components/interactive/Button.svelte";
+  import DayViewModal from "$lib/components/modals/DayViewModal.svelte";
+  import { getDayIndex, isInRange } from "$lib/scripts/common/date";
+  import { compareEventsByStartDate } from "$lib/scripts/common/comparators";
+  import SourceWizardModal from "$lib/components/modals/SourceWizardModal.svelte";
+  import SettingsModal from "$lib/components/modals/SettingsModal.svelte";
+  import { getSettings } from "$lib/scripts/client/data/settings.svelte";
+  import { UserSettingKeys } from "$lib/types/settings";
+  import ThemeToggle from "$lib/components/interactive/ThemeToggle.svelte";
+  import { ColorKeys } from "$lib/types/colors";
   import { page } from "$app/state";
-  import CreditsModal from "../../components/modals/CreditsModal.svelte";
-  import CreatePopup from "../../components/popups/CreatePopup.svelte";
+  import CreditsModal from "$lib/components/modals/CreditsModal.svelte";
+  import CreatePopup from "$lib/components/popups/CreatePopup.svelte";
   import { locale, t } from "@sveltia/i18n";
-  import AffectedRecurrencesModal from "../../components/modals/AffectedRecurrencesModal.svelte";
+  import AffectedRecurrencesModal from "$lib/components/modals/AffectedRecurrencesModal.svelte";
 
   /* Singletons */
   const settings = getSettings();
@@ -205,10 +205,10 @@
 </script>
 
 <style lang="scss">
-  @use "../../styles/animations.scss";
-  @use "../../styles/colors.scss";
-  @use "../../styles/dimensions.scss";
-  @use "../../styles/text.scss";
+  @use "$lib/styles/animations.scss";
+  @use "$lib/styles/colors.scss";
+  @use "$lib/styles/dimensions.scss";
+  @use "$lib/styles/text.scss";
 
   :global(body) {
     display: flex;

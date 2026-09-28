@@ -1,0 +1,168 @@
+<script lang="ts">
+  import { NoOp } from "$lib/scripts/client/placeholders";
+  import { focusIndicator } from "$lib/scripts/client/decoration";
+  import { getDayIndex } from "$lib/scripts/common/date";
+  import { UserSettingKeys } from "$lib/types/settings";
+  import { getSettings } from "$lib/scripts/client/data/settings.svelte";
+  import { svelteFlyInHorizontal, svelteFlyOutHorizontal } from "$lib/scripts/client/animations";
+  import { SvelteSet } from "svelte/reactivity";
+  import { getDayName } from "$lib/scripts/common/humanization";
+
+  const today = new Date();
+
+  interface Props {
+    date: Date;
+    onDayClick?: (date: Date) => any;
+    smaller?: boolean;
+    marked?: Set<string> | Map<string, any>;
+  }
+
+  let {
+    date = $bindable(new Date()),
+    onDayClick = NoOp,
+    smaller = false,
+    marked = $bindable(new SvelteSet([new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate())).toISOString().substring(0, 10)])),
+  }: Props = $props();
+
+  const settings = getSettings();
+
+  /* Date calculation */
+  let [days, amountOfRows] = $derived.by(() => {
+    const firstMonthDay = new Date(Date.UTC(date.getFullYear(), date.getMonth(), 1));
+    const lastMonthDay = new Date(Date.UTC(date.getFullYear(), date.getMonth() + 1, 0));
+    const firstDayOfWeek = getDayIndex(firstMonthDay);
+
+    const amountOfRows = 
+      settings.userSettings[UserSettingKeys.DynamicSmallCalendarRows] ?
+      Math.ceil((lastMonthDay.getDate() + firstDayOfWeek) / 7)
+      : 6;
+
+    const firstViewDay = new Date(firstMonthDay);
+    firstViewDay.setDate(firstMonthDay.getDate() - firstDayOfWeek);
+    const lastViewDay = new Date(firstMonthDay);
+    lastViewDay.setDate(firstMonthDay.getDate() + 7 * amountOfRows - 1);
+
+    // Fill
+    const days = [];
+
+    const dateIterator = new Date(firstViewDay);
+
+    for (let i = 0; i < 7 * amountOfRows; i++) {
+      days.push(new Date(dateIterator));
+      dateIterator.setDate(dateIterator.getDate() + 1);
+    }
+
+    return [days, amountOfRows];
+  });
+
+  /* Animation */
+  let viewIteration = $state(0);
+  // TODO: why do we need displayDays here but not in the large calendar?
+  // svelte-ignore state_referenced_locally
+  let displayDays = $state(days);
+  let currentDate = $state(new Date(date));
+  let flyDirection = $state("left");
+  $effect(() => {
+    if (date.getTime() === currentDate.getTime()) return;
+    flyDirection = currentDate.getTime() <= date.getTime() ? "left" : "right";
+    currentDate = new Date(date);
+    viewIteration++;
+    displayDays = days;
+  });
+
+</script>
+
+<style lang="scss">
+  @use "$lib/styles/animations.scss";
+  @use "$lib/styles/colors.scss";
+  @use "$lib/styles/dimensions.scss";
+  @use "$lib/styles/text.scss";
+
+  div.animation {
+    overflow: hidden;
+    position: relative;
+  }
+
+  div.calendar {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: dimensions.$gapSmall; 
+    width: 100%;
+  }
+
+  div.calendar.animate:not(:first-child) {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  div.smaller {
+    font-size: text.$fontSizeSmall;
+    gap: dimensions.$gapSmaller; 
+  }
+
+  button.day {
+    all: unset;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: dimensions.$borderRadiusSmall;
+    color: colors.$foregroundSecondary;
+    background-color: colors.$backgroundSecondary;
+    padding: dimensions.$gapSmaller;
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    overflow: hidden;
+  }
+
+  button.day.sunday {
+    color: colors.$foregroundSunday;
+  }
+
+  button.day.accent {
+    background-color: colors.$backgroundAccent;
+    color: colors.$foregroundAccent !important;
+    --barFocusIndicatorColor: #{colors.$barFocusIndicatorColorAlt};
+  }
+
+  button.day.otherMonth {
+    opacity: 0.5;
+  }
+</style>
+
+{#if settings.userSettings[UserSettingKeys.DynamicSmallCalendarRows]}
+  <div class="animation">
+    {#each [ displayDays ] as currentDays (viewIteration)}
+      {@render grid(currentDays, amountOfRows, true)}
+    {/each}
+  </div>
+{:else}
+  {@render grid(days, amountOfRows, false)}
+{/if}
+
+{#snippet grid(days: Date[], amountOfRows: number, animate: boolean)}
+  <div
+    class="calendar"
+    class:smaller={smaller}
+    class:animate={animate}
+    style="grid-template-rows: repeat({amountOfRows}, 1fr)"
+    in:svelteFlyInHorizontal={{duration: animate ? 500 * settings.userSettings[UserSettingKeys.AnimationDuration] : 0, flyDirection: () => flyDirection}}
+    out:svelteFlyOutHorizontal={{duration: animate ? 500 * settings.userSettings[UserSettingKeys.AnimationDuration] : 0, flyDirection: () => flyDirection}}
+  >
+    {#each days as day}
+      {@const dayId = day.toISOString().substring(0, 10)}
+      <button
+        class="day"
+        class:sunday={day.getDay() == 0}
+        class:accent={marked.has(dayId)}
+        class:otherMonth={day.getMonth() != currentDate.getMonth()}
+        type="button"
+        onclick={() => (onDayClick(day))}
+        use:focusIndicator
+      >
+        {getDayName(day.getDate(), true)}
+      </button>
+    {/each}
+  </div>
+{/snippet}

@@ -4,13 +4,13 @@
   import SimplePage from '../../../components/layout/SimplePage.svelte';
   import TextInput from '../../../components/forms/TextInput.svelte';
   import ToggleInput from '../../../components/forms/ToggleInput.svelte';
-  import { ColorKeys } from '../../../types/colors';
+  import { ColorKeys } from '../../../lib/types/colors';
 
   import { afterNavigate, invalidateAll } from '$app/navigation';
   import { page } from '$app/state';
 
-  import { isValidEmail, isValidInviteCode, isValidPassword, isValidRepeatPassword, isValidUsername, valid } from '$lib/client/validation';
-  import { queueNotification } from '$lib/client/notifications';
+  import { isValidEmail, isValidInviteCode, isValidPassword, isValidRepeatPassword, isValidUsername, valid } from '$lib/scripts/client/validation';
+  import { queueNotification } from '$lib/scripts/client/notifications';
   import Title from '../../../components/layout/Title.svelte';
   import Paragraph from '../../../components/layout/Paragraph.svelte';
   import Box from '../../../components/layout/Box.svelte';

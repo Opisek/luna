@@ -1,0 +1,195 @@
+<script lang="ts">
+  import List from "../../forms/List.svelte";
+  import Button from "../../interactive/Button.svelte";
+  import { Bot, Gamepad2, Info, Laptop, LogOut, Microchip, Pencil, RectangleGoggles, Smartphone, Tablet, TvMinimal, Watch } from "lucide-svelte";
+  import IconButton from "../../interactive/IconButton.svelte";
+  import { ColorKeys } from "$lib/types/colors";
+  import { UAParser } from "ua-parser-js";
+  import { UserSettingKeys } from "$lib/types/settings";
+  import type { Settings } from "$lib/scripts/client/data/settings.svelte";
+  import { clearSession, type ActiveSessions } from "$lib/scripts/client/data/sessions.svelte";
+  import { fetchResponse } from "$lib/scripts/client/net";
+  import { queueNotification } from "$lib/scripts/client/notifications";
+  import { NoOp } from "$lib/scripts/client/placeholders";
+  import { t } from "@sveltia/i18n";
+  import { extendUniqueElementId, generateUniqueElementId } from "$lib/scripts/common/dom";
+
+  interface Props {
+    settings: Settings;
+    sessions: ActiveSessions;
+    today: Date;
+    editApiToken: (session: Session, editable: boolean) => Promise<Session>;
+    showConfirmation: (message: string, details?: string, notice?: boolean) => Promise<void>;
+  }
+
+  let {
+    settings,
+    sessions,
+    today,
+    editApiToken,
+    showConfirmation
+  }: Props = $props();
+  let uniqueId = $props.id();
+
+  function logout() {
+    showConfirmation(t("settings.logout.confirm.current")).then(async () => {
+      await fetchResponse("/api/sessions/current", { method: "DELETE" }); // We don't need to check for errors, because the cookie is deleted either way
+      clearSession();
+    });
+  }
+  async function deauthorizeSessions() {
+    await showConfirmation(
+      t("settings.logout.confirm.all.display"),
+      t("settings.logout.confirm.all.info")
+    ).then(async () => {
+      sessions.deauthorizeUserSessions().catch((err) => {
+        queueNotification(ColorKeys.Danger, err);
+      });
+    }).catch(NoOp);
+  }
+  function deauthorizeSession(id: string) {
+    if (id === sessions.currentSession) return logout();
+    sessions.deauthorizeSession(id);
+  }
+</script>
+
+<style lang="scss">
+  @use "$lib/styles/dimensions.scss";
+  @use "$lib/styles/colors.scss";
+  @use "$lib/styles/text.scss";
+
+  .session {
+    padding: dimensions.$gapMiddle;
+    background-color: colors.$backgroundSecondary;
+    color: colors.$foregroundSecondary;
+    border-radius: dimensions.$borderRadius;
+
+    display: grid;
+    gap: dimensions.$gapSmall;
+    row-gap: 0;
+    grid-template-columns: auto 1fr auto;
+    grid-template-rows: auto auto;
+    grid-template-areas: "device agent buttons" "device details buttons";
+    justify-content: center;
+    align-items: center;
+  }
+
+  .session.showId {
+    grid-template-rows: auto auto auto;
+    grid-template-areas: "device agent buttons" "device details buttons" "device id buttons";
+  }
+
+  .session > .device {
+    grid-area: device;
+    display: flex;
+  }
+  .session > .agent {
+    grid-area: agent;
+  }
+  .session > .details {
+    grid-area: details;
+    font-size: text.$fontSizeSmall;
+  }
+  .session > .buttons {
+    grid-area: buttons;
+    display: flex;
+    flex-direction: row;
+    gap: dimensions.$gapSmall;
+  }
+  .session > .id {
+    grid-area: id;
+    font-size: text.$fontSizeSmall;
+  }
+  .session:not(.showId) > .id {
+    display: none;
+  }
+
+  .session.active {
+    background-color: colors.$backgroundAccent;
+    color: colors.$foregroundAccent;
+  }
+</style>
+
+<Button color={ColorKeys.Danger} onClick={logout}>{t("settings.logout.button.current")}</Button>
+<Button color={ColorKeys.Danger} onClick={deauthorizeSessions}>{t("settings.logout.button.all")}</Button>
+
+<List
+  label={t("settings.logout.sessions.display")}
+  info={t("settings.logout.sessions.info")}
+  items={sessions.activeSessions.filter(x => !x.is_api)}
+  id={item => item.id}
+  template={sessionTemplate}
+/>
+
+{#snippet sessionTemplate(s: Session)}
+  {@const entryId=generateUniqueElementId(["sessionentry", s.id], uniqueId)}
+  {@const labelId=extendUniqueElementId(["label", "agent"], entryId)}
+  {@const userAgent=UAParser(s.is_api ? "" : s.user_agent)}
+  {@const deviceName=`${userAgent.os.name || ""} ${userAgent.browser.name || ""}`.trim()}
+  {@const isActive=s.id === sessions.currentSession}
+
+  <div class="session"
+    class:active={isActive}
+    aria-current={isActive}
+    class:showId={settings.userSettings[UserSettingKeys.DebugMode]}
+    role="listitem"
+  >
+    <div class="device">
+      {#if s.is_api}
+        <Bot size={20}/>
+      {:else if userAgent.device.type === UAParser.DEVICE.CONSOLE}
+        <Gamepad2 size={20}/>
+      {:else if userAgent.device.type === UAParser.DEVICE.EMBEDDED}
+        <Microchip size={20}/>
+      {:else if userAgent.device.type === UAParser.DEVICE.MOBILE}
+        <Smartphone size={20}/>
+      {:else if userAgent.device.type === UAParser.DEVICE.SMARTTV}
+        <TvMinimal size={20}/>
+      {:else if userAgent.device.type === UAParser.DEVICE.TABLET}
+        <Tablet size={20}/>
+      {:else if userAgent.device.type === UAParser.DEVICE.WEARABLE}
+        <Watch size={20}/>
+      <!--{:else if userAgent.device.type === UAParser.DEVICE.XR}-->
+      {:else if userAgent.device.type === "xr"}
+        <RectangleGoggles size={20}/>
+      {:else if deviceName === ""}
+        <Bot size={20}/>
+      {:else}
+        <Laptop size={20}/>
+      {/if}
+    </div>
+
+    <span class="agent">
+      {#if deviceName === ""}
+        {s.user_agent}
+      {:else}
+        {deviceName}
+      {/if}
+    </span>
+
+    <span class="details">
+      {s.location}
+      •
+      {#if isActive}
+        {t("session.current")}
+      {:else if today.getDate() == s.last_seen.getDate() && today.getMonth() == s.last_seen.getMonth() && today.getFullYear() == s.last_seen.getFullYear()}
+        {t("session.active.today", { values: { date: s.last_seen } })}
+      {:else}
+        {t("session.active.elsewhen", { values: { date: s.last_seen } })}
+      {/if}
+    </span>
+
+    <div class="buttons">
+      <IconButton onClick={() => editApiToken(s, s.is_api)} alt={t("button.details")}>
+        <Info size={20}/>
+      </IconButton>
+      <IconButton onClick={() => deauthorizeSession(s.id)} color={ColorKeys.Danger} alt={t("settings.logout.button.single")}>
+        <LogOut size={20}/>
+      </IconButton>
+    </div>
+
+    <span class="id">
+      {t("session.id.inline", { values: { id: s.id } })}
+    </span>
+  </div>
+{/snippet}

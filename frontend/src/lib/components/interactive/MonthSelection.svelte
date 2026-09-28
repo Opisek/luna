@@ -1,0 +1,104 @@
+<script lang="ts">
+  import LeftIcon from "lucide-svelte/icons/chevron-left";
+  import RightIcon from "lucide-svelte/icons/chevron-right";
+
+  import IconButton from "./IconButton.svelte";
+  import MonthPopup from "../popups/MonthPopup.svelte";
+
+  import { NoOp } from "$lib/scripts/client/placeholders";
+  import { focusIndicator } from "$lib/scripts/client/decoration";
+  import { getMonthName, getYearName } from "$lib/scripts/common/humanization";
+
+  import { t } from "@sveltia/i18n";
+
+  interface Props {
+    date: Date;
+    granularity?: "month" | "week" | "day";
+    onSelect?: (date: Date) => void;
+  }
+
+  let {
+    date = $bindable(new Date()),
+    granularity = "month",
+    onSelect = NoOp,
+  }: Props = $props();
+
+  let showPopup: () => any = $state(NoOp);
+  let popupButton: HTMLElement | undefined = $state();
+
+  function previousMonth() {
+    const newDate = new Date(date.getFullYear(), date.getMonth() - 1, date.getDate());
+    if (newDate.getMonth() === date.getMonth()) newDate.setDate(0);
+    date = newDate;
+    onSelect(date);
+  }
+
+  function nextMonth() {
+    date = new Date(date.getFullYear(), date.getMonth() + 1, date.getDate());
+    onSelect(date);
+  }
+
+  function previousWeek() {
+    date = new Date(date.getFullYear(), date.getMonth(), date.getDate() - 7);
+    onSelect(date);
+  }
+
+  function nextWeek() {
+    date = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 7);
+    onSelect(date);
+  }
+
+  function previousDay() {
+    date = new Date(date.getFullYear(), date.getMonth(), date.getDate() - 1);
+    onSelect(date);
+  }
+
+  function nextDay() {
+    date = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1);
+    onSelect(date);
+  }
+</script>
+
+<style lang="scss">
+  @use "$lib/styles/dimensions.scss";
+
+  div {
+    display: flex;
+    flex-direction: row;
+    gap: dimensions.$gapSmall;
+    align-items: center;
+    position: relative;
+    width: max-content;
+    user-select: none;
+  }
+
+  button {
+    all: unset;
+    cursor: pointer;
+    position: relative;
+    text-transform: capitalize;
+  }
+</style>
+
+<div>
+  {#if granularity === "month"}
+    {@render buttons(previousMonth, nextMonth)}
+  {:else if granularity === "week"}
+    {@render buttons(previousWeek, nextWeek)}
+  {:else if granularity === "day"}
+    {@render buttons(previousDay, nextDay)}
+  {/if}
+  <button bind:this={popupButton} onclick={() => showPopup().catch(NoOp)} type="button" use:focusIndicator={{ type: "underline" }} aria-live="polite" aria-atomic="true">
+    {t("scope.selected.month", { values: { date: date } })}
+  </button>
+  <MonthPopup bind:showPopup bind:date={date} onSelect={onSelect} anchor={popupButton}/>
+</div>
+
+{#snippet buttons(prev: () => void, next: () => void)}
+  <IconButton onClick={prev} alt={t("button.month.previous")}>
+    <LeftIcon/>
+  </IconButton>
+  <IconButton onClick={next} alt={t("button.month.next")}>
+    <RightIcon/>
+  </IconButton>
+{/snippet}

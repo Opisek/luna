@@ -1,19 +1,19 @@
 <script lang="ts">
   import { browser } from "$app/environment";
 
-  import Box from "../../../components/layout/Box.svelte";
-  import Button from "../../../components/interactive/Button.svelte";
-  import Horizontal from "../../../components/layout/Horizontal.svelte";
-  import SimplePage from "../../../components/layout/SimplePage.svelte";
-  import Title from "../../../components/layout/Title.svelte";
-  import { VersionCompatibility } from "$lib/common/version";
+  import Box from "$lib/components/layout/Box.svelte";
+  import Button from "$lib/components/interactive/Button.svelte";
+  import Horizontal from "$lib/components/layout/Horizontal.svelte";
+  import SimplePage from "$lib/components/layout/SimplePage.svelte";
+  import Title from "$lib/components/layout/Title.svelte";
+  import { VersionCompatibility } from "$lib/scripts/common/version";
   import { afterNavigate } from "$app/navigation";
-  import { getConnectivity } from "$lib/client/data/connectivity.svelte";
-  import Paragraph from "../../../components/layout/Paragraph.svelte";
-  import Bold from "../../../components/layout/Bold.svelte";
-  import Divider from "../../../components/layout/Divider.svelte";
-  import { getRedirectPage } from "../../../lib/common/parsing";
-  import { ColorKeys } from "../../../types/colors";
+  import { getConnectivity } from "$lib/scripts/client/data/connectivity.svelte";
+  import Paragraph from "$lib/components/layout/Paragraph.svelte";
+  import Bold from "$lib/components/layout/Bold.svelte";
+  import Divider from "$lib/components/layout/Divider.svelte";
+  import { getRedirectPage } from "$lib/scripts/common/parsing";
+  import { ColorKeys } from "$lib/types/colors";
   import { t } from "@sveltia/i18n";
 
   let versions: ({ frontend: string, backend: string, compatibility: VersionCompatibility } | undefined) = $state();

@@ -1,0 +1,287 @@
+<script lang="ts">
+  import { PlusIcon } from "lucide-svelte";
+  import { getContext } from "svelte";
+
+  import Event from "./Event.svelte";
+  import IconButton from "../interactive/IconButton.svelte";
+
+  import { queueNotification } from "$lib/scripts/client/notifications";
+  import { NoOp } from "$lib/scripts/client/placeholders";
+  import { ColorKeys } from "$lib/types/colors";
+  import { t } from "@sveltia/i18n";
+  import { getDayName } from "$lib/scripts/common/humanization";
+  import { passIfEnter } from "$lib/scripts/common/inputs";
+  import { getRepository } from "$lib/scripts/client/data/repository.svelte";
+
+  interface Props {
+    date: Date;
+    isCurrentMonth: boolean;
+    isFirstDay: boolean;
+    isToday: boolean;
+    events: (EventModel | null)[];
+    maxEvents?: number;
+    containerHeight: number;
+    view: "month" | "week" | "day";
+    showMore?: (date: Date, events: (EventModel | null)[]) => any;
+  }
+
+  let {
+    date,
+    isCurrentMonth,
+    isFirstDay,
+    isToday,
+    events,
+    maxEvents = 1,
+    containerHeight = $bindable(),
+    view,
+    showMore = NoOp,
+  }: Props = $props();
+
+  let showEventModal: ((initial?: EventModel, date?: Date) => Promise<EventModel>) = getContext("showEventModal");
+  let createEventButtonClick = () => {
+    showEventModal(undefined, date).catch((err) => {
+      if (err) queueNotification(ColorKeys.Danger, t("event.error.create", { values: { msg: err.message}}));
+    });
+  };
+
+  let selectAffectedRecurrences: (edit: boolean) => Promise<"this" | "thisandfuture" | "all"> = getContext("selectAffectedRecurrences");
+
+  let actualMaxEvents: number = $derived(maxEvents <= events.length - 1 ? maxEvents - 1 : maxEvents);
+
+  function dragOver(e: DragEvent) {
+    if (e.dataTransfer === null) return;
+    const data = JSON.parse(e.dataTransfer.getData("application/json"));
+    if (!("app" in data) && data.app !== "luna") return;
+    if (!("element" in data) && data.element !== "event") return;
+    e.preventDefault();
+  }
+
+  async function dragDrop(e: DragEvent) {
+    if (e.dataTransfer === null) return;
+    const data = JSON.parse(e.dataTransfer.getData("application/json"));
+    if (!("app" in data) && data.app !== "luna") return;
+    if (!("element" in data) && data.element !== "event") return;
+    if (!("id" in data) && data.element !== "id") return;
+    e.preventDefault();
+
+    const repository = getRepository();
+    const event = await repository.getEvent(data.id);
+
+    if (!event.can_edit) return;
+
+    if (
+      event.date.start.getDate() === date.getDate() &&
+      event.date.start.getMonth() === date.getMonth() &&
+      event.date.start.getFullYear() == date.getFullYear()
+    ) return;
+
+    const affectedRecurrences = event.date.recurrence === null ? "this" : await selectAffectedRecurrences(true);
+
+    const delta = event.date.end.getTime() - event.date.start.getTime();
+
+    event.date.start.setDate(date.getDate());
+    event.date.start.setMonth(date.getMonth());
+    event.date.start.setFullYear(date.getFullYear());
+
+    event.date.end.setTime(event.date.start.getTime() + delta);
+
+    repository.editEvent(event, { date: true }, false, affectedRecurrences).catch((err) => {
+      queueNotification(ColorKeys.Danger, err);
+    })
+  }
+</script>
+
+<style lang="scss">
+  @use "$lib/styles/animations.scss";
+  @use "$lib/styles/colors.scss";
+  @use "$lib/styles/dimensions.scss";
+  @use "$lib/styles/text.scss";
+
+  div.day {
+    min-width: 0;
+    overflow: visible;
+    height: 100%;
+    position: relative;
+    font-size: text.$fontSizeSmall; // due to em units in the below variable being relative, we set the font size here already
+    --gapBetweenDays: calc(#{dimensions.$gapSmall} / 2);
+  }
+
+  div.background {
+    display: flex;
+    flex-direction: column;
+    gap: dimensions.$gapSmall;
+    margin: var(--gapBetweenDays);
+    padding: dimensions.$gapSmall;
+    border-radius: dimensions.$borderRadiusSmall;
+    background-color: colors.$backgroundSecondary;
+    height: calc(100% - dimensions.$gapSmall);
+  }
+
+  span.top {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-areas: "none date add";
+    font-size: text.$fontSize;
+  }
+  span.date {
+    color: colors.$foregroundSecondary;
+    text-align: center;
+    width: 100%;
+    display: block;
+    grid-area: date;
+    user-select: none;
+    z-index: 1;
+  }
+  span.sunday {
+    color: colors.$foregroundSunday;
+  }
+  span.today {
+    color: colors.$foregroundAccent;
+  }
+  span.today::before {
+    content: "";
+    background-color: colors.$backgroundAccent;
+    color: colors.$foregroundAccent;
+    position: absolute;
+    width: calc(1.25 * text.$fontSize);
+    aspect-ratio: 1 / 1;
+    border-radius: dimensions.$borderRadius;
+    left: calc(50% - 1.25 * 0.5 * #{text.$fontSize});
+    top: translateY(calc(1.25 * 0.5 * text.$fontSize - #{dimensions.$gapSmall}));
+    z-index: -1;
+  }
+  span.add {
+    grid-area: add;
+    display: flex;
+    align-items: center;
+    justify-content: right;
+    opacity: 0;
+    transition: opacity animations.$animationSpeed;
+  }
+  div.day:hover span.add,
+  div.day:focus-visible span.add {
+    opacity: 1;
+  }
+
+  div.day:focus-visible {
+    border: 0;
+    outline: 0;
+  }
+
+  button.more {
+    all: unset;
+    text-align: center;
+    color: color-mix(in srgb, colors.$foregroundSecondary 50%, transparent);
+    background-color: colors.$backgroundSecondary;
+    cursor: pointer;
+    z-index: 20;
+    margin: 0 var(--gapBetweenDays);
+    padding: dimensions.$gapSmaller 0;
+    position: relative;
+  }
+
+  button.otherMonth {
+    background-color: colors.$backgroundPrimary;
+  }
+
+  button.more.otherMonth::before {
+    content: "";
+    background-color: colors.$backgroundSecondary;
+    opacity: 0.5;
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    left: 0;
+    top: 0;
+    pointer-events: none;
+  }
+
+  div.events {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    gap: dimensions.$gapTiny;
+
+    --topMargin: calc(#{text.$fontSize} + 2.5 * #{dimensions.$gapSmall});
+    top: var(--topMargin);
+    height: calc(100% - var(--topMargin) - var(--gapBetweenDays));
+    width: 100%;
+  }
+
+  .otherMonth {
+    opacity: 0.5;
+  }
+
+  //div.eventAnimation.hidden {
+  //  display: none;
+  //}
+</style>
+
+<div
+  class="day"
+  ondragover={dragOver}
+  ondrop={dragDrop}
+  onkeypress={(e) => passIfEnter(e, createEventButtonClick)}
+  role="gridcell"
+  tabindex="0"
+  aria-label={t("scope.selected.day", { values: { date: date } })}
+  draggable="false"
+>
+  <div class="background" class:otherMonth={!isCurrentMonth}>
+    <span class="top">
+      <span class="date" class:sunday={date.getDay() === 0} class:today={isToday}>
+        {getDayName(date.getDate(), true)}
+      </span>
+      <span class="add">
+        <IconButton onClick={createEventButtonClick} tabindex={-1} alt={t("button.add.event")}>
+          <PlusIcon size={13}/>
+        </IconButton>
+      </span>
+    </span>
+  </div>
+  {#if isFirstDay}
+    <div class="events" bind:offsetHeight={containerHeight} aria-live="polite" aria-relevant="all">
+      {@render eventEntries()}
+    </div>
+  {:else}
+    <div class="events" aria-live="polite" aria-relevant="all">
+      {@render eventEntries()}
+    </div>
+  {/if}
+</div>
+
+{#snippet eventEntries()}
+  <!-- TODO: forcing EventEntry to be unique for each event and i like that
+  fixes a few issues but might be less performant. figure out the right
+  compromise -->
+  <!-- {#each events as event, i ((event?.id || 0) + i.toString())} -->
+
+  {#each events as event, i ((event?.id || i).toString() + date.getTime())}
+    <!-- TODO: make parameters match css, look into cubic easing, invert fly direction when going back in range -->
+    <!--<div
+      class="eventAnimation"
+      animate:flip={{duration: 300, delay: 300}}
+      in:fly={{duration: 300, x: 200}}
+      out:fly={{duration: 300, x: -200}}
+      style="z-index: {16 - getDayIndex(date)}"
+      class:hidden={i >= actualMaxEvents}
+    >-->
+      <Event
+        event={event}
+        isFirstDay={isFirstDay}
+        date={date}
+        visible={i < actualMaxEvents}
+        view={view}
+      />
+    <!--</div>-->
+  {/each}
+  {#if events.length > maxEvents && actualMaxEvents >= 0}
+    <button class="more" class:otherMonth={!isCurrentMonth} onclick={() => showMore(date, events)}>
+      {#if actualMaxEvents == 0}
+        {t("calendar.events.count.all", { values: { count: events.length }})}
+      {:else}
+        {t("calendar.events.count.more", { values: { count: events.length - actualMaxEvents }})}
+      {/if}
+    </button>
+  {/if}
+{/snippet}

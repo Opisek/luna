@@ -1,0 +1,156 @@
+<script lang="ts">
+  import type { Snippet } from "svelte";
+  import { ColorKeys } from "$lib/types/colors";
+  import { addRipple, focusIndicator } from "$lib/scripts/client/decoration";
+  import Loader from "../decoration/Loader.svelte";
+  import { NoOp } from "$lib/scripts/client/placeholders";
+
+  interface Props {
+    onClick?: () => any;
+    externalLoading?: (promise: Promise<any>) => void;
+    color?: ColorKeys;
+    type?: "button" | "submit";
+    compact?: boolean;
+    enabled?: boolean;
+    href?: string;
+    element?: HTMLElement | undefined;
+    children?: Snippet;
+  }
+
+  let {
+    onClick = () => {},
+    externalLoading = $bindable(),
+    color = ColorKeys.Neutral,
+    type = "button",
+    compact = false,
+    enabled = true,
+    href = "",
+    element = $bindable(),
+    children
+  }: Props = $props();
+
+  let loading = $state(false);
+  async function clickHandler() {
+    if (loading) return;
+    const result = onClick();
+    if (!(result instanceof Promise)) return;
+    loading = true;
+    await result.catch(NoOp);
+    loading = false;
+  }
+  externalLoading = async promise => {
+    if (loading) return;
+    loading = true;
+    await promise.catch(NoOp);
+    loading = false;
+  }
+</script>
+
+<style lang="scss">
+  @use "sass:map";
+
+  @use "$lib/styles/animations.scss";
+  @use "$lib/styles/colors.scss";
+  @use "$lib/styles/dimensions.scss";
+  @use "$lib/styles/text.scss";
+
+  button, a {
+    // unset props
+    background: none;
+    color: inherit;
+    border: none;
+    padding: 0;
+    font: inherit;
+    cursor: pointer;
+    outline: inherit;
+    text-decoration: none;
+
+    display: inline;
+
+    cursor: pointer;
+    padding: dimensions.$gapSmall;
+    border-radius: dimensions.$borderRadius;
+
+    min-width: dimensions.$buttonMinWidth;
+    text-align: center;
+    
+    position: relative;
+    overflow: hidden; 
+  }
+
+  // Nasty hack to get <Spinner/> to have the same height as text inside of buttons.
+  button > :global(span.spinner) {
+    &::before, &::after {
+      content: "a";
+      visibility: hidden;
+    }
+  }
+
+  button:not(.neutral) {
+    --barFocusIndicatorColor: #{colors.$barFocusIndicatorColorAlt};
+  }
+
+  button.compact, a.compact {
+    min-width: dimensions.$buttonMinWidthCompact;
+  }
+
+  .disabled {
+    cursor: not-allowed;
+  }
+
+  @each $key, $val in colors.$specialColors {
+    button.#{$key}, a.#{$key} {
+      background-color: map.get($val, "background");
+      color: map.get($val, "foreground");
+    }
+    button.#{$key}.disabled, a.#{$key}.disabled {
+      color: color-mix(in srgb, map.get($val, "foreground") 50%, transparent);
+    }
+  }
+</style>
+
+{#if href !== ""}
+  <a
+    bind:this={element}
+    class:success={color == ColorKeys.Success}
+    class:warning={color == ColorKeys.Warning}
+    class:danger={color == ColorKeys.Danger}
+    class:accent={color == ColorKeys.Accent}
+    class:neutral={color == ColorKeys.Neutral}
+    class:inherit={color == ColorKeys.Inherit}
+    class:compact={compact}
+    onmouseleave={(e) => {(e.target as HTMLButtonElement).blur()}}
+    class:disabled={!enabled}
+    aria-busy={loading}
+    href={enabled ? href : "#"}
+    onmousedown={addRipple}
+    use:focusIndicator
+  >
+    {@render children?.()}
+  </a>
+{:else}
+  <button
+    bind:this={element}
+    class:success={color == ColorKeys.Success}
+    class:warning={color == ColorKeys.Warning}
+    class:danger={color == ColorKeys.Danger}
+    class:accent={color == ColorKeys.Accent}
+    class:neutral={color == ColorKeys.Neutral}
+    class:inherit={color == ColorKeys.Inherit}
+    class:compact={compact}
+    onclick={clickHandler}
+    onmouseleave={(e) => {(e.target as HTMLButtonElement).blur()}}
+    type={type}
+    disabled={!enabled}
+    aria-busy={loading}
+    class:disabled={!enabled}
+    onmousedown={addRipple}
+    use:focusIndicator
+  >
+    {#if loading}
+      <Loader/>
+    {:else}
+      {@render children?.()}
+    {/if}
+  </button>
+{/if}

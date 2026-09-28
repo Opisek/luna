@@ -1,0 +1,133 @@
+<script lang="ts" generics="T">
+  import { extendUniqueElementId, generateUniqueElementId } from "$lib/scripts/common/dom";
+  import { addRipple, focusIndicator } from "$lib/scripts/client/decoration";
+  import { EmptyOption } from "$lib/scripts/client/placeholders";
+  import { ColorKeys } from "$lib/types/colors";
+  import type { Option } from "$lib/types/options";
+
+  // This component is used for category lists (currently only in the settings modal)
+
+  interface Props {
+    value: T;
+    options: Option<T>[][];
+    label: string;
+  }
+
+  let {
+    value = $bindable(),
+    options,
+    label
+  }: Props = $props();
+
+  let selected: Option<T> = $derived(options.flat().filter(option => option.value === value)[0] || options[0] || EmptyOption);
+  let uniqueId = $props.id();
+  let buttonListId = $derived(generateUniqueElementId(["buttonlist"], uniqueId));
+</script>
+
+<style lang="scss">
+  @use "sass:map";
+
+  @use "$lib/styles/colors.scss";
+  @use "$lib/styles/dimensions.scss";
+
+  div {
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+    padding-right: dimensions.$gapSmall;
+    margin-right: -(dimensions.$gapSmall);
+  }
+
+  .option {
+    border: 0;
+    outline: 0;
+    font-family: inherit;
+    font-size: inherit;
+    width: 100%;
+    background-color: colors.$backgroundSecondary;
+    color: colors.$foregroundSecondary;
+    padding: dimensions.$gapSmall;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: dimensions.$gapSmall;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .first {
+    border-top-left-radius: dimensions.$borderRadius;
+    border-top-right-radius: dimensions.$borderRadius;
+  }
+
+  .last {
+    border-bottom-left-radius: dimensions.$borderRadius;
+    border-bottom-right-radius: dimensions.$borderRadius;
+  }
+
+
+  :not(.option:last-child).last {
+    margin-bottom: dimensions.$gapSmall;
+  }
+
+  @each $key, $val in colors.$specialColors {
+    .selected.#{$key} {
+      background-color: map.get($val, "background");
+      color: map.get($val, "foreground");
+      --barFocusIndicatorColor: #{colors.$barFocusIndicatorColorAlt};
+    }
+  }
+
+  .option :global(*) {
+    pointer-events: none;
+  }
+
+  label {
+    margin: 0;
+    padding: 0;
+    flex-grow: 1;
+    text-align: center;
+  }
+</style>
+
+<div
+  aria-label={label}
+  role="radiogroup"
+  tabindex=-1
+>
+  {#each options as block}
+    {#each block as option, i}
+      {@const Icon = option.icon}
+      {@const entryId = extendUniqueElementId(option.name.toLowerCase().split(" "), buttonListId)}
+      {@const labelId = extendUniqueElementId(["label"], entryId)}
+      {@const buttonId = extendUniqueElementId(["button"], entryId)}
+      <button
+        class="option"
+        class:first={i === 0}
+        class:last={i === block.length - 1}
+        class:selected={option.value === value}
+        class:success={option.color === ColorKeys.Success}
+        class:warning={option.color === ColorKeys.Warning}
+        class:danger={option.color === ColorKeys.Danger}
+        class:accent={!option.color || option.color === ColorKeys.Accent}
+        class:neutral={option.color === ColorKeys.Neutral}
+        class:inherit={option.color === ColorKeys.Inherit}
+        onclick={() => value = option.value}
+        onmousedown={addRipple}
+        use:focusIndicator
+        role="radio"
+        aria-checked={option.value === value}
+        aria-labelledby={labelId}
+        id={buttonId}
+      >
+        <Icon size={20}/>
+        <label id={labelId} for={buttonId}>
+          {option.name}
+        </label>
+      </button>
+    {/each}
+  {/each}
+</div>

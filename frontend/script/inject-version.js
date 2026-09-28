@@ -14,6 +14,6 @@ replaceInFile("../package.json", (contents) => {
     return JSON.stringify(pack, null, 2);
 })
 
-replaceInFile("../src/lib/common/version.ts", (contents) => {
+replaceInFile("../src/lib/scripts/common/version.ts", (contents) => {
     return contents.replace(/\"[^\"]+\"/, `"${version}"`);
 })
