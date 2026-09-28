@@ -311,7 +311,7 @@
     aria-busy={isLoading}
     role="tree"
   >
-    {@render sourceEntries(repository.sources)}
+    {@render sourceEntries(getRepository().sources)}
   </div>
 
   <Horizontal position="center">
@@ -395,18 +395,19 @@
 </main>
 
 {#snippet sourceEntries(sources: SourceModel[])}
-  {#each sources as source, i (source.id)}
+  {#each sources as source (source.id)}
+    {@const index = repository.sources.findIndex((x) => x.id === source.id)}
     {@const calendars = repository.calendars.filter(cal => cal.source === source.id) || []}
-    <SourceEntry bind:source={repository.sources[i]} calendars={calendars} idSeed="main"/>
-    {#if !metadata.collapsedSources.has(repository.sources[i].id)}
+    <SourceEntry bind:source={repository.sources[index]} calendars={calendars} idSeed="main"/>
+    {#if !metadata.collapsedSources.has(repository.sources[index].id)}
         {@render calendarEntries(calendars)}
     {/if}
   {/each}
 {/snippet}
 
 {#snippet calendarEntries(calendars: CalendarModel[])}
-  {#each calendars as cal (cal.id)}
-    {@const index = repository.calendars.findIndex((calendar) => calendar.id === cal.id)}
+  {#each calendars as calendar (calendar.id)}
+    {@const index = repository.calendars.findIndex((x) => x.id === calendar.id)}
     <CalendarEntry bind:calendar={repository.calendars[index]} idSeed="main"/>
   {/each}
 {/snippet}

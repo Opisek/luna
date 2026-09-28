@@ -27,7 +27,6 @@ registerMessageFunction('date', (ctx, options, operand) => {
   delete options.format;
 
   // @ts-ignore
-  console.log(locale);
   const dtf = new Intl.DateTimeFormat(locale, options);
 
   return {

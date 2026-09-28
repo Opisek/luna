@@ -472,6 +472,9 @@ export class Repository {
     this.compileEvents(this.eventsRangeStart, this.eventsRangeEnd);
 
     this.saveCache();
+
+    // no idea why we need this timeout. might be a svelte bug
+    setTimeout(() => this.compileSources(), 0);
   }
 
   //
