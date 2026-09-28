@@ -1,9 +1,9 @@
 <script lang="ts">
-  import Form from '../../../components/forms/Form.svelte';
-  import Link from '../../../components/forms/Link.svelte';
-  import SimplePage from '../../../components/layout/SimplePage.svelte';
-  import TextInput from '../../../components/forms/TextInput.svelte';
-  import ToggleInput from '../../../components/forms/ToggleInput.svelte';
+  import Form from '$lib/components/forms/Form.svelte';
+  import Link from '$lib/components/forms/Link.svelte';
+  import SimplePage from '$lib/components/layout/SimplePage.svelte';
+  import TextInput from '$lib/components/forms/TextInput.svelte';
+  import ToggleInput from '$lib/components/forms/ToggleInput.svelte';
   import { ColorKeys } from '../../../lib/types/colors';
 
   import { afterNavigate, invalidateAll } from '$app/navigation';
