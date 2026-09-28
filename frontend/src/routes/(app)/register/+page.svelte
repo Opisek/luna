@@ -4,7 +4,7 @@
   import SimplePage from '$lib/components/layout/SimplePage.svelte';
   import TextInput from '$lib/components/forms/TextInput.svelte';
   import ToggleInput from '$lib/components/forms/ToggleInput.svelte';
-  import { ColorKeys } from '../../../lib/types/colors';
+  import { ColorKeys } from '$lib/types/colors';
 
   import { afterNavigate, invalidateAll } from '$app/navigation';
   import { page } from '$app/state';
