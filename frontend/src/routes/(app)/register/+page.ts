@@ -1,4 +1,4 @@
-import type { PageLoad } from "$lib/types";
+import type { PageLoad } from "./$types";
 import { fetchJsonFromEvent } from "$lib/scripts/client/net";
 import type { LoadEvent } from "@sveltejs/kit";
 

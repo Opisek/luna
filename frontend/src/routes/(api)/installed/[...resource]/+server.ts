@@ -1,5 +1,5 @@
 import { error, json } from "@sveltejs/kit";
-import type { RequestEvent } from "$lib/types";
+import type { RequestEvent } from "./$types";
 import * as fs from "fs";
 import path from "path";
 import { apiProxy } from "$lib/scripts/server/api.server";

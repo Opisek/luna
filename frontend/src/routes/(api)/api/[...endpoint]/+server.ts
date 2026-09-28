@@ -1,5 +1,5 @@
 import { apiProxy } from "$lib/scripts/server/api.server";
-import type { RequestEvent } from "$lib/types";
+import type { RequestEvent } from "./$types";
 import { error } from "@sveltejs/kit";
 
 const proxy = (async ({ params, request, url, getClientAddress }: RequestEvent) => {
