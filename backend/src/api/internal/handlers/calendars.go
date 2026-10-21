@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"luna-backend/api/internal/util"
-	"luna-backend/cache"
 	"luna-backend/errors"
 	"luna-backend/types"
 
@@ -36,7 +35,7 @@ func GetCalendars(c *gin.Context) {
 	}
 
 	// Get the specified source
-	source, err := cache.GetCached(u.Config.Cache, userId, sourceId, u.Context, func() (types.Source, *errors.ErrorTrace) {
+	source, err := u.Config.Cache.GetCached(userId, sourceId, u.Context, func() (types.Source, *errors.ErrorTrace) {
 		return u.Tx.Queries().GetSource(userId, sourceId, u.Context, u.Config)
 	})
 	if err != nil {
@@ -138,7 +137,7 @@ func PutCalendar(c *gin.Context, body *struct {
 		return
 	}
 
-	source, tr := cache.GetCached(u.Config.Cache, userId, sourceId, u.Context, func() (types.Source, *errors.ErrorTrace) {
+	source, tr := u.Config.Cache.GetCached(userId, sourceId, u.Context, func() (types.Source, *errors.ErrorTrace) {
 		return u.Tx.Queries().GetSource(userId, sourceId, u.Context, u.Config)
 	})
 	if tr != nil {
