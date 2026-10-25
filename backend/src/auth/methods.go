@@ -2,14 +2,19 @@ package auth
 
 import (
 	"context"
+	"crypto/md5"
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
 	"luna-backend/config"
 	"luna-backend/constants"
 	"luna-backend/db"
 	"luna-backend/errors"
 	"luna-backend/types"
 	"net/http"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -63,12 +68,213 @@ type BasicAuth struct {
 	Password string `json:"password" form:"password"`
 }
 
-func (auth BasicAuth) Do(req *http.Request) (*http.Response, *errors.ErrorTrace) {
-	req.SetBasicAuth(auth.Username, auth.Password)
-	res, err := http.DefaultClient.Do(req)
+type digestChallenge struct {
+	Realm     string
+	Nonce     string
+	Opaque    string
+	Qop       string
+	Algorithm string
+	Stale     string
+}
+
+var digestAuthHeaderPrefix = regexp.MustCompile(`(?i)^digest\s+`)
+
+func md5Hex(value string) string {
+	sum := md5.Sum([]byte(value))
+	return hex.EncodeToString(sum[:])
+}
+
+func splitHeaderFields(header string) []string {
+	parts := []string{}
+	start := 0
+	inQuotes := false
+
+	for i := 0; i < len(header); i++ {
+		switch header[i] {
+		case '"':
+			inQuotes = !inQuotes
+		case ',':
+			if !inQuotes {
+				parts = append(parts, strings.TrimSpace(header[start:i]))
+				start = i + 1
+			}
+		}
+	}
+
+	parts = append(parts, strings.TrimSpace(header[start:]))
+	return parts
+}
+
+func parseDigestChallenge(header string) *digestChallenge {
+	header = strings.TrimSpace(digestAuthHeaderPrefix.ReplaceAllString(header, ""))
+	if header == "" {
+		return nil
+	}
+
+	challenge := &digestChallenge{}
+	for _, field := range splitHeaderFields(header) {
+		if field == "" {
+			continue
+		}
+
+		key, value, ok := strings.Cut(field, "=")
+		if !ok {
+			continue
+		}
+
+		key = strings.ToLower(strings.TrimSpace(key))
+		value = strings.Trim(strings.TrimSpace(value), `"`)
+
+		switch key {
+		case "realm":
+			challenge.Realm = value
+		case "nonce":
+			challenge.Nonce = value
+		case "opaque":
+			challenge.Opaque = value
+		case "qop":
+			challenge.Qop = value
+		case "algorithm":
+			challenge.Algorithm = value
+		case "stale":
+			challenge.Stale = value
+		}
+	}
+
+	if challenge.Realm == "" || challenge.Nonce == "" {
+		return nil
+	}
+
+	return challenge
+}
+
+func cloneRequest(req *http.Request) (*http.Request, error) {
+	cloned := req.Clone(req.Context())
+	if req.GetBody != nil {
+		body, err := req.GetBody()
+		if err != nil {
+			return nil, err
+		}
+		cloned.Body = body
+	} else if req.Body != nil && req.Body != http.NoBody {
+		return nil, fmt.Errorf("request body is not replayable")
+	} else {
+		cloned.Body = nil
+	}
+	return cloned, nil
+}
+
+func newCnonce() (string, error) {
+	bytes := make([]byte, 16)
+	_, err := rand.Read(bytes)
+	if err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(bytes), nil
+}
+
+func digestAuthorization(req *http.Request, challenge *digestChallenge, username string, password string) (string, error) {
+	algorithm := strings.ToUpper(challenge.Algorithm)
+	if algorithm == "" {
+		algorithm = "MD5"
+	}
+	if algorithm != "MD5" {
+		return "", fmt.Errorf("unsupported digest algorithm %q", challenge.Algorithm)
+	}
+
+	qop := ""
+	if challenge.Qop != "" {
+		for _, option := range splitHeaderFields(challenge.Qop) {
+			if strings.EqualFold(option, "auth") {
+				qop = "auth"
+				break
+			}
+		}
+		if qop == "" {
+			return "", fmt.Errorf("unsupported digest qop %q", challenge.Qop)
+		}
+	}
+
+	cnonce, err := newCnonce()
+	if err != nil {
+		return "", err
+	}
+
+	uri := req.URL.RequestURI()
+	ha1 := md5Hex(fmt.Sprintf("%s:%s:%s", username, challenge.Realm, password))
+	ha2 := md5Hex(fmt.Sprintf("%s:%s", req.Method, uri))
+
+	response := ""
+	parts := []string{
+		fmt.Sprintf(`username="%s"`, username),
+		fmt.Sprintf(`realm="%s"`, challenge.Realm),
+		fmt.Sprintf(`nonce="%s"`, challenge.Nonce),
+		fmt.Sprintf(`uri="%s"`, uri),
+	}
+
+	if qop != "" {
+		nonceCount := "00000001"
+		response = md5Hex(fmt.Sprintf("%s:%s:%s:%s:%s:%s", ha1, challenge.Nonce, nonceCount, cnonce, qop, ha2))
+		parts = append(parts,
+			fmt.Sprintf(`qop=%s`, qop),
+			fmt.Sprintf(`nc=%s`, nonceCount),
+			fmt.Sprintf(`cnonce="%s"`, cnonce),
+		)
+	} else {
+		response = md5Hex(fmt.Sprintf("%s:%s:%s", ha1, challenge.Nonce, ha2))
+	}
+
+	parts = append(parts, fmt.Sprintf(`response="%s"`, response))
+	if challenge.Opaque != "" {
+		parts = append(parts, fmt.Sprintf(`opaque="%s"`, challenge.Opaque))
+	}
+	if challenge.Algorithm != "" {
+		parts = append(parts, fmt.Sprintf(`algorithm=%s`, challenge.Algorithm))
+	}
+
+	return "Digest " + strings.Join(parts, ", "), nil
+}
+
+func (auth BasicAuth) doDigest(req *http.Request, challenge *digestChallenge) (*http.Response, *errors.ErrorTrace) {
+	retryReq, err := cloneRequest(req)
 	if err != nil {
 		return nil, errors.New().AddErr(errors.LvlDebug, err)
 	}
+
+	authorization, err := digestAuthorization(retryReq, challenge, auth.Username, auth.Password)
+	if err != nil {
+		return nil, errors.New().AddErr(errors.LvlDebug, err)
+	}
+
+	retryReq.Header.Set("Authorization", authorization)
+	res, err := http.DefaultClient.Do(retryReq)
+	if err != nil {
+		return nil, errors.New().AddErr(errors.LvlDebug, err)
+	}
+	return res, nil
+}
+
+func (auth BasicAuth) Do(req *http.Request) (*http.Response, *errors.ErrorTrace) {
+	basicReq, err := cloneRequest(req)
+	if err != nil {
+		return nil, errors.New().AddErr(errors.LvlDebug, err)
+	}
+
+	basicReq.SetBasicAuth(auth.Username, auth.Password)
+	res, err := http.DefaultClient.Do(basicReq)
+	if err != nil {
+		return nil, errors.New().AddErr(errors.LvlDebug, err)
+	}
+
+	if res.StatusCode == http.StatusUnauthorized {
+		challenge := parseDigestChallenge(res.Header.Get("WWW-Authenticate"))
+		if challenge != nil {
+			io.Copy(io.Discard, res.Body)
+			res.Body.Close()
+			return auth.doDigest(req, challenge)
+		}
+	}
+
 	return res, nil
 }
 
