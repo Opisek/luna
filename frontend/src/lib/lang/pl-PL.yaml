@@ -4,7 +4,6 @@ branding:
 
 button:
   settings: "Ustawienia"
-  sidebar: "Kategorie"
   add:
     generic: "Dodaj"
     event: "Stwórz wydarzenie"
@@ -35,10 +34,13 @@ button:
   cancel: "Anuluj"
   reset: "Resetuj"
   details: "Szczegóły"
+  increment: "Zwiększ"
+  decrement: "Zniż"
   tooltip: "Podpowiedź"
 
 credits:
   title: "Credits"
+  sidebar: "Kategorie"
   repository: "Repozytorium Luna"
   stack:
     display: "Tech Stack"
@@ -97,13 +99,1767 @@ form:
 
 recurrence:
   repeats: "Powtarzające się wydarzenie"
+  advanced: "Zaawansowane ustawienia powtarzanie"
+  presets:
+    custom: "Własne"
+    daily: |
+      .input {$interval :integer}
+      .match $interval
+        1 {{Codziennie}}
+        * {{Co {$interval} dni}}
+    dailyworkdays: |
+      .input {$interval :integer}
+      .match $interval
+        1 {{W każdy dzień roboczy}}
+        * {{Co {$interval} dni robocze}}
+    monthlydate: |
+      .input {$interval :integer}
+      .input {$day :integer select=ordinal}
+      .match $interval $day
+        one * {{Miesięcznie {$day}go}}
+        few * {{Co {$interval} miesiące {$day}go}}
+        *   * {{Co {$interval} miesiący {$day}go}}
+    monthlyday: |
+      .input {$interval :integer}
+      .input {$date :integer}
+      .input {$nth :integer}
+      .input {$weekdaynum :integer}
+      .local $weekday = {$date :date weekday=long}
+      .match $interval $nth $weekdaynum
+        one 1 0 {{Miesięcznie w pierwszą niedzielę}}
+        one 1 3 {{Miesięcznie w pierwszą środę}}
+        one 1 6 {{Miesięcznie w pierwszą sobotę}}
+        one 1 * {{Miesięcznie w pierwszy {$weekday}}}
+        one 2 0 {{Miesięcznie w drugą niedzielę}}
+        one 2 3 {{Miesięcznie w drugą środę}}
+        one 2 6 {{Miesięcznie w drugą sobotę}}
+        one 2 * {{Miesięcznie w drugi {$weekday}}}
+        one 3 0 {{Miesięcznie w trzecią niedzielę}}
+        one 3 3 {{Miesięcznie w trzecią środę}}
+        one 3 6 {{Miesięcznie w trzecią sobotę}}
+        one 3 * {{Miesięcznie w trzeci {$weekday}}}
+        one 4 0 {{Miesięcznie w czwartą niedzielę}}
+        one 4 3 {{Miesięcznie w czwartą środę}}
+        one 4 6 {{Miesięcznie w czwartą sobotę}}
+        one 4 * {{Miesięcznie w czwarty {$weekday}}}
+        one * 0 {{Miesięcznie w piątą niedzielę}}
+        one * 3 {{Miesięcznie w piątą środę}}
+        one * 6 {{Miesięcznie w piątą sobotę}}
+        one * * {{Miesięcznie w piąty {$weekday}}}
+        few 1 0 {{Co {$interval} miesiące w pierwszą niedzielę}}
+        few 1 3 {{Co {$interval} miesiące w pierwszą środę}}
+        few 1 6 {{Co {$interval} miesiące w pierwszą sobotę}}
+        few 1 * {{Co {$interval} miesiące w pierwszy {$weekday}}}
+        few 2 0 {{Co {$interval} miesiące w drugą niedzielę}}
+        few 2 3 {{Co {$interval} miesiące w drugą środę}}
+        few 2 6 {{Co {$interval} miesiące w drugą sobotę}}
+        few 2 * {{Co {$interval} miesiące w drugi {$weekday}}}
+        few 3 0 {{Co {$interval} miesiące w trzecią niedzielę}}
+        few 3 3 {{Co {$interval} miesiące w trzecią środę}}
+        few 3 6 {{Co {$interval} miesiące w trzecią sobotę}}
+        few 3 * {{Co {$interval} miesiące w trzeci {$weekday}}}
+        few 4 0 {{Co {$interval} miesiące w czwartą niedzielę}}
+        few 4 3 {{Co {$interval} miesiące w czwartą środę}}
+        few 4 6 {{Co {$interval} miesiące w czwartą sobotę}}
+        few 4 * {{Co {$interval} miesiące w czwarty {$weekday}}}
+        few * 0 {{Co {$interval} miesiące w piątą niedzielę}}
+        few * 3 {{Co {$interval} miesiące w piątą środę}}
+        few * 6 {{Co {$interval} miesiące w piątą sobotę}}
+        few * * {{Co {$interval} miesiące w piąty {$weekday}}}
+        * 1 0 {{Co {$interval} miesięcy w pierwszą niedzielę}}
+        * 1 3 {{Co {$interval} miesięcy w pierwszą środę}}
+        * 1 6 {{Co {$interval} miesięcy w pierwszą sobotę}}
+        * 1 * {{Co {$interval} miesięcy w pierwszy {$weekday}}}
+        * 2 0 {{Co {$interval} miesięcy w drugą niedzielę}}
+        * 2 3 {{Co {$interval} miesięcy w drugą środę}}
+        * 2 6 {{Co {$interval} miesięcy w drugą sobotę}}
+        * 2 * {{Co {$interval} miesięcy w drugi {$weekday}}}
+        * 3 0 {{Co {$interval} miesięcy w trzecią niedzielę}}
+        * 3 3 {{Co {$interval} miesięcy w trzecią środę}}
+        * 3 6 {{Co {$interval} miesięcy w trzecią sobotę}}
+        * 3 * {{Co {$interval} miesięcy w trzeci {$weekday}}}
+        * 4 0 {{Co {$interval} miesięcy w czwartą niedzielę}}
+        * 4 3 {{Co {$interval} miesięcy w czwartą środę}}
+        * 4 6 {{Co {$interval} miesięcy w czwartą sobotę}}
+        * 4 * {{Co {$interval} miesięcy w czwarty {$weekday}}}
+        * * 0 {{Co {$interval} miesięcy w piątą niedzielę}}
+        * * 3 {{Co {$interval} miesięcy w piątą środę}}
+        * * 6 {{Co {$interval} miesięcy w piątą sobotę}}
+        * * * {{Co {$interval} miesięcy w piąty {$weekday}}}
+    monthlydayreverse: |
+      .input {$interval :integer}
+      .input {$date :integer}
+      .input {$nthrev :integer select=ordinal}
+      .input {$weekdaynum :integer}
+      .local $weekday = {$date :date weekday=long}
+      .match $interval $nthrev $weekdaynum
+        one 1 0 {{Miesięcznie w ostatnią niedzielę}}
+        one 1 3 {{Miesięcznie w ostatnią środę}}
+        one 1 6 {{Miesięcznie w ostatnią sobotę}}
+        one 1 * {{Miesięcznie w ostatni {$weekday}}}
+        one 2 0 {{Miesięcznie w przedostatnią niedzielę}}
+        one 2 3 {{Miesięcznie w przedostatnią środę}}
+        one 2 6 {{Miesięcznie w przedostatnią sobotę}}
+        one 2 * {{Miesięcznie w przedostatni {$weekday}}}
+        one 3 0 {{Miesięcznie w trzecią niedzielę od końca}}
+        one 3 3 {{Miesięcznie w trzecią środę od końca}}
+        one 3 6 {{Miesięcznie w trzecią sobotę od końca}}
+        one 3 * {{Miesięcznie w trzeci {$weekday} od końca}}
+        one 4 0 {{Miesięcznie w czwartą niedzielę od końca}}
+        one 4 3 {{Miesięcznie w czwartą środę od końca}}
+        one 4 6 {{Miesięcznie w czwartą sobotę od końca}}
+        one 4 * {{Miesięcznie w czwarty {$weekday} od końca}}
+        one * 0 {{Miesięcznie w piątą niedzielę od końca}}
+        one * 3 {{Miesięcznie w piątą środę od końca}}
+        one * 6 {{Miesięcznie w piątą sobotę od końca}}
+        one * * {{Miesięcznie w piąty {$weekday} od końca}}
+        few 1 0 {{Co {$interval} miesiące w ostatnią niedzielę}}
+        few 1 3 {{Co {$interval} miesiące w ostatnią środę}}
+        few 1 6 {{Co {$interval} miesiące w ostatnią sobotę}}
+        few 1 * {{Co {$interval} miesiące w ostatni {$weekday}}}
+        few 2 0 {{Co {$interval} miesiące w przedostatnią niedzielę}}
+        few 2 3 {{Co {$interval} miesiące w przedostatnią środę}}
+        few 2 6 {{Co {$interval} miesiące w przedostatnią sobotę}}
+        few 2 * {{Co {$interval} miesiące w przedostatni {$weekday}}}
+        few 3 0 {{Co {$interval} miesiące w trzecią niedzielę od końca}}
+        few 3 3 {{Co {$interval} miesiące w trzecią środę od końca}}
+        few 3 6 {{Co {$interval} miesiące w trzecią sobotę od końca}}
+        few 3 * {{Co {$interval} miesiące w trzeci {$weekday} od końca}}
+        few 4 0 {{Co {$interval} miesiące w czwartą niedzielę od końca}}
+        few 4 3 {{Co {$interval} miesiące w czwartą środę od końca}}
+        few 4 6 {{Co {$interval} miesiące w czwartą sobotę od końca}}
+        few 4 * {{Co {$interval} miesiące w czwarty {$weekday} od końca}}
+        few * 0 {{Co {$interval} miesiące w piątą niedzielę od końca}}
+        few * 3 {{Co {$interval} miesiące w piątą środę od końca}}
+        few * 6 {{Co {$interval} miesiące w piątą sobotę od końca}}
+        few * * {{Co {$interval} miesiące w piąty {$weekday} od końca}}
+        * 1 0 {{Co {$interval} miesięcy w ostatnią niedzielę}}
+        * 1 3 {{Co {$interval} miesięcy w ostatnią środę}}
+        * 1 6 {{Co {$interval} miesięcy w ostatnią sobotę}}
+        * 1 * {{Co {$interval} miesięcy w ostatni {$weekday}}}
+        * 2 0 {{Co {$interval} miesięcy w przedostatnią niedzielę}}
+        * 2 3 {{Co {$interval} miesięcy w przedostatnią środę}}
+        * 2 6 {{Co {$interval} miesięcy w przedostatnią sobotę}}
+        * 2 * {{Co {$interval} miesięcy w przedostatni {$weekday}}}
+        * 3 0 {{Co {$interval} miesięcy w trzecią niedzielę od końca}}
+        * 3 3 {{Co {$interval} miesięcy w trzecią środę od końca}}
+        * 3 6 {{Co {$interval} miesięcy w trzecią sobotę od końca}}
+        * 3 * {{Co {$interval} miesięcy w trzeci {$weekday} od końca}}
+        * 4 0 {{Co {$interval} miesięcy w czwartą niedzielę od końca}}
+        * 4 3 {{Co {$interval} miesięcy w czwartą środę od końca}}
+        * 4 6 {{Co {$interval} miesięcy w czwartą sobotę od końca}}
+        * 4 * {{Co {$interval} miesięcy w czwarty {$weekday} od końca}}
+        * * 0 {{Co {$interval} miesięcy w piątą niedzielę od końca}}
+        * * 3 {{Co {$interval} miesięcy w piątą środę od końca}}
+        * * 6 {{Co {$interval} miesięcy w piątą sobotę od końca}}
+        * * * {{Co {$interval} miesięcy w piąty {$weekday} od końca}}
+    yearlydate: |
+      .input {$interval :integer}
+      .input {$date :integer}
+      .input {$day :integer select=ordinal}
+      .local $month = {$date :date month=long}
+      .input {$monthnum :integer}
+      .match $interval $monthnum
+        one  0 {{Corocznie {$day}go stycznia}}
+        one  1 {{Corocznie {$day}go lutego}}
+        one  2 {{Corocznie {$day}go marca}}
+        one  3 {{Corocznie {$day}go kwietna}}
+        one  4 {{Corocznie {$day}go maja}}
+        one  5 {{Corocznie {$day}go czerwca}}
+        one  6 {{Corocznie {$day}go lipca}}
+        one  7 {{Corocznie {$day}go sierpnia}}
+        one  8 {{Corocznie {$day}go września}}
+        one  9 {{Corocznie {$day}go października}}
+        one 10 {{Corocznie {$day}go listopada}}
+        one  * {{Corocznie {$day}go grudnia}}
+        few  0 {{Co {$interval} lata {$day}go stycznia}}
+        few  1 {{Co {$interval} lata {$day}go lutego}}
+        few  2 {{Co {$interval} lata {$day}go marca}}
+        few  3 {{Co {$interval} lata {$day}go kwietna}}
+        few  4 {{Co {$interval} lata {$day}go maja}}
+        few  5 {{Co {$interval} lata {$day}go czerwca}}
+        few  6 {{Co {$interval} lata {$day}go lipca}}
+        few  7 {{Co {$interval} lata {$day}go sierpnia}}
+        few  8 {{Co {$interval} lata {$day}go września}}
+        few  9 {{Co {$interval} lata {$day}go października}}
+        few 10 {{Co {$interval} lata {$day}go listopada}}
+        few  * {{Co {$interval} lata {$day}go grudnia}}
+        *  0 {{Co {$interval} lat {$day}go stycznia}}
+        *  1 {{Co {$interval} lat {$day}go lutego}}
+        *  2 {{Co {$interval} lat {$day}go marca}}
+        *  3 {{Co {$interval} lat {$day}go kwietna}}
+        *  4 {{Co {$interval} lat {$day}go maja}}
+        *  5 {{Co {$interval} lat {$day}go czerwca}}
+        *  6 {{Co {$interval} lat {$day}go lipca}}
+        *  7 {{Co {$interval} lat {$day}go sierpnia}}
+        *  8 {{Co {$interval} lat {$day}go września}}
+        *  9 {{Co {$interval} lat {$day}go października}}
+        * 10 {{Co {$interval} lat {$day}go listopada}}
+        *  * {{Co {$interval} lat {$day}go grudnia}}
+    yearlymonthday: |
+      .input {$interval :integer}
+      .input {$date :integer}
+      .input {$nth :integer select=ordinal}
+      .local $weekday = {$date :date weekday=long}
+      .input {$weekdaynum :integer}
+      .local $month = {$date :date month=long}
+      .input {$monthnum :integer}
+      .match $interval $monthnum $nth $weekdaynum
+        one 0 1 0 {{Corocznie w pierwszą niedzielę stycznia}}
+        one 0 1 3 {{Corocznie w pierwszą środę stycznia}}
+        one 0 1 6 {{Corocznie w pierwszą sobotę stycznia}}
+        one 0 1 * {{Corocznie w pierwszy {$weekday} stycznia}}
+        one 0 2 0 {{Corocznie w drugą niedzielę stycznia}}
+        one 0 2 3 {{Corocznie w drugą środę stycznia}}
+        one 0 2 6 {{Corocznie w drugą sobotę stycznia}}
+        one 0 2 * {{Corocznie w drugi {$weekday} stycznia}}
+        one 0 3 0 {{Corocznie w trzecią niedzielę stycznia}}
+        one 0 3 3 {{Corocznie w trzecią środę stycznia}}
+        one 0 3 6 {{Corocznie w trzecią sobotę stycznia}}
+        one 0 3 * {{Corocznie w trzeci {$weekday} stycznia}}
+        one 0 4 0 {{Corocznie w czwartą niedzielę stycznia}}
+        one 0 4 3 {{Corocznie w czwartą środę stycznia}}
+        one 0 4 6 {{Corocznie w czwartą sobotę stycznia}}
+        one 0 4 * {{Corocznie w czwarty {$weekday} stycznia}}
+        one 0 * 0 {{Corocznie w piątą niedzielę stycznia}}
+        one 0 * 3 {{Corocznie w piątą środę stycznia}}
+        one 0 * 6 {{Corocznie w piątą sobotę stycznia}}
+        one 0 * * {{Corocznie w piąty {$weekday} stycznia}}
+        one 1 1 0 {{Corocznie w pierwszą niedzielę lutego}}
+        one 1 1 3 {{Corocznie w pierwszą środę lutego}}
+        one 1 1 6 {{Corocznie w pierwszą sobotę lutego}}
+        one 1 1 * {{Corocznie w pierwszy {$weekday} lutego}}
+        one 1 2 0 {{Corocznie w drugą niedzielę lutego}}
+        one 1 2 3 {{Corocznie w drugą środę lutego}}
+        one 1 2 6 {{Corocznie w drugą sobotę lutego}}
+        one 1 2 * {{Corocznie w drugi {$weekday} lutego}}
+        one 1 3 0 {{Corocznie w trzecią niedzielę lutego}}
+        one 1 3 3 {{Corocznie w trzecią środę lutego}}
+        one 1 3 6 {{Corocznie w trzecią sobotę lutego}}
+        one 1 3 * {{Corocznie w trzeci {$weekday} lutego}}
+        one 1 4 0 {{Corocznie w czwartą niedzielę lutego}}
+        one 1 4 3 {{Corocznie w czwartą środę lutego}}
+        one 1 4 6 {{Corocznie w czwartą sobotę lutego}}
+        one 1 4 * {{Corocznie w czwarty {$weekday} lutego}}
+        one 1 * 0 {{Corocznie w piątą niedzielę lutego}}
+        one 1 * 3 {{Corocznie w piątą środę lutego}}
+        one 1 * 6 {{Corocznie w piątą sobotę lutego}}
+        one 1 * * {{Corocznie w piąty {$weekday} lutego}}
+        one 2 1 0 {{Corocznie w pierwszą niedzielę marca}}
+        one 2 1 3 {{Corocznie w pierwszą środę marca}}
+        one 2 1 6 {{Corocznie w pierwszą sobotę marca}}
+        one 2 1 * {{Corocznie w pierwszy {$weekday} marca}}
+        one 2 2 0 {{Corocznie w drugą niedzielę marca}}
+        one 2 2 3 {{Corocznie w drugą środę marca}}
+        one 2 2 6 {{Corocznie w drugą sobotę marca}}
+        one 2 2 * {{Corocznie w drugi {$weekday} marca}}
+        one 2 3 0 {{Corocznie w trzecią niedzielę marca}}
+        one 2 3 3 {{Corocznie w trzecią środę marca}}
+        one 2 3 6 {{Corocznie w trzecią sobotę marca}}
+        one 2 3 * {{Corocznie w trzeci {$weekday} marca}}
+        one 2 4 0 {{Corocznie w czwartą niedzielę marca}}
+        one 2 4 3 {{Corocznie w czwartą środę marca}}
+        one 2 4 6 {{Corocznie w czwartą sobotę marca}}
+        one 2 4 * {{Corocznie w czwarty {$weekday} marca}}
+        one 2 * 0 {{Corocznie w piątą niedzielę marca}}
+        one 2 * 3 {{Corocznie w piątą środę marca}}
+        one 2 * 6 {{Corocznie w piątą sobotę marca}}
+        one 2 * * {{Corocznie w piąty {$weekday} marca}}
+        one 3 1 0 {{Corocznie w pierwszą niedzielę kwietnia}}
+        one 3 1 3 {{Corocznie w pierwszą środę kwietnia}}
+        one 3 1 6 {{Corocznie w pierwszą sobotę kwietnia}}
+        one 3 1 * {{Corocznie w pierwszy {$weekday} kwietnia}}
+        one 3 2 0 {{Corocznie w drugą niedzielę kwietnia}}
+        one 3 2 3 {{Corocznie w drugą środę kwietnia}}
+        one 3 2 6 {{Corocznie w drugą sobotę kwietnia}}
+        one 3 2 * {{Corocznie w drugi {$weekday} kwietnia}}
+        one 3 3 0 {{Corocznie w trzecią niedzielę kwietnia}}
+        one 3 3 3 {{Corocznie w trzecią środę kwietnia}}
+        one 3 3 6 {{Corocznie w trzecią sobotę kwietnia}}
+        one 3 3 * {{Corocznie w trzeci {$weekday} kwietnia}}
+        one 3 4 0 {{Corocznie w czwartą niedzielę kwietnia}}
+        one 3 4 3 {{Corocznie w czwartą środę kwietnia}}
+        one 3 4 6 {{Corocznie w czwartą sobotę kwietnia}}
+        one 3 4 * {{Corocznie w czwarty {$weekday} kwietnia}}
+        one 3 * 0 {{Corocznie w piątą niedzielę kwietnia}}
+        one 3 * 3 {{Corocznie w piątą środę kwietnia}}
+        one 3 * 6 {{Corocznie w piątą sobotę kwietnia}}
+        one 3 * * {{Corocznie w piąty {$weekday} kwietnia}}
+        one 4 1 0 {{Corocznie w pierwszą niedzielę maja}}
+        one 4 1 3 {{Corocznie w pierwszą środę maja}}
+        one 4 1 6 {{Corocznie w pierwszą sobotę maja}}
+        one 4 1 * {{Corocznie w pierwszy {$weekday} maja}}
+        one 4 2 0 {{Corocznie w drugą niedzielę maja}}
+        one 4 2 3 {{Corocznie w drugą środę maja}}
+        one 4 2 6 {{Corocznie w drugą sobotę maja}}
+        one 4 2 * {{Corocznie w drugi {$weekday} maja}}
+        one 4 3 0 {{Corocznie w trzecią niedzielę maja}}
+        one 4 3 3 {{Corocznie w trzecią środę maja}}
+        one 4 3 6 {{Corocznie w trzecią sobotę maja}}
+        one 4 3 * {{Corocznie w trzeci {$weekday} maja}}
+        one 4 4 0 {{Corocznie w czwartą niedzielę maja}}
+        one 4 4 3 {{Corocznie w czwartą środę maja}}
+        one 4 4 6 {{Corocznie w czwartą sobotę maja}}
+        one 4 4 * {{Corocznie w czwarty {$weekday} maja}}
+        one 4 * 0 {{Corocznie w piątą niedzielę maja}}
+        one 4 * 3 {{Corocznie w piątą środę maja}}
+        one 4 * 6 {{Corocznie w piątą sobotę maja}}
+        one 4 * * {{Corocznie w piąty {$weekday} maja}}
+        one 5 1 0 {{Corocznie w pierwszą niedzielę czerwca}}
+        one 5 1 3 {{Corocznie w pierwszą środę czerwca}}
+        one 5 1 6 {{Corocznie w pierwszą sobotę czerwca}}
+        one 5 1 * {{Corocznie w pierwszy {$weekday} czerwca}}
+        one 5 2 0 {{Corocznie w drugą niedzielę czerwca}}
+        one 5 2 3 {{Corocznie w drugą środę czerwca}}
+        one 5 2 6 {{Corocznie w drugą sobotę czerwca}}
+        one 5 2 * {{Corocznie w drugi {$weekday} czerwca}}
+        one 5 3 0 {{Corocznie w trzecią niedzielę czerwca}}
+        one 5 3 3 {{Corocznie w trzecią środę czerwca}}
+        one 5 3 6 {{Corocznie w trzecią sobotę czerwca}}
+        one 5 3 * {{Corocznie w trzeci {$weekday} czerwca}}
+        one 5 4 0 {{Corocznie w czwartą niedzielę czerwca}}
+        one 5 4 3 {{Corocznie w czwartą środę czerwca}}
+        one 5 4 6 {{Corocznie w czwartą sobotę czerwca}}
+        one 5 4 * {{Corocznie w czwarty {$weekday} czerwca}}
+        one 5 * 0 {{Corocznie w piątą niedzielę czerwca}}
+        one 5 * 3 {{Corocznie w piątą środę czerwca}}
+        one 5 * 6 {{Corocznie w piątą sobotę czerwca}}
+        one 5 * * {{Corocznie w piąty {$weekday} czerwca}}
+        one 6 1 0 {{Corocznie w pierwszą niedzielę lipca}}
+        one 6 1 3 {{Corocznie w pierwszą środę lipca}}
+        one 6 1 6 {{Corocznie w pierwszą sobotę lipca}}
+        one 6 1 * {{Corocznie w pierwszy {$weekday} lipca}}
+        one 6 2 0 {{Corocznie w drugą niedzielę lipca}}
+        one 6 2 3 {{Corocznie w drugą środę lipca}}
+        one 6 2 6 {{Corocznie w drugą sobotę lipca}}
+        one 6 2 * {{Corocznie w drugi {$weekday} lipca}}
+        one 6 3 0 {{Corocznie w trzecią niedzielę lipca}}
+        one 6 3 3 {{Corocznie w trzecią środę lipca}}
+        one 6 3 6 {{Corocznie w trzecią sobotę lipca}}
+        one 6 3 * {{Corocznie w trzeci {$weekday} lipca}}
+        one 6 4 0 {{Corocznie w czwartą niedzielę lipca}}
+        one 6 4 3 {{Corocznie w czwartą środę lipca}}
+        one 6 4 6 {{Corocznie w czwartą sobotę lipca}}
+        one 6 4 * {{Corocznie w czwarty {$weekday} lipca}}
+        one 6 * 0 {{Corocznie w piątą niedzielę lipca}}
+        one 6 * 3 {{Corocznie w piątą środę lipca}}
+        one 6 * 6 {{Corocznie w piątą sobotę lipca}}
+        one 6 * * {{Corocznie w piąty {$weekday} lipca}}
+        one 7 1 0 {{Corocznie w pierwszą niedzielę sierpnia}}
+        one 7 1 3 {{Corocznie w pierwszą środę sierpnia}}
+        one 7 1 6 {{Corocznie w pierwszą sobotę sierpnia}}
+        one 7 1 * {{Corocznie w pierwszy {$weekday} sierpnia}}
+        one 7 2 0 {{Corocznie w drugą niedzielę sierpnia}}
+        one 7 2 3 {{Corocznie w drugą środę sierpnia}}
+        one 7 2 6 {{Corocznie w drugą sobotę sierpnia}}
+        one 7 2 * {{Corocznie w drugi {$weekday} sierpnia}}
+        one 7 3 0 {{Corocznie w trzecią niedzielę sierpnia}}
+        one 7 3 3 {{Corocznie w trzecią środę sierpnia}}
+        one 7 3 6 {{Corocznie w trzecią sobotę sierpnia}}
+        one 7 3 * {{Corocznie w trzeci {$weekday} sierpnia}}
+        one 7 4 0 {{Corocznie w czwartą niedzielę sierpnia}}
+        one 7 4 3 {{Corocznie w czwartą środę sierpnia}}
+        one 7 4 6 {{Corocznie w czwartą sobotę sierpnia}}
+        one 7 4 * {{Corocznie w czwarty {$weekday} sierpnia}}
+        one 7 * 0 {{Corocznie w piątą niedzielę sierpnia}}
+        one 7 * 3 {{Corocznie w piątą środę sierpnia}}
+        one 7 * 6 {{Corocznie w piątą sobotę sierpnia}}
+        one 7 * * {{Corocznie w piąty {$weekday} sierpnia}}
+        one 8 1 0 {{Corocznie w pierwszą niedzielę września}}
+        one 8 1 3 {{Corocznie w pierwszą środę września}}
+        one 8 1 6 {{Corocznie w pierwszą sobotę września}}
+        one 8 1 * {{Corocznie w pierwszy {$weekday} września}}
+        one 8 2 0 {{Corocznie w drugą niedzielę września}}
+        one 8 2 3 {{Corocznie w drugą środę września}}
+        one 8 2 6 {{Corocznie w drugą sobotę września}}
+        one 8 2 * {{Corocznie w drugi {$weekday} września}}
+        one 8 3 0 {{Corocznie w trzecią niedzielę września}}
+        one 8 3 3 {{Corocznie w trzecią środę września}}
+        one 8 3 6 {{Corocznie w trzecią sobotę września}}
+        one 8 3 * {{Corocznie w trzeci {$weekday} września}}
+        one 8 4 0 {{Corocznie w czwartą niedzielę września}}
+        one 8 4 3 {{Corocznie w czwartą środę września}}
+        one 8 4 6 {{Corocznie w czwartą sobotę września}}
+        one 8 4 * {{Corocznie w czwarty {$weekday} września}}
+        one 8 * 0 {{Corocznie w piątą niedzielę września}}
+        one 8 * 3 {{Corocznie w piątą środę września}}
+        one 8 * 6 {{Corocznie w piątą sobotę września}}
+        one 8 * * {{Corocznie w piąty {$weekday} września}}
+        one 9 1 0 {{Corocznie w pierwszą niedzielę października}}
+        one 9 1 3 {{Corocznie w pierwszą środę października}}
+        one 9 1 6 {{Corocznie w pierwszą sobotę października}}
+        one 9 1 * {{Corocznie w pierwszy {$weekday} października}}
+        one 9 2 0 {{Corocznie w drugą niedzielę października}}
+        one 9 2 3 {{Corocznie w drugą środę października}}
+        one 9 2 6 {{Corocznie w drugą sobotę października}}
+        one 9 2 * {{Corocznie w drugi {$weekday} października}}
+        one 9 3 0 {{Corocznie w trzecią niedzielę października}}
+        one 9 3 3 {{Corocznie w trzecią środę października}}
+        one 9 3 6 {{Corocznie w trzecią sobotę października}}
+        one 9 3 * {{Corocznie w trzeci {$weekday} października}}
+        one 9 4 0 {{Corocznie w czwartą niedzielę października}}
+        one 9 4 3 {{Corocznie w czwartą środę października}}
+        one 9 4 6 {{Corocznie w czwartą sobotę października}}
+        one 9 4 * {{Corocznie w czwarty {$weekday} października}}
+        one 9 * 0 {{Corocznie w piątą niedzielę października}}
+        one 9 * 3 {{Corocznie w piątą środę października}}
+        one 9 * 6 {{Corocznie w piątą sobotę października}}
+        one 9 * * {{Corocznie w piąty {$weekday} października}}
+        one 10 1 0 {{Corocznie w pierwszą niedzielę listopada}}
+        one 10 1 3 {{Corocznie w pierwszą środę listopada}}
+        one 10 1 6 {{Corocznie w pierwszą sobotę listopada}}
+        one 10 1 * {{Corocznie w pierwszy {$weekday} listopada}}
+        one 10 2 0 {{Corocznie w drugą niedzielę listopada}}
+        one 10 2 3 {{Corocznie w drugą środę listopada}}
+        one 10 2 6 {{Corocznie w drugą sobotę listopada}}
+        one 10 2 * {{Corocznie w drugi {$weekday} listopada}}
+        one 10 3 0 {{Corocznie w trzecią niedzielę listopada}}
+        one 10 3 3 {{Corocznie w trzecią środę listopada}}
+        one 10 3 6 {{Corocznie w trzecią sobotę listopada}}
+        one 10 3 * {{Corocznie w trzeci {$weekday} listopada}}
+        one 10 4 0 {{Corocznie w czwartą niedzielę listopada}}
+        one 10 4 3 {{Corocznie w czwartą środę listopada}}
+        one 10 4 6 {{Corocznie w czwartą sobotę listopada}}
+        one 10 4 * {{Corocznie w czwarty {$weekday} listopada}}
+        one 10 * 0 {{Corocznie w piątą niedzielę listopada}}
+        one 10 * 3 {{Corocznie w piątą środę listopada}}
+        one 10 * 6 {{Corocznie w piątą sobotę listopada}}
+        one 10 * * {{Corocznie w piąty {$weekday} listopada}}
+        one * 1 0 {{Corocznie w pierwszą niedzielę grudnia}}
+        one * 1 3 {{Corocznie w pierwszą środę grudnia}}
+        one * 1 6 {{Corocznie w pierwszą sobotę grudnia}}
+        one * 1 * {{Corocznie w pierwszy {$weekday} grudnia}}
+        one * 2 0 {{Corocznie w drugą niedzielę grudnia}}
+        one * 2 3 {{Corocznie w drugą środę grudnia}}
+        one * 2 6 {{Corocznie w drugą sobotę grudnia}}
+        one * 2 * {{Corocznie w drugi {$weekday} grudnia}}
+        one * 3 0 {{Corocznie w trzecią niedzielę grudnia}}
+        one * 3 3 {{Corocznie w trzecią środę grudnia}}
+        one * 3 6 {{Corocznie w trzecią sobotę grudnia}}
+        one * 3 * {{Corocznie w trzeci {$weekday} grudnia}}
+        one * 4 0 {{Corocznie w czwartą niedzielę grudnia}}
+        one * 4 3 {{Corocznie w czwartą środę grudnia}}
+        one * 4 6 {{Corocznie w czwartą sobotę grudnia}}
+        one * 4 * {{Corocznie w czwarty {$weekday} grudnia}}
+        one * * 0 {{Corocznie w piątą niedzielę grudnia}}
+        one * * 3 {{Corocznie w piątą środę grudnia}}
+        one * * 6 {{Corocznie w piątą sobotę grudnia}}
+        one * * * {{Corocznie w piąty {$weekday} grudnia}}
+                few 0 1 0 {{Co {$interval} lata w pierwszą niedzielę stycznia}}
+        few 0 1 3 {{Co {$interval} lata w pierwszą środę stycznia}}
+        few 0 1 6 {{Co {$interval} lata w pierwszą sobotę stycznia}}
+        few 0 1 * {{Co {$interval} lata w pierwszy {$weekday} stycznia}}
+        few 0 2 0 {{Co {$interval} lata w drugą niedzielę stycznia}}
+        few 0 2 3 {{Co {$interval} lata w drugą środę stycznia}}
+        few 0 2 6 {{Co {$interval} lata w drugą sobotę stycznia}}
+        few 0 2 * {{Co {$interval} lata w drugi {$weekday} stycznia}}
+        few 0 3 0 {{Co {$interval} lata w trzecią niedzielę stycznia}}
+        few 0 3 3 {{Co {$interval} lata w trzecią środę stycznia}}
+        few 0 3 6 {{Co {$interval} lata w trzecią sobotę stycznia}}
+        few 0 3 * {{Co {$interval} lata w trzeci {$weekday} stycznia}}
+        few 0 4 0 {{Co {$interval} lata w czwartą niedzielę stycznia}}
+        few 0 4 3 {{Co {$interval} lata w czwartą środę stycznia}}
+        few 0 4 6 {{Co {$interval} lata w czwartą sobotę stycznia}}
+        few 0 4 * {{Co {$interval} lata w czwarty {$weekday} stycznia}}
+        few 0 * 0 {{Co {$interval} lata w piątą niedzielę stycznia}}
+        few 0 * 3 {{Co {$interval} lata w piątą środę stycznia}}
+        few 0 * 6 {{Co {$interval} lata w piątą sobotę stycznia}}
+        few 0 * * {{Co {$interval} lata w piąty {$weekday} stycznia}}
+        few 1 1 0 {{Co {$interval} lata w pierwszą niedzielę lutego}}
+        few 1 1 3 {{Co {$interval} lata w pierwszą środę lutego}}
+        few 1 1 6 {{Co {$interval} lata w pierwszą sobotę lutego}}
+        few 1 1 * {{Co {$interval} lata w pierwszy {$weekday} lutego}}
+        few 1 2 0 {{Co {$interval} lata w drugą niedzielę lutego}}
+        few 1 2 3 {{Co {$interval} lata w drugą środę lutego}}
+        few 1 2 6 {{Co {$interval} lata w drugą sobotę lutego}}
+        few 1 2 * {{Co {$interval} lata w drugi {$weekday} lutego}}
+        few 1 3 0 {{Co {$interval} lata w trzecią niedzielę lutego}}
+        few 1 3 3 {{Co {$interval} lata w trzecią środę lutego}}
+        few 1 3 6 {{Co {$interval} lata w trzecią sobotę lutego}}
+        few 1 3 * {{Co {$interval} lata w trzeci {$weekday} lutego}}
+        few 1 4 0 {{Co {$interval} lata w czwartą niedzielę lutego}}
+        few 1 4 3 {{Co {$interval} lata w czwartą środę lutego}}
+        few 1 4 6 {{Co {$interval} lata w czwartą sobotę lutego}}
+        few 1 4 * {{Co {$interval} lata w czwarty {$weekday} lutego}}
+        few 1 * 0 {{Co {$interval} lata w piątą niedzielę lutego}}
+        few 1 * 3 {{Co {$interval} lata w piątą środę lutego}}
+        few 1 * 6 {{Co {$interval} lata w piątą sobotę lutego}}
+        few 1 * * {{Co {$interval} lata w piąty {$weekday} lutego}}
+        few 2 1 0 {{Co {$interval} lata w pierwszą niedzielę marca}}
+        few 2 1 3 {{Co {$interval} lata w pierwszą środę marca}}
+        few 2 1 6 {{Co {$interval} lata w pierwszą sobotę marca}}
+        few 2 1 * {{Co {$interval} lata w pierwszy {$weekday} marca}}
+        few 2 2 0 {{Co {$interval} lata w drugą niedzielę marca}}
+        few 2 2 3 {{Co {$interval} lata w drugą środę marca}}
+        few 2 2 6 {{Co {$interval} lata w drugą sobotę marca}}
+        few 2 2 * {{Co {$interval} lata w drugi {$weekday} marca}}
+        few 2 3 0 {{Co {$interval} lata w trzecią niedzielę marca}}
+        few 2 3 3 {{Co {$interval} lata w trzecią środę marca}}
+        few 2 3 6 {{Co {$interval} lata w trzecią sobotę marca}}
+        few 2 3 * {{Co {$interval} lata w trzeci {$weekday} marca}}
+        few 2 4 0 {{Co {$interval} lata w czwartą niedzielę marca}}
+        few 2 4 3 {{Co {$interval} lata w czwartą środę marca}}
+        few 2 4 6 {{Co {$interval} lata w czwartą sobotę marca}}
+        few 2 4 * {{Co {$interval} lata w czwarty {$weekday} marca}}
+        few 2 * 0 {{Co {$interval} lata w piątą niedzielę marca}}
+        few 2 * 3 {{Co {$interval} lata w piątą środę marca}}
+        few 2 * 6 {{Co {$interval} lata w piątą sobotę marca}}
+        few 2 * * {{Co {$interval} lata w piąty {$weekday} marca}}
+        few 3 1 0 {{Co {$interval} lata w pierwszą niedzielę kwietnia}}
+        few 3 1 3 {{Co {$interval} lata w pierwszą środę kwietnia}}
+        few 3 1 6 {{Co {$interval} lata w pierwszą sobotę kwietnia}}
+        few 3 1 * {{Co {$interval} lata w pierwszy {$weekday} kwietnia}}
+        few 3 2 0 {{Co {$interval} lata w drugą niedzielę kwietnia}}
+        few 3 2 3 {{Co {$interval} lata w drugą środę kwietnia}}
+        few 3 2 6 {{Co {$interval} lata w drugą sobotę kwietnia}}
+        few 3 2 * {{Co {$interval} lata w drugi {$weekday} kwietnia}}
+        few 3 3 0 {{Co {$interval} lata w trzecią niedzielę kwietnia}}
+        few 3 3 3 {{Co {$interval} lata w trzecią środę kwietnia}}
+        few 3 3 6 {{Co {$interval} lata w trzecią sobotę kwietnia}}
+        few 3 3 * {{Co {$interval} lata w trzeci {$weekday} kwietnia}}
+        few 3 4 0 {{Co {$interval} lata w czwartą niedzielę kwietnia}}
+        few 3 4 3 {{Co {$interval} lata w czwartą środę kwietnia}}
+        few 3 4 6 {{Co {$interval} lata w czwartą sobotę kwietnia}}
+        few 3 4 * {{Co {$interval} lata w czwarty {$weekday} kwietnia}}
+        few 3 * 0 {{Co {$interval} lata w piątą niedzielę kwietnia}}
+        few 3 * 3 {{Co {$interval} lata w piątą środę kwietnia}}
+        few 3 * 6 {{Co {$interval} lata w piątą sobotę kwietnia}}
+        few 3 * * {{Co {$interval} lata w piąty {$weekday} kwietnia}}
+        few 4 1 0 {{Co {$interval} lata w pierwszą niedzielę maja}}
+        few 4 1 3 {{Co {$interval} lata w pierwszą środę maja}}
+        few 4 1 6 {{Co {$interval} lata w pierwszą sobotę maja}}
+        few 4 1 * {{Co {$interval} lata w pierwszy {$weekday} maja}}
+        few 4 2 0 {{Co {$interval} lata w drugą niedzielę maja}}
+        few 4 2 3 {{Co {$interval} lata w drugą środę maja}}
+        few 4 2 6 {{Co {$interval} lata w drugą sobotę maja}}
+        few 4 2 * {{Co {$interval} lata w drugi {$weekday} maja}}
+        few 4 3 0 {{Co {$interval} lata w trzecią niedzielę maja}}
+        few 4 3 3 {{Co {$interval} lata w trzecią środę maja}}
+        few 4 3 6 {{Co {$interval} lata w trzecią sobotę maja}}
+        few 4 3 * {{Co {$interval} lata w trzeci {$weekday} maja}}
+        few 4 4 0 {{Co {$interval} lata w czwartą niedzielę maja}}
+        few 4 4 3 {{Co {$interval} lata w czwartą środę maja}}
+        few 4 4 6 {{Co {$interval} lata w czwartą sobotę maja}}
+        few 4 4 * {{Co {$interval} lata w czwarty {$weekday} maja}}
+        few 4 * 0 {{Co {$interval} lata w piątą niedzielę maja}}
+        few 4 * 3 {{Co {$interval} lata w piątą środę maja}}
+        few 4 * 6 {{Co {$interval} lata w piątą sobotę maja}}
+        few 4 * * {{Co {$interval} lata w piąty {$weekday} maja}}
+        few 5 1 0 {{Co {$interval} lata w pierwszą niedzielę czerwca}}
+        few 5 1 3 {{Co {$interval} lata w pierwszą środę czerwca}}
+        few 5 1 6 {{Co {$interval} lata w pierwszą sobotę czerwca}}
+        few 5 1 * {{Co {$interval} lata w pierwszy {$weekday} czerwca}}
+        few 5 2 0 {{Co {$interval} lata w drugą niedzielę czerwca}}
+        few 5 2 3 {{Co {$interval} lata w drugą środę czerwca}}
+        few 5 2 6 {{Co {$interval} lata w drugą sobotę czerwca}}
+        few 5 2 * {{Co {$interval} lata w drugi {$weekday} czerwca}}
+        few 5 3 0 {{Co {$interval} lata w trzecią niedzielę czerwca}}
+        few 5 3 3 {{Co {$interval} lata w trzecią środę czerwca}}
+        few 5 3 6 {{Co {$interval} lata w trzecią sobotę czerwca}}
+        few 5 3 * {{Co {$interval} lata w trzeci {$weekday} czerwca}}
+        few 5 4 0 {{Co {$interval} lata w czwartą niedzielę czerwca}}
+        few 5 4 3 {{Co {$interval} lata w czwartą środę czerwca}}
+        few 5 4 6 {{Co {$interval} lata w czwartą sobotę czerwca}}
+        few 5 4 * {{Co {$interval} lata w czwarty {$weekday} czerwca}}
+        few 5 * 0 {{Co {$interval} lata w piątą niedzielę czerwca}}
+        few 5 * 3 {{Co {$interval} lata w piątą środę czerwca}}
+        few 5 * 6 {{Co {$interval} lata w piątą sobotę czerwca}}
+        few 5 * * {{Co {$interval} lata w piąty {$weekday} czerwca}}
+        few 6 1 0 {{Co {$interval} lata w pierwszą niedzielę lipca}}
+        few 6 1 3 {{Co {$interval} lata w pierwszą środę lipca}}
+        few 6 1 6 {{Co {$interval} lata w pierwszą sobotę lipca}}
+        few 6 1 * {{Co {$interval} lata w pierwszy {$weekday} lipca}}
+        few 6 2 0 {{Co {$interval} lata w drugą niedzielę lipca}}
+        few 6 2 3 {{Co {$interval} lata w drugą środę lipca}}
+        few 6 2 6 {{Co {$interval} lata w drugą sobotę lipca}}
+        few 6 2 * {{Co {$interval} lata w drugi {$weekday} lipca}}
+        few 6 3 0 {{Co {$interval} lata w trzecią niedzielę lipca}}
+        few 6 3 3 {{Co {$interval} lata w trzecią środę lipca}}
+        few 6 3 6 {{Co {$interval} lata w trzecią sobotę lipca}}
+        few 6 3 * {{Co {$interval} lata w trzeci {$weekday} lipca}}
+        few 6 4 0 {{Co {$interval} lata w czwartą niedzielę lipca}}
+        few 6 4 3 {{Co {$interval} lata w czwartą środę lipca}}
+        few 6 4 6 {{Co {$interval} lata w czwartą sobotę lipca}}
+        few 6 4 * {{Co {$interval} lata w czwarty {$weekday} lipca}}
+        few 6 * 0 {{Co {$interval} lata w piątą niedzielę lipca}}
+        few 6 * 3 {{Co {$interval} lata w piątą środę lipca}}
+        few 6 * 6 {{Co {$interval} lata w piątą sobotę lipca}}
+        few 6 * * {{Co {$interval} lata w piąty {$weekday} lipca}}
+        few 7 1 0 {{Co {$interval} lata w pierwszą niedzielę sierpnia}}
+        few 7 1 3 {{Co {$interval} lata w pierwszą środę sierpnia}}
+        few 7 1 6 {{Co {$interval} lata w pierwszą sobotę sierpnia}}
+        few 7 1 * {{Co {$interval} lata w pierwszy {$weekday} sierpnia}}
+        few 7 2 0 {{Co {$interval} lata w drugą niedzielę sierpnia}}
+        few 7 2 3 {{Co {$interval} lata w drugą środę sierpnia}}
+        few 7 2 6 {{Co {$interval} lata w drugą sobotę sierpnia}}
+        few 7 2 * {{Co {$interval} lata w drugi {$weekday} sierpnia}}
+        few 7 3 0 {{Co {$interval} lata w trzecią niedzielę sierpnia}}
+        few 7 3 3 {{Co {$interval} lata w trzecią środę sierpnia}}
+        few 7 3 6 {{Co {$interval} lata w trzecią sobotę sierpnia}}
+        few 7 3 * {{Co {$interval} lata w trzeci {$weekday} sierpnia}}
+        few 7 4 0 {{Co {$interval} lata w czwartą niedzielę sierpnia}}
+        few 7 4 3 {{Co {$interval} lata w czwartą środę sierpnia}}
+        few 7 4 6 {{Co {$interval} lata w czwartą sobotę sierpnia}}
+        few 7 4 * {{Co {$interval} lata w czwarty {$weekday} sierpnia}}
+        few 7 * 0 {{Co {$interval} lata w piątą niedzielę sierpnia}}
+        few 7 * 3 {{Co {$interval} lata w piątą środę sierpnia}}
+        few 7 * 6 {{Co {$interval} lata w piątą sobotę sierpnia}}
+        few 7 * * {{Co {$interval} lata w piąty {$weekday} sierpnia}}
+        few 8 1 0 {{Co {$interval} lata w pierwszą niedzielę września}}
+        few 8 1 3 {{Co {$interval} lata w pierwszą środę września}}
+        few 8 1 6 {{Co {$interval} lata w pierwszą sobotę września}}
+        few 8 1 * {{Co {$interval} lata w pierwszy {$weekday} września}}
+        few 8 2 0 {{Co {$interval} lata w drugą niedzielę września}}
+        few 8 2 3 {{Co {$interval} lata w drugą środę września}}
+        few 8 2 6 {{Co {$interval} lata w drugą sobotę września}}
+        few 8 2 * {{Co {$interval} lata w drugi {$weekday} września}}
+        few 8 3 0 {{Co {$interval} lata w trzecią niedzielę września}}
+        few 8 3 3 {{Co {$interval} lata w trzecią środę września}}
+        few 8 3 6 {{Co {$interval} lata w trzecią sobotę września}}
+        few 8 3 * {{Co {$interval} lata w trzeci {$weekday} września}}
+        few 8 4 0 {{Co {$interval} lata w czwartą niedzielę września}}
+        few 8 4 3 {{Co {$interval} lata w czwartą środę września}}
+        few 8 4 6 {{Co {$interval} lata w czwartą sobotę września}}
+        few 8 4 * {{Co {$interval} lata w czwarty {$weekday} września}}
+        few 8 * 0 {{Co {$interval} lata w piątą niedzielę września}}
+        few 8 * 3 {{Co {$interval} lata w piątą środę września}}
+        few 8 * 6 {{Co {$interval} lata w piątą sobotę września}}
+        few 8 * * {{Co {$interval} lata w piąty {$weekday} września}}
+        few 9 1 0 {{Co {$interval} lata w pierwszą niedzielę października}}
+        few 9 1 3 {{Co {$interval} lata w pierwszą środę października}}
+        few 9 1 6 {{Co {$interval} lata w pierwszą sobotę października}}
+        few 9 1 * {{Co {$interval} lata w pierwszy {$weekday} października}}
+        few 9 2 0 {{Co {$interval} lata w drugą niedzielę października}}
+        few 9 2 3 {{Co {$interval} lata w drugą środę października}}
+        few 9 2 6 {{Co {$interval} lata w drugą sobotę października}}
+        few 9 2 * {{Co {$interval} lata w drugi {$weekday} października}}
+        few 9 3 0 {{Co {$interval} lata w trzecią niedzielę października}}
+        few 9 3 3 {{Co {$interval} lata w trzecią środę października}}
+        few 9 3 6 {{Co {$interval} lata w trzecią sobotę października}}
+        few 9 3 * {{Co {$interval} lata w trzeci {$weekday} października}}
+        few 9 4 0 {{Co {$interval} lata w czwartą niedzielę października}}
+        few 9 4 3 {{Co {$interval} lata w czwartą środę października}}
+        few 9 4 6 {{Co {$interval} lata w czwartą sobotę października}}
+        few 9 4 * {{Co {$interval} lata w czwarty {$weekday} października}}
+        few 9 * 0 {{Co {$interval} lata w piątą niedzielę października}}
+        few 9 * 3 {{Co {$interval} lata w piątą środę października}}
+        few 9 * 6 {{Co {$interval} lata w piątą sobotę października}}
+        few 9 * * {{Co {$interval} lata w piąty {$weekday} października}}
+        few 10 1 0 {{Co {$interval} lata w pierwszą niedzielę listopada}}
+        few 10 1 3 {{Co {$interval} lata w pierwszą środę listopada}}
+        few 10 1 6 {{Co {$interval} lata w pierwszą sobotę listopada}}
+        few 10 1 * {{Co {$interval} lata w pierwszy {$weekday} listopada}}
+        few 10 2 0 {{Co {$interval} lata w drugą niedzielę listopada}}
+        few 10 2 3 {{Co {$interval} lata w drugą środę listopada}}
+        few 10 2 6 {{Co {$interval} lata w drugą sobotę listopada}}
+        few 10 2 * {{Co {$interval} lata w drugi {$weekday} listopada}}
+        few 10 3 0 {{Co {$interval} lata w trzecią niedzielę listopada}}
+        few 10 3 3 {{Co {$interval} lata w trzecią środę listopada}}
+        few 10 3 6 {{Co {$interval} lata w trzecią sobotę listopada}}
+        few 10 3 * {{Co {$interval} lata w trzeci {$weekday} listopada}}
+        few 10 4 0 {{Co {$interval} lata w czwartą niedzielę listopada}}
+        few 10 4 3 {{Co {$interval} lata w czwartą środę listopada}}
+        few 10 4 6 {{Co {$interval} lata w czwartą sobotę listopada}}
+        few 10 4 * {{Co {$interval} lata w czwarty {$weekday} listopada}}
+        few 10 * 0 {{Co {$interval} lata w piątą niedzielę listopada}}
+        few 10 * 3 {{Co {$interval} lata w piątą środę listopada}}
+        few 10 * 6 {{Co {$interval} lata w piątą sobotę listopada}}
+        few 10 * * {{Co {$interval} lata w piąty {$weekday} listopada}}
+        few * 1 0 {{Co {$interval} lata w pierwszą niedzielę grudnia}}
+        few * 1 3 {{Co {$interval} lata w pierwszą środę grudnia}}
+        few * 1 6 {{Co {$interval} lata w pierwszą sobotę grudnia}}
+        few * 1 * {{Co {$interval} lata w pierwszy {$weekday} grudnia}}
+        few * 2 0 {{Co {$interval} lata w drugą niedzielę grudnia}}
+        few * 2 3 {{Co {$interval} lata w drugą środę grudnia}}
+        few * 2 6 {{Co {$interval} lata w drugą sobotę grudnia}}
+        few * 2 * {{Co {$interval} lata w drugi {$weekday} grudnia}}
+        few * 3 0 {{Co {$interval} lata w trzecią niedzielę grudnia}}
+        few * 3 3 {{Co {$interval} lata w trzecią środę grudnia}}
+        few * 3 6 {{Co {$interval} lata w trzecią sobotę grudnia}}
+        few * 3 * {{Co {$interval} lata w trzeci {$weekday} grudnia}}
+        few * 4 0 {{Co {$interval} lata w czwartą niedzielę grudnia}}
+        few * 4 3 {{Co {$interval} lata w czwartą środę grudnia}}
+        few * 4 6 {{Co {$interval} lata w czwartą sobotę grudnia}}
+        few * 4 * {{Co {$interval} lata w czwarty {$weekday} grudnia}}
+        few * * 0 {{Co {$interval} lata w piątą niedzielę grudnia}}
+        few * * 3 {{Co {$interval} lata w piątą środę grudnia}}
+        few * * 6 {{Co {$interval} lata w piątą sobotę grudnia}}
+        few * * * {{Co {$interval} lata w piąty {$weekday} grudnia}}
+        * 0 1 0 {{Co {$interval} lat w pierwszą niedzielę stycznia}}
+        * 0 1 3 {{Co {$interval} lat w pierwszą środę stycznia}}
+        * 0 1 6 {{Co {$interval} lat w pierwszą sobotę stycznia}}
+        * 0 1 * {{Co {$interval} lat w pierwszy {$weekday} stycznia}}
+        * 0 2 0 {{Co {$interval} lat w drugą niedzielę stycznia}}
+        * 0 2 3 {{Co {$interval} lat w drugą środę stycznia}}
+        * 0 2 6 {{Co {$interval} lat w drugą sobotę stycznia}}
+        * 0 2 * {{Co {$interval} lat w drugi {$weekday} stycznia}}
+        * 0 3 0 {{Co {$interval} lat w trzecią niedzielę stycznia}}
+        * 0 3 3 {{Co {$interval} lat w trzecią środę stycznia}}
+        * 0 3 6 {{Co {$interval} lat w trzecią sobotę stycznia}}
+        * 0 3 * {{Co {$interval} lat w trzeci {$weekday} stycznia}}
+        * 0 4 0 {{Co {$interval} lat w czwartą niedzielę stycznia}}
+        * 0 4 3 {{Co {$interval} lat w czwartą środę stycznia}}
+        * 0 4 6 {{Co {$interval} lat w czwartą sobotę stycznia}}
+        * 0 4 * {{Co {$interval} lat w czwarty {$weekday} stycznia}}
+        * 0 * 0 {{Co {$interval} lat w piątą niedzielę stycznia}}
+        * 0 * 3 {{Co {$interval} lat w piątą środę stycznia}}
+        * 0 * 6 {{Co {$interval} lat w piątą sobotę stycznia}}
+        * 0 * * {{Co {$interval} lat w piąty {$weekday} stycznia}}
+        * 1 1 0 {{Co {$interval} lat w pierwszą niedzielę lutego}}
+        * 1 1 3 {{Co {$interval} lat w pierwszą środę lutego}}
+        * 1 1 6 {{Co {$interval} lat w pierwszą sobotę lutego}}
+        * 1 1 * {{Co {$interval} lat w pierwszy {$weekday} lutego}}
+        * 1 2 0 {{Co {$interval} lat w drugą niedzielę lutego}}
+        * 1 2 3 {{Co {$interval} lat w drugą środę lutego}}
+        * 1 2 6 {{Co {$interval} lat w drugą sobotę lutego}}
+        * 1 2 * {{Co {$interval} lat w drugi {$weekday} lutego}}
+        * 1 3 0 {{Co {$interval} lat w trzecią niedzielę lutego}}
+        * 1 3 3 {{Co {$interval} lat w trzecią środę lutego}}
+        * 1 3 6 {{Co {$interval} lat w trzecią sobotę lutego}}
+        * 1 3 * {{Co {$interval} lat w trzeci {$weekday} lutego}}
+        * 1 4 0 {{Co {$interval} lat w czwartą niedzielę lutego}}
+        * 1 4 3 {{Co {$interval} lat w czwartą środę lutego}}
+        * 1 4 6 {{Co {$interval} lat w czwartą sobotę lutego}}
+        * 1 4 * {{Co {$interval} lat w czwarty {$weekday} lutego}}
+        * 1 * 0 {{Co {$interval} lat w piątą niedzielę lutego}}
+        * 1 * 3 {{Co {$interval} lat w piątą środę lutego}}
+        * 1 * 6 {{Co {$interval} lat w piątą sobotę lutego}}
+        * 1 * * {{Co {$interval} lat w piąty {$weekday} lutego}}
+        * 2 1 0 {{Co {$interval} lat w pierwszą niedzielę marca}}
+        * 2 1 3 {{Co {$interval} lat w pierwszą środę marca}}
+        * 2 1 6 {{Co {$interval} lat w pierwszą sobotę marca}}
+        * 2 1 * {{Co {$interval} lat w pierwszy {$weekday} marca}}
+        * 2 2 0 {{Co {$interval} lat w drugą niedzielę marca}}
+        * 2 2 3 {{Co {$interval} lat w drugą środę marca}}
+        * 2 2 6 {{Co {$interval} lat w drugą sobotę marca}}
+        * 2 2 * {{Co {$interval} lat w drugi {$weekday} marca}}
+        * 2 3 0 {{Co {$interval} lat w trzecią niedzielę marca}}
+        * 2 3 3 {{Co {$interval} lat w trzecią środę marca}}
+        * 2 3 6 {{Co {$interval} lat w trzecią sobotę marca}}
+        * 2 3 * {{Co {$interval} lat w trzeci {$weekday} marca}}
+        * 2 4 0 {{Co {$interval} lat w czwartą niedzielę marca}}
+        * 2 4 3 {{Co {$interval} lat w czwartą środę marca}}
+        * 2 4 6 {{Co {$interval} lat w czwartą sobotę marca}}
+        * 2 4 * {{Co {$interval} lat w czwarty {$weekday} marca}}
+        * 2 * 0 {{Co {$interval} lat w piątą niedzielę marca}}
+        * 2 * 3 {{Co {$interval} lat w piątą środę marca}}
+        * 2 * 6 {{Co {$interval} lat w piątą sobotę marca}}
+        * 2 * * {{Co {$interval} lat w piąty {$weekday} marca}}
+        * 3 1 0 {{Co {$interval} lat w pierwszą niedzielę kwietnia}}
+        * 3 1 3 {{Co {$interval} lat w pierwszą środę kwietnia}}
+        * 3 1 6 {{Co {$interval} lat w pierwszą sobotę kwietnia}}
+        * 3 1 * {{Co {$interval} lat w pierwszy {$weekday} kwietnia}}
+        * 3 2 0 {{Co {$interval} lat w drugą niedzielę kwietnia}}
+        * 3 2 3 {{Co {$interval} lat w drugą środę kwietnia}}
+        * 3 2 6 {{Co {$interval} lat w drugą sobotę kwietnia}}
+        * 3 2 * {{Co {$interval} lat w drugi {$weekday} kwietnia}}
+        * 3 3 0 {{Co {$interval} lat w trzecią niedzielę kwietnia}}
+        * 3 3 3 {{Co {$interval} lat w trzecią środę kwietnia}}
+        * 3 3 6 {{Co {$interval} lat w trzecią sobotę kwietnia}}
+        * 3 3 * {{Co {$interval} lat w trzeci {$weekday} kwietnia}}
+        * 3 4 0 {{Co {$interval} lat w czwartą niedzielę kwietnia}}
+        * 3 4 3 {{Co {$interval} lat w czwartą środę kwietnia}}
+        * 3 4 6 {{Co {$interval} lat w czwartą sobotę kwietnia}}
+        * 3 4 * {{Co {$interval} lat w czwarty {$weekday} kwietnia}}
+        * 3 * 0 {{Co {$interval} lat w piątą niedzielę kwietnia}}
+        * 3 * 3 {{Co {$interval} lat w piątą środę kwietnia}}
+        * 3 * 6 {{Co {$interval} lat w piątą sobotę kwietnia}}
+        * 3 * * {{Co {$interval} lat w piąty {$weekday} kwietnia}}
+        * 4 1 0 {{Co {$interval} lat w pierwszą niedzielę maja}}
+        * 4 1 3 {{Co {$interval} lat w pierwszą środę maja}}
+        * 4 1 6 {{Co {$interval} lat w pierwszą sobotę maja}}
+        * 4 1 * {{Co {$interval} lat w pierwszy {$weekday} maja}}
+        * 4 2 0 {{Co {$interval} lat w drugą niedzielę maja}}
+        * 4 2 3 {{Co {$interval} lat w drugą środę maja}}
+        * 4 2 6 {{Co {$interval} lat w drugą sobotę maja}}
+        * 4 2 * {{Co {$interval} lat w drugi {$weekday} maja}}
+        * 4 3 0 {{Co {$interval} lat w trzecią niedzielę maja}}
+        * 4 3 3 {{Co {$interval} lat w trzecią środę maja}}
+        * 4 3 6 {{Co {$interval} lat w trzecią sobotę maja}}
+        * 4 3 * {{Co {$interval} lat w trzeci {$weekday} maja}}
+        * 4 4 0 {{Co {$interval} lat w czwartą niedzielę maja}}
+        * 4 4 3 {{Co {$interval} lat w czwartą środę maja}}
+        * 4 4 6 {{Co {$interval} lat w czwartą sobotę maja}}
+        * 4 4 * {{Co {$interval} lat w czwarty {$weekday} maja}}
+        * 4 * 0 {{Co {$interval} lat w piątą niedzielę maja}}
+        * 4 * 3 {{Co {$interval} lat w piątą środę maja}}
+        * 4 * 6 {{Co {$interval} lat w piątą sobotę maja}}
+        * 4 * * {{Co {$interval} lat w piąty {$weekday} maja}}
+        * 5 1 0 {{Co {$interval} lat w pierwszą niedzielę czerwca}}
+        * 5 1 3 {{Co {$interval} lat w pierwszą środę czerwca}}
+        * 5 1 6 {{Co {$interval} lat w pierwszą sobotę czerwca}}
+        * 5 1 * {{Co {$interval} lat w pierwszy {$weekday} czerwca}}
+        * 5 2 0 {{Co {$interval} lat w drugą niedzielę czerwca}}
+        * 5 2 3 {{Co {$interval} lat w drugą środę czerwca}}
+        * 5 2 6 {{Co {$interval} lat w drugą sobotę czerwca}}
+        * 5 2 * {{Co {$interval} lat w drugi {$weekday} czerwca}}
+        * 5 3 0 {{Co {$interval} lat w trzecią niedzielę czerwca}}
+        * 5 3 3 {{Co {$interval} lat w trzecią środę czerwca}}
+        * 5 3 6 {{Co {$interval} lat w trzecią sobotę czerwca}}
+        * 5 3 * {{Co {$interval} lat w trzeci {$weekday} czerwca}}
+        * 5 4 0 {{Co {$interval} lat w czwartą niedzielę czerwca}}
+        * 5 4 3 {{Co {$interval} lat w czwartą środę czerwca}}
+        * 5 4 6 {{Co {$interval} lat w czwartą sobotę czerwca}}
+        * 5 4 * {{Co {$interval} lat w czwarty {$weekday} czerwca}}
+        * 5 * 0 {{Co {$interval} lat w piątą niedzielę czerwca}}
+        * 5 * 3 {{Co {$interval} lat w piątą środę czerwca}}
+        * 5 * 6 {{Co {$interval} lat w piątą sobotę czerwca}}
+        * 5 * * {{Co {$interval} lat w piąty {$weekday} czerwca}}
+        * 6 1 0 {{Co {$interval} lat w pierwszą niedzielę lipca}}
+        * 6 1 3 {{Co {$interval} lat w pierwszą środę lipca}}
+        * 6 1 6 {{Co {$interval} lat w pierwszą sobotę lipca}}
+        * 6 1 * {{Co {$interval} lat w pierwszy {$weekday} lipca}}
+        * 6 2 0 {{Co {$interval} lat w drugą niedzielę lipca}}
+        * 6 2 3 {{Co {$interval} lat w drugą środę lipca}}
+        * 6 2 6 {{Co {$interval} lat w drugą sobotę lipca}}
+        * 6 2 * {{Co {$interval} lat w drugi {$weekday} lipca}}
+        * 6 3 0 {{Co {$interval} lat w trzecią niedzielę lipca}}
+        * 6 3 3 {{Co {$interval} lat w trzecią środę lipca}}
+        * 6 3 6 {{Co {$interval} lat w trzecią sobotę lipca}}
+        * 6 3 * {{Co {$interval} lat w trzeci {$weekday} lipca}}
+        * 6 4 0 {{Co {$interval} lat w czwartą niedzielę lipca}}
+        * 6 4 3 {{Co {$interval} lat w czwartą środę lipca}}
+        * 6 4 6 {{Co {$interval} lat w czwartą sobotę lipca}}
+        * 6 4 * {{Co {$interval} lat w czwarty {$weekday} lipca}}
+        * 6 * 0 {{Co {$interval} lat w piątą niedzielę lipca}}
+        * 6 * 3 {{Co {$interval} lat w piątą środę lipca}}
+        * 6 * 6 {{Co {$interval} lat w piątą sobotę lipca}}
+        * 6 * * {{Co {$interval} lat w piąty {$weekday} lipca}}
+        * 7 1 0 {{Co {$interval} lat w pierwszą niedzielę sierpnia}}
+        * 7 1 3 {{Co {$interval} lat w pierwszą środę sierpnia}}
+        * 7 1 6 {{Co {$interval} lat w pierwszą sobotę sierpnia}}
+        * 7 1 * {{Co {$interval} lat w pierwszy {$weekday} sierpnia}}
+        * 7 2 0 {{Co {$interval} lat w drugą niedzielę sierpnia}}
+        * 7 2 3 {{Co {$interval} lat w drugą środę sierpnia}}
+        * 7 2 6 {{Co {$interval} lat w drugą sobotę sierpnia}}
+        * 7 2 * {{Co {$interval} lat w drugi {$weekday} sierpnia}}
+        * 7 3 0 {{Co {$interval} lat w trzecią niedzielę sierpnia}}
+        * 7 3 3 {{Co {$interval} lat w trzecią środę sierpnia}}
+        * 7 3 6 {{Co {$interval} lat w trzecią sobotę sierpnia}}
+        * 7 3 * {{Co {$interval} lat w trzeci {$weekday} sierpnia}}
+        * 7 4 0 {{Co {$interval} lat w czwartą niedzielę sierpnia}}
+        * 7 4 3 {{Co {$interval} lat w czwartą środę sierpnia}}
+        * 7 4 6 {{Co {$interval} lat w czwartą sobotę sierpnia}}
+        * 7 4 * {{Co {$interval} lat w czwarty {$weekday} sierpnia}}
+        * 7 * 0 {{Co {$interval} lat w piątą niedzielę sierpnia}}
+        * 7 * 3 {{Co {$interval} lat w piątą środę sierpnia}}
+        * 7 * 6 {{Co {$interval} lat w piątą sobotę sierpnia}}
+        * 7 * * {{Co {$interval} lat w piąty {$weekday} sierpnia}}
+        * 8 1 0 {{Co {$interval} lat w pierwszą niedzielę września}}
+        * 8 1 3 {{Co {$interval} lat w pierwszą środę września}}
+        * 8 1 6 {{Co {$interval} lat w pierwszą sobotę września}}
+        * 8 1 * {{Co {$interval} lat w pierwszy {$weekday} września}}
+        * 8 2 0 {{Co {$interval} lat w drugą niedzielę września}}
+        * 8 2 3 {{Co {$interval} lat w drugą środę września}}
+        * 8 2 6 {{Co {$interval} lat w drugą sobotę września}}
+        * 8 2 * {{Co {$interval} lat w drugi {$weekday} września}}
+        * 8 3 0 {{Co {$interval} lat w trzecią niedzielę września}}
+        * 8 3 3 {{Co {$interval} lat w trzecią środę września}}
+        * 8 3 6 {{Co {$interval} lat w trzecią sobotę września}}
+        * 8 3 * {{Co {$interval} lat w trzeci {$weekday} września}}
+        * 8 4 0 {{Co {$interval} lat w czwartą niedzielę września}}
+        * 8 4 3 {{Co {$interval} lat w czwartą środę września}}
+        * 8 4 6 {{Co {$interval} lat w czwartą sobotę września}}
+        * 8 4 * {{Co {$interval} lat w czwarty {$weekday} września}}
+        * 8 * 0 {{Co {$interval} lat w piątą niedzielę września}}
+        * 8 * 3 {{Co {$interval} lat w piątą środę września}}
+        * 8 * 6 {{Co {$interval} lat w piątą sobotę września}}
+        * 8 * * {{Co {$interval} lat w piąty {$weekday} września}}
+        * 9 1 0 {{Co {$interval} lat w pierwszą niedzielę października}}
+        * 9 1 3 {{Co {$interval} lat w pierwszą środę października}}
+        * 9 1 6 {{Co {$interval} lat w pierwszą sobotę października}}
+        * 9 1 * {{Co {$interval} lat w pierwszy {$weekday} października}}
+        * 9 2 0 {{Co {$interval} lat w drugą niedzielę października}}
+        * 9 2 3 {{Co {$interval} lat w drugą środę października}}
+        * 9 2 6 {{Co {$interval} lat w drugą sobotę października}}
+        * 9 2 * {{Co {$interval} lat w drugi {$weekday} października}}
+        * 9 3 0 {{Co {$interval} lat w trzecią niedzielę października}}
+        * 9 3 3 {{Co {$interval} lat w trzecią środę października}}
+        * 9 3 6 {{Co {$interval} lat w trzecią sobotę października}}
+        * 9 3 * {{Co {$interval} lat w trzeci {$weekday} października}}
+        * 9 4 0 {{Co {$interval} lat w czwartą niedzielę października}}
+        * 9 4 3 {{Co {$interval} lat w czwartą środę października}}
+        * 9 4 6 {{Co {$interval} lat w czwartą sobotę października}}
+        * 9 4 * {{Co {$interval} lat w czwarty {$weekday} października}}
+        * 9 * 0 {{Co {$interval} lat w piątą niedzielę października}}
+        * 9 * 3 {{Co {$interval} lat w piątą środę października}}
+        * 9 * 6 {{Co {$interval} lat w piątą sobotę października}}
+        * 9 * * {{Co {$interval} lat w piąty {$weekday} października}}
+        * 10 1 0 {{Co {$interval} lat w pierwszą niedzielę listopada}}
+        * 10 1 3 {{Co {$interval} lat w pierwszą środę listopada}}
+        * 10 1 6 {{Co {$interval} lat w pierwszą sobotę listopada}}
+        * 10 1 * {{Co {$interval} lat w pierwszy {$weekday} listopada}}
+        * 10 2 0 {{Co {$interval} lat w drugą niedzielę listopada}}
+        * 10 2 3 {{Co {$interval} lat w drugą środę listopada}}
+        * 10 2 6 {{Co {$interval} lat w drugą sobotę listopada}}
+        * 10 2 * {{Co {$interval} lat w drugi {$weekday} listopada}}
+        * 10 3 0 {{Co {$interval} lat w trzecią niedzielę listopada}}
+        * 10 3 3 {{Co {$interval} lat w trzecią środę listopada}}
+        * 10 3 6 {{Co {$interval} lat w trzecią sobotę listopada}}
+        * 10 3 * {{Co {$interval} lat w trzeci {$weekday} listopada}}
+        * 10 4 0 {{Co {$interval} lat w czwartą niedzielę listopada}}
+        * 10 4 3 {{Co {$interval} lat w czwartą środę listopada}}
+        * 10 4 6 {{Co {$interval} lat w czwartą sobotę listopada}}
+        * 10 4 * {{Co {$interval} lat w czwarty {$weekday} listopada}}
+        * 10 * 0 {{Co {$interval} lat w piątą niedzielę listopada}}
+        * 10 * 3 {{Co {$interval} lat w piątą środę listopada}}
+        * 10 * 6 {{Co {$interval} lat w piątą sobotę listopada}}
+        * 10 * * {{Co {$interval} lat w piąty {$weekday} listopada}}
+        * * 1 0 {{Co {$interval} lat w pierwszą niedzielę grudnia}}
+        * * 1 3 {{Co {$interval} lat w pierwszą środę grudnia}}
+        * * 1 6 {{Co {$interval} lat w pierwszą sobotę grudnia}}
+        * * 1 * {{Co {$interval} lat w pierwszy {$weekday} grudnia}}
+        * * 2 0 {{Co {$interval} lat w drugą niedzielę grudnia}}
+        * * 2 3 {{Co {$interval} lat w drugą środę grudnia}}
+        * * 2 6 {{Co {$interval} lat w drugą sobotę grudnia}}
+        * * 2 * {{Co {$interval} lat w drugi {$weekday} grudnia}}
+        * * 3 0 {{Co {$interval} lat w trzecią niedzielę grudnia}}
+        * * 3 3 {{Co {$interval} lat w trzecią środę grudnia}}
+        * * 3 6 {{Co {$interval} lat w trzecią sobotę grudnia}}
+        * * 3 * {{Co {$interval} lat w trzeci {$weekday} grudnia}}
+        * * 4 0 {{Co {$interval} lat w czwartą niedzielę grudnia}}
+        * * 4 3 {{Co {$interval} lat w czwartą środę grudnia}}
+        * * 4 6 {{Co {$interval} lat w czwartą sobotę grudnia}}
+        * * 4 * {{Co {$interval} lat w czwarty {$weekday} grudnia}}
+        * * * 0 {{Co {$interval} lat w piątą niedzielę grudnia}}
+        * * * 3 {{Co {$interval} lat w piątą środę grudnia}}
+        * * * 6 {{Co {$interval} lat w piątą sobotę grudnia}}
+        * * * * {{Co {$interval} lat w piąty {$weekday} grudnia}}
+    yearlymonthdayreverse: |
+      .input {$interval :integer}
+      .input {$date :integer}
+      .input {$nthrev :integer select=ordinal}
+      .local $weekday = {$date :date weekday=long}
+      .input {$weekdaynum :integer}
+      .local $month = {$date :date month=long}
+      .input {$monthnum :integer}
+      .match $interval $monthnum $nthrev $weekdaynum
+                one 0 1 0 {{Corocznie w ostatnią niedzielę stycznia}}
+        one 0 1 3 {{Corocznie w ostatnią środę stycznia}}
+        one 0 1 6 {{Corocznie w ostatnią sobotę stycznia}}
+        one 0 1 * {{Corocznie w ostatni {$weekday} stycznia}}
+        one 0 2 0 {{Corocznie w przedostatnią niedzielę stycznia}}
+        one 0 2 3 {{Corocznie w przedostatnią środę stycznia}}
+        one 0 2 6 {{Corocznie w przedostatnią sobotę stycznia}}
+        one 0 2 * {{Corocznie w przedostatni {$weekday} stycznia}}
+        one 0 3 0 {{Corocznie w trzecią niedzielę stycznia od końca}}
+        one 0 3 3 {{Corocznie w trzecią środę stycznia od końca}}
+        one 0 3 6 {{Corocznie w trzecią sobotę stycznia od końca}}
+        one 0 3 * {{Corocznie w trzeci {$weekday} stycznia od końca}}
+        one 0 4 0 {{Corocznie w czwartą niedzielę stycznia od końca}}
+        one 0 4 3 {{Corocznie w czwartą środę stycznia od końca}}
+        one 0 4 6 {{Corocznie w czwartą sobotę stycznia od końca}}
+        one 0 4 * {{Corocznie w czwarty {$weekday} stycznia od końca}}
+        one 0 * 0 {{Corocznie w piątą niedzielę stycznia od końca}}
+        one 0 * 3 {{Corocznie w piątą środę stycznia od końca}}
+        one 0 * 6 {{Corocznie w piątą sobotę stycznia od końca}}
+        one 0 * * {{Corocznie w piąty {$weekday} stycznia od końca}}
+        one 1 1 0 {{Corocznie w ostatnią niedzielę lutego}}
+        one 1 1 3 {{Corocznie w ostatnią środę lutego}}
+        one 1 1 6 {{Corocznie w ostatnią sobotę lutego}}
+        one 1 1 * {{Corocznie w ostatni {$weekday} lutego}}
+        one 1 2 0 {{Corocznie w przedostatnią niedzielę lutego}}
+        one 1 2 3 {{Corocznie w przedostatnią środę lutego}}
+        one 1 2 6 {{Corocznie w przedostatnią sobotę lutego}}
+        one 1 2 * {{Corocznie w przedostatni {$weekday} lutego}}
+        one 1 3 0 {{Corocznie w trzecią niedzielę lutego od końca}}
+        one 1 3 3 {{Corocznie w trzecią środę lutego od końca}}
+        one 1 3 6 {{Corocznie w trzecią sobotę lutego od końca}}
+        one 1 3 * {{Corocznie w trzeci {$weekday} lutego od końca}}
+        one 1 4 0 {{Corocznie w czwartą niedzielę lutego od końca}}
+        one 1 4 3 {{Corocznie w czwartą środę lutego od końca}}
+        one 1 4 6 {{Corocznie w czwartą sobotę lutego od końca}}
+        one 1 4 * {{Corocznie w czwarty {$weekday} lutego od końca}}
+        one 1 * 0 {{Corocznie w piątą niedzielę lutego od końca}}
+        one 1 * 3 {{Corocznie w piątą środę lutego od końca}}
+        one 1 * 6 {{Corocznie w piątą sobotę lutego od końca}}
+        one 1 * * {{Corocznie w piąty {$weekday} lutego od końca}}
+        one 2 1 0 {{Corocznie w ostatnią niedzielę marca}}
+        one 2 1 3 {{Corocznie w ostatnią środę marca}}
+        one 2 1 6 {{Corocznie w ostatnią sobotę marca}}
+        one 2 1 * {{Corocznie w ostatni {$weekday} marca}}
+        one 2 2 0 {{Corocznie w przedostatnią niedzielę marca}}
+        one 2 2 3 {{Corocznie w przedostatnią środę marca}}
+        one 2 2 6 {{Corocznie w przedostatnią sobotę marca}}
+        one 2 2 * {{Corocznie w przedostatni {$weekday} marca}}
+        one 2 3 0 {{Corocznie w trzecią niedzielę marca od końca}}
+        one 2 3 3 {{Corocznie w trzecią środę marca od końca}}
+        one 2 3 6 {{Corocznie w trzecią sobotę marca od końca}}
+        one 2 3 * {{Corocznie w trzeci {$weekday} marca od końca}}
+        one 2 4 0 {{Corocznie w czwartą niedzielę marca od końca}}
+        one 2 4 3 {{Corocznie w czwartą środę marca od końca}}
+        one 2 4 6 {{Corocznie w czwartą sobotę marca od końca}}
+        one 2 4 * {{Corocznie w czwarty {$weekday} marca od końca}}
+        one 2 * 0 {{Corocznie w piątą niedzielę marca od końca}}
+        one 2 * 3 {{Corocznie w piątą środę marca od końca}}
+        one 2 * 6 {{Corocznie w piątą sobotę marca od końca}}
+        one 2 * * {{Corocznie w piąty {$weekday} marca od końca}}
+        one 3 1 0 {{Corocznie w ostatnią niedzielę kwietnia}}
+        one 3 1 3 {{Corocznie w ostatnią środę kwietnia}}
+        one 3 1 6 {{Corocznie w ostatnią sobotę kwietnia}}
+        one 3 1 * {{Corocznie w ostatni {$weekday} kwietnia}}
+        one 3 2 0 {{Corocznie w przedostatnią niedzielę kwietnia}}
+        one 3 2 3 {{Corocznie w przedostatnią środę kwietnia}}
+        one 3 2 6 {{Corocznie w przedostatnią sobotę kwietnia}}
+        one 3 2 * {{Corocznie w przedostatni {$weekday} kwietnia}}
+        one 3 3 0 {{Corocznie w trzecią niedzielę kwietnia od końca}}
+        one 3 3 3 {{Corocznie w trzecią środę kwietnia od końca}}
+        one 3 3 6 {{Corocznie w trzecią sobotę kwietnia od końca}}
+        one 3 3 * {{Corocznie w trzeci {$weekday} kwietnia od końca}}
+        one 3 4 0 {{Corocznie w czwartą niedzielę kwietnia od końca}}
+        one 3 4 3 {{Corocznie w czwartą środę kwietnia od końca}}
+        one 3 4 6 {{Corocznie w czwartą sobotę kwietnia od końca}}
+        one 3 4 * {{Corocznie w czwarty {$weekday} kwietnia od końca}}
+        one 3 * 0 {{Corocznie w piątą niedzielę kwietnia od końca}}
+        one 3 * 3 {{Corocznie w piątą środę kwietnia od końca}}
+        one 3 * 6 {{Corocznie w piątą sobotę kwietnia od końca}}
+        one 3 * * {{Corocznie w piąty {$weekday} kwietnia od końca}}
+        one 4 1 0 {{Corocznie w ostatnią niedzielę maja}}
+        one 4 1 3 {{Corocznie w ostatnią środę maja}}
+        one 4 1 6 {{Corocznie w ostatnią sobotę maja}}
+        one 4 1 * {{Corocznie w ostatni {$weekday} maja}}
+        one 4 2 0 {{Corocznie w przedostatnią niedzielę maja}}
+        one 4 2 3 {{Corocznie w przedostatnią środę maja}}
+        one 4 2 6 {{Corocznie w przedostatnią sobotę maja}}
+        one 4 2 * {{Corocznie w przedostatni {$weekday} maja}}
+        one 4 3 0 {{Corocznie w trzecią niedzielę maja od końca}}
+        one 4 3 3 {{Corocznie w trzecią środę maja od końca}}
+        one 4 3 6 {{Corocznie w trzecią sobotę maja od końca}}
+        one 4 3 * {{Corocznie w trzeci {$weekday} maja od końca}}
+        one 4 4 0 {{Corocznie w czwartą niedzielę maja od końca}}
+        one 4 4 3 {{Corocznie w czwartą środę maja od końca}}
+        one 4 4 6 {{Corocznie w czwartą sobotę maja od końca}}
+        one 4 4 * {{Corocznie w czwarty {$weekday} maja od końca}}
+        one 4 * 0 {{Corocznie w piątą niedzielę maja od końca}}
+        one 4 * 3 {{Corocznie w piątą środę maja od końca}}
+        one 4 * 6 {{Corocznie w piątą sobotę maja od końca}}
+        one 4 * * {{Corocznie w piąty {$weekday} maja od końca}}
+        one 5 1 0 {{Corocznie w ostatnią niedzielę czerwca}}
+        one 5 1 3 {{Corocznie w ostatnią środę czerwca}}
+        one 5 1 6 {{Corocznie w ostatnią sobotę czerwca}}
+        one 5 1 * {{Corocznie w ostatni {$weekday} czerwca}}
+        one 5 2 0 {{Corocznie w przedostatnią niedzielę czerwca}}
+        one 5 2 3 {{Corocznie w przedostatnią środę czerwca}}
+        one 5 2 6 {{Corocznie w przedostatnią sobotę czerwca}}
+        one 5 2 * {{Corocznie w przedostatni {$weekday} czerwca}}
+        one 5 3 0 {{Corocznie w trzecią niedzielę czerwca od końca}}
+        one 5 3 3 {{Corocznie w trzecią środę czerwca od końca}}
+        one 5 3 6 {{Corocznie w trzecią sobotę czerwca od końca}}
+        one 5 3 * {{Corocznie w trzeci {$weekday} czerwca od końca}}
+        one 5 4 0 {{Corocznie w czwartą niedzielę czerwca od końca}}
+        one 5 4 3 {{Corocznie w czwartą środę czerwca od końca}}
+        one 5 4 6 {{Corocznie w czwartą sobotę czerwca od końca}}
+        one 5 4 * {{Corocznie w czwarty {$weekday} czerwca od końca}}
+        one 5 * 0 {{Corocznie w piątą niedzielę czerwca od końca}}
+        one 5 * 3 {{Corocznie w piątą środę czerwca od końca}}
+        one 5 * 6 {{Corocznie w piątą sobotę czerwca od końca}}
+        one 5 * * {{Corocznie w piąty {$weekday} czerwca od końca}}
+        one 6 1 0 {{Corocznie w ostatnią niedzielę lipca}}
+        one 6 1 3 {{Corocznie w ostatnią środę lipca}}
+        one 6 1 6 {{Corocznie w ostatnią sobotę lipca}}
+        one 6 1 * {{Corocznie w ostatni {$weekday} lipca}}
+        one 6 2 0 {{Corocznie w przedostatnią niedzielę lipca}}
+        one 6 2 3 {{Corocznie w przedostatnią środę lipca}}
+        one 6 2 6 {{Corocznie w przedostatnią sobotę lipca}}
+        one 6 2 * {{Corocznie w przedostatni {$weekday} lipca}}
+        one 6 3 0 {{Corocznie w trzecią niedzielę lipca od końca}}
+        one 6 3 3 {{Corocznie w trzecią środę lipca od końca}}
+        one 6 3 6 {{Corocznie w trzecią sobotę lipca od końca}}
+        one 6 3 * {{Corocznie w trzeci {$weekday} lipca od końca}}
+        one 6 4 0 {{Corocznie w czwartą niedzielę lipca od końca}}
+        one 6 4 3 {{Corocznie w czwartą środę lipca od końca}}
+        one 6 4 6 {{Corocznie w czwartą sobotę lipca od końca}}
+        one 6 4 * {{Corocznie w czwarty {$weekday} lipca od końca}}
+        one 6 * 0 {{Corocznie w piątą niedzielę lipca od końca}}
+        one 6 * 3 {{Corocznie w piątą środę lipca od końca}}
+        one 6 * 6 {{Corocznie w piątą sobotę lipca od końca}}
+        one 6 * * {{Corocznie w piąty {$weekday} lipca od końca}}
+        one 7 1 0 {{Corocznie w ostatnią niedzielę sierpnia}}
+        one 7 1 3 {{Corocznie w ostatnią środę sierpnia}}
+        one 7 1 6 {{Corocznie w ostatnią sobotę sierpnia}}
+        one 7 1 * {{Corocznie w ostatni {$weekday} sierpnia}}
+        one 7 2 0 {{Corocznie w przedostatnią niedzielę sierpnia}}
+        one 7 2 3 {{Corocznie w przedostatnią środę sierpnia}}
+        one 7 2 6 {{Corocznie w przedostatnią sobotę sierpnia}}
+        one 7 2 * {{Corocznie w przedostatni {$weekday} sierpnia}}
+        one 7 3 0 {{Corocznie w trzecią niedzielę sierpnia od końca}}
+        one 7 3 3 {{Corocznie w trzecią środę sierpnia od końca}}
+        one 7 3 6 {{Corocznie w trzecią sobotę sierpnia od końca}}
+        one 7 3 * {{Corocznie w trzeci {$weekday} sierpnia od końca}}
+        one 7 4 0 {{Corocznie w czwartą niedzielę sierpnia od końca}}
+        one 7 4 3 {{Corocznie w czwartą środę sierpnia od końca}}
+        one 7 4 6 {{Corocznie w czwartą sobotę sierpnia od końca}}
+        one 7 4 * {{Corocznie w czwarty {$weekday} sierpnia od końca}}
+        one 7 * 0 {{Corocznie w piątą niedzielę sierpnia od końca}}
+        one 7 * 3 {{Corocznie w piątą środę sierpnia od końca}}
+        one 7 * 6 {{Corocznie w piątą sobotę sierpnia od końca}}
+        one 7 * * {{Corocznie w piąty {$weekday} sierpnia od końca}}
+        one 8 1 0 {{Corocznie w ostatnią niedzielę września}}
+        one 8 1 3 {{Corocznie w ostatnią środę września}}
+        one 8 1 6 {{Corocznie w ostatnią sobotę września}}
+        one 8 1 * {{Corocznie w ostatni {$weekday} września}}
+        one 8 2 0 {{Corocznie w przedostatnią niedzielę września}}
+        one 8 2 3 {{Corocznie w przedostatnią środę września}}
+        one 8 2 6 {{Corocznie w przedostatnią sobotę września}}
+        one 8 2 * {{Corocznie w przedostatni {$weekday} września}}
+        one 8 3 0 {{Corocznie w trzecią niedzielę września od końca}}
+        one 8 3 3 {{Corocznie w trzecią środę września od końca}}
+        one 8 3 6 {{Corocznie w trzecią sobotę września od końca}}
+        one 8 3 * {{Corocznie w trzeci {$weekday} września od końca}}
+        one 8 4 0 {{Corocznie w czwartą niedzielę września od końca}}
+        one 8 4 3 {{Corocznie w czwartą środę września od końca}}
+        one 8 4 6 {{Corocznie w czwartą sobotę września od końca}}
+        one 8 4 * {{Corocznie w czwarty {$weekday} września od końca}}
+        one 8 * 0 {{Corocznie w piątą niedzielę września od końca}}
+        one 8 * 3 {{Corocznie w piątą środę września od końca}}
+        one 8 * 6 {{Corocznie w piątą sobotę września od końca}}
+        one 8 * * {{Corocznie w piąty {$weekday} września od końca}}
+        one 9 1 0 {{Corocznie w ostatnią niedzielę października}}
+        one 9 1 3 {{Corocznie w ostatnią środę października}}
+        one 9 1 6 {{Corocznie w ostatnią sobotę października}}
+        one 9 1 * {{Corocznie w ostatni {$weekday} października}}
+        one 9 2 0 {{Corocznie w przedostatnią niedzielę października}}
+        one 9 2 3 {{Corocznie w przedostatnią środę października}}
+        one 9 2 6 {{Corocznie w przedostatnią sobotę października}}
+        one 9 2 * {{Corocznie w przedostatni {$weekday} października}}
+        one 9 3 0 {{Corocznie w trzecią niedzielę października od końca}}
+        one 9 3 3 {{Corocznie w trzecią środę października od końca}}
+        one 9 3 6 {{Corocznie w trzecią sobotę października od końca}}
+        one 9 3 * {{Corocznie w trzeci {$weekday} października od końca}}
+        one 9 4 0 {{Corocznie w czwartą niedzielę października od końca}}
+        one 9 4 3 {{Corocznie w czwartą środę października od końca}}
+        one 9 4 6 {{Corocznie w czwartą sobotę października od końca}}
+        one 9 4 * {{Corocznie w czwarty {$weekday} października od końca}}
+        one 9 * 0 {{Corocznie w piątą niedzielę października od końca}}
+        one 9 * 3 {{Corocznie w piątą środę października od końca}}
+        one 9 * 6 {{Corocznie w piątą sobotę października od końca}}
+        one 9 * * {{Corocznie w piąty {$weekday} października od końca}}
+        one 10 1 0 {{Corocznie w ostatnią niedzielę listopada}}
+        one 10 1 3 {{Corocznie w ostatnią środę listopada}}
+        one 10 1 6 {{Corocznie w ostatnią sobotę listopada}}
+        one 10 1 * {{Corocznie w ostatni {$weekday} listopada}}
+        one 10 2 0 {{Corocznie w przedostatnią niedzielę listopada}}
+        one 10 2 3 {{Corocznie w przedostatnią środę listopada}}
+        one 10 2 6 {{Corocznie w przedostatnią sobotę listopada}}
+        one 10 2 * {{Corocznie w przedostatni {$weekday} listopada}}
+        one 10 3 0 {{Corocznie w trzecią niedzielę listopada od końca}}
+        one 10 3 3 {{Corocznie w trzecią środę listopada od końca}}
+        one 10 3 6 {{Corocznie w trzecią sobotę listopada od końca}}
+        one 10 3 * {{Corocznie w trzeci {$weekday} listopada od końca}}
+        one 10 4 0 {{Corocznie w czwartą niedzielę listopada od końca}}
+        one 10 4 3 {{Corocznie w czwartą środę listopada od końca}}
+        one 10 4 6 {{Corocznie w czwartą sobotę listopada od końca}}
+        one 10 4 * {{Corocznie w czwarty {$weekday} listopada od końca}}
+        one 10 * 0 {{Corocznie w piątą niedzielę listopada od końca}}
+        one 10 * 3 {{Corocznie w piątą środę listopada od końca}}
+        one 10 * 6 {{Corocznie w piątą sobotę listopada od końca}}
+        one 10 * * {{Corocznie w piąty {$weekday} listopada od końca}}
+        one * 1 0 {{Corocznie w ostatnią niedzielę grudnia}}
+        one * 1 3 {{Corocznie w ostatnią środę grudnia}}
+        one * 1 6 {{Corocznie w ostatnią sobotę grudnia}}
+        one * 1 * {{Corocznie w ostatni {$weekday} grudnia}}
+        one * 2 0 {{Corocznie w przedostatnią niedzielę grudnia}}
+        one * 2 3 {{Corocznie w przedostatnią środę grudnia}}
+        one * 2 6 {{Corocznie w przedostatnią sobotę grudnia}}
+        one * 2 * {{Corocznie w przedostatni {$weekday} grudnia}}
+        one * 3 0 {{Corocznie w trzecią niedzielę grudnia od końca}}
+        one * 3 3 {{Corocznie w trzecią środę grudnia od końca}}
+        one * 3 6 {{Corocznie w trzecią sobotę grudnia od końca}}
+        one * 3 * {{Corocznie w trzeci {$weekday} grudnia od końca}}
+        one * 4 0 {{Corocznie w czwartą niedzielę grudnia od końca}}
+        one * 4 3 {{Corocznie w czwartą środę grudnia od końca}}
+        one * 4 6 {{Corocznie w czwartą sobotę grudnia od końca}}
+        one * 4 * {{Corocznie w czwarty {$weekday} grudnia od końca}}
+        one * * 0 {{Corocznie w piątą niedzielę grudnia od końca}}
+        one * * 3 {{Corocznie w piątą środę grudnia od końca}}
+        one * * 6 {{Corocznie w piątą sobotę grudnia od końca}}
+        one * * * {{Corocznie w piąty {$weekday} grudnia od końca}}
+                few 0 1 0 {{Co {$interval} lata w ostatnią niedzielę stycznia}}
+        few 0 1 3 {{Co {$interval} lata w ostatnią środę stycznia}}
+        few 0 1 6 {{Co {$interval} lata w ostatnią sobotę stycznia}}
+        few 0 1 * {{Co {$interval} lata w ostatni {$weekday} stycznia}}
+        few 0 2 0 {{Co {$interval} lata w przedostatnią niedzielę stycznia}}
+        few 0 2 3 {{Co {$interval} lata w przedostatnią środę stycznia}}
+        few 0 2 6 {{Co {$interval} lata w przedostatnią sobotę stycznia}}
+        few 0 2 * {{Co {$interval} lata w przedostatni {$weekday} stycznia}}
+        few 0 3 0 {{Co {$interval} lata w trzecią niedzielę stycznia od końca}}
+        few 0 3 3 {{Co {$interval} lata w trzecią środę stycznia od końca}}
+        few 0 3 6 {{Co {$interval} lata w trzecią sobotę stycznia od końca}}
+        few 0 3 * {{Co {$interval} lata w trzeci {$weekday} stycznia od końca}}
+        few 0 4 0 {{Co {$interval} lata w czwartą niedzielę stycznia od końca}}
+        few 0 4 3 {{Co {$interval} lata w czwartą środę stycznia od końca}}
+        few 0 4 6 {{Co {$interval} lata w czwartą sobotę stycznia od końca}}
+        few 0 4 * {{Co {$interval} lata w czwarty {$weekday} stycznia od końca}}
+        few 0 * 0 {{Co {$interval} lata w piątą niedzielę stycznia od końca}}
+        few 0 * 3 {{Co {$interval} lata w piątą środę stycznia od końca}}
+        few 0 * 6 {{Co {$interval} lata w piątą sobotę stycznia od końca}}
+        few 0 * * {{Co {$interval} lata w piąty {$weekday} stycznia od końca}}
+        few 1 1 0 {{Co {$interval} lata w ostatnią niedzielę lutego}}
+        few 1 1 3 {{Co {$interval} lata w ostatnią środę lutego}}
+        few 1 1 6 {{Co {$interval} lata w ostatnią sobotę lutego}}
+        few 1 1 * {{Co {$interval} lata w ostatni {$weekday} lutego}}
+        few 1 2 0 {{Co {$interval} lata w przedostatnią niedzielę lutego}}
+        few 1 2 3 {{Co {$interval} lata w przedostatnią środę lutego}}
+        few 1 2 6 {{Co {$interval} lata w przedostatnią sobotę lutego}}
+        few 1 2 * {{Co {$interval} lata w przedostatni {$weekday} lutego}}
+        few 1 3 0 {{Co {$interval} lata w trzecią niedzielę lutego od końca}}
+        few 1 3 3 {{Co {$interval} lata w trzecią środę lutego od końca}}
+        few 1 3 6 {{Co {$interval} lata w trzecią sobotę lutego od końca}}
+        few 1 3 * {{Co {$interval} lata w trzeci {$weekday} lutego od końca}}
+        few 1 4 0 {{Co {$interval} lata w czwartą niedzielę lutego od końca}}
+        few 1 4 3 {{Co {$interval} lata w czwartą środę lutego od końca}}
+        few 1 4 6 {{Co {$interval} lata w czwartą sobotę lutego od końca}}
+        few 1 4 * {{Co {$interval} lata w czwarty {$weekday} lutego od końca}}
+        few 1 * 0 {{Co {$interval} lata w piątą niedzielę lutego od końca}}
+        few 1 * 3 {{Co {$interval} lata w piątą środę lutego od końca}}
+        few 1 * 6 {{Co {$interval} lata w piątą sobotę lutego od końca}}
+        few 1 * * {{Co {$interval} lata w piąty {$weekday} lutego od końca}}
+        few 2 1 0 {{Co {$interval} lata w ostatnią niedzielę marca}}
+        few 2 1 3 {{Co {$interval} lata w ostatnią środę marca}}
+        few 2 1 6 {{Co {$interval} lata w ostatnią sobotę marca}}
+        few 2 1 * {{Co {$interval} lata w ostatni {$weekday} marca}}
+        few 2 2 0 {{Co {$interval} lata w przedostatnią niedzielę marca}}
+        few 2 2 3 {{Co {$interval} lata w przedostatnią środę marca}}
+        few 2 2 6 {{Co {$interval} lata w przedostatnią sobotę marca}}
+        few 2 2 * {{Co {$interval} lata w przedostatni {$weekday} marca}}
+        few 2 3 0 {{Co {$interval} lata w trzecią niedzielę marca od końca}}
+        few 2 3 3 {{Co {$interval} lata w trzecią środę marca od końca}}
+        few 2 3 6 {{Co {$interval} lata w trzecią sobotę marca od końca}}
+        few 2 3 * {{Co {$interval} lata w trzeci {$weekday} marca od końca}}
+        few 2 4 0 {{Co {$interval} lata w czwartą niedzielę marca od końca}}
+        few 2 4 3 {{Co {$interval} lata w czwartą środę marca od końca}}
+        few 2 4 6 {{Co {$interval} lata w czwartą sobotę marca od końca}}
+        few 2 4 * {{Co {$interval} lata w czwarty {$weekday} marca od końca}}
+        few 2 * 0 {{Co {$interval} lata w piątą niedzielę marca od końca}}
+        few 2 * 3 {{Co {$interval} lata w piątą środę marca od końca}}
+        few 2 * 6 {{Co {$interval} lata w piątą sobotę marca od końca}}
+        few 2 * * {{Co {$interval} lata w piąty {$weekday} marca od końca}}
+        few 3 1 0 {{Co {$interval} lata w ostatnią niedzielę kwietnia}}
+        few 3 1 3 {{Co {$interval} lata w ostatnią środę kwietnia}}
+        few 3 1 6 {{Co {$interval} lata w ostatnią sobotę kwietnia}}
+        few 3 1 * {{Co {$interval} lata w ostatni {$weekday} kwietnia}}
+        few 3 2 0 {{Co {$interval} lata w przedostatnią niedzielę kwietnia}}
+        few 3 2 3 {{Co {$interval} lata w przedostatnią środę kwietnia}}
+        few 3 2 6 {{Co {$interval} lata w przedostatnią sobotę kwietnia}}
+        few 3 2 * {{Co {$interval} lata w przedostatni {$weekday} kwietnia}}
+        few 3 3 0 {{Co {$interval} lata w trzecią niedzielę kwietnia od końca}}
+        few 3 3 3 {{Co {$interval} lata w trzecią środę kwietnia od końca}}
+        few 3 3 6 {{Co {$interval} lata w trzecią sobotę kwietnia od końca}}
+        few 3 3 * {{Co {$interval} lata w trzeci {$weekday} kwietnia od końca}}
+        few 3 4 0 {{Co {$interval} lata w czwartą niedzielę kwietnia od końca}}
+        few 3 4 3 {{Co {$interval} lata w czwartą środę kwietnia od końca}}
+        few 3 4 6 {{Co {$interval} lata w czwartą sobotę kwietnia od końca}}
+        few 3 4 * {{Co {$interval} lata w czwarty {$weekday} kwietnia od końca}}
+        few 3 * 0 {{Co {$interval} lata w piątą niedzielę kwietnia od końca}}
+        few 3 * 3 {{Co {$interval} lata w piątą środę kwietnia od końca}}
+        few 3 * 6 {{Co {$interval} lata w piątą sobotę kwietnia od końca}}
+        few 3 * * {{Co {$interval} lata w piąty {$weekday} kwietnia od końca}}
+        few 4 1 0 {{Co {$interval} lata w ostatnią niedzielę maja}}
+        few 4 1 3 {{Co {$interval} lata w ostatnią środę maja}}
+        few 4 1 6 {{Co {$interval} lata w ostatnią sobotę maja}}
+        few 4 1 * {{Co {$interval} lata w ostatni {$weekday} maja}}
+        few 4 2 0 {{Co {$interval} lata w przedostatnią niedzielę maja}}
+        few 4 2 3 {{Co {$interval} lata w przedostatnią środę maja}}
+        few 4 2 6 {{Co {$interval} lata w przedostatnią sobotę maja}}
+        few 4 2 * {{Co {$interval} lata w przedostatni {$weekday} maja}}
+        few 4 3 0 {{Co {$interval} lata w trzecią niedzielę maja od końca}}
+        few 4 3 3 {{Co {$interval} lata w trzecią środę maja od końca}}
+        few 4 3 6 {{Co {$interval} lata w trzecią sobotę maja od końca}}
+        few 4 3 * {{Co {$interval} lata w trzeci {$weekday} maja od końca}}
+        few 4 4 0 {{Co {$interval} lata w czwartą niedzielę maja od końca}}
+        few 4 4 3 {{Co {$interval} lata w czwartą środę maja od końca}}
+        few 4 4 6 {{Co {$interval} lata w czwartą sobotę maja od końca}}
+        few 4 4 * {{Co {$interval} lata w czwarty {$weekday} maja od końca}}
+        few 4 * 0 {{Co {$interval} lata w piątą niedzielę maja od końca}}
+        few 4 * 3 {{Co {$interval} lata w piątą środę maja od końca}}
+        few 4 * 6 {{Co {$interval} lata w piątą sobotę maja od końca}}
+        few 4 * * {{Co {$interval} lata w piąty {$weekday} maja od końca}}
+        few 5 1 0 {{Co {$interval} lata w ostatnią niedzielę czerwca}}
+        few 5 1 3 {{Co {$interval} lata w ostatnią środę czerwca}}
+        few 5 1 6 {{Co {$interval} lata w ostatnią sobotę czerwca}}
+        few 5 1 * {{Co {$interval} lata w ostatni {$weekday} czerwca}}
+        few 5 2 0 {{Co {$interval} lata w przedostatnią niedzielę czerwca}}
+        few 5 2 3 {{Co {$interval} lata w przedostatnią środę czerwca}}
+        few 5 2 6 {{Co {$interval} lata w przedostatnią sobotę czerwca}}
+        few 5 2 * {{Co {$interval} lata w przedostatni {$weekday} czerwca}}
+        few 5 3 0 {{Co {$interval} lata w trzecią niedzielę czerwca od końca}}
+        few 5 3 3 {{Co {$interval} lata w trzecią środę czerwca od końca}}
+        few 5 3 6 {{Co {$interval} lata w trzecią sobotę czerwca od końca}}
+        few 5 3 * {{Co {$interval} lata w trzeci {$weekday} czerwca od końca}}
+        few 5 4 0 {{Co {$interval} lata w czwartą niedzielę czerwca od końca}}
+        few 5 4 3 {{Co {$interval} lata w czwartą środę czerwca od końca}}
+        few 5 4 6 {{Co {$interval} lata w czwartą sobotę czerwca od końca}}
+        few 5 4 * {{Co {$interval} lata w czwarty {$weekday} czerwca od końca}}
+        few 5 * 0 {{Co {$interval} lata w piątą niedzielę czerwca od końca}}
+        few 5 * 3 {{Co {$interval} lata w piątą środę czerwca od końca}}
+        few 5 * 6 {{Co {$interval} lata w piątą sobotę czerwca od końca}}
+        few 5 * * {{Co {$interval} lata w piąty {$weekday} czerwca od końca}}
+        few 6 1 0 {{Co {$interval} lata w ostatnią niedzielę lipca}}
+        few 6 1 3 {{Co {$interval} lata w ostatnią środę lipca}}
+        few 6 1 6 {{Co {$interval} lata w ostatnią sobotę lipca}}
+        few 6 1 * {{Co {$interval} lata w ostatni {$weekday} lipca}}
+        few 6 2 0 {{Co {$interval} lata w przedostatnią niedzielę lipca}}
+        few 6 2 3 {{Co {$interval} lata w przedostatnią środę lipca}}
+        few 6 2 6 {{Co {$interval} lata w przedostatnią sobotę lipca}}
+        few 6 2 * {{Co {$interval} lata w przedostatni {$weekday} lipca}}
+        few 6 3 0 {{Co {$interval} lata w trzecią niedzielę lipca od końca}}
+        few 6 3 3 {{Co {$interval} lata w trzecią środę lipca od końca}}
+        few 6 3 6 {{Co {$interval} lata w trzecią sobotę lipca od końca}}
+        few 6 3 * {{Co {$interval} lata w trzeci {$weekday} lipca od końca}}
+        few 6 4 0 {{Co {$interval} lata w czwartą niedzielę lipca od końca}}
+        few 6 4 3 {{Co {$interval} lata w czwartą środę lipca od końca}}
+        few 6 4 6 {{Co {$interval} lata w czwartą sobotę lipca od końca}}
+        few 6 4 * {{Co {$interval} lata w czwarty {$weekday} lipca od końca}}
+        few 6 * 0 {{Co {$interval} lata w piątą niedzielę lipca od końca}}
+        few 6 * 3 {{Co {$interval} lata w piątą środę lipca od końca}}
+        few 6 * 6 {{Co {$interval} lata w piątą sobotę lipca od końca}}
+        few 6 * * {{Co {$interval} lata w piąty {$weekday} lipca od końca}}
+        few 7 1 0 {{Co {$interval} lata w ostatnią niedzielę sierpnia}}
+        few 7 1 3 {{Co {$interval} lata w ostatnią środę sierpnia}}
+        few 7 1 6 {{Co {$interval} lata w ostatnią sobotę sierpnia}}
+        few 7 1 * {{Co {$interval} lata w ostatni {$weekday} sierpnia}}
+        few 7 2 0 {{Co {$interval} lata w przedostatnią niedzielę sierpnia}}
+        few 7 2 3 {{Co {$interval} lata w przedostatnią środę sierpnia}}
+        few 7 2 6 {{Co {$interval} lata w przedostatnią sobotę sierpnia}}
+        few 7 2 * {{Co {$interval} lata w przedostatni {$weekday} sierpnia}}
+        few 7 3 0 {{Co {$interval} lata w trzecią niedzielę sierpnia od końca}}
+        few 7 3 3 {{Co {$interval} lata w trzecią środę sierpnia od końca}}
+        few 7 3 6 {{Co {$interval} lata w trzecią sobotę sierpnia od końca}}
+        few 7 3 * {{Co {$interval} lata w trzeci {$weekday} sierpnia od końca}}
+        few 7 4 0 {{Co {$interval} lata w czwartą niedzielę sierpnia od końca}}
+        few 7 4 3 {{Co {$interval} lata w czwartą środę sierpnia od końca}}
+        few 7 4 6 {{Co {$interval} lata w czwartą sobotę sierpnia od końca}}
+        few 7 4 * {{Co {$interval} lata w czwarty {$weekday} sierpnia od końca}}
+        few 7 * 0 {{Co {$interval} lata w piątą niedzielę sierpnia od końca}}
+        few 7 * 3 {{Co {$interval} lata w piątą środę sierpnia od końca}}
+        few 7 * 6 {{Co {$interval} lata w piątą sobotę sierpnia od końca}}
+        few 7 * * {{Co {$interval} lata w piąty {$weekday} sierpnia od końca}}
+        few 8 1 0 {{Co {$interval} lata w ostatnią niedzielę września}}
+        few 8 1 3 {{Co {$interval} lata w ostatnią środę września}}
+        few 8 1 6 {{Co {$interval} lata w ostatnią sobotę września}}
+        few 8 1 * {{Co {$interval} lata w ostatni {$weekday} września}}
+        few 8 2 0 {{Co {$interval} lata w przedostatnią niedzielę września}}
+        few 8 2 3 {{Co {$interval} lata w przedostatnią środę września}}
+        few 8 2 6 {{Co {$interval} lata w przedostatnią sobotę września}}
+        few 8 2 * {{Co {$interval} lata w przedostatni {$weekday} września}}
+        few 8 3 0 {{Co {$interval} lata w trzecią niedzielę września od końca}}
+        few 8 3 3 {{Co {$interval} lata w trzecią środę września od końca}}
+        few 8 3 6 {{Co {$interval} lata w trzecią sobotę września od końca}}
+        few 8 3 * {{Co {$interval} lata w trzeci {$weekday} września od końca}}
+        few 8 4 0 {{Co {$interval} lata w czwartą niedzielę września od końca}}
+        few 8 4 3 {{Co {$interval} lata w czwartą środę września od końca}}
+        few 8 4 6 {{Co {$interval} lata w czwartą sobotę września od końca}}
+        few 8 4 * {{Co {$interval} lata w czwarty {$weekday} września od końca}}
+        few 8 * 0 {{Co {$interval} lata w piątą niedzielę września od końca}}
+        few 8 * 3 {{Co {$interval} lata w piątą środę września od końca}}
+        few 8 * 6 {{Co {$interval} lata w piątą sobotę września od końca}}
+        few 8 * * {{Co {$interval} lata w piąty {$weekday} września od końca}}
+        few 9 1 0 {{Co {$interval} lata w ostatnią niedzielę października}}
+        few 9 1 3 {{Co {$interval} lata w ostatnią środę października}}
+        few 9 1 6 {{Co {$interval} lata w ostatnią sobotę października}}
+        few 9 1 * {{Co {$interval} lata w ostatni {$weekday} października}}
+        few 9 2 0 {{Co {$interval} lata w przedostatnią niedzielę października}}
+        few 9 2 3 {{Co {$interval} lata w przedostatnią środę października}}
+        few 9 2 6 {{Co {$interval} lata w przedostatnią sobotę października}}
+        few 9 2 * {{Co {$interval} lata w przedostatni {$weekday} października}}
+        few 9 3 0 {{Co {$interval} lata w trzecią niedzielę października od końca}}
+        few 9 3 3 {{Co {$interval} lata w trzecią środę października od końca}}
+        few 9 3 6 {{Co {$interval} lata w trzecią sobotę października od końca}}
+        few 9 3 * {{Co {$interval} lata w trzeci {$weekday} października od końca}}
+        few 9 4 0 {{Co {$interval} lata w czwartą niedzielę października od końca}}
+        few 9 4 3 {{Co {$interval} lata w czwartą środę października od końca}}
+        few 9 4 6 {{Co {$interval} lata w czwartą sobotę października od końca}}
+        few 9 4 * {{Co {$interval} lata w czwarty {$weekday} października od końca}}
+        few 9 * 0 {{Co {$interval} lata w piątą niedzielę października od końca}}
+        few 9 * 3 {{Co {$interval} lata w piątą środę października od końca}}
+        few 9 * 6 {{Co {$interval} lata w piątą sobotę października od końca}}
+        few 9 * * {{Co {$interval} lata w piąty {$weekday} października od końca}}
+        few 10 1 0 {{Co {$interval} lata w ostatnią niedzielę listopada}}
+        few 10 1 3 {{Co {$interval} lata w ostatnią środę listopada}}
+        few 10 1 6 {{Co {$interval} lata w ostatnią sobotę listopada}}
+        few 10 1 * {{Co {$interval} lata w ostatni {$weekday} listopada}}
+        few 10 2 0 {{Co {$interval} lata w przedostatnią niedzielę listopada}}
+        few 10 2 3 {{Co {$interval} lata w przedostatnią środę listopada}}
+        few 10 2 6 {{Co {$interval} lata w przedostatnią sobotę listopada}}
+        few 10 2 * {{Co {$interval} lata w przedostatni {$weekday} listopada}}
+        few 10 3 0 {{Co {$interval} lata w trzecią niedzielę listopada od końca}}
+        few 10 3 3 {{Co {$interval} lata w trzecią środę listopada od końca}}
+        few 10 3 6 {{Co {$interval} lata w trzecią sobotę listopada od końca}}
+        few 10 3 * {{Co {$interval} lata w trzeci {$weekday} listopada od końca}}
+        few 10 4 0 {{Co {$interval} lata w czwartą niedzielę listopada od końca}}
+        few 10 4 3 {{Co {$interval} lata w czwartą środę listopada od końca}}
+        few 10 4 6 {{Co {$interval} lata w czwartą sobotę listopada od końca}}
+        few 10 4 * {{Co {$interval} lata w czwarty {$weekday} listopada od końca}}
+        few 10 * 0 {{Co {$interval} lata w piątą niedzielę listopada od końca}}
+        few 10 * 3 {{Co {$interval} lata w piątą środę listopada od końca}}
+        few 10 * 6 {{Co {$interval} lata w piątą sobotę listopada od końca}}
+        few 10 * * {{Co {$interval} lata w piąty {$weekday} listopada od końca}}
+        few * 1 0 {{Co {$interval} lata w ostatnią niedzielę grudnia}}
+        few * 1 3 {{Co {$interval} lata w ostatnią środę grudnia}}
+        few * 1 6 {{Co {$interval} lata w ostatnią sobotę grudnia}}
+        few * 1 * {{Co {$interval} lata w ostatni {$weekday} grudnia}}
+        few * 2 0 {{Co {$interval} lata w przedostatnią niedzielę grudnia}}
+        few * 2 3 {{Co {$interval} lata w przedostatnią środę grudnia}}
+        few * 2 6 {{Co {$interval} lata w przedostatnią sobotę grudnia}}
+        few * 2 * {{Co {$interval} lata w przedostatni {$weekday} grudnia}}
+        few * 3 0 {{Co {$interval} lata w trzecią niedzielę grudnia od końca}}
+        few * 3 3 {{Co {$interval} lata w trzecią środę grudnia od końca}}
+        few * 3 6 {{Co {$interval} lata w trzecią sobotę grudnia od końca}}
+        few * 3 * {{Co {$interval} lata w trzeci {$weekday} grudnia od końca}}
+        few * 4 0 {{Co {$interval} lata w czwartą niedzielę grudnia od końca}}
+        few * 4 3 {{Co {$interval} lata w czwartą środę grudnia od końca}}
+        few * 4 6 {{Co {$interval} lata w czwartą sobotę grudnia od końca}}
+        few * 4 * {{Co {$interval} lata w czwarty {$weekday} grudnia od końca}}
+        few * * 0 {{Co {$interval} lata w piątą niedzielę grudnia od końca}}
+        few * * 3 {{Co {$interval} lata w piątą środę grudnia od końca}}
+        few * * 6 {{Co {$interval} lata w piątą sobotę grudnia od końca}}
+        few * * * {{Co {$interval} lata w piąty {$weekday} grudnia od końca}}
+                * 0 1 0 {{Co {$interval} lat w ostatnią niedzielę stycznia}}
+        * 0 1 3 {{Co {$interval} lat w ostatnią środę stycznia}}
+        * 0 1 6 {{Co {$interval} lat w ostatnią sobotę stycznia}}
+        * 0 1 * {{Co {$interval} lat w ostatni {$weekday} stycznia}}
+        * 0 2 0 {{Co {$interval} lat w przedostatnią niedzielę stycznia}}
+        * 0 2 3 {{Co {$interval} lat w przedostatnią środę stycznia}}
+        * 0 2 6 {{Co {$interval} lat w przedostatnią sobotę stycznia}}
+        * 0 2 * {{Co {$interval} lat w przedostatni {$weekday} stycznia}}
+        * 0 3 0 {{Co {$interval} lat w trzecią niedzielę stycznia od końca}}
+        * 0 3 3 {{Co {$interval} lat w trzecią środę stycznia od końca}}
+        * 0 3 6 {{Co {$interval} lat w trzecią sobotę stycznia od końca}}
+        * 0 3 * {{Co {$interval} lat w trzeci {$weekday} stycznia od końca}}
+        * 0 4 0 {{Co {$interval} lat w czwartą niedzielę stycznia od końca}}
+        * 0 4 3 {{Co {$interval} lat w czwartą środę stycznia od końca}}
+        * 0 4 6 {{Co {$interval} lat w czwartą sobotę stycznia od końca}}
+        * 0 4 * {{Co {$interval} lat w czwarty {$weekday} stycznia od końca}}
+        * 0 * 0 {{Co {$interval} lat w piątą niedzielę stycznia od końca}}
+        * 0 * 3 {{Co {$interval} lat w piątą środę stycznia od końca}}
+        * 0 * 6 {{Co {$interval} lat w piątą sobotę stycznia od końca}}
+        * 0 * * {{Co {$interval} lat w piąty {$weekday} stycznia od końca}}
+        * 1 1 0 {{Co {$interval} lat w ostatnią niedzielę lutego}}
+        * 1 1 3 {{Co {$interval} lat w ostatnią środę lutego}}
+        * 1 1 6 {{Co {$interval} lat w ostatnią sobotę lutego}}
+        * 1 1 * {{Co {$interval} lat w ostatni {$weekday} lutego}}
+        * 1 2 0 {{Co {$interval} lat w przedostatnią niedzielę lutego}}
+        * 1 2 3 {{Co {$interval} lat w przedostatnią środę lutego}}
+        * 1 2 6 {{Co {$interval} lat w przedostatnią sobotę lutego}}
+        * 1 2 * {{Co {$interval} lat w przedostatni {$weekday} lutego}}
+        * 1 3 0 {{Co {$interval} lat w trzecią niedzielę lutego od końca}}
+        * 1 3 3 {{Co {$interval} lat w trzecią środę lutego od końca}}
+        * 1 3 6 {{Co {$interval} lat w trzecią sobotę lutego od końca}}
+        * 1 3 * {{Co {$interval} lat w trzeci {$weekday} lutego od końca}}
+        * 1 4 0 {{Co {$interval} lat w czwartą niedzielę lutego od końca}}
+        * 1 4 3 {{Co {$interval} lat w czwartą środę lutego od końca}}
+        * 1 4 6 {{Co {$interval} lat w czwartą sobotę lutego od końca}}
+        * 1 4 * {{Co {$interval} lat w czwarty {$weekday} lutego od końca}}
+        * 1 * 0 {{Co {$interval} lat w piątą niedzielę lutego od końca}}
+        * 1 * 3 {{Co {$interval} lat w piątą środę lutego od końca}}
+        * 1 * 6 {{Co {$interval} lat w piątą sobotę lutego od końca}}
+        * 1 * * {{Co {$interval} lat w piąty {$weekday} lutego od końca}}
+        * 2 1 0 {{Co {$interval} lat w ostatnią niedzielę marca}}
+        * 2 1 3 {{Co {$interval} lat w ostatnią środę marca}}
+        * 2 1 6 {{Co {$interval} lat w ostatnią sobotę marca}}
+        * 2 1 * {{Co {$interval} lat w ostatni {$weekday} marca}}
+        * 2 2 0 {{Co {$interval} lat w przedostatnią niedzielę marca}}
+        * 2 2 3 {{Co {$interval} lat w przedostatnią środę marca}}
+        * 2 2 6 {{Co {$interval} lat w przedostatnią sobotę marca}}
+        * 2 2 * {{Co {$interval} lat w przedostatni {$weekday} marca}}
+        * 2 3 0 {{Co {$interval} lat w trzecią niedzielę marca od końca}}
+        * 2 3 3 {{Co {$interval} lat w trzecią środę marca od końca}}
+        * 2 3 6 {{Co {$interval} lat w trzecią sobotę marca od końca}}
+        * 2 3 * {{Co {$interval} lat w trzeci {$weekday} marca od końca}}
+        * 2 4 0 {{Co {$interval} lat w czwartą niedzielę marca od końca}}
+        * 2 4 3 {{Co {$interval} lat w czwartą środę marca od końca}}
+        * 2 4 6 {{Co {$interval} lat w czwartą sobotę marca od końca}}
+        * 2 4 * {{Co {$interval} lat w czwarty {$weekday} marca od końca}}
+        * 2 * 0 {{Co {$interval} lat w piątą niedzielę marca od końca}}
+        * 2 * 3 {{Co {$interval} lat w piątą środę marca od końca}}
+        * 2 * 6 {{Co {$interval} lat w piątą sobotę marca od końca}}
+        * 2 * * {{Co {$interval} lat w piąty {$weekday} marca od końca}}
+        * 3 1 0 {{Co {$interval} lat w ostatnią niedzielę kwietnia}}
+        * 3 1 3 {{Co {$interval} lat w ostatnią środę kwietnia}}
+        * 3 1 6 {{Co {$interval} lat w ostatnią sobotę kwietnia}}
+        * 3 1 * {{Co {$interval} lat w ostatni {$weekday} kwietnia}}
+        * 3 2 0 {{Co {$interval} lat w przedostatnią niedzielę kwietnia}}
+        * 3 2 3 {{Co {$interval} lat w przedostatnią środę kwietnia}}
+        * 3 2 6 {{Co {$interval} lat w przedostatnią sobotę kwietnia}}
+        * 3 2 * {{Co {$interval} lat w przedostatni {$weekday} kwietnia}}
+        * 3 3 0 {{Co {$interval} lat w trzecią niedzielę kwietnia od końca}}
+        * 3 3 3 {{Co {$interval} lat w trzecią środę kwietnia od końca}}
+        * 3 3 6 {{Co {$interval} lat w trzecią sobotę kwietnia od końca}}
+        * 3 3 * {{Co {$interval} lat w trzeci {$weekday} kwietnia od końca}}
+        * 3 4 0 {{Co {$interval} lat w czwartą niedzielę kwietnia od końca}}
+        * 3 4 3 {{Co {$interval} lat w czwartą środę kwietnia od końca}}
+        * 3 4 6 {{Co {$interval} lat w czwartą sobotę kwietnia od końca}}
+        * 3 4 * {{Co {$interval} lat w czwarty {$weekday} kwietnia od końca}}
+        * 3 * 0 {{Co {$interval} lat w piątą niedzielę kwietnia od końca}}
+        * 3 * 3 {{Co {$interval} lat w piątą środę kwietnia od końca}}
+        * 3 * 6 {{Co {$interval} lat w piątą sobotę kwietnia od końca}}
+        * 3 * * {{Co {$interval} lat w piąty {$weekday} kwietnia od końca}}
+        * 4 1 0 {{Co {$interval} lat w ostatnią niedzielę maja}}
+        * 4 1 3 {{Co {$interval} lat w ostatnią środę maja}}
+        * 4 1 6 {{Co {$interval} lat w ostatnią sobotę maja}}
+        * 4 1 * {{Co {$interval} lat w ostatni {$weekday} maja}}
+        * 4 2 0 {{Co {$interval} lat w przedostatnią niedzielę maja}}
+        * 4 2 3 {{Co {$interval} lat w przedostatnią środę maja}}
+        * 4 2 6 {{Co {$interval} lat w przedostatnią sobotę maja}}
+        * 4 2 * {{Co {$interval} lat w przedostatni {$weekday} maja}}
+        * 4 3 0 {{Co {$interval} lat w trzecią niedzielę maja od końca}}
+        * 4 3 3 {{Co {$interval} lat w trzecią środę maja od końca}}
+        * 4 3 6 {{Co {$interval} lat w trzecią sobotę maja od końca}}
+        * 4 3 * {{Co {$interval} lat w trzeci {$weekday} maja od końca}}
+        * 4 4 0 {{Co {$interval} lat w czwartą niedzielę maja od końca}}
+        * 4 4 3 {{Co {$interval} lat w czwartą środę maja od końca}}
+        * 4 4 6 {{Co {$interval} lat w czwartą sobotę maja od końca}}
+        * 4 4 * {{Co {$interval} lat w czwarty {$weekday} maja od końca}}
+        * 4 * 0 {{Co {$interval} lat w piątą niedzielę maja od końca}}
+        * 4 * 3 {{Co {$interval} lat w piątą środę maja od końca}}
+        * 4 * 6 {{Co {$interval} lat w piątą sobotę maja od końca}}
+        * 4 * * {{Co {$interval} lat w piąty {$weekday} maja od końca}}
+        * 5 1 0 {{Co {$interval} lat w ostatnią niedzielę czerwca}}
+        * 5 1 3 {{Co {$interval} lat w ostatnią środę czerwca}}
+        * 5 1 6 {{Co {$interval} lat w ostatnią sobotę czerwca}}
+        * 5 1 * {{Co {$interval} lat w ostatni {$weekday} czerwca}}
+        * 5 2 0 {{Co {$interval} lat w przedostatnią niedzielę czerwca}}
+        * 5 2 3 {{Co {$interval} lat w przedostatnią środę czerwca}}
+        * 5 2 6 {{Co {$interval} lat w przedostatnią sobotę czerwca}}
+        * 5 2 * {{Co {$interval} lat w przedostatni {$weekday} czerwca}}
+        * 5 3 0 {{Co {$interval} lat w trzecią niedzielę czerwca od końca}}
+        * 5 3 3 {{Co {$interval} lat w trzecią środę czerwca od końca}}
+        * 5 3 6 {{Co {$interval} lat w trzecią sobotę czerwca od końca}}
+        * 5 3 * {{Co {$interval} lat w trzeci {$weekday} czerwca od końca}}
+        * 5 4 0 {{Co {$interval} lat w czwartą niedzielę czerwca od końca}}
+        * 5 4 3 {{Co {$interval} lat w czwartą środę czerwca od końca}}
+        * 5 4 6 {{Co {$interval} lat w czwartą sobotę czerwca od końca}}
+        * 5 4 * {{Co {$interval} lat w czwarty {$weekday} czerwca od końca}}
+        * 5 * 0 {{Co {$interval} lat w piątą niedzielę czerwca od końca}}
+        * 5 * 3 {{Co {$interval} lat w piątą środę czerwca od końca}}
+        * 5 * 6 {{Co {$interval} lat w piątą sobotę czerwca od końca}}
+        * 5 * * {{Co {$interval} lat w piąty {$weekday} czerwca od końca}}
+        * 6 1 0 {{Co {$interval} lat w ostatnią niedzielę lipca}}
+        * 6 1 3 {{Co {$interval} lat w ostatnią środę lipca}}
+        * 6 1 6 {{Co {$interval} lat w ostatnią sobotę lipca}}
+        * 6 1 * {{Co {$interval} lat w ostatni {$weekday} lipca}}
+        * 6 2 0 {{Co {$interval} lat w przedostatnią niedzielę lipca}}
+        * 6 2 3 {{Co {$interval} lat w przedostatnią środę lipca}}
+        * 6 2 6 {{Co {$interval} lat w przedostatnią sobotę lipca}}
+        * 6 2 * {{Co {$interval} lat w przedostatni {$weekday} lipca}}
+        * 6 3 0 {{Co {$interval} lat w trzecią niedzielę lipca od końca}}
+        * 6 3 3 {{Co {$interval} lat w trzecią środę lipca od końca}}
+        * 6 3 6 {{Co {$interval} lat w trzecią sobotę lipca od końca}}
+        * 6 3 * {{Co {$interval} lat w trzeci {$weekday} lipca od końca}}
+        * 6 4 0 {{Co {$interval} lat w czwartą niedzielę lipca od końca}}
+        * 6 4 3 {{Co {$interval} lat w czwartą środę lipca od końca}}
+        * 6 4 6 {{Co {$interval} lat w czwartą sobotę lipca od końca}}
+        * 6 4 * {{Co {$interval} lat w czwarty {$weekday} lipca od końca}}
+        * 6 * 0 {{Co {$interval} lat w piątą niedzielę lipca od końca}}
+        * 6 * 3 {{Co {$interval} lat w piątą środę lipca od końca}}
+        * 6 * 6 {{Co {$interval} lat w piątą sobotę lipca od końca}}
+        * 6 * * {{Co {$interval} lat w piąty {$weekday} lipca od końca}}
+        * 7 1 0 {{Co {$interval} lat w ostatnią niedzielę sierpnia}}
+        * 7 1 3 {{Co {$interval} lat w ostatnią środę sierpnia}}
+        * 7 1 6 {{Co {$interval} lat w ostatnią sobotę sierpnia}}
+        * 7 1 * {{Co {$interval} lat w ostatni {$weekday} sierpnia}}
+        * 7 2 0 {{Co {$interval} lat w przedostatnią niedzielę sierpnia}}
+        * 7 2 3 {{Co {$interval} lat w przedostatnią środę sierpnia}}
+        * 7 2 6 {{Co {$interval} lat w przedostatnią sobotę sierpnia}}
+        * 7 2 * {{Co {$interval} lat w przedostatni {$weekday} sierpnia}}
+        * 7 3 0 {{Co {$interval} lat w trzecią niedzielę sierpnia od końca}}
+        * 7 3 3 {{Co {$interval} lat w trzecią środę sierpnia od końca}}
+        * 7 3 6 {{Co {$interval} lat w trzecią sobotę sierpnia od końca}}
+        * 7 3 * {{Co {$interval} lat w trzeci {$weekday} sierpnia od końca}}
+        * 7 4 0 {{Co {$interval} lat w czwartą niedzielę sierpnia od końca}}
+        * 7 4 3 {{Co {$interval} lat w czwartą środę sierpnia od końca}}
+        * 7 4 6 {{Co {$interval} lat w czwartą sobotę sierpnia od końca}}
+        * 7 4 * {{Co {$interval} lat w czwarty {$weekday} sierpnia od końca}}
+        * 7 * 0 {{Co {$interval} lat w piątą niedzielę sierpnia od końca}}
+        * 7 * 3 {{Co {$interval} lat w piątą środę sierpnia od końca}}
+        * 7 * 6 {{Co {$interval} lat w piątą sobotę sierpnia od końca}}
+        * 7 * * {{Co {$interval} lat w piąty {$weekday} sierpnia od końca}}
+        * 8 1 0 {{Co {$interval} lat w ostatnią niedzielę września}}
+        * 8 1 3 {{Co {$interval} lat w ostatnią środę września}}
+        * 8 1 6 {{Co {$interval} lat w ostatnią sobotę września}}
+        * 8 1 * {{Co {$interval} lat w ostatni {$weekday} września}}
+        * 8 2 0 {{Co {$interval} lat w przedostatnią niedzielę września}}
+        * 8 2 3 {{Co {$interval} lat w przedostatnią środę września}}
+        * 8 2 6 {{Co {$interval} lat w przedostatnią sobotę września}}
+        * 8 2 * {{Co {$interval} lat w przedostatni {$weekday} września}}
+        * 8 3 0 {{Co {$interval} lat w trzecią niedzielę września od końca}}
+        * 8 3 3 {{Co {$interval} lat w trzecią środę września od końca}}
+        * 8 3 6 {{Co {$interval} lat w trzecią sobotę września od końca}}
+        * 8 3 * {{Co {$interval} lat w trzeci {$weekday} września od końca}}
+        * 8 4 0 {{Co {$interval} lat w czwartą niedzielę września od końca}}
+        * 8 4 3 {{Co {$interval} lat w czwartą środę września od końca}}
+        * 8 4 6 {{Co {$interval} lat w czwartą sobotę września od końca}}
+        * 8 4 * {{Co {$interval} lat w czwarty {$weekday} września od końca}}
+        * 8 * 0 {{Co {$interval} lat w piątą niedzielę września od końca}}
+        * 8 * 3 {{Co {$interval} lat w piątą środę września od końca}}
+        * 8 * 6 {{Co {$interval} lat w piątą sobotę września od końca}}
+        * 8 * * {{Co {$interval} lat w piąty {$weekday} września od końca}}
+        * 9 1 0 {{Co {$interval} lat w ostatnią niedzielę października}}
+        * 9 1 3 {{Co {$interval} lat w ostatnią środę października}}
+        * 9 1 6 {{Co {$interval} lat w ostatnią sobotę października}}
+        * 9 1 * {{Co {$interval} lat w ostatni {$weekday} października}}
+        * 9 2 0 {{Co {$interval} lat w przedostatnią niedzielę października}}
+        * 9 2 3 {{Co {$interval} lat w przedostatnią środę października}}
+        * 9 2 6 {{Co {$interval} lat w przedostatnią sobotę października}}
+        * 9 2 * {{Co {$interval} lat w przedostatni {$weekday} października}}
+        * 9 3 0 {{Co {$interval} lat w trzecią niedzielę października od końca}}
+        * 9 3 3 {{Co {$interval} lat w trzecią środę października od końca}}
+        * 9 3 6 {{Co {$interval} lat w trzecią sobotę października od końca}}
+        * 9 3 * {{Co {$interval} lat w trzeci {$weekday} października od końca}}
+        * 9 4 0 {{Co {$interval} lat w czwartą niedzielę października od końca}}
+        * 9 4 3 {{Co {$interval} lat w czwartą środę października od końca}}
+        * 9 4 6 {{Co {$interval} lat w czwartą sobotę października od końca}}
+        * 9 4 * {{Co {$interval} lat w czwarty {$weekday} października od końca}}
+        * 9 * 0 {{Co {$interval} lat w piątą niedzielę października od końca}}
+        * 9 * 3 {{Co {$interval} lat w piątą środę października od końca}}
+        * 9 * 6 {{Co {$interval} lat w piątą sobotę października od końca}}
+        * 9 * * {{Co {$interval} lat w piąty {$weekday} października od końca}}
+        * 10 1 0 {{Co {$interval} lat w ostatnią niedzielę listopada}}
+        * 10 1 3 {{Co {$interval} lat w ostatnią środę listopada}}
+        * 10 1 6 {{Co {$interval} lat w ostatnią sobotę listopada}}
+        * 10 1 * {{Co {$interval} lat w ostatni {$weekday} listopada}}
+        * 10 2 0 {{Co {$interval} lat w przedostatnią niedzielę listopada}}
+        * 10 2 3 {{Co {$interval} lat w przedostatnią środę listopada}}
+        * 10 2 6 {{Co {$interval} lat w przedostatnią sobotę listopada}}
+        * 10 2 * {{Co {$interval} lat w przedostatni {$weekday} listopada}}
+        * 10 3 0 {{Co {$interval} lat w trzecią niedzielę listopada od końca}}
+        * 10 3 3 {{Co {$interval} lat w trzecią środę listopada od końca}}
+        * 10 3 6 {{Co {$interval} lat w trzecią sobotę listopada od końca}}
+        * 10 3 * {{Co {$interval} lat w trzeci {$weekday} listopada od końca}}
+        * 10 4 0 {{Co {$interval} lat w czwartą niedzielę listopada od końca}}
+        * 10 4 3 {{Co {$interval} lat w czwartą środę listopada od końca}}
+        * 10 4 6 {{Co {$interval} lat w czwartą sobotę listopada od końca}}
+        * 10 4 * {{Co {$interval} lat w czwarty {$weekday} listopada od końca}}
+        * 10 * 0 {{Co {$interval} lat w piątą niedzielę listopada od końca}}
+        * 10 * 3 {{Co {$interval} lat w piątą środę listopada od końca}}
+        * 10 * 6 {{Co {$interval} lat w piątą sobotę listopada od końca}}
+        * 10 * * {{Co {$interval} lat w piąty {$weekday} listopada od końca}}
+        * * 1 0 {{Co {$interval} lat w ostatnią niedzielę grudnia}}
+        * * 1 3 {{Co {$interval} lat w ostatnią środę grudnia}}
+        * * 1 6 {{Co {$interval} lat w ostatnią sobotę grudnia}}
+        * * 1 * {{Co {$interval} lat w ostatni {$weekday} grudnia}}
+        * * 2 0 {{Co {$interval} lat w przedostatnią niedzielę grudnia}}
+        * * 2 3 {{Co {$interval} lat w przedostatnią środę grudnia}}
+        * * 2 6 {{Co {$interval} lat w przedostatnią sobotę grudnia}}
+        * * 2 * {{Co {$interval} lat w przedostatni {$weekday} grudnia}}
+        * * 3 0 {{Co {$interval} lat w trzecią niedzielę grudnia od końca}}
+        * * 3 3 {{Co {$interval} lat w trzecią środę grudnia od końca}}
+        * * 3 6 {{Co {$interval} lat w trzecią sobotę grudnia od końca}}
+        * * 3 * {{Co {$interval} lat w trzeci {$weekday} grudnia od końca}}
+        * * 4 0 {{Co {$interval} lat w czwartą niedzielę grudnia od końca}}
+        * * 4 3 {{Co {$interval} lat w czwartą środę grudnia od końca}}
+        * * 4 6 {{Co {$interval} lat w czwartą sobotę grudnia od końca}}
+        * * 4 * {{Co {$interval} lat w czwarty {$weekday} grudnia od końca}}
+        * * * 0 {{Co {$interval} lat w piątą niedzielę grudnia od końca}}
+        * * * 3 {{Co {$interval} lat w piątą środę grudnia od końca}}
+        * * * 6 {{Co {$interval} lat w piątą sobotę grudnia od końca}}
+        * * * * {{Co {$interval} lat w piąty {$weekday} grudnia od końca}}
+    weekly: |
+      .input {$interval :integer}
+      .match $interval
+        one {{Co tydzień}}
+        few {{Co {$interval} tygodnie}}
+        * {{Co {$interval} tygodni}}
+  props:
+    freq:
+      name: "Częstotliwość"
+      vals:
+        secondly: "Co daną ilość sekund"
+        minutely: "Co daną ilość minut"
+        hourly: "Godzinnie"
+        daily: "Dziennie"
+        weekly: "Tygodniowo"
+        monthly: "Miesięcznie"
+        yearly: "Rocznie"
+    interval:
+      name: "Interwał"
+    duration:
+      name: "Czas Trwania"
+      vals:
+        date:
+          name: "Do ustawionej daty"
+          param: "Data końcowa powtarzania"
+        count:
+          name: "Dana ilość powtórzeń"
+          param: "Ilość powtórzeń"
+        forever: "Bez końca"
+    rrule: "RRULE"
+    rdate: "RDATE"
+    exdate: "EXDATE"
+    by:
+      month:
+        limit:
+          enable: "Tylko w dane miesiące"
+          name: "Miesiące"
+        expand:
+          enable: "Ustal miesące roku"
+          name: "Miesiące"
+      weekno:
+        expand:
+          enable: "Tylko w dane tygodnie roku"
+          name: "Tygodnie roku"
+      yearday:
+        limit:
+          enable: "Tylko w dane dni roku"
+          name: "Dni roku"
+        expand:
+          enable: "Ustal dni roku"
+          name: "Dni roku"
+      monthday:
+        limit:
+          enable: "Tylko w dane dni miesiąca"
+          name: "Dni miesiąca"
+        expand:
+          enable: "Ustal dni miesiąca"
+          name: "Dni miesiąca"
+      day:
+        dayname:
+          limit:
+            enable: "Tylko w dane dni tygodnia"
+            name: "Dni tygodnia"
+          expand:
+            enable: "Ustal dni tygodnia"
+            name: "Dni tygodnia"
+        numeric:
+          limit:
+            enable: "Tylko w dane dni tygodnia"
+            name: "Dni tygodnia"
+          expand:
+            enable: "Ustal dni tygodnia"
+            name: "Dni tygodnia"
+      hour:
+        limit:
+          enable: "Tylko w dane godziny dnia"
+          name: "Godziny dnia"
+        expand:
+          enable: "Ustal godziny dnia"
+          name: "Godziny dnia"
+      minute:
+        limit:
+          enable: "Tylko w dane minuty godziny"
+          name: "Minuty godziny"
+        expand:
+          enable: "Ustal minuty godziny"
+          name: "Minuty godziny"
+      second:
+        limit:
+          enable: "Tylko w dane sekundy minuty"
+          name: "Sekundy minuty"
+        expand:
+          enable: "Ustal sekundy minuty"
+          name: "Sekundy minuty"
 
 date:
   title: "Wybór Daty"
-  allDay: "Całodniowe"
+  allDay: "Całodniowe wydarzenie"
   start: "Początek"
   end: "Koniec"
   date: "Data"
+  formatted:
+    date: |
+      {{{$date :date dateStyle=short format=custom}}}
+    time: |
+      {{{$date :date timeStyle=short format=custom}}}
 
 time:
   title: "Wybór Czasu"
@@ -388,7 +2144,19 @@ event:
     edit: "Edytowanie Wydarzenia"
     copy: "Kopiowanie Wydarzenia"
   copy:
-    instruction: "Wybierz w które dni ma miejsce to wydarzenie."
+    instruction: |
+      .input {$count :integer}
+      .match $count
+        0 {{Wybierz na które dni skopiować wydarzenie.}}
+        * {{Wybierz na które dni skopiować wydarzenie. (wybrano {$count})}}
+    rdate:
+      toggle: "Skopiuj jako powtórzenie"
+      details: |
+        .input {$count :integer}
+        .match $count
+        0 {{Jeżeli deaktywowane, to w każdy wybrany dzień zostanie utworzone nowe wydarzenie. Jeżeli aktywowane, to oryginalne wydarzenie będzie miało również miejsce w wybrane dni.}}
+        1 {{Jeżeli deaktywowane, to w wybrany dzień zostanie utworzone nowe wydarzenie. Jeżeli aktywowane, to oryginalne wydarzenie będzie miało również miejsce w wybrany dzień.}}
+        * {{Jeżeli deaktywowane, to w każdy z {$count} wybranych dni zostanie utworzone nowe wydarzenie. Jeżeli aktywowane, to oryginalne wydarzenie będzie miało również miejsce w każdy z {$count} wybranych dni.}}
   confirm:
     delete: "Czy na pewno chcesz usunąć wydarzenie o nazwie {$name}?"
   error:
@@ -488,6 +2256,7 @@ scope:
 
 settings:
   title: "Ustawienia"
+  sidebar: "Categories"
   account:
     title: "Konto"
     pfp:

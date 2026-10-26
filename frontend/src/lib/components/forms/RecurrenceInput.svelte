@@ -410,7 +410,7 @@
   // Presets
   enum RecurrencePreset {
     Daily,
-    DailyWeekdays,
+    DailyWorkdays,
     Weekly,
     MonthlyDate,
     MonthlyDay,
@@ -426,10 +426,18 @@
     lastDayOfMonth.setDate(0);
     return Math.max(Math.ceil((lastDayOfMonth.getDate() - dtstart.getDate() + 1) / 7), 1);
   })
-  let recurrencePresetNameParameters = $derived({ values: { interval: options.interval || 1, date: dtstart, day: dtstart.getDate(), nth: nthMonthDay, nthrev: nthReverseMonthDay } });
+  let recurrencePresetNameParameters = $derived({ values: {
+    interval: options.interval || 1,
+    date: dtstart,
+    day: dtstart.getDate(),
+    nth: nthMonthDay,
+    nthrev: nthReverseMonthDay,
+    weekdaynum: dtstart.getDay(),
+    monthnum: dtstart.getMonth()
+  }});
   let recurrencePresetNames: Record<RecurrencePreset, string> = $derived({
     [RecurrencePreset.Daily]: t("recurrence.presets.daily", recurrencePresetNameParameters),
-    [RecurrencePreset.DailyWeekdays]: t("recurrence.presets.dailyweekdays", recurrencePresetNameParameters),
+    [RecurrencePreset.DailyWorkdays]: t("recurrence.presets.dailyworkdays", recurrencePresetNameParameters),
     [RecurrencePreset.Weekly]: t("recurrence.presets.weekly", recurrencePresetNameParameters),
     [RecurrencePreset.MonthlyDate]: t("recurrence.presets.monthlydate", recurrencePresetNameParameters),
     [RecurrencePreset.MonthlyDay]: t("recurrence.presets.monthlyday", recurrencePresetNameParameters),
@@ -442,14 +450,14 @@
     [RRule.SECONDLY]: [],
     [RRule.MINUTELY]: [],
     [RRule.HOURLY]: [],
-    [RRule.DAILY]: [ RecurrencePreset.Daily, RecurrencePreset.DailyWeekdays ],
+    [RRule.DAILY]: [ RecurrencePreset.Daily, RecurrencePreset.DailyWorkdays ],
     [RRule.WEEKLY]: [ RecurrencePreset.Weekly ],
     [RRule.MONTHLY]: [ RecurrencePreset.MonthlyDate, RecurrencePreset.MonthlyDay, RecurrencePreset.MonthlyDayReverse ],
     [RRule.YEARLY]: [ RecurrencePreset.YearlyDate, RecurrencePreset.YearlyMonthDay, RecurrencePreset.YearlyMonthDayReverse ],
   }
   let recurrencePresets: Record<RecurrencePreset, Partial<Options>> = $derived({
     [RecurrencePreset.Daily]: { dtstart: dtstart, freq: RRule.DAILY },
-    [RecurrencePreset.DailyWeekdays]: { dtstart: dtstart, freq: RRule.DAILY, byweekday: [ RRule.MO, RRule.TU, RRule.WE, RRule.TH, RRule.FR ] },
+    [RecurrencePreset.DailyWorkdays]: { dtstart: dtstart, freq: RRule.DAILY, byweekday: [ RRule.MO, RRule.TU, RRule.WE, RRule.TH, RRule.FR ] },
     [RecurrencePreset.Weekly]: { dtstart: dtstart, freq: RRule.WEEKLY },
     [RecurrencePreset.MonthlyDate]: { dtstart: dtstart, freq: RRule.MONTHLY, bymonthday: dtstart.getDate() },
     [RecurrencePreset.MonthlyDay]: { dtstart: dtstart, freq: RRule.MONTHLY, byweekday: weekdays[dtstart.getDay()].nth(nthMonthDay) },

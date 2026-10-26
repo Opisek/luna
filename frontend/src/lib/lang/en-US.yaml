@@ -99,6 +99,7 @@ form:
 
 recurrence:
   repeats: "Repeats"
+  advanced: "Advanced recurrence editing"
   presets:
     custom: "Custom"
     daily: |
@@ -107,66 +108,120 @@ recurrence:
         1 {{Every day}}
         2 {{Every other day}}
         * {{Every {$interval} days}}
-    dailyweekdays: |
+    dailyworkdays: |
       .input {$interval :integer}
       .match $interval
-        1 {{Every weekday}}
-        2 {{Every other day on weekdays}}
-        * {{Every {$interval} days on weekdays}}
+        1 {{Every workday}}
+        2 {{Every other day on workdays}}
+        * {{Every {$interval} days on workdays}}
     monthlydate: |
       .input {$interval :integer}
-      .input {$day :integer}
-      .match $interval
-        1 {{Every month on the {$day}}}
-        2 {{Every other monh on the {$day}}}
-        * {{Every {$interval} months on the {$day}}}
+      .input {$day :integer select=ordinal}
+      .match $interval $day
+        1 one {{Every month on the {$day}st}}
+        1 two {{Every month on the {$day}nd}}
+        1 few {{Every month on the {$day}rd}}
+        1 *   {{Every month on the {$day}th}}
+        2 one {{Every other month on the {$day}st}}
+        2 two {{Every other month on the {$day}nd}}
+        2 few {{Every other month on the {$day}rd}}
+        2 *   {{Every other month on the {$day}th}}
+        * one {{Every {$interval} months on the {$day}st}}
+        * two {{Every {$interval} months on the {$day}nd}}
+        * few {{Every {$interval} months on the {$day}rd}}
+        * *   {{Every {$interval} months on the {$day}th}}
     monthlyday: |
       .input {$interval :integer}
       .input {$date :integer}
       .input {$nth :integer}
       .local $weekday = {$date :date weekday=long}
-      .match $interval
-        1 {{Every month on the {$nth} {$weekday}}}
-        2 {{Every other monh on the {$nth} {$weekday}}}
-        * {{Every {$interval} months on the {$nth} {$weekday}}}
+      .match $interval $nth
+        1 one {{Every month on the first {$weekday}}}
+        1 two {{Every month on the {$nth}nd {$weekday}}}
+        1 few {{Every month on the {$nth}rd {$weekday}}}
+        1 *   {{Every month on the {$nth}th {$weekday}}}
+        2 one {{Every other month on the last {$weekday}}}
+        2 two {{Every other month on the {$nth}nd {$weekday}}}
+        2 few {{Every other month on the {$nth}rd {$weekday}}}
+        2 *   {{Every other month on the {$nth}th {$weekday}}}
+        * one {{Every {$interval} months on the last {$weekday}}}
+        * two {{Every {$interval} months on the {$nth}nd {$weekday}}}
+        * few {{Every {$interval} months on the {$nth}rd {$weekday}}}
+        * *   {{Every {$interval} months on the {$nth}th {$weekday}}}
     monthlydayreverse: |
       .input {$interval :integer}
       .input {$date :integer}
-      .input {$nthrev :integer order=reverse}
+      .input {$nthrev :integer select=ordinal}
       .local $weekday = {$date :date weekday=long}
-      .match $interval
-        1 {{Every month on the {$nthrev} {$weekday}}}
-        2 {{Every other monh on the {$nthrev} {$weekday}}}
-        * {{Every {$interval} months on the {$nthrev} {$weekday}}}
+      .match $interval $nthrev
+        1 one {{Every month on the last {$weekday}}}
+        1 two {{Every month on the {$nthrev}nd last {$weekday}}}
+        1 few {{Every month on the {$nthrev}rd last {$weekday}}}
+        1 *   {{Every month on the {$nthrev}th last {$weekday}}}
+        2 one {{Every other month on the last {$weekday}}}
+        2 two {{Every other month on the {$nthrev}nd last {$weekday}}}
+        2 few {{Every other month on the {$nthrev}rd last {$weekday}}}
+        2 *   {{Every other month on the {$nthrev}th last {$weekday}}}
+        * one {{Every {$interval} months on the last {$weekday}}}
+        * two {{Every {$interval} months on the {$nthrev}nd last {$weekday}}}
+        * few {{Every {$interval} months on the {$nthrev}rd last {$weekday}}}
+        * *   {{Every {$interval} months on the {$nthrev}th last {$weekday}}}
     yearlydate: |
       .input {$interval :integer}
       .input {$date :integer}
-      .input {$day :number}
+      .input {$day :integer select=ordinal}
       .local $month = {$date :date month=long}
-      .match $interval
-        1 {{Every year on the {$day} of {$month}}}
-        2 {{Every other year on the {$day} of {$month}}}
-        * {{Every {$interval} years on the {$day} of {$month}}}
+      .match $interval $day
+        1 one {{Every year on the {$day}st of {$month}}}
+        1 two {{Every year on the {$day}nd of {$month}}}
+        1 few {{Every year on the {$day}rd of {$month}}}
+        1 *   {{Every year on the {$day}th of {$month}}}
+        2 one {{Every other year on the {$day}st of {$month}}}
+        2 two {{Every other year on the {$day}nd of {$month}}}
+        2 few {{Every other year on the {$day}rd of {$month}}}
+        2 *   {{Every other year on the {$day}th of {$month}}}
+        * one {{Every {$interval} years on the {$day}st of {$month}}}
+        * two {{Every {$interval} years on the {$day}nd of {$month}}}
+        * few {{Every {$interval} years on the {$day}rd of {$month}}}
+        * *   {{Every {$interval} years on the {$day}th of {$month}}}
     yearlymonthday: |
       .input {$interval :integer}
       .input {$date :integer}
-      .input {$nth :integer}
+      .input {$nth :integer select=ordinal}
       .local $weekday = {$date :date weekday=long}
       .local $month = {$date :date month=long}
-      .match $interval
-        1 {{Every year on the {$nth} {$weekday} of {$month}}}
-        2 {{Every other year on the {$nth} {$weekday} of {$month}}}
-        * {{Every {$interval} years on the {$nth} {$weekday} of {$month}}}
+      .match $interval $nth
+        1 one {{Every year on the first {$weekday} of {$month}}}
+        1 two {{Every year on the {$nth}nd {$weekday} of {$month}}}
+        1 few {{Every year on the {$nth}rd {$weekday} of {$month}}}
+        1 *   {{Every year on the {$nth}th {$weekday} of {$month}}}
+        2 one {{Every other year on the first {$weekday} of {$month}}}
+        2 two {{Every other year on the {$nth}nd {$weekday} of {$month}}}
+        2 few {{Every other year on the {$nth}rd {$weekday} of {$month}}}
+        2 *   {{Every other year on the {$nth}th {$weekday} of {$month}}}
+        * one {{Every {$interval} years on the first {$weekday} of {$month}}}
+        * two {{Every {$interval} years on the {$nth}nd {$weekday} of {$month}}}
+        * few {{Every {$interval} years on the {$nth}rd {$weekday} of {$month}}}
+        * *   {{Every {$interval} years on the {$nth}th {$weekday} of {$month}}}
     yearlymonthdayreverse: |
       .input {$interval :integer}
       .input {$date :integer}
-      .input {$nthrev :integer order=reverse}
+      .input {$nthrev :integer select=ordinal}
       .local $weekday = {$date :date weekday=long}
       .local $month = {$date :date month=long}
-      .match $interval
-        1 {{Every year on the {$nthrev} {$weekday} of {$month}}}
-        2 {{Every other year on the {$nthrev} {$weekday} of {$month}}}
-        * {{Every {$interval} years on the {$nthrev} {$weekday} of {$month}}}
+      .match $interval $nthrev
+        1 one {{Every year on the last {$weekday} of {$monthrev}}}
+        1 two {{Every year on the {$nthrev}nd last {$weekday} of {$month}}}
+        1 few {{Every year on the {$nthrev}rd last {$weekday} of {$month}}}
+        1 *   {{Every year on the {$nthrev}th last {$weekday} of {$month}}}
+        2 one {{Every other year on the {$nthrev}st last {$weekday} of {$month}}}
+        2 two {{Every other year on the {$nthrev}nd last {$weekday} of {$month}}}
+        2 few {{Every other year on the {$nthrev}rd last {$weekday} of {$month}}}
+        2 *   {{Every other year on the {$nthrev}th last {$weekday} of {$month}}}
+        * one {{Every {$interval} years on the {$nthrev}st last {$weekday} of {$month}}}
+        * two {{Every {$interval} years on the {$nthrev}nd last {$weekday} of {$month}}}
+        * few {{Every {$interval} years on the {$nthrev}rd last {$weekday} of {$month}}}
+        * *   {{Every {$interval} years on the {$nthrev}th last {$weekday} of {$month}}}
     weekly: |
       .input {$interval :integer}
       .match $interval
@@ -551,7 +606,19 @@ event:
     edit: "Edit Event"
     copy: "Copy Event"
   copy:
-    instruction: "Select on which days the event should take place."
+    instruction: |
+      .input {$count :integer}
+      .match $count
+        0 {{Select to which days to copy the event.}}
+        * {{Select to which days to copy the event. ({$count} selected)}}
+    rdate:
+      toggle: "Copy as recurrence"
+      details: |
+        .input {$count :integer}
+        .match $count
+        0 {{If disabled, a seperate event will be created for each selected date. If enabled, the original event will additionally take place on the selected dates.}}
+        1 {{If disabled, a new event will be created for the selected date. If enabled, the original event will additionally take place on the selected date.}}
+        * {{If disabled, {$count} new events will be created for the selected dates. If enabled, the original event will additionally take place on the {$count} selected dates.}}
   confirm:
     delete: "Are you sure you want to delete event {$name}?"
   error:
@@ -934,21 +1001,3 @@ perms:
   create_backups: "Create backups"
   restore_backups: "Restore backups"
   administrative: "Administrative"
-
-numbers:
-  ordinal:
-    normal: |
-      .input {$num :integer select=ordinal}
-      .match $num
-        one {{{$num}st}}
-        two {{{$num}nd}}
-        few {{{$num}rd}}
-        * {{{$num}th}}
-    reverse: |
-      .input {$num :integer select=ordinal}
-      .match $num
-        1 {{last}}
-        one {{{$num}st to last}}
-        two {{{$num}nd to last}}
-        few {{{$num}rd to last}}
-        * {{{$num}th to last}}

@@ -95,8 +95,174 @@ form:
 
 recurrence:
   repeats: "繰り返し"
+  advanced: "Advanced recurrence editing"
   presets:
     custom: "カスタム"
+    daily: |
+      .input {$interval :integer}
+      .match $interval
+        1 {{毎日}}
+        2 {{隔日}}
+        * {{{$interval}日ごと}}
+    dailyworkdays: |
+      .input {$interval :integer}
+      .match $interval
+        1 {{毎営業日}}
+        * {{{$interval}営業日ごと}}
+    monthlydate: |
+      .input {$interval :integer}
+      .input {$day :integer select=ordinal}
+      .match $interval
+        1 {{毎月{$day}日に}}
+        2 {{隔月{$day}日に}}
+        * {{{$interval}ヶ月ごとの{$day}日に}}
+    monthlyday: |
+      .input {$interval :integer}
+      .input {$date :integer}
+      .input {$nth :integer select=ordinal}
+      .local $weekday = {$date :date weekday=long}
+      .match $interval
+        1 {{毎月第{$nth}{$weekday}に}}
+        2 {{隔月第{$nth}{$weekday}に}}
+        * {{{$interval}ヶ月ごとの第{$nth}{$weekday}に}}
+    monthlydayreverse: |
+      .input {$interval :integer}
+      .input {$date :integer}
+      .input {$nthrev :integer select=ordinal}
+      .local $weekday = {$date :date weekday=long}
+      .match $interval $nthrev
+        1 1 {{毎月最終{$weekday}に}}
+        1 * {{毎月最後から{$nthrev}番目の{$weekday}に}}
+        2 1 {{隔月最終{$weekday}に}}
+        2 * {{隔月最後から{$nthrev}番目の{$weekday}に}}
+        * 1 {{{$interval}ヶ月ごとの最終{$weekday}に}}
+        * * {{{$interval}ヶ月ごとの最後から{$nthrev}番目の{$weekday}に}}
+    yearlydate: |
+      .input {$interval :integer}
+      .input {$date :integer}
+      .input {$day :integer select=ordinal}
+      .local $month = {$date :date month=long}
+      .match $interval
+        1 {{毎年{$month}{$day}日に}}
+        2 {{隔年{$month}{$day}日に}}
+        * {{{$interval}年ごとの{$month}{$day}日に}}
+    yearlymonthday: |
+      .input {$interval :integer}
+      .input {$date :integer}
+      .input {$nth :integer select=ordinal}
+      .local $weekday = {$date :date weekday=long}
+      .local $month = {$date :date month=long}
+      .match $interval
+        1 {{毎年{$month}の第{$nth}{$weekday}に}}
+        2 {{隔年{$month}の第{$nth}{$weekday}に}}
+        * {{{$interval}年ごとの{$month}の第{$nth}{$weekday}に}}
+    yearlymonthdayreverse: |
+      .input {$interval :integer}
+      .input {$date :integer}
+      .input {$nthrev :integer select=ordinal}
+      .local $weekday = {$date :date weekday=long}
+      .local $month = {$date :date month=long}
+      .match $interval $nthrev
+        1 1 {{毎年{$month}の最終{$weekday}に}}
+        1 * {{毎年{$month}の最後から{$nthrev}番目の{$weekday}に}}
+        2 1 {{隔年{$month}の最終{$weekday}に}}
+        2 * {{隔年{$month}の最後から{$nthrev}番目の{$weekday}に}}
+        * 1 {{{$interval}年ごとの{$month}の最終{$weekday}に}}
+        * * {{{$interval}年ごとの{$month}の最後から{$nthrev}番目の{$weekday}に}}
+    weekly: |
+      .input {$interval :integer}
+      .match $interval
+        1 {{毎週}}
+        2 {{隔週}}
+        * {{{$interval}週ごと}}
+  props:
+    freq:
+      name: "頻度"
+      vals:
+        secondly: "秒"
+        minutely: "分"
+        hourly: "時間"
+        daily: "日"
+        weekly: "週"
+        monthly: "月"
+        yearly: "年"
+    interval:
+      name: "間隔"
+    duration:
+      name: "期間"
+      vals:
+        date:
+          name: "終了日まで"
+          param: "終了日"
+        count:
+          name: "予定の回数"
+          param: "回数"
+        forever: "制限なし"
+    rrule: "RRULE"
+    rdate: "RDATE"
+    exdate: "EXDATE"
+    by:
+      month:
+        limit:
+          enable: "Only during specific months"
+          name: "Months"
+        expand:
+          enable: "Specify month(s) of the year"
+          name: "Months"
+      weekno:
+        expand:
+          enable: "Specify weeks(s) of the year"
+          name: "Week numbers"
+      yearday:
+        limit:
+          enable: "Only on specific days of the year"
+          name: "Days of the year"
+        expand:
+          enable: "Specify day(s) of the year"
+          name: "Days of the year"
+      monthday:
+        limit:
+          enable: "Only on specific days of the month"
+          name: "Days of the month"
+        expand:
+          enable: "Specify day(s) of the month"
+          name: "Days of the month"
+      day:
+        dayname:
+          limit:
+            enable: "Only on specific days of the week"
+            name: "Weekdays"
+          expand:
+            enable: "Specify day(s) of the week"
+            name: "Weekdays"
+        numeric:
+          limit:
+            enable: "Only on specific days of the week"
+            name: "Weekdays"
+          expand:
+            enable: "Specify weekday(s)"
+            name: "Weekdays"
+      hour:
+        limit:
+          enable: "Only during specific hours of the day"
+          name: "Hours of the day"
+        expand:
+          enable: "Specify hour(s) of the day"
+          name: "Hours of the day"
+      minute:
+        limit:
+          enable: "Only during specific minutes of the hour"
+          name: "Minutes of the hour"
+        expand:
+          enable: "Specify minute(s) of the hour"
+          name: "Minutes of the hour"
+      second:
+        limit:
+          enable: "Only during specific seconds of the minute"
+          name: "Seconds of the minute"
+        expand:
+          enable: "Specify seconds(s) of the minute"
+          name: "Seconds of the minute"
 
 date:
   title: "日付を選択"
@@ -104,6 +270,11 @@ date:
   start: "開始日"
   end: "終了日"
   date: "日付"
+  formatted:
+    date: |
+      {{{$date :date dateStyle=short format=custom}}}
+    time: |
+      {{{$date :date timeStyle=short format=custom}}}
 
 time:
   title: "時刻を選択"
@@ -195,7 +366,7 @@ invite:
       3h: "３時間"
       1d: "１日間"
       3d: "３日間"
-      7d: "７日か"
+      7d: "７日間"
 
 session:
   title: 
@@ -754,21 +925,3 @@ perms:
   create_backups: "バックアップを作成"
   restore_backups: "バックアップから復元"
   administrative: "アドミニストレーション"
-
-numbers:
-  ordinal:
-    normal: |
-      .input {$num :integer select=ordinal}
-      .match $num
-        one {{{$num}st}}
-        two {{{$num}nd}}
-        few {{{$num}rd}}
-        * {{{$num}th}}
-    reverse: |
-      .input {$num :integer select=ordinal}
-      .match $num
-        1 {{last}}
-        one {{{$num}st to last}}
-        two {{{$num}nd to last}}
-        few {{{$num}rd to last}}
-        * {{{$num}th to last}}

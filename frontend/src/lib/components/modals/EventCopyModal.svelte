@@ -2,20 +2,19 @@
   import Modal from "./Modal.svelte";
 
   import { EmptyEvent, NoOp } from "$lib/scripts/client/placeholders";
-  import { getSettings } from "$lib/scripts/client/data/settings.svelte";
   import Paragraph from "../forms/Paragraph.svelte";
   import { getRepository } from "$lib/scripts/client/data/repository.svelte";
   import SmallCalendar from "../interactive/SmallCalendar.svelte";
   import MonthSelection from "../interactive/MonthSelection.svelte";
-  import { SvelteMap, SvelteSet } from "svelte/reactivity";
-  import Button from "../interactive/Button.svelte";
+  import { SvelteMap } from "svelte/reactivity";
   import { ColorKeys } from "$lib/types/colors";
   import SelectInput from "../forms/SelectInput.svelte";
   import { deepCopy } from "$lib/scripts/common/misc";
   import IconButton from "../interactive/IconButton.svelte";
-  import { Check, Save, X } from "lucide-svelte";
+  import { Check, X } from "lucide-svelte";
   import { parseTimestampList, serializeTimestampList } from "$lib/scripts/common/ical";
   import { t } from "@sveltia/i18n";
+  import ToggleInput from "../forms/ToggleInput.svelte";
   
   interface Props {
     copy?: (event: EventModel) => Promise<EventModel>;
@@ -33,6 +32,7 @@
 
   let date = $state(new Date());
   let marked: Map<string, Date> = $state(new SvelteMap());
+  let copyAsRecurrence = $state(false);
   
   let event = $state(EmptyEvent)
   let original = $state(EmptyEvent)
@@ -48,12 +48,17 @@
     original = eventToCopy;
 
     date = new Date(event.date.start);
-    marked = new SvelteMap();
-    if (event.date.recurrence && event.date.recurrence.RDATE) {
-      parseTimestampList(event.date.recurrence.RDATE).forEach(markDay);
-    } else {
-      markDay(date);
+    if (event.date.allDay) {
+      date.setUTCMilliseconds(0);
+      date.setUTCSeconds(0);
+      date.setUTCMinutes(0);
+      date.setUTCHours(0);
+      date.setUTCDate(event.date.start.getDate());
+      date.setUTCMonth(event.date.start.getMonth());
+      date.setUTCFullYear(event.date.start.getFullYear());
     }
+    marked = new SvelteMap();
+    copyAsRecurrence = false;
 
     return showModalInternal();
   }
@@ -71,19 +76,49 @@
   }
 
   function daySelected(day: Date) {
-    day.setHours(date.getHours());
-    day.setMinutes(date.getMinutes());
-    day.setSeconds(date.getSeconds());
+    if (!original.date.allDay) {
+      day.setHours(date.getHours());
+      day.setMinutes(date.getMinutes());
+      day.setSeconds(date.getSeconds());
+    }
     if (isMarked(day)) unmarkDay(day);
     else markDay(day);
   }
 
   async function save() {
-    if (!event.date.recurrence) event.date.recurrence = {};
-    event.date.recurrence.RDATE = serializeTimestampList("RDATE", event.date.allDay, "UTC", [...marked.values()]);
-    return getRepository().editEvent(event, { date: true }, false).then(() => success(event)).catch(err => {
-      throw new Error(t("event.error.copy", { values: { name: event.name, msg: err.message } }));
-    });
+    if (copyAsRecurrence) {
+      if (event.date.recurrence && event.date.recurrence.RDATE) {
+        parseTimestampList(event.date.recurrence.RDATE).forEach(markDay);
+      } else {
+        markDay(date);
+      }
+
+      if (!event.date.recurrence) event.date.recurrence = {};
+      event.date.recurrence.RDATE = serializeTimestampList("RDATE", event.date.allDay, "UTC", [...marked.values()]);
+      return getRepository().editEvent(event, { date: true }, false).then(() => success(event)).catch(err => {
+        throw new Error(t("event.error.copy", { values: { name: event.name, msg: err.message } }));
+      });
+    } else {
+      const newDays = [...marked.values()]
+      newDays.forEach(newDay => {
+        newDay.setHours(date.getHours());
+        newDay.setMinutes(date.getMinutes());
+        newDay.setSeconds(date.getSeconds());
+      })
+
+      const delta = original.date.end.getTime() - original.date.start.getTime();
+
+      const promises = newDays.map(async newDate => new Promise<EventModel>(async (res, rej) => {
+        const newEvent = await deepCopy(original);
+        newEvent.date.start = newDate;
+        newEvent.date.end = new Date(newEvent.date.start.getTime() + delta);
+        newEvent.calendar = event.calendar;
+        return getRepository().createEvent(newEvent).then(() => res(event)).catch(err => {
+          rej(t("event.error.copy", { values: { name: event.name, msg: err.message } }));
+        });
+      }))
+      await Promise.all(promises).then(x => success(event)).catch(err => { throw new Error(err) });
+    }
   }
 </script>
 
@@ -102,11 +137,13 @@
   <SelectInput bind:value={event.calendar} name="calendar" placeholder={t("calendar.display")} options={selectableCalendars} />
 
   <Paragraph>
-    {t("event.copy.instruction")}
+    {t("event.copy.instruction", { values: { count: marked.size } })}
   </Paragraph>
 
   <MonthSelection bind:date />
   <SmallCalendar bind:date bind:marked onDayClick={daySelected} />
+
+  <ToggleInput bind:value={copyAsRecurrence} name="copy-rdate" description={t("event.copy.rdate.toggle")} info={t("event.copy.rdate.details", { values: { count: marked.size } })}/>
 
   {#snippet buttons()}
     <IconButton onClick={save} color={ColorKeys.Success} enabled={marked.size != 0} type="submit" alt={t("button.save")} canRenderAsButton={true}><Check/></IconButton>

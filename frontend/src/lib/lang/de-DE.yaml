@@ -4,7 +4,6 @@ branding:
 
 button:
   settings: "Einstellungen"
-  sidebar: "Kategorien"
   add:
     generic: "Hinzufügen"
     event: "Ereignis erstellen"
@@ -35,10 +34,13 @@ button:
   cancel: "Abbrechen"
   reset: "Zurücksetzen"
   details: "Details"
+  increment: "Inkrementieren"
+  decrement: "Dekrementieren"
   tooltip: "Tooltipp"
 
 credits:
   title: "Credits"
+  sidebar: "Kategorien"
   repository: "Luna Repository"
   stack:
     display: "Tech Stack"
@@ -98,6 +100,192 @@ form:
 
 recurrence:
   repeats: "Wiederkehrend"
+  advanced: "Fortgeschrittene Wiederholungsbestimmung"
+  presets:
+    custom: "Benutzerdefiniert"
+    daily: |
+      .input {$interval :integer}
+      .match $interval
+        1 {{Jeden Tag}}
+        * {{Jeden {$interval}ten Tag}}
+    dailyworkdays: |
+      .input {$interval :integer}
+      .match $interval
+        1 {{Jeden Wochentag}}
+        * {{Jeden {$interval}ten Wochentag}}
+    monthlydate: |
+      .input {$interval :integer}
+      .input {$day :integer select=ordinal}
+      .match $interval $day
+        1 * {{Monatlich am {$day}ten}}
+        * * {{Alle {$interval} Monate am {$day}ten}}
+    monthlyday: |
+      .input {$interval :integer}
+      .input {$date :integer}
+      .input {$nth :integer}
+      .local $weekday = {$date :date weekday=long}
+      .match $interval $nth
+        1 1 {{Monatlich am ersten {$weekday}}}
+        1 2 {{Monatlich am zweiten {$weekday}}}
+        1 3 {{Monatlich am dritten {$weekday}}}
+        1 4 {{Monatlich am vierten {$weekday}}}
+        1 * {{Monatlich am fünften {$weekday}}}
+        * 1 {{Alle {$interval} Monate am ersten {$weekday}}}
+        * 2 {{Alle {$interval} Monate am zweiten {$weekday}}}
+        * 3 {{Alle {$interval} Monate am dritten {$weekday}}}
+        * 4 {{Alle {$interval} Monate am vierten {$weekday}}}
+        * * {{Alle {$interval} Monate am fünften {$weekday}}}
+    monthlydayreverse: |
+      .input {$interval :integer}
+      .input {$date :integer}
+      .input {$nthrev :integer select=ordinal}
+      .local $weekday = {$date :date weekday=long}
+      .match $interval $nthrev
+        1 1 {{Monatlich am letzten {$weekday}}}
+        1 2 {{Monatlich am zweitletzten {$weekday}}}
+        1 3 {{Monatlich am drittletzten {$weekday}}}
+        1 4 {{Monatlich am viertletzten {$weekday}}}
+        1 * {{Monatlich am fünftletzten {$weekday}}}
+        * 1 {{Alle {$interval} Monate am letzten {$weekday}}}
+        * 2 {{Alle {$interval} Monate am zweitletzten {$weekday}}}
+        * 3 {{Alle {$interval} Monate am drittletzten {$weekday}}}
+        * 4 {{Alle {$interval} Monate am viertletzten {$weekday}}}
+        * * {{Alle {$interval} Monate am fünftletzten {$weekday}}}
+    yearlydate: |
+      .input {$interval :integer}
+      .input {$date :integer}
+      .input {$day :integer select=ordinal}
+      .local $month = {$date :date month=long}
+      .match $interval $day
+        1 * {{Jählich am {$day}ten {$month}}}
+        * * {{Alle {$interval} Jahre am {$day}ten {$month}}}
+    yearlymonthday: |
+      .input {$interval :integer}
+      .input {$date :integer}
+      .input {$nth :integer select=ordinal}
+      .local $weekday = {$date :date weekday=long}
+      .local $month = {$date :date month=long}
+      .match $interval $nth
+        1 1 {{Jählich am ersten {$weekday} im {$month}}}
+        1 2 {{Jählich am zweiten {$weekday} im {$month}}}
+        1 3 {{Jählich am dritten {$weekday} im {$month}}}
+        1 4 {{Jählich am vierten {$weekday} im {$month}}}
+        1 * {{Jählich am fünften {$weekday} im {$month}}}
+        * 1 {{Alle {$interval} Jahre am ersten {$weekday} im {$month}}}
+        * 2 {{Alle {$interval} Jahre am zweiten {$weekday} im {$month}}}
+        * 3 {{Alle {$interval} Jahre am dritten {$weekday} im {$month}}}
+        * 4 {{Alle {$interval} Jahre am vierten {$weekday} im {$month}}}
+        * * {{Alle {$interval} Jahre am fünften {$weekday} im {$month}}}
+    yearlymonthdayreverse: |
+      .input {$interval :integer}
+      .input {$date :integer}
+      .input {$nthrev :integer select=ordinal}
+      .local $weekday = {$date :date weekday=long}
+      .local $month = {$date :date month=long}
+      .match $interval $nthrev
+        1 1 {{Jählich am letzten {$weekday} im {$month}}}
+        1 2 {{Jählich am zweitletzten {$weekday} im {$month}}}
+        1 3 {{Jählich am drittletzten {$weekday} im {$month}}}
+        1 4 {{Jählich am viertletzten {$weekday} im {$month}}}
+        1 * {{Jählich am fünftletzten {$weekday} im {$month}}}
+        * 1 {{Alle {$interval} Jahre am letzten {$weekday} im {$month}}}
+        * 2 {{Alle {$interval} Jahre am zweitletzten {$weekday} im {$month}}}
+        * 3 {{Alle {$interval} Jahre am drittletzten {$weekday} im {$month}}}
+        * 4 {{Alle {$interval} Jahre am viertletzten {$weekday} im {$month}}}
+        * * {{Alle {$interval} Jahre am fünftletzten {$weekday} im {$month}}}
+    weekly: |
+      .input {$interval :integer}
+      .match $interval
+        1 {{Wöchentlich}}
+        * {{Alle {$interval} Wochen}}
+  props:
+    freq:
+      name: "Frequenz"
+      vals:
+        secondly: "Sekündlich"
+        minutely: "Minütlich"
+        hourly: "Stündlich"
+        daily: "Täglich"
+        weekly: "Wöchentlich"
+        monthly: "Monatlich"
+        yearly: "Jählich"
+    interval:
+      name: "Interval"
+    duration:
+      name: "Dauer"
+      vals:
+        date:
+          name: "Bis zum Enddatum"
+          param: "Ende der Wiederholung"
+        count:
+          name: "Fixe Anzahl"
+          param: "Anzahl der Wiederholungen"
+        forever: "Ohne Ende"
+    rrule: "RRULE"
+    rdate: "RDATE"
+    exdate: "EXDATE"
+    by:
+      month:
+        limit:
+          enable: "Nur an bestimmten Monaten"
+          name: "Monate"
+        expand:
+          enable: "Bestimme die Monate im Jahr"
+          name: "Monate"
+      weekno:
+        expand:
+          enable: "Bestimme die Wochen im Jahr"
+          name: "Wochennummern"
+      yearday:
+        limit:
+          enable: "Nur an bestimmten Tagen im Jahr"
+          name: "Tage des Jahres"
+        expand:
+          enable: "Bestimme die Tage des Jahres"
+          name: "Tage des Jahres"
+      monthday:
+        limit:
+          enable: "Nur an bestimmten Kalendertagen"
+          name: "Kalendertage"
+        expand:
+          enable: "Bestimme die Kalendertage"
+          name: "Kalendartage"
+      day:
+        dayname:
+          limit:
+            enable: "Nur an bestimmten Wochentagn"
+            name: "Wochentage"
+          expand:
+            enable: "Bestimme die Wochentage"
+            name: "Wochentage"
+        numeric:
+          limit:
+            enable: "Nur an bestimmten Wochentagn"
+            name: "Wochentage"
+          expand:
+            enable: "Bestimme die Wochentage"
+            name: "Wochentage"
+      hour:
+        limit:
+          enable: "Nur zu bestimmten Stunden des Tages"
+          name: "Stunden des Tages"
+        expand:
+          enable: "Bestimme die Stunden des Tages"
+          name: "Stunden des Tages"
+      minute:
+        limit:
+          enable: "Nur zu bestimmten Minuten der Stunde"
+          name: "Minuten der Stunde"
+        expand:
+          enable: "Bestimme die Minuten der Stunde"
+          name: "Minuten der Stunde"
+      second:
+        limit:
+          enable: "Nur zu bestimmten Sekunden der Minute"
+          name: "Sekunden der Minute"
+        expand:
+          enable: "Bestimme die Sekunden der Minute"
+          name: "Sekunden der Minute"
 
 date:
   title: "Datum Wählen"
@@ -105,6 +293,11 @@ date:
   start: "Beginn"
   end: "Ende"
   date: "Datum"
+  formatted:
+    date: |
+      {{{$date :date dateStyle=short format=custom}}}
+    time: |
+      {{{$date :date timeStyle=short format=custom}}}
 
 time:
   title: "Zeit Wählen"
@@ -286,7 +479,7 @@ auth:
     abort: "Authentisierung fehlgeschlagen"
     success: "Erfolgreich mit {$client} eingeloggt"
     google:
-      unconfigured: "Der Administrator dieser Luna-Instanz hat noch keine Google Klaendar Integration hergerichtet."
+      unconfigured: "Der Administrator dieser Luna-Instanz hat noch keine Google Kalender Integration hergerichtet."
     tokens:
       title: "Konto wählen"
       list: "Authorisierte Kontos"
@@ -342,8 +535,8 @@ source:
 
 calendar:
   display: "Kalender"
-  aria: "Kalendar \"{$name}\""
-  id: "Kalendar-ID"
+  aria: "Kalender \"{$name}\""
+  id: "Kalender-ID"
   title:
     view: "Kalender"
     create: "Kalender Erstellen"
@@ -384,7 +577,19 @@ event:
     edit: "Ereignis Bearbeiten"
     copy: "Ereignis Kopieren"
   copy:
-    instruction: "Wählen Sie aus, an welchen Tagen das Ereignis stattfinden soll."
+    instruction: |
+      .input {$count :integer}
+      .match $count
+        0 {{Wählen Sie die Tage as, an die das Ereignis kopiert werden soll.}}
+        0 {{Wählen Sie die Tage aus, an die das Ereignis kopiert werden soll. ({$count} ausgewählt)}}
+    rdate:
+      toggle: "Als Wiederkehrung kopieren"
+      details: |
+        .input {$count :integer}
+        .match $count
+        0 {{Falls ausgeschaltet, wird für jeden ausgewählten Tag jeweils ein neues Ereignis erstellt. Falls angeschaltet, wird das ursprüngliche Ereignis zusätzlich an den ausgewählten Tagen stattfinden.}}
+        1 {{Falls ausgeschaltet, wird für den ausgewählten Tag ein neues Ereignis erstellt. Falls angeschaltet, wird das ursprüngliche Ereignis zusätzlich an dem ausgewählten Tag stattfinden.}}
+        * {{Falls ausgeschaltet, wird für jeden der {$count} ausgewählten Tag jeweils ein neues Ereignis erstellt. Falls angeschaltet, wird das ursprüngliche Ereignis zusätzlich an den {$count} ausgewählten Tagen stattfinden.}}
   confirm:
     delete: "Möchten Sie das Ereignis {$name} wirklich löschen?"
   error:
@@ -484,6 +689,7 @@ scope:
 
 settings:
   title: "Einstellungen"
+  sidebar: "Kategorien"
   account:
     title: "Konto"
     pfp:

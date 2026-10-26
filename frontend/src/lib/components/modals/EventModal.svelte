@@ -178,7 +178,6 @@
     if (event.date.allDay) {
       event.date.end.setDate(event.date.end.getDate() + 1);
     }
-    console.log("edit!");
     if (event.id === "") {
       return await getRepository().createEvent(event).then(() => event).catch(err => {
         throw new Error(t("event.error.create", { values: { name: event.name, msg: err.message } }));
@@ -241,10 +240,9 @@
   
   const copyEvent = async () => {
     await showCopyModal(originalEvent).then((newEvent) => {
-      console.log(originalEvent);
-      console.log(newEvent);
-    }).catch(() => {
-      console.log("aborted copy")
+      queueNotification(ColorKeys.Success, t("notification.success.save"));
+    }).catch((err) => {
+      if (err) queueNotification(ColorKeys.Danger, err);
     });
   }
 </script>
@@ -294,7 +292,7 @@
           simple={true}
         />
         <Horizontal position="right">
-          <Link onClick={async () => await showRecurrenceRuleModal(eventRecurrenceRruleOptions).then(x => eventRecurrenceRruleOptions = x).catch(NoOp)}>Advanced recurrence editing</Link>
+          <Link onClick={async () => await showRecurrenceRuleModal(eventRecurrenceRruleOptions).then(x => eventRecurrenceRruleOptions = x).catch(NoOp)}>{t("recurrence.advanced")}</Link>
         </Horizontal>
         <RecurrenceRuleModal
           dtstart={event.date.start}
