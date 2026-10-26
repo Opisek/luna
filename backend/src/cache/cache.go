@@ -69,11 +69,7 @@ func getCacheKey(userId types.ID, objectId types.ID) string {
 }
 
 // This will be possible in Go 1.27 (https://github.com/golang/go/issues/77273)
-//func (cache *Cache) GetCached[T any](userId types.ID, objectId types.ID, fallback func () T) T {
-//
-//}
-
-func GetCached[T Cacheable](cache *Cache, userId types.ID, objectId types.ID, ctx context.Context, fallback func() (T, *errors.ErrorTrace)) (T, *errors.ErrorTrace) {
+func (cache *Cache) GetCached[T Cacheable](userId types.ID, objectId types.ID, ctx context.Context, fallback func() (T, *errors.ErrorTrace)) (T, *errors.ErrorTrace) {
 	cache.lock.RLock()
 	obj, exists := cache.dictionary[getCacheKey(userId, objectId)]
 	cache.lock.RUnlock()
