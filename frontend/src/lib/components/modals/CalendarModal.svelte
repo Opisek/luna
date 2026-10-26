@@ -15,6 +15,7 @@
   import { ArchiveRestore } from "lucide-svelte";
 
   import { t } from "@sveltia/i18n";
+  import Title from "../layout/Title.svelte";
 
   interface Props {
     showCreateModal?: () => any;
@@ -119,8 +120,12 @@
   submittable={canSubmit}
 >
   {#if calendar != EmptyCalendar}
-    <TextInput bind:value={calendar.name} name="name" placeholder={t("form.name")} editable={editMode} />
-  <SelectInput bind:value={calendar.source} name="source" placeholder={t("source.display")} options={selectableSources} editable={calendar.id === ""} />
+    {#if editMode}
+      <TextInput bind:value={calendar.name} name="name" placeholder={t("form.name")} editable={editMode} />
+    {:else}
+      <Title>{calendar.name}</Title>
+    {/if}
+    <SelectInput bind:value={calendar.source} name="source" placeholder={t("source.display")} options={selectableSources} editable={calendar.id === ""} />
     {#if editMode}
       <ColorInput bind:color={calendar.color} name="color" editable={editMode} />
     {/if}

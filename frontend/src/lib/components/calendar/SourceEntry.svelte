@@ -28,6 +28,8 @@
   }: Props = $props();
   let sourceEntryId = $derived(generateUniqueElementId(["sourceentry", source.id], idSeed));
 
+  let element: HTMLDivElement | undefined = $state();
+
   let ariaControls = $derived(calendars.map(x => generateUniqueElementId(["calendarentry", x.id], idSeed)).join(" "));
 
   const metadata = getMetadata();
@@ -39,9 +41,9 @@
 
   let hasCals = $derived(repository.calendars.filter(x => x.source === source.id).length > 0);
 
-  let showModal: ((source: SourceModel) => Promise<SourceModel>) = getContext("showSourceModal");
+  let showModal: ((source: SourceModel, anchor?: HTMLElement) => Promise<SourceModel>) = getContext("showSourceModal");
   function showModalInternal() {
-    showModal(source).then(newSource => source = newSource).catch(NoOp);
+    showModal(source, element).then(newSource => source = newSource).catch(NoOp);
   }
 
   $effect(() => {
@@ -109,6 +111,7 @@
   role="treeitem"
   aria-selected={document.activeElement?.id === sourceEntryId}
   aria-details={hasErrored ? extendUniqueElementId(["tooltip"], sourceEntryId) : undefined}
+  bind:this={element}
 >
   <button onclick={showModalInternal} use:focusIndicator={{ type: "underline" }}>
     {source.name}

@@ -278,7 +278,7 @@
   onresize={recalculateBackgroundPercentage}
 />
 
-<Label name={name} info={info}>{title}</Label>
+<Label describes={name} info={info}>{title}</Label>
 <div class="container"
   onmousedown={mouseDown}
   onkeydown={keyPress}

@@ -83,6 +83,6 @@
   <TextInput bind:value={client.scope} name="scope" placeholder={t("auth.oauth.client.scope")} editable={editMode}/>
 
   {#if settings.userSettings[UserSettingKeys.DebugMode]}
-    <TextInput value={client.id} name="id" placeholder={t("invite.id.label")} editable={false} />
+    <TextInput value={client.id} name="id" placeholder={t("auth.oauth.client.id.label")} editable={false} />
   {/if}
 </EditableModal>

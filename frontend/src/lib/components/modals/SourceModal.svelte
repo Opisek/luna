@@ -21,6 +21,7 @@
   import Horizontal from "../layout/Horizontal.svelte";
   import Link from "../forms/Link.svelte";
   import { t } from "@sveltia/i18n";
+  import Title from "../layout/Title.svelte";
 
   interface Props {
     showModal?: (source?: SourceModel, anchor?: HTMLElement) => Promise<SourceModel>;
@@ -182,7 +183,11 @@
   submittable={canSubmit}
 >
   {#if sourceDetailed}
-    <TextInput bind:value={sourceDetailed.name} name="name" placeholder={t("form.name")} editable={editMode} />
+    {#if editMode}
+      <TextInput bind:value={sourceDetailed.name} name="name" placeholder={t("form.name")} editable={editMode} />
+    {:else}
+      <Title>{sourceDetailed.name}</Title>
+    {/if}
 
     <SelectButtons bind:value={sourceDetailed.type} name="type" placeholder={"Type"} editable={editMode}
       options={[

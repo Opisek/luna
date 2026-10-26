@@ -90,7 +90,7 @@
 </style>
 
 {#if label && placeholder}
-  <Label name={name} info={info}>{placeholder}</Label>
+  <Label describes={name} info={info}>{placeholder}</Label>
 {/if}
 {#if editable}
   <div

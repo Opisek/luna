@@ -34,7 +34,7 @@
   }
 </style>
 
-<Label name={name}>{t("color.display")}</Label>
+<Label describes={name}>{t("color.display")}</Label>
 <div
   class:editable={editable}
 >

@@ -114,7 +114,7 @@
 {/if}
 
 {#snippet inputSnippet()}
-  <Label name={name}>{placeholder}</Label>
+  <Label describes={name}>{placeholder}</Label>
   <div class="row" class:editable={editable}>
     <button
       bind:this={dateButton}

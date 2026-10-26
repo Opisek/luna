@@ -28,6 +28,8 @@
   }: Props = $props();
   let calendarEntryId = $derived(generateUniqueElementId(["calendarentry", calendar.id], idSeed));
 
+  let element: HTMLDivElement | undefined = $state();
+
   const metadata = getMetadata();
   const repository = getRepository();
 
@@ -35,9 +37,9 @@
   let isLoading = $derived(calendar && metadata.loadingCalendars.get(calendar.id));
   let calendarVisible = $derived(calendar && metadata.hiddenCalendars.has(calendar.id));
 
-  let showModal: ((calendar: CalendarModel) => Promise<CalendarModel>) = getContext("showCalendarModal");
+  let showModal: ((calendar: CalendarModel, anchor?: HTMLElement) => Promise<CalendarModel>) = getContext("showCalendarModal");
   function showModalInternal() {
-    showModal(calendar).then(newCalendar => calendar = newCalendar).catch(NoOp);
+    showModal(calendar, element).then(newCalendar => calendar = newCalendar).catch(NoOp);
   }
 
   $effect(() => {
@@ -107,6 +109,7 @@
   role="treeitem"
   aria-selected={document.activeElement?.id === calendarEntryId}
   aria-details={hasErrored ? extendUniqueElementId(["tooltip"], calendarEntryId) : undefined}
+  bind:this={element}
 >
   <span class="name">
     <ColorCircle
