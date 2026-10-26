@@ -1,5 +1,5 @@
 branding:
-  name: "ルーナ"
+  name: "ルナ"
   copyright: "Copyright © 2026 Kacper Darowski (Opisek)\nLicensed under TBD"
 
 button:
@@ -37,7 +37,7 @@ button:
 
 credits:
   title: "クレジット"
-  repository: "ルーナのレポジトリ"
+  repository: "ルナのレポジトリ"
   stack:
     display: "テックスタック"
     subtitle: "使用技術"
