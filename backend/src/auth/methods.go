@@ -8,6 +8,7 @@ import (
 	"luna-backend/constants"
 	"luna-backend/db"
 	"luna-backend/errors"
+	lunanet "luna-backend/net"
 	"luna-backend/types"
 	"net/http"
 	"strings"
@@ -33,7 +34,7 @@ func (httpClient *httpClient) Do(req *http.Request) (*http.Response, error) {
 type NoAuth struct{}
 
 func (auth NoAuth) Do(req *http.Request) (*http.Response, *errors.ErrorTrace) {
-	res, err := http.DefaultClient.Do(req)
+	res, err := lunanet.GuardedClient.Do(req)
 	if err != nil {
 		return nil, errors.New().AddErr(errors.LvlDebug, err)
 	}
@@ -65,7 +66,7 @@ type BasicAuth struct {
 
 func (auth BasicAuth) Do(req *http.Request) (*http.Response, *errors.ErrorTrace) {
 	req.SetBasicAuth(auth.Username, auth.Password)
-	res, err := http.DefaultClient.Do(req)
+	res, err := lunanet.GuardedClient.Do(req)
 	if err != nil {
 		return nil, errors.New().AddErr(errors.LvlDebug, err)
 	}
@@ -100,7 +101,7 @@ type BearerAuth struct {
 
 func (auth BearerAuth) Do(req *http.Request) (*http.Response, *errors.ErrorTrace) {
 	req.Header.Set("Authorization", "Bearer "+auth.Token)
-	res, err := http.DefaultClient.Do(req)
+	res, err := lunanet.GuardedClient.Do(req)
 	if err != nil {
 		return nil, errors.New().AddErr(errors.LvlDebug, err)
 	}
@@ -205,7 +206,7 @@ func (auth *OauthAuth) Do(req *http.Request) (*http.Response, *errors.ErrorTrace
 	}
 
 	req.Header.Set("Authorization", "Bearer "+tokens.AccessToken)
-	res, err := http.DefaultClient.Do(req)
+	res, err := lunanet.GuardedClient.Do(req)
 	if err != nil {
 		if strings.Contains(err.Error(), "invalid_grant") {
 			return nil, auth.expired()
